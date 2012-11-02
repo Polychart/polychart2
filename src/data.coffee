@@ -1,30 +1,36 @@
-# EXCEPTIONS
-class NotImplemented extends Error
-
-# GRAPHS
-class Graph
-  constructor: (input) ->
-    graphSpec = spec
-
 # DATA REALTED
 class Data
-  constructor: (input) ->
-    @input = input
+  constructor: (params) ->
+    {@url, @json} = params
+    @frontEnd = !!@url
 
-this.Data = Data
-
-transformFactory = (transSpec) ->
-  trans
 class Transform
-  constructor: (transSpec) ->
+  constructor: (key, transSpec) ->
+    @key = key
+    @name = transSpec.name
     @transSpec = transSpec
-  mutate: (item) -> item
+    @mutate = @getMutateFunction()
+  getMutateFunction: () =>
 
 class Bin extends Transform
-  mutate: (item) -> item
-class Lag extends Transform
-  mutate: (item) -> item
+  getMutateFunction: () =>
+    @binwidth = @transSpec.binwidth
+    if _.isNumber @binwidth
+      return (item) ->
+        item[@name] = @binwidth * Math.floor item[@key]/@binwidth
 
+class Lag extends Transform
+  getMutateFunction: () =>
+    @lag = @transSpec.lag
+    @lastn = (undefined for i in [1..@lag])
+    return (item) ->
+      @lastn.push(item[@key])
+      item[@name] = @lastn.shift()
+
+transformFactory = (key,transSpec) ->
+  switch transSpec.trans
+    when "bin" then return new Bin(key, transSpec)
+    when "lag" then return new Lag(key, transSpec)
 
 filterFactory = (filterSpec) ->
   idontknow
@@ -60,29 +66,31 @@ extractDataSpec = (layerSpec) -> dataSpec
 frontendProcess = (dataSpec, rawData, callback) ->
   # transforms
   _.each dataSpec.trans, (transSpec, key) ->
-    trans = transformFactory(transSpec)
-    _.each rawData (d) ->
+    trans = transformFactory(key, transSpec)
+    _.each rawData, (d) ->
       trans.mutate(d)
+  ###
   # filter
   filter = filterFactory(dataSpec.filter)
   rawData = filter(rawData)
   # groupby
   groupeData = groupby(filterSpec, rawData)
-
+  ###
 
   # computation
-  callback(statData)
+  callback(rawData)
 
 backendProcess = (dataSpec, rawData, callback) ->
   # computation
   callback(statData)
 
+processData = (dataObj, layerSpec, callback) ->
+  dataSpec = extractDataSpec(layerSpec)
+  if dataObj.frontEnd
+    frontendProcess(dataSpec, layerSpec, callback)
+  else
+    backendProcess(dataSpec, layerSpec, callback)
 
-
-class Layer
-  constructor: (layerSpec, statData) ->
-    @spec = layerSpec
-    @precalc = statData
-  calculate: (statData) ->
-    layerData
-
+@frontendProcess = frontendProcess
+@processData = processData
+@Data = Data

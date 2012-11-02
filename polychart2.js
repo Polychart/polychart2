@@ -1,68 +1,30 @@
 (function() {
-  var Foo;
-
-  Foo = (function() {
-
-    function Foo() {}
-
-    return Foo;
-
-  })();
-
-}).call(this);
-(function() {
-  var Bin, Box, Count, Data, Filter, Graph, Group, Lag, Layer, Lm, Mean, NotImplemented, Statistic, Sum, Transform, Uniq, backendProcess, extractDataSpec, filterFactory, frontendProcess, transformFactory,
+  var Bin, Box, Count, Data, Filter, Group, Lag, Lm, Mean, Statistic, Sum, Transform, Uniq, backendProcess, extractDataSpec, filterFactory, frontendProcess, processData, transformFactory,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
-  NotImplemented = (function(_super) {
-
-    __extends(NotImplemented, _super);
-
-    function NotImplemented() {
-      NotImplemented.__super__.constructor.apply(this, arguments);
-    }
-
-    return NotImplemented;
-
-  })(Error);
-
-  Graph = (function() {
-
-    function Graph(input) {
-      var graphSpec;
-      graphSpec = spec;
-    }
-
-    return Graph;
-
-  })();
-
   Data = (function() {
 
-    function Data(input) {
-      this.input = input;
+    function Data(params) {
+      this.url = params.url, this.json = params.json;
+      this.frontEnd = !!this.url;
     }
 
     return Data;
 
   })();
 
-  this.Data = Data;
-
-  transformFactory = function(transSpec) {
-    return trans;
-  };
-
   Transform = (function() {
 
-    function Transform(transSpec) {
+    function Transform(key, transSpec) {
+      this.getMutateFunction = __bind(this.getMutateFunction, this);      this.key = key;
+      this.name = transSpec.name;
       this.transSpec = transSpec;
+      this.mutate = this.getMutateFunction();
     }
 
-    Transform.prototype.mutate = function(item) {
-      return item;
-    };
+    Transform.prototype.getMutateFunction = function() {};
 
     return Transform;
 
@@ -73,11 +35,17 @@
     __extends(Bin, _super);
 
     function Bin() {
+      this.getMutateFunction = __bind(this.getMutateFunction, this);
       Bin.__super__.constructor.apply(this, arguments);
     }
 
-    Bin.prototype.mutate = function(item) {
-      return item;
+    Bin.prototype.getMutateFunction = function() {
+      this.binwidth = this.transSpec.binwidth;
+      if (_.isNumber(this.binwidth)) {
+        return function(item) {
+          return item[this.name] = this.binwidth * Math.floor(item[this.key] / this.binwidth);
+        };
+      }
     };
 
     return Bin;
@@ -89,16 +57,39 @@
     __extends(Lag, _super);
 
     function Lag() {
+      this.getMutateFunction = __bind(this.getMutateFunction, this);
       Lag.__super__.constructor.apply(this, arguments);
     }
 
-    Lag.prototype.mutate = function(item) {
-      return item;
+    Lag.prototype.getMutateFunction = function() {
+      var i;
+      this.lag = this.transSpec.lag;
+      this.lastn = (function() {
+        var _ref, _results;
+        _results = [];
+        for (i = 1, _ref = this.lag; 1 <= _ref ? i <= _ref : i >= _ref; 1 <= _ref ? i++ : i--) {
+          _results.push(void 0);
+        }
+        return _results;
+      }).call(this);
+      return function(item) {
+        this.lastn.push(item[this.key]);
+        return item[this.name] = this.lastn.shift();
+      };
     };
 
     return Lag;
 
   })(Transform);
+
+  transformFactory = function(key, transSpec) {
+    switch (transSpec.trans) {
+      case "bin":
+        return new Bin(key, transSpec);
+      case "lag":
+        return new Lag(key, transSpec);
+    }
+  };
 
   filterFactory = function(filterSpec) {
     return idontknow;
@@ -247,23 +238,75 @@
   };
 
   frontendProcess = function(dataSpec, rawData, callback) {
-    var filter, groupeData;
     _.each(dataSpec.trans, function(transSpec, key) {
       var trans;
-      trans = transformFactory(transSpec);
-      return _.each(rawData(function(d) {
+      trans = transformFactory(key, transSpec);
+      return _.each(rawData, function(d) {
         return trans.mutate(d);
-      }));
+      });
     });
-    filter = filterFactory(dataSpec.filter);
-    rawData = filter(rawData);
-    groupeData = groupby(filterSpec, rawData);
-    return callback(statData);
+    /*
+      # filter
+      filter = filterFactory(dataSpec.filter)
+      rawData = filter(rawData)
+      # groupby
+      groupeData = groupby(filterSpec, rawData)
+    */
+    return callback(rawData);
   };
 
   backendProcess = function(dataSpec, rawData, callback) {
     return callback(statData);
   };
+
+  processData = function(dataObj, layerSpec, callback) {
+    var dataSpec;
+    dataSpec = extractDataSpec(layerSpec);
+    if (dataObj.frontEnd) {
+      return frontendProcess(dataSpec, layerSpec, callback);
+    } else {
+      return backendProcess(dataSpec, layerSpec, callback);
+    }
+  };
+
+  this.frontendProcess = frontendProcess;
+
+  this.processData = processData;
+
+  this.Data = Data;
+
+}).call(this);
+(function() {
+  var NotImplemented,
+    __hasProp = Object.prototype.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
+
+  NotImplemented = (function(_super) {
+
+    __extends(NotImplemented, _super);
+
+    function NotImplemented() {
+      NotImplemented.__super__.constructor.apply(this, arguments);
+    }
+
+    return NotImplemented;
+
+  })(Error);
+
+}).call(this);
+(function() {
+  var Graph, Layer;
+
+  Graph = (function() {
+
+    function Graph(input) {
+      var graphSpec;
+      graphSpec = spec;
+    }
+
+    return Graph;
+
+  })();
 
   Layer = (function() {
 
