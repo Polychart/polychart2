@@ -46,13 +46,18 @@ filterFactory = (filterSpec) ->
 groupByFunc = (group) ->
   (item) ->
     concat = (memo, g) -> "#{memo}#{g}:#{item[g]};"
-    _.reduceRight group, concat, ""
+    _.reduce group, concat, ""
 
 # STATS
 
 statistics =
-  sum : (spec) -> (values) -> _.sum values
-  count : (spec) -> (values) -> values.length
+  sum : (spec) -> (values) ->
+    memo = 0
+    for v in values
+      memo += v
+    return memo
+  count : (spec) -> (values) ->
+    return values.length
   uniq : (spec) -> (values) -> (_.uniq values).length
 
 statisticFactory = (statSpecs) ->
@@ -68,23 +73,55 @@ statisticFactory = (statSpecs) ->
     _.each statFuncs, (stats, name) -> rep[name] = stats(data)
     return rep
 
+# META
+
+calculateMeta = (key, metaSpec, data) ->
+  # note: data = array
+  {sort, stat, limit, asc} = metaSpec
+  # stats
+  if stat
+    statSpec = stats: [stat], group: [key]
+    groupedData = _.groupBy(data, groupByFunc(statSpec.group))
+    data = _.map groupedData, statisticFactory(statSpec)
+  # sorting
+  multiplier = if asc then 1 else -1
+  comparator = (a, b) ->
+    if a[sort] == b[sort] then return 0
+    if a[sort] >= b[sort] then return 1 * multiplier
+    return -1 * multiplier
+  data.sort comparator
+  # limiting
+  if limit
+    data = data[0..limit-1]
+  values = _.uniq _.pluck data, key
+  return meta: { levels: values, sorted: true}, filter: { in: values}
+
 # GENERAL PROCESSING
 
 extractDataSpec = (layerSpec) -> dataSpec
 
 frontendProcess = (dataSpec, rawData, callback) ->
-  # TODO add metadata computation
-  # TODO add sorting, limiting and secondary filters
+  # TODO add metadata computation to binning
   data = _.clone(rawData)
+  metaData = {}
   # transforms
   if dataSpec.trans
-    _.each dataSpec.trans, (transSpec, key) ->
+    _.each dataSpec.trans, (transSpec, key) -> #the spec here should be like stats
       trans = transformFactory(key, transSpec)
       _.each data, (d) ->
         trans(d)
   # filter
   if dataSpec.filter
     data = _.filter data, filterFactory(dataSpec.filter)
+  # meta + more filtering
+  if dataSpec.meta
+    additionalFilter = {}
+    _.each dataSpec.meta, (metaSpec, key) ->
+      {meta, filter} = calculateMeta(key, metaSpec, data)
+      metaData[key] = meta
+      additionalFilter[key] = filter
+    data = _.filter data, filterFactory(additionalFilter)
+
   # stats
   if dataSpec.stats
     groupedData = _.groupBy data, groupByFunc(dataSpec.stats.group)

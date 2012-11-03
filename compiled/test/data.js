@@ -522,4 +522,124 @@
     ]);
   });
 
+  test("meta sorting", function() {
+    var data, spec, trans;
+    data = [
+      {
+        x: 'A',
+        y: 3
+      }, {
+        x: 'B',
+        y: 1
+      }, {
+        x: 'C',
+        y: 2
+      }
+    ];
+    spec = {
+      meta: {
+        x: {
+          sort: 'y',
+          asc: true
+        }
+      }
+    };
+    trans = frontendProcess(spec, data, function(x) {
+      return x;
+    });
+    deepEqual(_.pluck(trans, 'x'), ['B', 'C', 'A']);
+    spec = {
+      meta: {
+        x: {
+          sort: 'y',
+          asc: true,
+          limit: 2
+        }
+      }
+    };
+    trans = frontendProcess(spec, data, function(x) {
+      return x;
+    });
+    deepEqual(_.pluck(trans, 'x'), ['B', 'C']);
+    spec = {
+      meta: {
+        x: {
+          sort: 'y',
+          asc: false,
+          limit: 1
+        }
+      }
+    };
+    trans = frontendProcess(spec, data, function(x) {
+      return x;
+    });
+    deepEqual(_.pluck(trans, 'x'), ['A']);
+    data = [
+      {
+        x: 'A',
+        y: 3
+      }, {
+        x: 'B',
+        y: 1
+      }, {
+        x: 'C',
+        y: 2
+      }, {
+        x: 'C',
+        y: 2
+      }
+    ];
+    spec = {
+      meta: {
+        x: {
+          sort: 'sum(y)',
+          stat: {
+            key: 'y',
+            stat: 'sum',
+            name: 'sum(y)'
+          },
+          asc: false,
+          limit: 1
+        }
+      }
+    };
+    trans = frontendProcess(spec, data, function(x) {
+      return x;
+    });
+    deepEqual(_.pluck(trans, 'x'), ['C', 'C']);
+    data = [
+      {
+        x: 'A',
+        y: 3
+      }, {
+        x: 'B',
+        y: 1
+      }, {
+        x: 'C',
+        y: 2
+      }, {
+        x: 'C',
+        y: 2
+      }
+    ];
+    spec = {
+      meta: {
+        x: {
+          sort: 'sum(y)',
+          stat: {
+            key: 'y',
+            stat: 'sum',
+            name: 'sum(y)'
+          },
+          asc: true,
+          limit: 1
+        }
+      }
+    };
+    trans = frontendProcess(spec, data, function(x) {
+      return x;
+    });
+    return deepEqual(_.pluck(trans, 'x'), ['B']);
+  });
+
 }).call(this);

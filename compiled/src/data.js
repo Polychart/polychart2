@@ -1,5 +1,5 @@
 (function() {
-  var Data, backendProcess, extractDataSpec, filterFactory, filters, frontendProcess, groupByFunc, processData, statisticFactory, statistics, transformFactory, transforms,
+  var Data, backendProcess, calculateMeta, extractDataSpec, filterFactory, filters, frontendProcess, groupByFunc, processData, statisticFactory, statistics, transformFactory, transforms,
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   Data = (function() {
@@ -91,14 +91,20 @@
       concat = function(memo, g) {
         return "" + memo + g + ":" + item[g] + ";";
       };
-      return _.reduceRight(group, concat, "");
+      return _.reduce(group, concat, "");
     };
   };
 
   statistics = {
     sum: function(spec) {
       return function(values) {
-        return _.sum(values);
+        var memo, v, _i, _len;
+        memo = 0;
+        for (_i = 0, _len = values.length; _i < _len; _i++) {
+          v = values[_i];
+          memo += v;
+        }
+        return memo;
       };
     },
     count: function(spec) {
@@ -138,13 +144,45 @@
     };
   };
 
+  calculateMeta = function(key, metaSpec, data) {
+    var asc, comparator, groupedData, limit, multiplier, sort, stat, statSpec, values;
+    sort = metaSpec.sort, stat = metaSpec.stat, limit = metaSpec.limit, asc = metaSpec.asc;
+    if (stat) {
+      statSpec = {
+        stats: [stat],
+        group: [key]
+      };
+      groupedData = _.groupBy(data, groupByFunc(statSpec.group));
+      data = _.map(groupedData, statisticFactory(statSpec));
+    }
+    multiplier = asc ? 1 : -1;
+    comparator = function(a, b) {
+      if (a[sort] === b[sort]) return 0;
+      if (a[sort] >= b[sort]) return 1 * multiplier;
+      return -1 * multiplier;
+    };
+    data.sort(comparator);
+    if (limit) data = data.slice(0, (limit - 1) + 1 || 9e9);
+    values = _.uniq(_.pluck(data, key));
+    return {
+      meta: {
+        levels: values,
+        sorted: true
+      },
+      filter: {
+        "in": values
+      }
+    };
+  };
+
   extractDataSpec = function(layerSpec) {
     return dataSpec;
   };
 
   frontendProcess = function(dataSpec, rawData, callback) {
-    var data, groupedData;
+    var additionalFilter, data, groupedData, metaData;
     data = _.clone(rawData);
+    metaData = {};
     if (dataSpec.trans) {
       _.each(dataSpec.trans, function(transSpec, key) {
         var trans;
@@ -155,6 +193,16 @@
       });
     }
     if (dataSpec.filter) data = _.filter(data, filterFactory(dataSpec.filter));
+    if (dataSpec.meta) {
+      additionalFilter = {};
+      _.each(dataSpec.meta, function(metaSpec, key) {
+        var filter, meta, _ref;
+        _ref = calculateMeta(key, metaSpec, data), meta = _ref.meta, filter = _ref.filter;
+        metaData[key] = meta;
+        return additionalFilter[key] = filter;
+      });
+      data = _.filter(data, filterFactory(additionalFilter));
+    }
     if (dataSpec.stats) {
       groupedData = _.groupBy(data, groupByFunc(dataSpec.stats.group));
       data = _.map(groupedData, statisticFactory(dataSpec.stats));
