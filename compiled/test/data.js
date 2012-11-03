@@ -13,7 +13,7 @@
         y: 4
       }
     ];
-    data = new Data({
+    data = new poly.Data({
       json: jsondata
     });
     return deepEqual(data.json, jsondata);
@@ -21,7 +21,7 @@
 
   test("transforms -- numeric binning", function() {
     var data, spec, trans;
-    data = new Data({
+    data = new poly.Data({
       json: [
         {
           x: 12,
@@ -46,7 +46,7 @@
         }
       }
     };
-    trans = frontendProcess(spec, data.json, function(x) {
+    trans = poly.data.frontendProcess(spec, data.json, function(x) {
       return x;
     });
     deepEqual(trans, [
@@ -62,7 +62,7 @@
         'bin(y, 5)': 55
       }
     ]);
-    data = new Data({
+    data = new poly.Data({
       json: [
         {
           x: 1.2,
@@ -90,7 +90,7 @@
         }
       }
     };
-    trans = frontendProcess(spec, data.json, function(x) {
+    trans = poly.data.frontendProcess(spec, data.json, function(x) {
       return x;
     });
     deepEqual(trans, [
@@ -111,7 +111,7 @@
         'lag(y, 1)': 2
       }
     ]);
-    data = new Data({
+    data = new poly.Data({
       json: [
         {
           x: 1.2,
@@ -139,7 +139,7 @@
         }
       }
     };
-    trans = frontendProcess(spec, data.json, function(x) {
+    trans = poly.data.frontendProcess(spec, data.json, function(x) {
       return x;
     });
     return deepEqual(trans, [
@@ -197,7 +197,7 @@
         }
       }
     };
-    trans = frontendProcess(spec, data, function(x) {
+    trans = poly.data.frontendProcess(spec, data, function(x) {
       return x;
     });
     deepEqual(trans, [
@@ -228,7 +228,7 @@
         }
       }
     };
-    trans = frontendProcess(spec, data, function(x) {
+    trans = poly.data.frontendProcess(spec, data, function(x) {
       return x;
     });
     deepEqual(trans, [
@@ -262,7 +262,7 @@
         }
       }
     };
-    trans = frontendProcess(spec, data, function(x) {
+    trans = poly.data.frontendProcess(spec, data, function(x) {
       return x;
     });
     deepEqual(trans, [
@@ -300,7 +300,7 @@
         }
       }
     };
-    trans = frontendProcess(spec, data, function(x) {
+    trans = poly.data.frontendProcess(spec, data, function(x) {
       return x;
     });
     deepEqual(trans, [
@@ -321,7 +321,7 @@
         }
       }
     };
-    trans = frontendProcess(spec, data, function(x) {
+    trans = poly.data.frontendProcess(spec, data, function(x) {
       return x;
     });
     return deepEqual(trans, [
@@ -398,7 +398,7 @@
         group: ['x']
       }
     };
-    trans = frontendProcess(spec, data, function(x) {
+    trans = poly.data.frontendProcess(spec, data, function(x) {
       return x;
     });
     deepEqual(trans, [
@@ -422,7 +422,7 @@
         group: ['x', 'z']
       }
     };
-    trans = frontendProcess(spec, data, function(x) {
+    trans = poly.data.frontendProcess(spec, data, function(x) {
       return x;
     });
     deepEqual(trans, [
@@ -456,7 +456,7 @@
         group: ['x', 'z']
       }
     };
-    trans = frontendProcess(spec, data, function(x) {
+    trans = poly.data.frontendProcess(spec, data, function(x) {
       return x;
     });
     deepEqual(trans, [
@@ -494,7 +494,7 @@
         group: ['x', 'z']
       }
     };
-    trans = frontendProcess(spec, data, function(x) {
+    trans = poly.data.frontendProcess(spec, data, function(x) {
       return x;
     });
     return deepEqual(trans, [
@@ -544,7 +544,7 @@
         }
       }
     };
-    trans = frontendProcess(spec, data, function(x) {
+    trans = poly.data.frontendProcess(spec, data, function(x) {
       return x;
     });
     deepEqual(_.pluck(trans, 'x'), ['B', 'C', 'A']);
@@ -557,7 +557,7 @@
         }
       }
     };
-    trans = frontendProcess(spec, data, function(x) {
+    trans = poly.data.frontendProcess(spec, data, function(x) {
       return x;
     });
     deepEqual(_.pluck(trans, 'x'), ['B', 'C']);
@@ -570,7 +570,7 @@
         }
       }
     };
-    trans = frontendProcess(spec, data, function(x) {
+    trans = poly.data.frontendProcess(spec, data, function(x) {
       return x;
     });
     deepEqual(_.pluck(trans, 'x'), ['A']);
@@ -603,7 +603,7 @@
         }
       }
     };
-    trans = frontendProcess(spec, data, function(x) {
+    trans = poly.data.frontendProcess(spec, data, function(x) {
       return x;
     });
     deepEqual(_.pluck(trans, 'x'), ['C', 'C']);
@@ -636,7 +636,7 @@
         }
       }
     };
-    trans = frontendProcess(spec, data, function(x) {
+    trans = poly.data.frontendProcess(spec, data, function(x) {
       return x;
     });
     return deepEqual(_.pluck(trans, 'x'), ['B']);

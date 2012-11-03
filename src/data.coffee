@@ -1,8 +1,9 @@
+poly = @poly || {}
 # DATA REALTED
 class Data
   constructor: (params) ->
     {@url, @json} = params
-    @frontEnd = !!@url
+    @frontEnd = !@url
 
 # TRANFORMS
 transforms =
@@ -41,13 +42,6 @@ filterFactory = (filterSpec) ->
       if not f(item) then return false
     return true
 
-# GROUPING
-
-groupByFunc = (group) ->
-  (item) ->
-    concat = (memo, g) -> "#{memo}#{g}:#{item[g]};"
-    _.reduce group, concat, ""
-
 # STATS
 
 statistics =
@@ -81,7 +75,7 @@ calculateMeta = (key, metaSpec, data) ->
   # stats
   if stat
     statSpec = stats: [stat], group: [key]
-    groupedData = _.groupBy(data, groupByFunc(statSpec.group))
+    groupedData = poly.groupBy data, statSpec.group
     data = _.map groupedData, statisticFactory(statSpec)
   # sorting
   multiplier = if asc then 1 else -1
@@ -98,7 +92,7 @@ calculateMeta = (key, metaSpec, data) ->
 
 # GENERAL PROCESSING
 
-extractDataSpec = (layerSpec) -> dataSpec
+extractDataSpec = (layerSpec) -> {}
 
 frontendProcess = (dataSpec, rawData, callback) ->
   # TODO add metadata computation to binning
@@ -124,22 +118,25 @@ frontendProcess = (dataSpec, rawData, callback) ->
 
   # stats
   if dataSpec.stats
-    groupedData = _.groupBy data, groupByFunc(dataSpec.stats.group)
+    groupedData = poly.groupBy data, dataSpec.stats.group
     data = _.map groupedData, statisticFactory(dataSpec.stats)
   # done
-  callback(data)
+  callback(data, metaData)
 
 backendProcess = (dataSpec, rawData, callback) ->
   # computation
-  callback(statData)
+  console.log 'backendProcess'
 
 processData = (dataObj, layerSpec, callback) ->
   dataSpec = extractDataSpec(layerSpec)
   if dataObj.frontEnd
-    frontendProcess(dataSpec, layerSpec, callback)
+    frontendProcess(dataSpec, dataObj.json, callback)
   else
-    backendProcess(dataSpec, layerSpec, callback)
+    backendProcess(dataSpec, dataObj, callback)
 
-@frontendProcess = frontendProcess
-@processData = processData
-@Data = Data
+# EXPORT
+poly.Data = Data
+poly.data =
+  frontendProcess: frontendProcess
+  processData: processData
+@poly = poly

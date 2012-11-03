@@ -1,12 +1,14 @@
 (function() {
-  var Data, backendProcess, calculateMeta, extractDataSpec, filterFactory, filters, frontendProcess, groupByFunc, processData, statisticFactory, statistics, transformFactory, transforms,
+  var Data, backendProcess, calculateMeta, extractDataSpec, filterFactory, filters, frontendProcess, poly, processData, statisticFactory, statistics, transformFactory, transforms,
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+  poly = this.poly || {};
 
   Data = (function() {
 
     function Data(params) {
       this.url = params.url, this.json = params.json;
-      this.frontEnd = !!this.url;
+      this.frontEnd = !this.url;
     }
 
     return Data;
@@ -85,16 +87,6 @@
     };
   };
 
-  groupByFunc = function(group) {
-    return function(item) {
-      var concat;
-      concat = function(memo, g) {
-        return "" + memo + g + ":" + item[g] + ";";
-      };
-      return _.reduce(group, concat, "");
-    };
-  };
-
   statistics = {
     sum: function(spec) {
       return function(values) {
@@ -152,7 +144,7 @@
         stats: [stat],
         group: [key]
       };
-      groupedData = _.groupBy(data, groupByFunc(statSpec.group));
+      groupedData = poly.groupBy(data, statSpec.group);
       data = _.map(groupedData, statisticFactory(statSpec));
     }
     multiplier = asc ? 1 : -1;
@@ -176,7 +168,7 @@
   };
 
   extractDataSpec = function(layerSpec) {
-    return dataSpec;
+    return {};
   };
 
   frontendProcess = function(dataSpec, rawData, callback) {
@@ -204,30 +196,33 @@
       data = _.filter(data, filterFactory(additionalFilter));
     }
     if (dataSpec.stats) {
-      groupedData = _.groupBy(data, groupByFunc(dataSpec.stats.group));
+      groupedData = poly.groupBy(data, dataSpec.stats.group);
       data = _.map(groupedData, statisticFactory(dataSpec.stats));
     }
-    return callback(data);
+    return callback(data, metaData);
   };
 
   backendProcess = function(dataSpec, rawData, callback) {
-    return callback(statData);
+    return console.log('backendProcess');
   };
 
   processData = function(dataObj, layerSpec, callback) {
     var dataSpec;
     dataSpec = extractDataSpec(layerSpec);
     if (dataObj.frontEnd) {
-      return frontendProcess(dataSpec, layerSpec, callback);
+      return frontendProcess(dataSpec, dataObj.json, callback);
     } else {
-      return backendProcess(dataSpec, layerSpec, callback);
+      return backendProcess(dataSpec, dataObj, callback);
     }
   };
 
-  this.frontendProcess = frontendProcess;
+  poly.Data = Data;
 
-  this.processData = processData;
+  poly.data = {
+    frontendProcess: frontendProcess,
+    processData: processData
+  };
 
-  this.Data = Data;
+  this.poly = poly;
 
 }).call(this);

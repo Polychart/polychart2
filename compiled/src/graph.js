@@ -1,9 +1,11 @@
 (function() {
-  var Graph, Layer;
+  var Graph, poly;
+
+  poly = this.poly || {};
 
   Graph = (function() {
 
-    function Graph(input) {
+    function Graph(spec) {
       var graphSpec;
       graphSpec = spec;
     }
@@ -12,19 +14,27 @@
 
   })();
 
-  Layer = (function() {
+  poly.chart = function(spec) {
+    var layers;
+    layers = [];
+    spec.layers = spec.layers || [];
+    _.each(spec.layers, function(layerSpec) {
+      return poly.data.processData(layerSpec.data, layerSpec, function(statData, meta) {
+        var layerObj;
+        layerObj = poly.layer.makeLayer(layerSpec, statData);
+        layerObj.calculate();
+        return layers.push(layerObj);
+      });
+    });
+    return layers;
+    /*
+      # domain calculation and guide merging
+      _.each layers (layerObj) ->
+        makeGuides layerObj
+      mergeGuides
+    */
+  };
 
-    function Layer(layerSpec, statData) {
-      this.spec = layerSpec;
-      this.precalc = statData;
-    }
-
-    Layer.prototype.calculate = function(statData) {
-      return layerData;
-    };
-
-    return Layer;
-
-  })();
+  this.poly = poly;
 
 }).call(this);

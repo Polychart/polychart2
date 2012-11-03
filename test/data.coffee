@@ -4,11 +4,11 @@ test "smoke test", ->
     {x: 2, y: 4},
     {x: 2, y: 4}
   ]
-  data = new Data (json: jsondata)
+  data = new poly.Data (json: jsondata)
   deepEqual data.json, jsondata
 
 test "transforms -- numeric binning", ->
-  data = new Data
+  data = new poly.Data
     json: [
       {x: 12, y: 42},
       {x: 33, y: 56},
@@ -20,13 +20,13 @@ test "transforms -- numeric binning", ->
       y:
         trans: "bin", binwidth: 5, name: "bin(y, 5)"
 
-  trans = frontendProcess spec, data.json, (x) -> x
+  trans = poly.data.frontendProcess spec, data.json, (x) -> x
   deepEqual trans, [
       {x: 12, y: 42, 'bin(x, 10)': 10, 'bin(y, 5)': 40},
       {x: 33, y: 56, 'bin(x, 10)': 30, 'bin(y, 5)': 55},
     ]
 
-  data = new Data
+  data = new poly.Data
     json: [
       {x: 1.2, y: 1},
       {x: 3.3, y: 2},
@@ -38,14 +38,14 @@ test "transforms -- numeric binning", ->
         trans: "bin", binwidth: 1, name: "bin(x, 1)"
       y:
         trans: "lag", lag: 1, name: "lag(y, 1)"
-  trans = frontendProcess spec, data.json, (x) -> x
+  trans = poly.data.frontendProcess spec, data.json, (x) -> x
   deepEqual trans, [
       {x: 1.2, y: 1, 'bin(x, 1)': 1, 'lag(y, 1)': undefined},
       {x: 3.3, y: 2, 'bin(x, 1)': 3, 'lag(y, 1)': 1},
       {x: 3.3, y: 3, 'bin(x, 1)': 3, 'lag(y, 1)': 2},
     ]
 
-  data = new Data
+  data = new poly.Data
     json: [
       {x: 1.2, y: 1},
       {x: 3.3, y: 2},
@@ -57,7 +57,7 @@ test "transforms -- numeric binning", ->
         trans: "bin", binwidth: 1, name: "bin(x, 1)"
       y:
         trans: "lag", lag: 2, name: "lag(y, 2)"
-  trans = frontendProcess spec, data.json, (x) -> x
+  trans = poly.data.frontendProcess spec, data.json, (x) -> x
   deepEqual trans, [
       {x: 1.2, y: 1, 'bin(x, 1)': 1, 'lag(y, 2)': undefined},
       {x: 3.3, y: 2, 'bin(x, 1)': 3, 'lag(y, 2)': undefined},
@@ -81,7 +81,7 @@ test "filtering", ->
     filter:
       x:
         lt: 3
-  trans = frontendProcess spec, data, (x) -> x
+  trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual trans, [
       {x: 1.2, y: 1, 'bin(x, 1)': 1, 'lag(y, 1)': undefined},
     ]
@@ -96,7 +96,7 @@ test "filtering", ->
       x:
         lt: 3.35
         gt: 1.2
-  trans = frontendProcess spec, data, (x) -> x
+  trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual trans, [
       {x: 3.3, y: 2, 'bin(x, 1)': 3, 'lag(y, 1)': 1},
     ]
@@ -112,7 +112,7 @@ test "filtering", ->
         le: 3.35, ge: 1.2
       y:
         lt: 100
-  trans = frontendProcess spec, data, (x) -> x
+  trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual trans, [
       {x: 1.2, y: 1, 'bin(x, 1)': 1, 'lag(y, 1)': undefined},
       {x: 3.3, y: 2, 'bin(x, 1)': 3, 'lag(y, 1)': 1},
@@ -125,7 +125,7 @@ test "filtering", ->
   ]
   spec =
     filter: z: in: 'B'
-  trans = frontendProcess spec, data, (x) -> x
+  trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual trans, [
       {x: 3.3, y: 2, z:'B'}
       {x: 3.4, y: 3, z:'B'}
@@ -133,7 +133,7 @@ test "filtering", ->
 
   spec =
     filter: z: in: ['A', 'B']
-  trans = frontendProcess spec, data, (x) -> x
+  trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual trans, [
       {x: 1.2, y: 1, z:'A'}
       {x: 3.3, y: 2, z:'B'}
@@ -159,7 +159,7 @@ test "statistics - sum", ->
         key: 'y', stat: 'count', name: 'count(y)'
       ]
       group: ['x']
-  trans = frontendProcess spec, data, (x) -> x
+  trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual trans, [
       {x: 'A', 'count(y)': 6}
       {x: 'B', 'count(y)': 4}
@@ -171,7 +171,7 @@ test "statistics - sum", ->
         key: 'y', stat: 'count', name: 'count(y)'
       ]
       group: ['x', 'z']
-  trans = frontendProcess spec, data, (x) -> x
+  trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual trans, [
       {x: 'A', z:1, 'count(y)': 3}
       {x: 'A', z:2, 'count(y)': 3}
@@ -185,7 +185,7 @@ test "statistics - sum", ->
         key: 'y', stat: 'uniq', name: 'uniq(y)'
       ],
       group: ['x', 'z']
-  trans = frontendProcess spec, data, (x) -> x
+  trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual trans, [
       {x: 'A', z:1, 'uniq(y)': 1}
       {x: 'A', z:2, 'uniq(y)': 1}
@@ -200,7 +200,7 @@ test "statistics - sum", ->
         {key: 'y', stat: 'uniq', name: 'uniq(y)'}
       ]
       group: ['x', 'z']
-  trans = frontendProcess spec, data, (x) -> x
+  trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual trans, [
       {x: 'A', z:1, 'uniq(y)': 1, 'count(y)':3}
       {x: 'A', z:2, 'uniq(y)': 1, 'count(y)':3}
@@ -216,17 +216,17 @@ test "meta sorting", ->
   ]
   spec = meta:
     x: {sort: 'y', asc: true}
-  trans = frontendProcess spec, data, (x) -> x
+  trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual _.pluck(trans, 'x'), ['B','C','A']
 
   spec = meta:
     x: {sort: 'y', asc: true, limit: 2}
-  trans = frontendProcess spec, data, (x) -> x
+  trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual _.pluck(trans, 'x'), ['B','C']
 
   spec = meta:
     x: {sort: 'y', asc: false, limit: 1}
-  trans = frontendProcess spec, data, (x) -> x
+  trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual _.pluck(trans, 'x'), ['A']
 
   data = [
@@ -241,7 +241,7 @@ test "meta sorting", ->
       stat: {key: 'y', stat:'sum', name:'sum(y)'},
       asc: false,
       limit: 1
-  trans = frontendProcess spec, data, (x) -> x
+  trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual _.pluck(trans, 'x'), ['C', 'C']
 
   data = [
@@ -256,7 +256,6 @@ test "meta sorting", ->
       stat: {key: 'y', stat:'sum', name:'sum(y)'},
       asc: true,
       limit: 1
-  trans = frontendProcess spec, data, (x) -> x
+  trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual _.pluck(trans, 'x'), ['B']
 
- 
