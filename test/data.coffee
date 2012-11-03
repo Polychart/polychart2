@@ -140,4 +140,53 @@ test "filtering", ->
       {x: 3.4, y: 3, z:'B'}
     ]
 
+test "statistics - sum", ->
+  data = [
+    {x: 'A', y: 1, z:1}
+    {x: 'A', y: 1, z:2}
+    {x: 'A', y: 1, z:1}
+    {x: 'A', y: 1, z:2}
+    {x: 'A', y: 1, z:1}
+    {x: 'A', y: 1, z:2}
+    {x: 'B', y: 1, z:1}
+    {x: 'B', y: 1, z:2}
+    {x: 'B', y: 1, z:1}
+    {x: 'B', y: 1, z:2}
+  ]
+  spec =
+    stats:
+      stats:
+        y: stat: 'count', name: 'count(y)'
+      group: ['x']
+  trans = frontendProcess spec, data, (x) -> x
+  deepEqual trans, [
+      {x: 'A', 'count(y)': 6}
+      {x: 'B', 'count(y)': 4}
+    ]
+
+  spec =
+    stats:
+      stats:
+        y: stat: 'count', name: 'count(y)'
+      group: ['x', 'z']
+  trans = frontendProcess spec, data, (x) -> x
+  deepEqual trans, [
+      {x: 'A', z:1, 'count(y)': 3}
+      {x: 'A', z:2, 'count(y)': 3}
+      {x: 'B', z:1, 'count(y)': 2}
+      {x: 'B', z:2, 'count(y)': 2}
+    ]
+
+  spec =
+    stats:
+      stats:
+        y: stat: 'uniq', name: 'uniq(y)'
+      group: ['x', 'z']
+  trans = frontendProcess spec, data, (x) -> x
+  deepEqual trans, [
+      {x: 'A', z:1, 'uniq(y)': 1}
+      {x: 'A', z:2, 'uniq(y)': 1}
+      {x: 'B', z:1, 'uniq(y)': 1}
+      {x: 'B', z:2, 'uniq(y)': 1}
+    ]
 

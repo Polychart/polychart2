@@ -1,8 +1,6 @@
 (function() {
-  var Box, Count, Data, Group, Lm, Mean, Statistic, Sum, Uniq, backendProcess, constraintFunc, extractDataSpec, filterFactory, frontendProcess, processData, trans_bin, trans_lag, transformFactory,
-    __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
-    __hasProp = Object.prototype.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
+  var Data, backendProcess, constraintFunc, extractDataSpec, filterFactory, frontendProcess, groupByFunc, processData, singleStatsFunc, stat_count, stat_sum, stat_uniq, statisticFactory, trans_bin, trans_lag, transformFactory,
+    __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   Data = (function() {
 
@@ -97,136 +95,78 @@
     }
   };
 
-  Group = (function() {
-
-    function Group(groupSpec) {
-      this.groupSepc = groupSpec;
-    }
-
-    Group.prototype.compute = function(data) {
-      return data;
+  groupByFunc = function(group) {
+    return function(item) {
+      var concat;
+      concat = function(memo, g) {
+        return "" + memo + g + ":" + item[g] + ";";
+      };
+      return _.reduceRight(group, concat, "");
     };
+  };
 
-    return Group;
-
-  })();
-
-  Statistic = (function() {
-
-    function Statistic(statSpec) {
-      this.statSpec = statSpec;
-    }
-
-    Statistic.prototype.compute = function(data) {
-      return item;
+  statisticFactory = function(statSpecs) {
+    var group, statistics;
+    group = statSpecs.group;
+    statistics = [];
+    _.each(statSpecs.stats, function(statSpec, key) {
+      return statistics.push(singleStatsFunc(key, statSpec, group));
+    });
+    return function(data) {
+      var rep;
+      rep = {};
+      _.each(group, function(g) {
+        return rep[g] = data[0][g];
+      });
+      _.each(statistics, function(stats) {
+        return stats(data, rep);
+      });
+      return rep;
     };
+  };
 
-    return Statistic;
-
-  })();
-
-  Sum = (function(_super) {
-
-    __extends(Sum, _super);
-
-    function Sum() {
-      Sum.__super__.constructor.apply(this, arguments);
-    }
-
-    Sum.prototype.compute = function(data) {
-      return _.sum(data);
+  singleStatsFunc = function(key, statSpec, group) {
+    var name, stat;
+    name = statSpec.name;
+    stat = (function() {
+      switch (statSpec.stat) {
+        case 'sum':
+          return stat_sum(key, statSpec, group);
+        case 'count':
+          return stat_count(key, statSpec, group);
+        case 'uniq':
+          return stat_uniq(key, statSpec, group);
+      }
+    })();
+    return function(data, rep) {
+      return rep[name] = stat(_.pluck(data, key));
     };
+  };
 
-    return Sum;
-
-  })(Statistic);
-
-  Mean = (function(_super) {
-
-    __extends(Mean, _super);
-
-    function Mean() {
-      Mean.__super__.constructor.apply(this, arguments);
-    }
-
-    Mean.prototype.compute = function(data) {
-      return data;
+  stat_sum = function(key, spec, group) {
+    return function(values) {
+      return _.sum(values);
     };
+  };
 
-    return Mean;
-
-  })(Statistic);
-
-  Uniq = (function(_super) {
-
-    __extends(Uniq, _super);
-
-    function Uniq() {
-      Uniq.__super__.constructor.apply(this, arguments);
-    }
-
-    Uniq.prototype.compute = function(data) {
-      return data;
+  stat_count = function(key, spec, group) {
+    return function(values) {
+      return values.length;
     };
+  };
 
-    return Uniq;
-
-  })(Statistic);
-
-  Count = (function(_super) {
-
-    __extends(Count, _super);
-
-    function Count() {
-      Count.__super__.constructor.apply(this, arguments);
-    }
-
-    Count.prototype.compute = function(data) {
-      return data;
+  stat_uniq = function(key, spec, group) {
+    return function(values) {
+      return (_.uniq(values)).length;
     };
-
-    return Count;
-
-  })(Statistic);
-
-  Lm = (function(_super) {
-
-    __extends(Lm, _super);
-
-    function Lm() {
-      Lm.__super__.constructor.apply(this, arguments);
-    }
-
-    Lm.prototype.compute = function(data) {
-      return data;
-    };
-
-    return Lm;
-
-  })(Statistic);
-
-  Box = (function(_super) {
-
-    __extends(Box, _super);
-
-    function Box() {
-      Box.__super__.constructor.apply(this, arguments);
-    }
-
-    Box.prototype.compute = function(data) {
-      return data;
-    };
-
-    return Box;
-
-  })(Statistic);
+  };
 
   extractDataSpec = function(layerSpec) {
     return dataSpec;
   };
 
   frontendProcess = function(dataSpec, rawData, callback) {
-    var data;
+    var data, groupedData;
     data = _.clone(rawData);
     if (dataSpec.trans) {
       _.each(dataSpec.trans, function(transSpec, key) {
@@ -238,6 +178,10 @@
       });
     }
     if (dataSpec.filter) data = _.filter(data, filterFactory(dataSpec.filter));
+    if (dataSpec.stats) {
+      groupedData = _.groupBy(data, groupByFunc(dataSpec.stats.group));
+      data = _.map(groupedData, statisticFactory(dataSpec.stats));
+    }
     return callback(data);
   };
 

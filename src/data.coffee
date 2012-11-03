@@ -45,27 +45,40 @@ constraintFunc = (predicate, value, key) ->
     when 'in' then return (x) -> x[key] in value
 
 # GROUPING
-class Group #singleton
-  constructor: (groupSpec) ->
-    @groupSepc = groupSpec
-  compute: (data) -> data
 
-class Statistic
-  constructor: (statSpec) ->
-    @statSpec = statSpec
-  compute: (data) -> item
-class Sum extends Statistic
-  compute: (data) -> _.sum(data)
-class Mean extends Statistic
-  compute: (data) -> data
-class Uniq extends Statistic
-  compute: (data) -> data
-class Count extends Statistic
-  compute: (data) -> data
-class Lm extends Statistic
-  compute: (data) -> data
-class Box extends Statistic
-  compute: (data) -> data
+groupByFunc = (group) ->
+  (item) ->
+    concat = (memo, g) -> "#{memo}#{g}:#{item[g]};"
+    _.reduceRight group, concat, ""
+
+# STATS
+statisticFactory = (statSpecs) ->
+  group = statSpecs.group
+  statistics = []
+  _.each statSpecs.stats, (statSpec, key) ->
+    statistics.push singleStatsFunc(key, statSpec, group)
+  (data) ->
+    rep = {}; _.each group, (g) -> rep[g] = data[0][g] # define a representative
+    _.each statistics, (stats) ->
+      stats(data, rep)
+    return rep
+
+singleStatsFunc = (key, statSpec, group) ->
+  name = statSpec.name
+  stat = switch statSpec.stat
+    when 'sum' then stat_sum(key, statSpec, group)
+    when 'count' then stat_count(key, statSpec, group)
+    when 'uniq' then stat_uniq(key, statSpec, group)
+  (data, rep) ->
+    rep[name] = stat _.pluck data, key
+
+stat_sum = (key, spec, group) -> (values) -> _.sum values
+
+stat_count = (key, spec, group) -> (values) -> values.length
+
+stat_uniq = (key, spec, group) -> (values) -> (_.uniq values).length
+
+# GENERAL PROCESSING
 
 extractDataSpec = (layerSpec) -> dataSpec
 
@@ -80,8 +93,11 @@ frontendProcess = (dataSpec, rawData, callback) ->
   # filter
   if dataSpec.filter
     data = _.filter data, filterFactory(dataSpec.filter)
-  # groupby
-  #groupeData = groupby(filterSpec, rawData)
+  # stats
+  if dataSpec.stats
+    groupedData = _.groupBy data, groupByFunc(dataSpec.stats.group)
+    data = _.map groupedData, statisticFactory(dataSpec.stats)
+
 
   # computation
   callback(data)
