@@ -388,12 +388,13 @@
     ];
     spec = {
       stats: {
-        stats: {
-          y: {
+        stats: [
+          {
+            key: 'y',
             stat: 'count',
             name: 'count(y)'
           }
-        },
+        ],
         group: ['x']
       }
     };
@@ -411,12 +412,13 @@
     ]);
     spec = {
       stats: {
-        stats: {
-          y: {
+        stats: [
+          {
+            key: 'y',
             stat: 'count',
             name: 'count(y)'
           }
-        },
+        ],
         group: ['x', 'z']
       }
     };
@@ -444,19 +446,20 @@
     ]);
     spec = {
       stats: {
-        stats: {
-          y: {
+        stats: [
+          {
+            key: 'y',
             stat: 'uniq',
             name: 'uniq(y)'
           }
-        },
+        ],
         group: ['x', 'z']
       }
     };
     trans = frontendProcess(spec, data, function(x) {
       return x;
     });
-    return deepEqual(trans, [
+    deepEqual(trans, [
       {
         x: 'A',
         z: 1,
@@ -473,6 +476,48 @@
         x: 'B',
         z: 2,
         'uniq(y)': 1
+      }
+    ]);
+    spec = {
+      stats: {
+        stats: [
+          {
+            key: 'y',
+            stat: 'count',
+            name: 'count(y)'
+          }, {
+            key: 'y',
+            stat: 'uniq',
+            name: 'uniq(y)'
+          }
+        ],
+        group: ['x', 'z']
+      }
+    };
+    trans = frontendProcess(spec, data, function(x) {
+      return x;
+    });
+    return deepEqual(trans, [
+      {
+        x: 'A',
+        z: 1,
+        'uniq(y)': 1,
+        'count(y)': 3
+      }, {
+        x: 'A',
+        z: 2,
+        'uniq(y)': 1,
+        'count(y)': 3
+      }, {
+        x: 'B',
+        z: 1,
+        'uniq(y)': 1,
+        'count(y)': 2
+      }, {
+        x: 'B',
+        z: 2,
+        'uniq(y)': 1,
+        'count(y)': 2
       }
     ]);
   });

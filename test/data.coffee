@@ -155,8 +155,9 @@ test "statistics - sum", ->
   ]
   spec =
     stats:
-      stats:
-        y: stat: 'count', name: 'count(y)'
+      stats: [
+        key: 'y', stat: 'count', name: 'count(y)'
+      ]
       group: ['x']
   trans = frontendProcess spec, data, (x) -> x
   deepEqual trans, [
@@ -166,8 +167,9 @@ test "statistics - sum", ->
 
   spec =
     stats:
-      stats:
-        y: stat: 'count', name: 'count(y)'
+      stats: [
+        key: 'y', stat: 'count', name: 'count(y)'
+      ]
       group: ['x', 'z']
   trans = frontendProcess spec, data, (x) -> x
   deepEqual trans, [
@@ -179,8 +181,9 @@ test "statistics - sum", ->
 
   spec =
     stats:
-      stats:
-        y: stat: 'uniq', name: 'uniq(y)'
+      stats: [
+        key: 'y', stat: 'uniq', name: 'uniq(y)'
+      ],
       group: ['x', 'z']
   trans = frontendProcess spec, data, (x) -> x
   deepEqual trans, [
@@ -188,5 +191,20 @@ test "statistics - sum", ->
       {x: 'A', z:2, 'uniq(y)': 1}
       {x: 'B', z:1, 'uniq(y)': 1}
       {x: 'B', z:2, 'uniq(y)': 1}
+    ]
+
+  spec =
+    stats:
+      stats: [
+        {key: 'y', stat: 'count', name: 'count(y)'}
+        {key: 'y', stat: 'uniq', name: 'uniq(y)'}
+      ]
+      group: ['x', 'z']
+  trans = frontendProcess spec, data, (x) -> x
+  deepEqual trans, [
+      {x: 'A', z:1, 'uniq(y)': 1, 'count(y)':3}
+      {x: 'A', z:2, 'uniq(y)': 1, 'count(y)':3}
+      {x: 'B', z:1, 'uniq(y)': 1, 'count(y)':2}
+      {x: 'B', z:2, 'uniq(y)': 1, 'count(y)':2}
     ]
 

@@ -1,5 +1,5 @@
 (function() {
-  var Data, backendProcess, constraintFunc, extractDataSpec, filterFactory, frontendProcess, groupByFunc, processData, singleStatsFunc, stat_count, stat_sum, stat_uniq, statisticFactory, trans_bin, trans_lag, transformFactory,
+  var Data, backendProcess, extractDataSpec, filterFactory, filters, frontendProcess, groupByFunc, processData, statisticFactory, statistics, transformFactory, transforms,
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   Data = (function() {
@@ -13,41 +13,53 @@
 
   })();
 
-  trans_bin = function(key, transSpec) {
-    var binwidth, name;
-    name = transSpec.name;
-    binwidth = transSpec.binwidth;
-    if (_.isNumber(binwidth)) {
+  transforms = {
+    'bin': function(key, transSpec) {
+      var binwidth, name;
+      name = transSpec.name, binwidth = transSpec.binwidth;
+      if (_.isNumber(binwidth)) {
+        return function(item) {
+          return item[name] = binwidth * Math.floor(item[key] / binwidth);
+        };
+      }
+    },
+    'lag': function(key, transSpec) {
+      var i, lag, lastn, name;
+      name = transSpec.name, lag = transSpec.lag;
+      lastn = (function() {
+        var _results;
+        _results = [];
+        for (i = 1; 1 <= lag ? i <= lag : i >= lag; 1 <= lag ? i++ : i--) {
+          _results.push(void 0);
+        }
+        return _results;
+      })();
       return function(item) {
-        return item[name] = binwidth * Math.floor(item[key] / binwidth);
+        lastn.push(item[key]);
+        return item[name] = lastn.shift();
       };
     }
   };
 
-  trans_lag = function(key, transSpec) {
-    var i, lag, lastn, name;
-    name = transSpec.name;
-    lag = transSpec.lag;
-    lastn = (function() {
-      var _results;
-      _results = [];
-      for (i = 1; 1 <= lag ? i <= lag : i >= lag; 1 <= lag ? i++ : i--) {
-        _results.push(void 0);
-      }
-      return _results;
-    })();
-    return function(item) {
-      lastn.push(item[key]);
-      return item[name] = lastn.shift();
-    };
+  transformFactory = function(key, transSpec) {
+    return transforms[transSpec.trans](key, transSpec);
   };
 
-  transformFactory = function(key, transSpec) {
-    switch (transSpec.trans) {
-      case "bin":
-        return trans_bin(key, transSpec);
-      case "lag":
-        return trans_lag(key, transSpec);
+  filters = {
+    'lt': function(x, value) {
+      return x < value;
+    },
+    'le': function(x, value) {
+      return x <= value;
+    },
+    'gt': function(x, value) {
+      return x > value;
+    },
+    'ge': function(x, value) {
+      return x >= value;
+    },
+    'in': function(x, value) {
+      return __indexOf.call(value, x) >= 0;
     }
   };
 
@@ -56,7 +68,11 @@
     filterFuncs = [];
     _.each(filterSpec, function(spec, key) {
       return _.each(spec, function(value, predicate) {
-        return filterFuncs.push(constraintFunc(predicate, value, key));
+        var filter;
+        filter = function(item) {
+          return filters[predicate](item[key], value);
+        };
+        return filterFuncs.push(filter);
       });
     });
     return function(item) {
@@ -69,32 +85,6 @@
     };
   };
 
-  constraintFunc = function(predicate, value, key) {
-    switch (predicate) {
-      case 'lt':
-        return function(x) {
-          return x[key] < value;
-        };
-      case 'le':
-        return function(x) {
-          return x[key] <= value;
-        };
-      case 'gt':
-        return function(x) {
-          return x[key] > value;
-        };
-      case 'ge':
-        return function(x) {
-          return x[key] >= value;
-        };
-      case 'in':
-        return function(x) {
-          var _ref;
-          return _ref = x[key], __indexOf.call(value, _ref) >= 0;
-        };
-    }
-  };
-
   groupByFunc = function(group) {
     return function(item) {
       var concat;
@@ -105,12 +95,35 @@
     };
   };
 
+  statistics = {
+    sum: function(spec) {
+      return function(values) {
+        return _.sum(values);
+      };
+    },
+    count: function(spec) {
+      return function(values) {
+        return values.length;
+      };
+    },
+    uniq: function(spec) {
+      return function(values) {
+        return (_.uniq(values)).length;
+      };
+    }
+  };
+
   statisticFactory = function(statSpecs) {
-    var group, statistics;
+    var group, statFuncs;
     group = statSpecs.group;
-    statistics = [];
-    _.each(statSpecs.stats, function(statSpec, key) {
-      return statistics.push(singleStatsFunc(key, statSpec, group));
+    statFuncs = {};
+    _.each(statSpecs.stats, function(statSpec) {
+      var key, name, stat, statFn;
+      stat = statSpec.stat, key = statSpec.key, name = statSpec.name;
+      statFn = statistics[stat](statSpec);
+      return statFuncs[name] = function(data) {
+        return statFn(_.pluck(data, key));
+      };
     });
     return function(data) {
       var rep;
@@ -118,46 +131,10 @@
       _.each(group, function(g) {
         return rep[g] = data[0][g];
       });
-      _.each(statistics, function(stats) {
-        return stats(data, rep);
+      _.each(statFuncs, function(stats, name) {
+        return rep[name] = stats(data);
       });
       return rep;
-    };
-  };
-
-  singleStatsFunc = function(key, statSpec, group) {
-    var name, stat;
-    name = statSpec.name;
-    stat = (function() {
-      switch (statSpec.stat) {
-        case 'sum':
-          return stat_sum(key, statSpec, group);
-        case 'count':
-          return stat_count(key, statSpec, group);
-        case 'uniq':
-          return stat_uniq(key, statSpec, group);
-      }
-    })();
-    return function(data, rep) {
-      return rep[name] = stat(_.pluck(data, key));
-    };
-  };
-
-  stat_sum = function(key, spec, group) {
-    return function(values) {
-      return _.sum(values);
-    };
-  };
-
-  stat_count = function(key, spec, group) {
-    return function(values) {
-      return values.length;
-    };
-  };
-
-  stat_uniq = function(key, spec, group) {
-    return function(values) {
-      return (_.uniq(values)).length;
     };
   };
 
