@@ -4,41 +4,47 @@ class Data
     {@url, @json} = params
     @frontEnd = !!@url
 
-class Transform
-  constructor: (key, transSpec) ->
-    @key = key
-    @name = transSpec.name
-    @transSpec = transSpec
-    @mutate = @getMutateFunction()
-  getMutateFunction: () =>
-
-class Bin extends Transform
-  getMutateFunction: () =>
-    @binwidth = @transSpec.binwidth
-    if _.isNumber @binwidth
-      return (item) ->
-        item[@name] = @binwidth * Math.floor item[@key]/@binwidth
-
-class Lag extends Transform
-  getMutateFunction: () =>
-    @lag = @transSpec.lag
-    @lastn = (undefined for i in [1..@lag])
+# TRANFORMS
+trans_bin = (key, transSpec) ->
+  name = transSpec.name
+  binwidth = transSpec.binwidth
+  if _.isNumber binwidth
     return (item) ->
-      @lastn.push(item[@key])
-      item[@name] = @lastn.shift()
+      item[name] = binwidth * Math.floor item[key]/binwidth
 
-transformFactory = (key,transSpec) ->
+trans_lag = (key, transSpec) ->
+  name = transSpec.name
+  lag = transSpec.lag
+  lastn = (undefined for i in [1..lag])
+  return (item) ->
+    lastn.push(item[key])
+    item[name] = lastn.shift()
+
+transformFactory = (key, transSpec) ->
   switch transSpec.trans
-    when "bin" then return new Bin(key, transSpec)
-    when "lag" then return new Lag(key, transSpec)
+    when "bin" then return trans_bin(key, transSpec)
+    when "lag" then return trans_lag(key, transSpec)
 
+# FILTERS
 filterFactory = (filterSpec) ->
-  idontknow
-class Filter #singleton
-  constructor: (filterSpec) ->
-    @filterSpec = filterSpec
-  mutate: (data) -> data
+  filterFuncs = []
+  _.each filterSpec, (spec, key) ->
+    _.each spec, (value, predicate) ->
+      filterFuncs.push constraintFunc predicate, value, key
+  (item) ->
+    for f in filterFuncs
+      if not f(item) then return false
+    return true
 
+constraintFunc = (predicate, value, key) ->
+  switch predicate
+    when 'lt' then return (x) -> x[key] < value
+    when 'le' then return (x) -> x[key] <= value
+    when 'gt' then return (x) -> x[key] > value
+    when 'ge' then return (x) -> x[key] >= value
+    when 'in' then return (x) -> x[key] in value
+
+# GROUPING
 class Group #singleton
   constructor: (groupSpec) ->
     @groupSepc = groupSpec
@@ -64,21 +70,21 @@ class Box extends Statistic
 extractDataSpec = (layerSpec) -> dataSpec
 
 frontendProcess = (dataSpec, rawData, callback) ->
+  data = _.clone(rawData)
   # transforms
-  _.each dataSpec.trans, (transSpec, key) ->
-    trans = transformFactory(key, transSpec)
-    _.each rawData, (d) ->
-      trans.mutate(d)
-  ###
+  if dataSpec.trans
+    _.each dataSpec.trans, (transSpec, key) ->
+      trans = transformFactory(key, transSpec)
+      _.each data, (d) ->
+        trans(d)
   # filter
-  filter = filterFactory(dataSpec.filter)
-  rawData = filter(rawData)
+  if dataSpec.filter
+    data = _.filter data, filterFactory(dataSpec.filter)
   # groupby
-  groupeData = groupby(filterSpec, rawData)
-  ###
+  #groupeData = groupby(filterSpec, rawData)
 
   # computation
-  callback(rawData)
+  callback(data)
 
 backendProcess = (dataSpec, rawData, callback) ->
   # computation

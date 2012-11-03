@@ -1,6 +1,6 @@
 (function() {
-  var Bin, Box, Count, Data, Filter, Group, Lag, Lm, Mean, Statistic, Sum, Transform, Uniq, backendProcess, extractDataSpec, filterFactory, frontendProcess, processData, transformFactory,
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+  var Box, Count, Data, Group, Lm, Mean, Statistic, Sum, Uniq, backendProcess, constraintFunc, extractDataSpec, filterFactory, frontendProcess, processData, trans_bin, trans_lag, transformFactory,
+    __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -15,99 +15,87 @@
 
   })();
 
-  Transform = (function() {
-
-    function Transform(key, transSpec) {
-      this.getMutateFunction = __bind(this.getMutateFunction, this);      this.key = key;
-      this.name = transSpec.name;
-      this.transSpec = transSpec;
-      this.mutate = this.getMutateFunction();
-    }
-
-    Transform.prototype.getMutateFunction = function() {};
-
-    return Transform;
-
-  })();
-
-  Bin = (function(_super) {
-
-    __extends(Bin, _super);
-
-    function Bin() {
-      this.getMutateFunction = __bind(this.getMutateFunction, this);
-      Bin.__super__.constructor.apply(this, arguments);
-    }
-
-    Bin.prototype.getMutateFunction = function() {
-      this.binwidth = this.transSpec.binwidth;
-      if (_.isNumber(this.binwidth)) {
-        return function(item) {
-          return item[this.name] = this.binwidth * Math.floor(item[this.key] / this.binwidth);
-        };
-      }
-    };
-
-    return Bin;
-
-  })(Transform);
-
-  Lag = (function(_super) {
-
-    __extends(Lag, _super);
-
-    function Lag() {
-      this.getMutateFunction = __bind(this.getMutateFunction, this);
-      Lag.__super__.constructor.apply(this, arguments);
-    }
-
-    Lag.prototype.getMutateFunction = function() {
-      var i;
-      this.lag = this.transSpec.lag;
-      this.lastn = (function() {
-        var _ref, _results;
-        _results = [];
-        for (i = 1, _ref = this.lag; 1 <= _ref ? i <= _ref : i >= _ref; 1 <= _ref ? i++ : i--) {
-          _results.push(void 0);
-        }
-        return _results;
-      }).call(this);
+  trans_bin = function(key, transSpec) {
+    var binwidth, name;
+    name = transSpec.name;
+    binwidth = transSpec.binwidth;
+    if (_.isNumber(binwidth)) {
       return function(item) {
-        this.lastn.push(item[this.key]);
-        return item[this.name] = this.lastn.shift();
+        return item[name] = binwidth * Math.floor(item[key] / binwidth);
       };
+    }
+  };
+
+  trans_lag = function(key, transSpec) {
+    var i, lag, lastn, name;
+    name = transSpec.name;
+    lag = transSpec.lag;
+    lastn = (function() {
+      var _results;
+      _results = [];
+      for (i = 1; 1 <= lag ? i <= lag : i >= lag; 1 <= lag ? i++ : i--) {
+        _results.push(void 0);
+      }
+      return _results;
+    })();
+    return function(item) {
+      lastn.push(item[key]);
+      return item[name] = lastn.shift();
     };
-
-    return Lag;
-
-  })(Transform);
+  };
 
   transformFactory = function(key, transSpec) {
     switch (transSpec.trans) {
       case "bin":
-        return new Bin(key, transSpec);
+        return trans_bin(key, transSpec);
       case "lag":
-        return new Lag(key, transSpec);
+        return trans_lag(key, transSpec);
     }
   };
 
   filterFactory = function(filterSpec) {
-    return idontknow;
+    var filterFuncs;
+    filterFuncs = [];
+    _.each(filterSpec, function(spec, key) {
+      return _.each(spec, function(value, predicate) {
+        return filterFuncs.push(constraintFunc(predicate, value, key));
+      });
+    });
+    return function(item) {
+      var f, _i, _len;
+      for (_i = 0, _len = filterFuncs.length; _i < _len; _i++) {
+        f = filterFuncs[_i];
+        if (!f(item)) return false;
+      }
+      return true;
+    };
   };
 
-  Filter = (function() {
-
-    function Filter(filterSpec) {
-      this.filterSpec = filterSpec;
+  constraintFunc = function(predicate, value, key) {
+    switch (predicate) {
+      case 'lt':
+        return function(x) {
+          return x[key] < value;
+        };
+      case 'le':
+        return function(x) {
+          return x[key] <= value;
+        };
+      case 'gt':
+        return function(x) {
+          return x[key] > value;
+        };
+      case 'ge':
+        return function(x) {
+          return x[key] >= value;
+        };
+      case 'in':
+        return function(x) {
+          var _ref;
+          return _ref = x[key], __indexOf.call(value, _ref) >= 0;
+        };
     }
-
-    Filter.prototype.mutate = function(data) {
-      return data;
-    };
-
-    return Filter;
-
-  })();
+  };
 
   Group = (function() {
 
@@ -238,21 +226,19 @@
   };
 
   frontendProcess = function(dataSpec, rawData, callback) {
-    _.each(dataSpec.trans, function(transSpec, key) {
-      var trans;
-      trans = transformFactory(key, transSpec);
-      return _.each(rawData, function(d) {
-        return trans.mutate(d);
+    var data;
+    data = _.clone(rawData);
+    if (dataSpec.trans) {
+      _.each(dataSpec.trans, function(transSpec, key) {
+        var trans;
+        trans = transformFactory(key, transSpec);
+        return _.each(data, function(d) {
+          return trans(d);
+        });
       });
-    });
-    /*
-      # filter
-      filter = filterFactory(dataSpec.filter)
-      rawData = filter(rawData)
-      # groupby
-      groupeData = groupby(filterSpec, rawData)
-    */
-    return callback(rawData);
+    }
+    if (dataSpec.filter) data = _.filter(data, filterFactory(dataSpec.filter));
+    return callback(data);
   };
 
   backendProcess = function(dataSpec, rawData, callback) {
