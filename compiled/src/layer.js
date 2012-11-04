@@ -1,21 +1,17 @@
 (function() {
-  var Layer, Line, Point, aesthetics, defaults, makeLayer, poly, toStrictMode,
+  var Layer, Line, Point, aesthetics, defaults, makeLayer, poly, sf, toStrictMode,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
   poly = this.poly || {};
 
+  sf = poly.scaleFns;
+
   aesthetics = ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id'];
 
   defaults = {
-    'x': {
-      v: null,
-      f: 'null'
-    },
-    'y': {
-      v: null,
-      f: 'null'
-    },
+    'x': sf.novalue(),
+    'y': sf.novalue(),
     'color': 'steelblue',
     'size': 1,
     'opacity': 0.7,
@@ -68,8 +64,8 @@
 
     Layer.prototype.getValue = function(item, aes) {
       if (this.mapping[aes]) return item[this.mapping[aes]];
-      if (this.consts[aes]) return this.consts[aes];
-      return this.defaults[aes];
+      if (this.consts[aes]) return sf.identity(this.consts[aes]);
+      return sf.identity(this.defaults[aes]);
     };
 
     return Layer;

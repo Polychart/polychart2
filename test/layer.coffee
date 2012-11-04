@@ -16,14 +16,14 @@ test "point", ->
   equal layer.geoms[0].geom.type, 'point'
   equal layer.geoms[0].geom.x, 2
   equal layer.geoms[0].geom.y, 4
-  equal layer.geoms[0].geom.color, layer.defaults.color
+  deepEqual layer.geoms[0].geom.color, poly.scaleFns.identity(layer.defaults.color)
   deepEqual layer.geoms[0].evtData.x.in, [2]
   deepEqual layer.geoms[0].evtData.y.in, [4]
 
   equal layer.geoms[1].geom.type, 'point'
   equal layer.geoms[1].geom.x, 3
   equal layer.geoms[1].geom.y, 3
-  equal layer.geoms[1].geom.color, layer.defaults.color
+  deepEqual layer.geoms[1].geom.color, poly.scaleFns.identity(layer.defaults.color)
   deepEqual layer.geoms[1].evtData.x.in, [3]
   deepEqual layer.geoms[1].evtData.y.in, [3]
 
@@ -45,7 +45,7 @@ test "lines", ->
   equal layer.geoms[0].geom.type, 'line'
   deepEqual layer.geoms[0].geom.x, [2, 3]
   deepEqual layer.geoms[0].geom.y, [4, 3]
-  equal layer.geoms[0].geom.color, layer.defaults.color
+  deepEqual layer.geoms[0].geom.color, poly.scaleFns.identity(layer.defaults.color)
   deepEqual layer.geoms[0].evtData, {}
 
   # one grouping

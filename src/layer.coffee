@@ -1,9 +1,11 @@
 poly = @poly || {}
 
+sf = poly.scaleFns
+
 aesthetics = ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id']
 defaults = {
-  'x': {v: null, f: 'null'}
-  'y': {v: null, f: 'null'}
+  'x': sf.novalue()
+  'y': sf.novalue()
   'color': 'steelblue'
   'size': 1
   'opacity': 0.7
@@ -41,8 +43,8 @@ class Layer
   # helpers
   getValue: (item, aes) ->
     if @mapping[aes] then return item[@mapping[aes]]
-    if @consts[aes] then return @consts[aes]
-    return @defaults[aes]
+    if @consts[aes] then return sf.identity(@consts[aes])
+    return sf.identity(@defaults[aes])
 
 class Point extends Layer
   geomCalc: () ->

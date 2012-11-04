@@ -17,6 +17,53 @@
 
 }).call(this);
 (function() {
+  var poly;
+
+  poly = this.poly || {};
+
+  poly.scaleFns = {
+    novalue: function() {
+      return {
+        v: null,
+        f: 'novalue'
+      };
+    },
+    upper: function(v) {
+      return {
+        v: v,
+        f: 'upper'
+      };
+    },
+    lower: function(v) {
+      return {
+        v: v,
+        f: 'lower'
+      };
+    },
+    middle: function(v) {
+      return {
+        v: v,
+        f: 'middle'
+      };
+    },
+    jitter: function(v) {
+      return {
+        v: v,
+        f: 'jitter'
+      };
+    },
+    identity: function(v) {
+      return {
+        v: v,
+        f: 'identity'
+      };
+    }
+  };
+
+  this.poly = poly;
+
+}).call(this);
+(function() {
   var Data, backendProcess, calculateMeta, extractDataSpec, filterFactory, filters, frontendProcess, poly, processData, statisticFactory, statistics, transformFactory, transforms,
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -303,23 +350,19 @@
 
 }).call(this);
 (function() {
-  var Layer, Line, Point, aesthetics, defaults, makeLayer, poly, toStrictMode,
+  var Layer, Line, Point, aesthetics, defaults, makeLayer, poly, sf, toStrictMode,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
   poly = this.poly || {};
 
+  sf = poly.scaleFns;
+
   aesthetics = ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id'];
 
   defaults = {
-    'x': {
-      v: null,
-      f: 'null'
-    },
-    'y': {
-      v: null,
-      f: 'null'
-    },
+    'x': sf.novalue(),
+    'y': sf.novalue(),
     'color': 'steelblue',
     'size': 1,
     'opacity': 0.7,
@@ -372,8 +415,8 @@
 
     Layer.prototype.getValue = function(item, aes) {
       if (this.mapping[aes]) return item[this.mapping[aes]];
-      if (this.consts[aes]) return this.consts[aes];
-      return this.defaults[aes];
+      if (this.consts[aes]) return sf.identity(this.consts[aes]);
+      return sf.identity(this.defaults[aes]);
     };
 
     return Layer;
@@ -493,6 +536,53 @@
   poly.layer = {
     toStrictMode: toStrictMode,
     makeLayer: makeLayer
+  };
+
+  this.poly = poly;
+
+}).call(this);
+(function() {
+  var poly;
+
+  poly = this.poly || {};
+
+  poly.scaleFns = {
+    novalue: function() {
+      return {
+        v: null,
+        f: 'novalue'
+      };
+    },
+    upper: function(v) {
+      return {
+        v: v,
+        f: 'upper'
+      };
+    },
+    lower: function(v) {
+      return {
+        v: v,
+        f: 'lower'
+      };
+    },
+    middle: function(v) {
+      return {
+        v: v,
+        f: 'middle'
+      };
+    },
+    jitter: function(v) {
+      return {
+        v: v,
+        f: 'jitter'
+      };
+    },
+    identity: function(v) {
+      return {
+        v: v,
+        f: 'identity'
+      };
+    }
   };
 
   this.poly = poly;
