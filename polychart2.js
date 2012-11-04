@@ -303,7 +303,7 @@
 
 }).call(this);
 (function() {
-  var Layer, Point, aesthetics, defaults, makeLayer, mark_circle, poly, toStrictMode,
+  var Layer, Line, Point, aesthetics, defaults, makeLayer, poly, toStrictMode,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -389,48 +389,104 @@
     }
 
     Point.prototype.geomCalc = function() {
-      var getGeom,
-        _this = this;
-      getGeom = mark_circle(this);
+      var _this = this;
       return this.geoms = _.map(this.postcalc, function(item) {
+        var evtData;
+        evtData = {};
+        _.each(item, function(v, k) {
+          return evtData[k] = {
+            "in": [v]
+          };
+        });
         return {
-          geom: getGeom(item),
-          evtData: _this.getEvtData(item)
+          geom: {
+            type: 'point',
+            x: _this.getValue(item, 'x'),
+            y: _this.getValue(item, 'y'),
+            color: _this.getValue(item, 'color')
+          },
+          evtData: evtData
         };
       });
-    };
-
-    Point.prototype.getEvtData = function(item) {
-      var evtData;
-      evtData = {};
-      _.each(item, function(v, k) {
-        return evtData[k] = {
-          "in": [v]
-        };
-      });
-      return evtData;
     };
 
     return Point;
 
   })(Layer);
 
-  mark_circle = function(layer) {
-    return function(item) {
-      return {
-        type: 'point',
-        x: layer.getValue(item, 'x'),
-        y: layer.getValue(item, 'y'),
-        color: layer.getValue(item, 'color'),
-        color: layer.getValue(item, 'color')
-      };
+  Line = (function(_super) {
+
+    __extends(Line, _super);
+
+    function Line() {
+      Line.__super__.constructor.apply(this, arguments);
+    }
+
+    Line.prototype.layerDataCalc = function() {
+      this.ys = this.mapping['y'] ? _.uniq(_.pluck(this.precalc, this.mapping['y'])) : [];
+      return this.postcalc = this.precalc;
     };
-  };
+
+    Line.prototype.geomCalc = function() {
+      var datas, group, k,
+        _this = this;
+      group = (function() {
+        var _i, _len, _ref, _results;
+        _ref = _.difference(_.keys(this.mapping), ['x', 'y']);
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          k = _ref[_i];
+          _results.push(this.mapping[k]);
+        }
+        return _results;
+      }).call(this);
+      datas = poly.groupBy(this.postcalc, group);
+      return this.geoms = _.map(datas, function(data) {
+        var evtData, item;
+        evtData = {};
+        _.each(group, function(key) {
+          return evtData[key] = {
+            "in": [data[0][key]]
+          };
+        });
+        return {
+          geom: {
+            type: 'line',
+            x: (function() {
+              var _i, _len, _results;
+              _results = [];
+              for (_i = 0, _len = data.length; _i < _len; _i++) {
+                item = data[_i];
+                _results.push(this.getValue(item, 'x'));
+              }
+              return _results;
+            }).call(_this),
+            y: (function() {
+              var _i, _len, _results;
+              _results = [];
+              for (_i = 0, _len = data.length; _i < _len; _i++) {
+                item = data[_i];
+                _results.push(this.getValue(item, 'y'));
+              }
+              return _results;
+            }).call(_this),
+            color: _this.getValue(data[0], 'color')
+          },
+          evtData: evtData
+        };
+      });
+    };
+
+    return Line;
+
+  })(Layer);
 
   makeLayer = function(layerSpec, statData) {
     switch (layerSpec.type) {
       case 'point':
         return new Point(layerSpec, statData);
+      case 'line':
+        return new Line(layerSpec, statData);
     }
   };
 

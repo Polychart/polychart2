@@ -11,9 +11,10 @@ defaults = {
 }
 
 toStrictMode = (spec) ->
+  # wrap aes mapping defined by a string with an object
   _.each aesthetics, (aes) ->
     if spec[aes] and _.isString spec[aes] then spec[aes] = { var: spec[aes] }
-  spec
+  return spec
 
 class Layer
   constructor: (layerSpec, statData) ->
@@ -45,27 +46,40 @@ class Layer
 
 class Point extends Layer
   geomCalc: () ->
-    getGeom = mark_circle @
     @geoms = _.map @postcalc, (item) =>
-      geom: getGeom item
-      evtData: @getEvtData item
-  getEvtData: (item) ->
-    evtData = {}
-    _.each item, (v, k) ->
-      evtData[k] = { in : [v] }
-    evtData
+      evtData = {}
+      _.each item, (v, k) ->
+        evtData[k] = { in : [v] }
+      geom:
+        type: 'point'
+        x: @getValue item, 'x'
+        y: @getValue item, 'y'
+        color: @getValue item, 'color'
+      evtData: evtData
 
-mark_circle = (layer) ->
-  (item) ->
-    type: 'point'
-    x: layer.getValue item, 'x'
-    y: layer.getValue item, 'y'
-    color: layer.getValue item, 'color'
-    color: layer.getValue item, 'color'
+class Line extends Layer
+  layerDataCalc: () ->
+    @ys = if @mapping['y'] then _.uniq _.pluck @precalc, @mapping['y'] else []
+    # TODO: fill in missing points
+    @postcalc = @precalc
+  geomCalc: () ->
+    group = (@mapping[k] for k in _.difference(_.keys(@mapping), ['x', 'y']))
+    datas = poly.groupBy @postcalc, group
+    @geoms = _.map datas, (data) =>
+      evtData = {}
+      _.each group, (key) ->
+        evtData[key] = { in : [data[0][key]] }
+      geom:
+        type: 'line'
+        x: (@getValue item, 'x' for item in data)
+        y: (@getValue item, 'y' for item in data)
+        color: @getValue data[0], 'color'
+      evtData: evtData
 
 makeLayer = (layerSpec, statData) ->
   switch layerSpec.type
     when 'point' then return new Point(layerSpec, statData)
+    when 'line' then return new Line(layerSpec, statData)
 
 poly.layer =
   toStrictMode : toStrictMode
