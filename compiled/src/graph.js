@@ -15,7 +15,7 @@
   })();
 
   poly.chart = function(spec) {
-    var guides, layers;
+    var guides, layers, ticks;
     if (spec.strict == null) spec.strict = false;
     layers = [];
     if (spec.layers == null) spec.layers = [];
@@ -30,13 +30,19 @@
       return poly.data.processData(layerSpec.data, layerSpec, spec.strict, callback);
     });
     guides = {};
+    ticks = {};
     if (spec.guides) {
       if (spec.guides == null) spec.guides = {};
       guides = poly.guide.makeGuides(layers, spec.guides, spec.strict);
     }
+    _.each(guides, function(domain, aes) {
+      var _ref;
+      return ticks[aes] = poly.guide.makeTicks(domain, (_ref = spec.guides[aes]) != null ? _ref : []);
+    });
     return {
       layers: layers,
-      guides: guides
+      guides: guides,
+      ticks: ticks
     };
   };
 

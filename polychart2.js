@@ -411,7 +411,7 @@
   })();
 
   poly.chart = function(spec) {
-    var guides, layers;
+    var guides, layers, ticks;
     if (spec.strict == null) spec.strict = false;
     layers = [];
     if (spec.layers == null) spec.layers = [];
@@ -426,13 +426,19 @@
       return poly.data.processData(layerSpec.data, layerSpec, spec.strict, callback);
     });
     guides = {};
+    ticks = {};
     if (spec.guides) {
       if (spec.guides == null) spec.guides = {};
       guides = poly.guide.makeGuides(layers, spec.guides, spec.strict);
     }
+    _.each(guides, function(domain, aes) {
+      var _ref;
+      return ticks[aes] = poly.guide.makeTicks(domain, (_ref = spec.guides[aes]) != null ? _ref : []);
+    });
     return {
       layers: layers,
-      guides: guides
+      guides: guides,
+      ticks: ticks
     };
   };
 
@@ -440,7 +446,7 @@
 
 }).call(this);
 (function() {
-  var CategoricalDomain, DateDomain, NumericDomain, aesthetics, makeDomain, makeDomainSet, makeGuides, mergeDomainSets, mergeDomains, poly;
+  var CategoricalDomain, DateDomain, NumericDomain, Tick, aesthetics, domainMerge, makeDomain, makeDomainSet, makeGuides, makeTicks, mergeDomainSets, mergeDomains, poly, tickFactory, tickValues;
 
   poly = this.poly || {};
 
@@ -516,18 +522,14 @@
     }
   };
 
-  mergeDomains = function(domains) {
-    var bw, levels, max, min, sortedLevels, types, unsortedLevels;
-    types = _.uniq(_.map(domains, function(d) {
-      return d.type;
-    }));
-    if (types.length > 1) console.log('wtf');
-    if (types[0] === 'num' || types[0] === 'date') {
+  domainMerge = {
+    'num': function(domains) {
+      var bw, max, min, _ref;
       bw = _.uniq(_.map(domains, function(d) {
         return d.bw;
       }));
       if (bw.length > 1) console.log('wtf');
-      bw = bw[0] != null ? bw[0] : void 0;
+      bw = (_ref = bw[0]) != null ? _ref : void 0;
       min = _.min(_.map(domains, function(d) {
         return d.min;
       }));
@@ -535,13 +537,14 @@
         return d.max;
       }));
       return makeDomain({
-        type: types[0],
+        type: 'num',
         min: min,
         max: max,
         bw: bw
       });
-    }
-    if (types[0] === 'cat') {
+    },
+    'cat': function(domains) {
+      var levels, sortedLevels, unsortedLevels;
       sortedLevels = _.chain(domains).filter(function(d) {
         return d.sorted;
       }).map(function(d) {
@@ -552,7 +555,6 @@
       }).map(function(d) {
         return d.levels;
       }).value();
-      debugger;
       if (sortedLevels.length > 0 && _.intersection.apply(this, sortedLevels)) {
         console.log('wtf');
       }
@@ -566,8 +568,90 @@
     }
   };
 
+  mergeDomains = function(domains) {
+    var types;
+    types = _.uniq(_.map(domains, function(d) {
+      return d.type;
+    }));
+    if (types.length > 1) console.log('wtf');
+    return domainMerge[types[0]](domains);
+  };
+
+  Tick = (function() {
+
+    function Tick(params) {
+      this.location = params.location, this.value = params.value;
+    }
+
+    return Tick;
+
+  })();
+
+  tickFactory = function(scale, formatter) {
+    return function(value) {
+      return new Tick({
+        location: scale(value),
+        value: formatter(value)
+      });
+    };
+  };
+
+  tickValues = {
+    'cat': function(domain, numticks) {
+      return domain.levels;
+    },
+    'num': function(domain, numticks) {
+      var error, max, min, span, step, ticks, tmp;
+      min = domain.min, max = domain.max;
+      span = max - min;
+      step = Math.pow(10, Math.floor(Math.log(span / numticks) / Math.LN10));
+      error = numticks / span * step;
+      if (error < 0.15) {
+        step *= 10;
+      } else if (error <= 0.35) {
+        step *= 5;
+      } else if (error <= 0.75) {
+        step *= 2;
+      }
+      tmp = Math.ceil(min / step) * step;
+      ticks = [];
+      while (tmp < max) {
+        ticks.push(tmp);
+        tmp += step;
+      }
+      return ticks;
+    },
+    'num-log': function(domain, numticks) {
+      return 2;
+    },
+    'date': function(domain, numticks) {
+      return 2;
+    }
+  };
+
+  makeTicks = function(domain, guideSpec, range, scale) {
+    var formatter, ticks, _ref, _ref2;
+    ticks = (_ref = guideSpec.ticks) != null ? _ref : tickValues[domain.type](domain, (_ref2 = guideSpec.numticks) != null ? _ref2 : 5);
+    scale = scale || function(x) {
+      return x;
+    };
+    formatter = function(x) {
+      return x;
+    };
+    if (guideSpec.labels) {
+      formatter = function(x) {
+        var _ref3;
+        return (_ref3 = guideSpec.labels[x]) != null ? _ref3 : x;
+      };
+    } else if (guideSpec.formatter) {
+      formatter = guideSpec.formatter;
+    }
+    return ticks = _.map(ticks, tickFactory(scale, formatter));
+  };
+
   poly.guide = {
-    makeGuides: makeGuides
+    makeGuides: makeGuides,
+    makeTicks: makeTicks
   };
 
   this.poly = poly;

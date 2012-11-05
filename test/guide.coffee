@@ -1,7 +1,7 @@
 module "Guides"
 
 jsondata= [
-  {x: 2, y: 4},
+  {x: 2, y: 1},
   {x: 3, y: 3}
 ]
 data = new poly.Data (json: jsondata)
@@ -13,8 +13,8 @@ test "domain: strict mode num & cat", ->
     strict: true
     guides:
       x: { type: 'num', min: 2, max: 4, bw : 3 }
-      y: { type: 'cat', levels: [1,2,3]}
-  {guides} = poly.chart spec
+      y: { type: 'cat', levels: [1,2,3], labels: {1: 'One', 2: 'Five'} }
+  {guides, ticks} = poly.chart spec
   equal guides.x.type, 'num'
   equal guides.x.min , 2
   equal guides.x.max, 4
@@ -22,3 +22,7 @@ test "domain: strict mode num & cat", ->
   equal guides.y.type, 'cat'
   deepEqual guides.y.levels, [1,2,3]
   equal guides.y.sorted, true
+
+  deepEqual _.pluck(ticks.x, 'location'), [2, 2.5, 3, 3.5]
+  deepEqual _.pluck(ticks.y, 'location'), [1, 2, 3]
+  deepEqual _.pluck(ticks.y, 'value'), ['One', 'Five', 3]

@@ -6,7 +6,7 @@
   jsondata = [
     {
       x: 2,
-      y: 4
+      y: 1
     }, {
       x: 3,
       y: 3
@@ -25,7 +25,7 @@
   };
 
   test("domain: strict mode num & cat", function() {
-    var guides, spec;
+    var guides, spec, ticks, _ref;
     spec = {
       layers: [sampleLayer],
       strict: true,
@@ -38,18 +38,25 @@
         },
         y: {
           type: 'cat',
-          levels: [1, 2, 3]
+          levels: [1, 2, 3],
+          labels: {
+            1: 'One',
+            2: 'Five'
+          }
         }
       }
     };
-    guides = poly.chart(spec).guides;
+    _ref = poly.chart(spec), guides = _ref.guides, ticks = _ref.ticks;
     equal(guides.x.type, 'num');
     equal(guides.x.min, 2);
     equal(guides.x.max, 4);
     equal(guides.x.bw, 3);
     equal(guides.y.type, 'cat');
     deepEqual(guides.y.levels, [1, 2, 3]);
-    return equal(guides.y.sorted, true);
+    equal(guides.y.sorted, true);
+    deepEqual(_.pluck(ticks.x, 'location'), [2, 2.5, 3, 3.5]);
+    deepEqual(_.pluck(ticks.y, 'location'), [1, 2, 3]);
+    return deepEqual(_.pluck(ticks.y, 'value'), ['One', 'Five', 3]);
   });
 
 }).call(this);
