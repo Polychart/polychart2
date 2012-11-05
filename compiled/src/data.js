@@ -17,16 +17,23 @@
 
   transforms = {
     'bin': function(key, transSpec) {
-      var binwidth, name;
+      var binFn, binwidth, name;
       name = transSpec.name, binwidth = transSpec.binwidth;
       if (_.isNumber(binwidth)) {
-        return function(item) {
+        binFn = function(item) {
           return item[name] = binwidth * Math.floor(item[key] / binwidth);
+        };
+        return {
+          trans: binFn,
+          meta: {
+            bw: binwidth,
+            binned: true
+          }
         };
       }
     },
     'lag': function(key, transSpec) {
-      var i, lag, lastn, name;
+      var i, lag, lagFn, lastn, name;
       name = transSpec.name, lag = transSpec.lag;
       lastn = (function() {
         var _results;
@@ -36,9 +43,13 @@
         }
         return _results;
       })();
-      return function(item) {
+      lagFn = function(item) {
         lastn.push(item[key]);
         return item[name] = lastn.shift();
+      };
+      return {
+        trans: lagFn,
+        meta: void 0
       };
     }
   };
@@ -172,16 +183,21 @@
   };
 
   frontendProcess = function(dataSpec, rawData, callback) {
-    var additionalFilter, data, groupedData, metaData;
+    var addMeta, additionalFilter, data, groupedData, metaData;
     data = _.clone(rawData);
     metaData = {};
+    addMeta = function(key, meta) {
+      if (metaData[key] == null) metaData[key] = {};
+      return _.extend(metaData[key], meta);
+    };
     if (dataSpec.trans) {
       _.each(dataSpec.trans, function(transSpec, key) {
-        var trans;
-        trans = transformFactory(key, transSpec);
-        return _.each(data, function(d) {
+        var meta, trans, _ref;
+        _ref = transformFactory(key, transSpec), trans = _ref.trans, meta = _ref.meta;
+        _.each(data, function(d) {
           return trans(d);
         });
+        return addMeta(transSpec.name, meta);
       });
     }
     if (dataSpec.filter) data = _.filter(data, filterFactory(dataSpec.filter));
@@ -190,8 +206,8 @@
       _.each(dataSpec.meta, function(metaSpec, key) {
         var filter, meta, _ref;
         _ref = calculateMeta(key, metaSpec, data), meta = _ref.meta, filter = _ref.filter;
-        metaData[key] = meta;
-        return additionalFilter[key] = filter;
+        additionalFilter[key] = filter;
+        return addMeta(key, meta);
       });
       data = _.filter(data, filterFactory(additionalFilter));
     }

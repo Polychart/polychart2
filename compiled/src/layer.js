@@ -1,5 +1,5 @@
 (function() {
-  var Layer, Line, Point, aesthetics, defaults, makeLayer, poly, sf, toStrictMode,
+  var Bar, Layer, Line, Point, aesthetics, defaults, makeLayer, poly, sf, toStrictMode,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -31,7 +31,7 @@
 
   Layer = (function() {
 
-    function Layer(layerSpec, statData) {
+    function Layer(layerSpec, statData, metaData) {
       var aes, _i, _len;
       this.spec = toStrictMode(layerSpec);
       this.mapping = {};
@@ -46,6 +46,7 @@
       this.defaults = defaults;
       this.precalc = statData;
       this.postcalc = null;
+      this.meta = metaData;
       this.geoms = null;
     }
 
@@ -91,12 +92,14 @@
           };
         });
         return {
-          geom: {
-            type: 'point',
-            x: _this.getValue(item, 'x'),
-            y: _this.getValue(item, 'y'),
-            color: _this.getValue(item, 'color')
-          },
+          geoms: [
+            {
+              type: 'point',
+              x: _this.getValue(item, 'x'),
+              y: _this.getValue(item, 'y'),
+              color: _this.getValue(item, 'color')
+            }
+          ],
           evtData: evtData
         };
       });
@@ -116,7 +119,7 @@
 
     Line.prototype.layerDataCalc = function() {
       this.ys = this.mapping['y'] ? _.uniq(_.pluck(this.precalc, this.mapping['y'])) : [];
-      return this.postcalc = this.precalc;
+      return this.postcalc = _.clone(this.precalc);
     };
 
     Line.prototype.geomCalc = function() {
@@ -142,28 +145,30 @@
           };
         });
         return {
-          geom: {
-            type: 'line',
-            x: (function() {
-              var _i, _len, _results;
-              _results = [];
-              for (_i = 0, _len = data.length; _i < _len; _i++) {
-                item = data[_i];
-                _results.push(this.getValue(item, 'x'));
-              }
-              return _results;
-            }).call(_this),
-            y: (function() {
-              var _i, _len, _results;
-              _results = [];
-              for (_i = 0, _len = data.length; _i < _len; _i++) {
-                item = data[_i];
-                _results.push(this.getValue(item, 'y'));
-              }
-              return _results;
-            }).call(_this),
-            color: _this.getValue(data[0], 'color')
-          },
+          geoms: [
+            {
+              type: 'line',
+              x: (function() {
+                var _i, _len, _results;
+                _results = [];
+                for (_i = 0, _len = data.length; _i < _len; _i++) {
+                  item = data[_i];
+                  _results.push(this.getValue(item, 'x'));
+                }
+                return _results;
+              }).call(_this),
+              y: (function() {
+                var _i, _len, _results;
+                _results = [];
+                for (_i = 0, _len = data.length; _i < _len; _i++) {
+                  item = data[_i];
+                  _results.push(this.getValue(item, 'y'));
+                }
+                return _results;
+              }).call(_this),
+              color: _this.getValue(data[0], 'color')
+            }
+          ],
           evtData: evtData
         };
       });
@@ -173,12 +178,75 @@
 
   })(Layer);
 
+  Bar = (function(_super) {
+
+    __extends(Bar, _super);
+
+    function Bar() {
+      Bar.__super__.constructor.apply(this, arguments);
+    }
+
+    Bar.prototype.layerDataCalc = function() {
+      var datas, group,
+        _this = this;
+      this.postcalc = _.clone(this.precalc);
+      group = this.mapping.x != null ? [this.mapping.x] : [];
+      datas = poly.groupBy(this.postcalc, group);
+      return _.each(datas, function(data) {
+        var tmp, yval;
+        tmp = 0;
+        yval = _this.mapping.y != null ? (function(item) {
+          return item[_this.mapping.y];
+        }) : function(item) {
+          return 0;
+        };
+        return _.each(data, function(item) {
+          item.$lower = tmp;
+          tmp += yval(item);
+          return item.$upper = tmp;
+        });
+      });
+    };
+
+    Bar.prototype.geomCalc = function() {
+      var _this = this;
+      return this.geoms = _.map(this.postcalc, function(item) {
+        var evtData;
+        evtData = {};
+        _.each(item, function(v, k) {
+          if (k !== 'y') {
+            return evtData[k] = {
+              "in": [v]
+            };
+          }
+        });
+        return {
+          geoms: [
+            {
+              type: 'rect',
+              x1: sf.lower(_this.getValue(item, 'x')),
+              x2: sf.upper(_this.getValue(item, 'x')),
+              y1: item.$lower,
+              y2: item.$upper,
+              fill: _this.getValue(item, 'color')
+            }
+          ]
+        };
+      });
+    };
+
+    return Bar;
+
+  })(Layer);
+
   makeLayer = function(layerSpec, statData) {
     switch (layerSpec.type) {
       case 'point':
         return new Point(layerSpec, statData);
       case 'line':
         return new Line(layerSpec, statData);
+      case 'bar':
+        return new Bar(layerSpec, statData);
     }
   };
 

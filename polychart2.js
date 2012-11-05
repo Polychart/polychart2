@@ -25,37 +25,43 @@
     novalue: function() {
       return {
         v: null,
-        f: 'novalue'
+        f: 'novalue',
+        t: 'scalefn'
       };
     },
     upper: function(v) {
       return {
         v: v,
-        f: 'upper'
+        f: 'upper',
+        t: 'scalefn'
       };
     },
     lower: function(v) {
       return {
         v: v,
-        f: 'lower'
+        f: 'lower',
+        t: 'scalefn'
       };
     },
     middle: function(v) {
       return {
         v: v,
-        f: 'middle'
+        f: 'middle',
+        t: 'scalefn'
       };
     },
     jitter: function(v) {
       return {
         v: v,
-        f: 'jitter'
+        f: 'jitter',
+        t: 'scalefn'
       };
     },
     identity: function(v) {
       return {
         v: v,
-        f: 'identity'
+        f: 'identity',
+        t: 'scalefn'
       };
     }
   };
@@ -82,16 +88,23 @@
 
   transforms = {
     'bin': function(key, transSpec) {
-      var binwidth, name;
+      var binFn, binwidth, name;
       name = transSpec.name, binwidth = transSpec.binwidth;
       if (_.isNumber(binwidth)) {
-        return function(item) {
+        binFn = function(item) {
           return item[name] = binwidth * Math.floor(item[key] / binwidth);
+        };
+        return {
+          trans: binFn,
+          meta: {
+            bw: binwidth,
+            binned: true
+          }
         };
       }
     },
     'lag': function(key, transSpec) {
-      var i, lag, lastn, name;
+      var i, lag, lagFn, lastn, name;
       name = transSpec.name, lag = transSpec.lag;
       lastn = (function() {
         var _results;
@@ -101,9 +114,13 @@
         }
         return _results;
       })();
-      return function(item) {
+      lagFn = function(item) {
         lastn.push(item[key]);
         return item[name] = lastn.shift();
+      };
+      return {
+        trans: lagFn,
+        meta: void 0
       };
     }
   };
@@ -237,16 +254,21 @@
   };
 
   frontendProcess = function(dataSpec, rawData, callback) {
-    var additionalFilter, data, groupedData, metaData;
+    var addMeta, additionalFilter, data, groupedData, metaData;
     data = _.clone(rawData);
     metaData = {};
+    addMeta = function(key, meta) {
+      if (metaData[key] == null) metaData[key] = {};
+      return _.extend(metaData[key], meta);
+    };
     if (dataSpec.trans) {
       _.each(dataSpec.trans, function(transSpec, key) {
-        var trans;
-        trans = transformFactory(key, transSpec);
-        return _.each(data, function(d) {
+        var meta, trans, _ref;
+        _ref = transformFactory(key, transSpec), trans = _ref.trans, meta = _ref.meta;
+        _.each(data, function(d) {
           return trans(d);
         });
+        return addMeta(transSpec.name, meta);
       });
     }
     if (dataSpec.filter) data = _.filter(data, filterFactory(dataSpec.filter));
@@ -255,8 +277,8 @@
       _.each(dataSpec.meta, function(metaSpec, key) {
         var filter, meta, _ref;
         _ref = calculateMeta(key, metaSpec, data), meta = _ref.meta, filter = _ref.filter;
-        metaData[key] = meta;
-        return additionalFilter[key] = filter;
+        additionalFilter[key] = filter;
+        return addMeta(key, meta);
       });
       data = _.filter(data, filterFactory(additionalFilter));
     }
@@ -330,9 +352,9 @@
     layers = [];
     spec.layers = spec.layers || [];
     _.each(spec.layers, function(layerSpec) {
-      return poly.data.processData(layerSpec.data, layerSpec, function(statData, meta) {
+      return poly.data.processData(layerSpec.data, layerSpec, function(statData, metaData) {
         var layerObj;
-        layerObj = poly.layer.makeLayer(layerSpec, statData);
+        layerObj = poly.layer.makeLayer(layerSpec, statData, metaData);
         layerObj.calculate();
         return layers.push(layerObj);
       });
@@ -350,7 +372,7 @@
 
 }).call(this);
 (function() {
-  var Layer, Line, Point, aesthetics, defaults, makeLayer, poly, sf, toStrictMode,
+  var Bar, Layer, Line, Point, aesthetics, defaults, makeLayer, poly, sf, toStrictMode,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -382,7 +404,7 @@
 
   Layer = (function() {
 
-    function Layer(layerSpec, statData) {
+    function Layer(layerSpec, statData, metaData) {
       var aes, _i, _len;
       this.spec = toStrictMode(layerSpec);
       this.mapping = {};
@@ -397,6 +419,7 @@
       this.defaults = defaults;
       this.precalc = statData;
       this.postcalc = null;
+      this.meta = metaData;
       this.geoms = null;
     }
 
@@ -442,12 +465,14 @@
           };
         });
         return {
-          geom: {
-            type: 'point',
-            x: _this.getValue(item, 'x'),
-            y: _this.getValue(item, 'y'),
-            color: _this.getValue(item, 'color')
-          },
+          geoms: [
+            {
+              type: 'point',
+              x: _this.getValue(item, 'x'),
+              y: _this.getValue(item, 'y'),
+              color: _this.getValue(item, 'color')
+            }
+          ],
           evtData: evtData
         };
       });
@@ -467,7 +492,7 @@
 
     Line.prototype.layerDataCalc = function() {
       this.ys = this.mapping['y'] ? _.uniq(_.pluck(this.precalc, this.mapping['y'])) : [];
-      return this.postcalc = this.precalc;
+      return this.postcalc = _.clone(this.precalc);
     };
 
     Line.prototype.geomCalc = function() {
@@ -493,28 +518,30 @@
           };
         });
         return {
-          geom: {
-            type: 'line',
-            x: (function() {
-              var _i, _len, _results;
-              _results = [];
-              for (_i = 0, _len = data.length; _i < _len; _i++) {
-                item = data[_i];
-                _results.push(this.getValue(item, 'x'));
-              }
-              return _results;
-            }).call(_this),
-            y: (function() {
-              var _i, _len, _results;
-              _results = [];
-              for (_i = 0, _len = data.length; _i < _len; _i++) {
-                item = data[_i];
-                _results.push(this.getValue(item, 'y'));
-              }
-              return _results;
-            }).call(_this),
-            color: _this.getValue(data[0], 'color')
-          },
+          geoms: [
+            {
+              type: 'line',
+              x: (function() {
+                var _i, _len, _results;
+                _results = [];
+                for (_i = 0, _len = data.length; _i < _len; _i++) {
+                  item = data[_i];
+                  _results.push(this.getValue(item, 'x'));
+                }
+                return _results;
+              }).call(_this),
+              y: (function() {
+                var _i, _len, _results;
+                _results = [];
+                for (_i = 0, _len = data.length; _i < _len; _i++) {
+                  item = data[_i];
+                  _results.push(this.getValue(item, 'y'));
+                }
+                return _results;
+              }).call(_this),
+              color: _this.getValue(data[0], 'color')
+            }
+          ],
           evtData: evtData
         };
       });
@@ -524,12 +551,75 @@
 
   })(Layer);
 
+  Bar = (function(_super) {
+
+    __extends(Bar, _super);
+
+    function Bar() {
+      Bar.__super__.constructor.apply(this, arguments);
+    }
+
+    Bar.prototype.layerDataCalc = function() {
+      var datas, group,
+        _this = this;
+      this.postcalc = _.clone(this.precalc);
+      group = this.mapping.x != null ? [this.mapping.x] : [];
+      datas = poly.groupBy(this.postcalc, group);
+      return _.each(datas, function(data) {
+        var tmp, yval;
+        tmp = 0;
+        yval = _this.mapping.y != null ? (function(item) {
+          return item[_this.mapping.y];
+        }) : function(item) {
+          return 0;
+        };
+        return _.each(data, function(item) {
+          item.$lower = tmp;
+          tmp += yval(item);
+          return item.$upper = tmp;
+        });
+      });
+    };
+
+    Bar.prototype.geomCalc = function() {
+      var _this = this;
+      return this.geoms = _.map(this.postcalc, function(item) {
+        var evtData;
+        evtData = {};
+        _.each(item, function(v, k) {
+          if (k !== 'y') {
+            return evtData[k] = {
+              "in": [v]
+            };
+          }
+        });
+        return {
+          geoms: [
+            {
+              type: 'rect',
+              x1: sf.lower(_this.getValue(item, 'x')),
+              x2: sf.upper(_this.getValue(item, 'x')),
+              y1: item.$lower,
+              y2: item.$upper,
+              fill: _this.getValue(item, 'color')
+            }
+          ]
+        };
+      });
+    };
+
+    return Bar;
+
+  })(Layer);
+
   makeLayer = function(layerSpec, statData) {
     switch (layerSpec.type) {
       case 'point':
         return new Point(layerSpec, statData);
       case 'line':
         return new Line(layerSpec, statData);
+      case 'bar':
+        return new Bar(layerSpec, statData);
     }
   };
 
@@ -550,37 +640,43 @@
     novalue: function() {
       return {
         v: null,
-        f: 'novalue'
+        f: 'novalue',
+        t: 'scalefn'
       };
     },
     upper: function(v) {
       return {
         v: v,
-        f: 'upper'
+        f: 'upper',
+        t: 'scalefn'
       };
     },
     lower: function(v) {
       return {
         v: v,
-        f: 'lower'
+        f: 'lower',
+        t: 'scalefn'
       };
     },
     middle: function(v) {
       return {
         v: v,
-        f: 'middle'
+        f: 'middle',
+        t: 'scalefn'
       };
     },
     jitter: function(v) {
       return {
         v: v,
-        f: 'jitter'
+        f: 'jitter',
+        t: 'scalefn'
       };
     },
     identity: function(v) {
       return {
         v: v,
-        f: 'identity'
+        f: 'identity',
+        t: 'scalefn'
       };
     }
   };

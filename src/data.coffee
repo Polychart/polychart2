@@ -10,14 +10,16 @@ transforms =
   'bin' : (key, transSpec) ->
     {name, binwidth} = transSpec
     if _.isNumber binwidth
-      return (item) ->
+      binFn = (item) ->
         item[name] = binwidth * Math.floor item[key]/binwidth
+      return trans: binFn, meta: {bw: binwidth, binned: true}
   'lag' : (key, transSpec) ->
     {name, lag} = transSpec
     lastn = (undefined for i in [1..lag])
-    return (item) ->
+    lagFn = (item) ->
       lastn.push(item[key])
       item[name] = lastn.shift()
+    return trans: lagFn, meta:undefined
 
 transformFactory = (key, transSpec) ->
   transforms[transSpec.trans](key, transSpec)
@@ -97,13 +99,17 @@ extractDataSpec = (layerSpec) -> {}
 frontendProcess = (dataSpec, rawData, callback) ->
   # TODO add metadata computation to binning
   data = _.clone(rawData)
+  # metaData and related f'ns
   metaData = {}
+  addMeta = (key, meta) ->
+    metaData[key] ?= {}
+    _.extend metaData[key], meta
   # transforms
   if dataSpec.trans
-    _.each dataSpec.trans, (transSpec, key) -> #the spec here should be like stats
-      trans = transformFactory(key, transSpec)
-      _.each data, (d) ->
-        trans(d)
+    _.each dataSpec.trans, (transSpec, key) ->
+      {trans, meta} = transformFactory(key, transSpec)
+      _.each data, (d) -> trans(d)
+      addMeta transSpec.name, meta
   # filter
   if dataSpec.filter
     data = _.filter data, filterFactory(dataSpec.filter)
@@ -112,10 +118,9 @@ frontendProcess = (dataSpec, rawData, callback) ->
     additionalFilter = {}
     _.each dataSpec.meta, (metaSpec, key) ->
       {meta, filter} = calculateMeta(key, metaSpec, data)
-      metaData[key] = meta
       additionalFilter[key] = filter
+      addMeta key, meta
     data = _.filter data, filterFactory(additionalFilter)
-
   # stats
   if dataSpec.stats
     groupedData = poly.groupBy data, dataSpec.stats.group
@@ -127,7 +132,7 @@ backendProcess = (dataSpec, rawData, callback) ->
   # computation
   console.log 'backendProcess'
 
-processData = (dataObj, layerSpec, callback) ->
+processData = (dataObj, layerSpec, mode, callback) ->
   dataSpec = extractDataSpec(layerSpec)
   if dataObj.frontEnd
     frontendProcess(dataSpec, dataObj.json, callback)

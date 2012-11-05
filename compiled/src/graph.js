@@ -19,9 +19,9 @@
     layers = [];
     spec.layers = spec.layers || [];
     _.each(spec.layers, function(layerSpec) {
-      return poly.data.processData(layerSpec.data, layerSpec, function(statData, meta) {
+      return poly.data.processData(layerSpec.data, layerSpec, function(statData, metaData) {
         var layerObj;
-        layerObj = poly.layer.makeLayer(layerSpec, statData);
+        layerObj = poly.layer.makeLayer(layerSpec, statData, metaData);
         layerObj.calculate();
         return layers.push(layerObj);
       });

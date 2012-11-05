@@ -6,19 +6,23 @@ class Graph
     graphSpec = spec
 
 poly.chart = (spec) ->
+  # modes
+  spec.strict ?= false
   # data and layer calculation
   layers = []
-  spec.layers = spec.layers || []
+  spec.layers ?= []
   _.each spec.layers, (layerSpec) ->
-    poly.data.processData layerSpec.data, layerSpec, (statData, meta) ->
-      layerObj = poly.layer.makeLayer layerSpec, statData
+    poly.data.processData layerSpec.data,
+                          layerSpec,
+                          spec.strict,
+                          (statData, metaData) ->
+      layerObj = poly.layer.makeLayer layerSpec, statData, metaData
       layerObj.calculate()
       layers.push layerObj
-  return layers
-  ###
+
   # domain calculation and guide merging
-  _.each layers (layerObj) ->
-    makeGuides layerObj
+  spec.guide ?= []
+  poly.guide.makeGuides layers, spec.guide
   mergeGuides
   ###
 @poly = poly

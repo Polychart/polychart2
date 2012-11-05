@@ -7,37 +7,43 @@
     novalue: function() {
       return {
         v: null,
-        f: 'novalue'
+        f: 'novalue',
+        t: 'scalefn'
       };
     },
     upper: function(v) {
       return {
         v: v,
-        f: 'upper'
+        f: 'upper',
+        t: 'scalefn'
       };
     },
     lower: function(v) {
       return {
         v: v,
-        f: 'lower'
+        f: 'lower',
+        t: 'scalefn'
       };
     },
     middle: function(v) {
       return {
         v: v,
-        f: 'middle'
+        f: 'middle',
+        t: 'scalefn'
       };
     },
     jitter: function(v) {
       return {
         v: v,
-        f: 'jitter'
+        f: 'jitter',
+        t: 'scalefn'
       };
     },
     identity: function(v) {
       return {
         v: v,
-        f: 'identity'
+        f: 'identity',
+        t: 'scalefn'
       };
     }
   };
