@@ -127,7 +127,7 @@
         _this = this;
       group = (function() {
         var _i, _len, _ref, _results;
-        _ref = _.difference(_.keys(this.mapping), ['x', 'y']);
+        _ref = _.without(_.keys(this.mapping), 'x', 'y');
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           k = _ref[_i];

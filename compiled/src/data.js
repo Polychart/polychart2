@@ -101,13 +101,9 @@
   statistics = {
     sum: function(spec) {
       return function(values) {
-        var memo, v, _i, _len;
-        memo = 0;
-        for (_i = 0, _len = values.length; _i < _len; _i++) {
-          v = values[_i];
-          memo += v;
-        }
-        return memo;
+        return _.reduce(values, (function(v, m) {
+          return v + m;
+        }), 0);
       };
     },
     count: function(spec) {

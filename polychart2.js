@@ -231,13 +231,9 @@
   statistics = {
     sum: function(spec) {
       return function(values) {
-        var memo, v, _i, _len;
-        memo = 0;
-        for (_i = 0, _len = values.length; _i < _len; _i++) {
-          v = values[_i];
-          memo += v;
-        }
-        return memo;
+        return _.reduce(values, (function(v, m) {
+          return v + m;
+        }), 0);
       };
     },
     count: function(spec) {
@@ -706,7 +702,7 @@
         _this = this;
       group = (function() {
         var _i, _len, _ref, _results;
-        _ref = _.difference(_.keys(this.mapping), ['x', 'y']);
+        _ref = _.without(_.keys(this.mapping), 'x', 'y');
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           k = _ref[_i];

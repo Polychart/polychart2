@@ -35,10 +35,10 @@ class Layer
     @meta = metaData
     # geoms
     @geoms = null
+  # calculation related
   calculate: () ->
     @layerDataCalc()
     @geomCalc()
-  # calculators
   layerDataCalc: () -> @postcalc = @precalc
   geomCalc: () -> @geoms = {}
   # helpers
@@ -67,7 +67,7 @@ class Line extends Layer
     # TODO: fill in missing points
     @postcalc = _.clone @precalc
   geomCalc: () ->
-    group = (@mapping[k] for k in _.difference(_.keys(@mapping), ['x', 'y']))
+    group = (@mapping[k] for k in _.without(_.keys(@mapping), 'x', 'y'))
     datas = poly.groupBy @postcalc, group
     @geoms = _.map datas, (data) =>
       evtData = {}

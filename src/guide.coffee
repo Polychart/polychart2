@@ -8,6 +8,8 @@ makeGuides = (layers, guideSpec, strictmode) ->
     domainSets.push makeDomainSet layerObj, guideSpec, strictmode
   mergeDomainSets domainSets
 
+# DOMAIN CREATION AND MERGING
+
 makeDomainSet = (layerObj, guideSpec, strictmode) ->
   domain = {}
   _.each _.keys(layerObj.mapping), (aes) ->
@@ -29,7 +31,6 @@ class DateDomain
   constructor: (params) -> {@type, @min, @max, @bw} = params
 class CategoricalDomain
   constructor: (params) -> {@type, @levels, @sorted} = params
-
 makeDomain = (params) ->
   switch params.type
     when 'num' then return new NumericDomain(params)

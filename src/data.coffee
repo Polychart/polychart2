@@ -47,13 +47,8 @@ filterFactory = (filterSpec) ->
 # STATS
 
 statistics =
-  sum : (spec) -> (values) ->
-    memo = 0
-    for v in values
-      memo += v
-    return memo
-  count : (spec) -> (values) ->
-    return values.length
+  sum : (spec) -> (values) -> _.reduce(values, ((v, m) -> v + m), 0)
+  count : (spec) -> (values) -> values.length
   uniq : (spec) -> (values) -> (_.uniq values).length
 
 statisticFactory = (statSpecs) ->
