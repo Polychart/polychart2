@@ -1,5 +1,5 @@
 (function() {
-  var CategoricalDomain, DateDomain, NumericDomain, Tick, aesthetics, domainMerge, makeDomain, makeDomainSet, makeGuides, makeTicks, mergeDomainSets, mergeDomains, poly, tickFactory, tickValues;
+  var CategoricalDomain, DateDomain, NumericDomain, Tick, aesthetics, domainMerge, getStep, makeDomain, makeDomainSet, makeGuides, makeTicks, mergeDomainSets, mergeDomains, poly, tickFactory, tickValues;
 
   poly = this.poly || {};
 
@@ -149,23 +149,28 @@
     };
   };
 
+  getStep = function(span, numticks) {
+    var error, step;
+    step = Math.pow(10, Math.floor(Math.log(span / numticks) / Math.LN10));
+    error = numticks / span * step;
+    if (error < 0.15) {
+      step *= 10;
+    } else if (error <= 0.35) {
+      step *= 5;
+    } else if (error <= 0.75) {
+      step *= 2;
+    }
+    return step;
+  };
+
   tickValues = {
     'cat': function(domain, numticks) {
       return domain.levels;
     },
     'num': function(domain, numticks) {
-      var error, max, min, span, step, ticks, tmp;
+      var max, min, step, ticks, tmp;
       min = domain.min, max = domain.max;
-      span = max - min;
-      step = Math.pow(10, Math.floor(Math.log(span / numticks) / Math.LN10));
-      error = numticks / span * step;
-      if (error < 0.15) {
-        step *= 10;
-      } else if (error <= 0.35) {
-        step *= 5;
-      } else if (error <= 0.75) {
-        step *= 2;
-      }
+      step = getStep(max - min, numticks);
       tmp = Math.ceil(min / step) * step;
       ticks = [];
       while (tmp < max) {
@@ -175,7 +180,37 @@
       return ticks;
     },
     'num-log': function(domain, numticks) {
-      return 2;
+      var exp, lg, lgmax, lgmin, max, min, num, step, tmp;
+      min = domain.min, max = domain.max;
+      lg = function(v) {
+        return Math.log(v) / Math.LN10;
+      };
+      exp = function(v) {
+        return Math.exp(v * Math.LN10);
+      };
+      lgmin = Math.max(lg(min), 0);
+      lgmax = lg(max);
+      step = getStep(lgmax - lgmin, numticks);
+      tmp = Math.ceil(lgmin / step) * step;
+      while (tmp < (lgmax + poly["const"].epsilon)) {
+        if (tmp % 1 !== 0 && tmp % 1 <= 0.1) {
+          tmp += step;
+          continue;
+        } else if (tmp % 1 > poly["const"].epsilon) {
+          num = Math.floor(tmp) + lg(10 * (tmp % 1));
+          if (num % 1 === 0) {
+            tmp += step;
+            continue;
+          }
+        }
+        num = exp(num);
+        if (num < min || num > max) {
+          tmp += step;
+          continue;
+        }
+        ticks.push(num);
+      }
+      return ticks;
     },
     'date': function(domain, numticks) {
       return 2;
@@ -183,8 +218,17 @@
   };
 
   makeTicks = function(domain, guideSpec, range, scale) {
-    var formatter, ticks, _ref, _ref2;
-    ticks = (_ref = guideSpec.ticks) != null ? _ref : tickValues[domain.type](domain, (_ref2 = guideSpec.numticks) != null ? _ref2 : 5);
+    var formatter, numticks, ticks, _ref;
+    if (guideSpec.ticks != null) {
+      ticks = guideSpec.ticks;
+    } else {
+      numticks = (_ref = guideSpec.numticks) != null ? _ref : 5;
+      if (domain.type === 'num' && guideSpec.transform === 'log') {
+        ticks = tickValues['num-log'](domain, numticks);
+      } else {
+        ticks = tickValues[domain.type](domain, numticks);
+      }
+    }
     scale = scale || function(x) {
       return x;
     };
@@ -193,8 +237,8 @@
     };
     if (guideSpec.labels) {
       formatter = function(x) {
-        var _ref3;
-        return (_ref3 = guideSpec.labels[x]) != null ? _ref3 : x;
+        var _ref2;
+        return (_ref2 = guideSpec.labels[x]) != null ? _ref2 : x;
       };
     } else if (guideSpec.formatter) {
       formatter = guideSpec.formatter;

@@ -9,6 +9,7 @@ poly.const =
     middle: (v) -> {v: v, f: 'middle', t: 'scalefn'}
     jitter: (v) -> {v: v, f: 'jitter', t: 'scalefn'}
     identity: (v) -> {v: v, f: 'identity', t: 'scalefn'}
+  epsilon : Math.pow(10, -7)
 
 
 @poly = poly

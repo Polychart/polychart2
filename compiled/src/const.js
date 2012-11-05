@@ -48,7 +48,8 @@
           t: 'scalefn'
         };
       }
-    }
+    },
+    epsilon: Math.pow(10, -7)
   };
 
   this.poly = poly;
