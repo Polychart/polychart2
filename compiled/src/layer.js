@@ -5,9 +5,9 @@
 
   poly = this.poly || {};
 
-  sf = poly.scaleFns;
+  aesthetics = poly["const"].aes;
 
-  aesthetics = ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id'];
+  sf = poly["const"].scaleFns;
 
   defaults = {
     'x': sf.novalue(),

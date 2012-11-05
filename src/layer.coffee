@@ -1,8 +1,8 @@
 poly = @poly || {}
 
-sf = poly.scaleFns
-
-aesthetics = ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id']
+# constants
+aesthetics = poly.const.aes
+sf = poly.const.scaleFns
 defaults = {
   'x': sf.novalue()
   'y': sf.novalue()

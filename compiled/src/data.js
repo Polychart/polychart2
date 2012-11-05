@@ -222,13 +222,21 @@
     return console.log('backendProcess');
   };
 
-  processData = function(dataObj, layerSpec, callback) {
+  processData = function(dataObj, layerSpec, strictmode, callback) {
     var dataSpec;
     dataSpec = extractDataSpec(layerSpec);
     if (dataObj.frontEnd) {
-      return frontendProcess(dataSpec, dataObj.json, callback);
+      if (strictmode) {
+        return callback(dataObj.json, layerSpec);
+      } else {
+        return frontendProcess(dataSpec, dataObj.json, callback);
+      }
     } else {
-      return backendProcess(dataSpec, dataObj, callback);
+      if (strictmode) {
+        return console.log('wtf, cant use strict mode here');
+      } else {
+        return backendProcess(dataSpec, dataObj, callback);
+      }
     }
   };
 

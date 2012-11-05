@@ -11,18 +11,17 @@ poly.chart = (spec) ->
   # data and layer calculation
   layers = []
   spec.layers ?= []
+
   _.each spec.layers, (layerSpec) ->
-    poly.data.processData layerSpec.data,
-                          layerSpec,
-                          spec.strict,
-                          (statData, metaData) ->
+    callback = (statData, metaData) ->
       layerObj = poly.layer.makeLayer layerSpec, statData, metaData
       layerObj.calculate()
       layers.push layerObj
-
+    poly.data.processData layerSpec.data, layerSpec, spec.strict, callback
   # domain calculation and guide merging
-  spec.guide ?= []
-  poly.guide.makeGuides layers, spec.guide
-  mergeGuides
-  ###
+  guides = {}
+  if spec.guides # for now, skip when guides are not defined
+    spec.guides ?= {}
+    guides = poly.guide.makeGuides layers, spec.guides, spec.strict
+  return layers: layers, guides: guides
 @poly = poly

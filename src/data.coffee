@@ -132,12 +132,18 @@ backendProcess = (dataSpec, rawData, callback) ->
   # computation
   console.log 'backendProcess'
 
-processData = (dataObj, layerSpec, mode, callback) ->
+processData = (dataObj, layerSpec, strictmode, callback) ->
   dataSpec = extractDataSpec(layerSpec)
   if dataObj.frontEnd
-    frontendProcess(dataSpec, dataObj.json, callback)
+    if strictmode
+      callback dataObj.json, layerSpec
+    else
+      frontendProcess(dataSpec, dataObj.json, callback)
   else
-    backendProcess(dataSpec, dataObj, callback)
+    if strictmode
+      console.log 'wtf, cant use strict mode here'
+    else
+      backendProcess(dataSpec, dataObj, callback)
 
 # EXPORT
 poly.Data = Data
