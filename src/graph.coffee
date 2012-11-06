@@ -13,21 +13,29 @@ poly.chart = (spec) ->
   spec.layers ?= []
   _.each spec.layers, (layerSpec) ->
     callback = (statData, metaData) ->
-      layerObj = poly.layer.makeLayer layerSpec, statData, metaData
+      layerObj = poly.layer.make layerSpec, statData, metaData
       layerObj.calculate()
       layers.push layerObj
-    poly.data.processData layerSpec.data, layerSpec, spec.strict, callback
+    poly.data.process layerSpec.data, layerSpec, spec.strict, callback
   # domain calculation and guide merging
-  guides = {}
+  domains = {}
   ticks = {}
   if spec.guides # for now, skip when guides are not defined
     spec.guides ?= {}
-    guides = poly.guide.makeGuides layers, spec.guides, spec.strict
+    domains = poly.domain.make layers, spec.guides, spec.strict
 
   # tick calculation
-  _.each guides, (domain, aes) ->
-    ticks[aes] = poly.guide.makeTicks(domain, spec.guides[aes] ? [])
+  _.each domains, (domain, aes) ->
+    ticks[aes] = poly.tick.make(domain, spec.guides[aes] ? [])
 
-  return layers: layers, guides: guides, ticks: ticks
+  # dimension calculation
+  dims = poly.dim.make(spec, ticks)
+
+  # scale creation
+  scales = poly.scale.make(spec.guide, domains, dims)
+
+  # rendering
+
+  return layers: layers, guides: domains, ticks: ticks, dims: dims, scales: scales
 
 @poly = poly

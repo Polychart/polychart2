@@ -131,10 +131,14 @@
 
 }).call(this);
 (function() {
-  var Data, backendProcess, calculateMeta, extractDataSpec, filterFactory, filters, frontendProcess, poly, processData, statisticFactory, statistics, transformFactory, transforms,
+  var Data, backendProcess, calculateMeta, extractDataSpec, filterFactory, filters, frontendProcess, poly, statisticFactory, statistics, transformFactory, transforms,
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   poly = this.poly || {};
+
+  /*
+  # GLOBALS
+  */
 
   Data = (function() {
 
@@ -146,6 +150,32 @@
     return Data;
 
   })();
+
+  poly.Data = Data;
+
+  poly.data = {};
+
+  poly.data.process = function(dataObj, layerSpec, strictmode, callback) {
+    var dataSpec;
+    dataSpec = extractDataSpec(layerSpec);
+    if (dataObj.frontEnd) {
+      if (strictmode) {
+        return callback(dataObj.json, layerSpec);
+      } else {
+        return frontendProcess(dataSpec, dataObj.json, callback);
+      }
+    } else {
+      if (strictmode) {
+        return console.log('wtf, cant use strict mode here');
+      } else {
+        return backendProcess(dataSpec, dataObj, callback);
+      }
+    }
+  };
+
+  /*
+  # TRANSFORMS
+  */
 
   transforms = {
     'bin': function(key, transSpec) {
@@ -190,6 +220,10 @@
     return transforms[transSpec.trans](key, transSpec);
   };
 
+  /*
+  # FILTERS
+  */
+
   filters = {
     'lt': function(x, value) {
       return x < value;
@@ -229,6 +263,10 @@
       return true;
     };
   };
+
+  /*
+  # STATS
+  */
 
   statistics = {
     sum: function(spec) {
@@ -275,6 +313,10 @@
     };
   };
 
+  /*
+  # META
+  */
+
   calculateMeta = function(key, metaSpec, data) {
     var asc, comparator, groupedData, limit, multiplier, sort, stat, statSpec, values;
     sort = metaSpec.sort, stat = metaSpec.stat, limit = metaSpec.limit, asc = metaSpec.asc;
@@ -305,6 +347,10 @@
       }
     };
   };
+
+  /*
+  # GENERAL PROCESSING
+  */
 
   extractDataSpec = function(layerSpec) {
     return {};
@@ -350,111 +396,74 @@
     return console.log('backendProcess');
   };
 
-  processData = function(dataObj, layerSpec, strictmode, callback) {
-    var dataSpec;
-    dataSpec = extractDataSpec(layerSpec);
-    if (dataObj.frontEnd) {
-      if (strictmode) {
-        return callback(dataObj.json, layerSpec);
-      } else {
-        return frontendProcess(dataSpec, dataObj.json, callback);
-      }
-    } else {
-      if (strictmode) {
-        return console.log('wtf, cant use strict mode here');
-      } else {
-        return backendProcess(dataSpec, dataObj, callback);
-      }
-    }
-  };
+  /*
+  # DEBUG
+  */
 
-  poly.Data = Data;
+  poly.data.frontendProcess = frontendProcess;
 
-  poly.data = {
-    frontendProcess: frontendProcess,
-    processData: processData
-  };
+  /*
+  # EXPORT
+  */
 
   this.poly = poly;
 
 }).call(this);
 (function() {
-  var NotImplemented,
-    __hasProp = Object.prototype.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
-
-  NotImplemented = (function(_super) {
-
-    __extends(NotImplemented, _super);
-
-    function NotImplemented() {
-      NotImplemented.__super__.constructor.apply(this, arguments);
-    }
-
-    return NotImplemented;
-
-  })(Error);
-
-}).call(this);
-(function() {
-  var Graph, poly;
+  var poly;
 
   poly = this.poly || {};
 
-  Graph = (function() {
+  /*
+  # GLOBALS
+  */
 
-    function Graph(spec) {
-      var graphSpec;
-      graphSpec = spec;
-    }
+  poly.dim = {};
 
-    return Graph;
-
-  })();
-
-  poly.chart = function(spec) {
-    var guides, layers, ticks;
-    if (spec.strict == null) spec.strict = false;
-    layers = [];
-    if (spec.layers == null) spec.layers = [];
-    _.each(spec.layers, function(layerSpec) {
-      var callback;
-      callback = function(statData, metaData) {
-        var layerObj;
-        layerObj = poly.layer.makeLayer(layerSpec, statData, metaData);
-        layerObj.calculate();
-        return layers.push(layerObj);
-      };
-      return poly.data.processData(layerSpec.data, layerSpec, spec.strict, callback);
-    });
-    guides = {};
-    ticks = {};
-    if (spec.guides) {
-      if (spec.guides == null) spec.guides = {};
-      guides = poly.guide.makeGuides(layers, spec.guides, spec.strict);
-    }
-    _.each(guides, function(domain, aes) {
-      var _ref;
-      return ticks[aes] = poly.guide.makeTicks(domain, (_ref = spec.guides[aes]) != null ? _ref : []);
-    });
+  poly.dim.make = function(spec, ticks) {
     return {
-      layers: layers,
-      guides: guides,
-      ticks: ticks
+      chartWidth: 300,
+      chartHeight: 300,
+      paddingLeft: 10,
+      paddingRight: 10,
+      paddingTop: 10,
+      paddingBottom: 10,
+      guideLeft: 10,
+      guideRight: 10,
+      guideTop: 10,
+      guideBottom: 10
     };
   };
 
+  /*
+  # CLASSES
+  */
+
+  /*
+  # EXPORT
+  */
+
   this.poly = poly;
 
 }).call(this);
 (function() {
-  var CategoricalDomain, DateDomain, NumericDomain, Tick, aesthetics, domainMerge, getStep, makeDomain, makeDomainSet, makeGuides, makeTicks, mergeDomainSets, mergeDomains, poly, tickFactory, tickValues;
+  var CategoricalDomain, DateDomain, NumericDomain, aesthetics, domainMerge, makeDomain, makeDomainSet, mergeDomainSets, mergeDomains, poly;
 
   poly = this.poly || {};
 
+  /*
+  # CONSTANTS
+  */
+
   aesthetics = poly["const"].aes;
 
-  makeGuides = function(layers, guideSpec, strictmode) {
+  /*
+  # GLOBALS
+  */
+
+  poly.domain = {};
+
+  poly.domain.make = function(layers, guideSpec, strictmode) {
     var domainSets;
     domainSets = [];
     _.each(layers, function(layerObj) {
@@ -463,25 +472,9 @@
     return mergeDomainSets(domainSets);
   };
 
-  makeDomainSet = function(layerObj, guideSpec, strictmode) {
-    var domain;
-    domain = {};
-    _.each(_.keys(layerObj.mapping), function(aes) {
-      if (strictmode) return domain[aes] = makeDomain(guideSpec[aes]);
-    });
-    return domain;
-  };
-
-  mergeDomainSets = function(domainSets) {
-    var merged;
-    merged = {};
-    _.each(aesthetics, function(aes) {
-      var domains;
-      domains = _.without(_.pluck(domainSets, aes), void 0);
-      if (domains.length > 0) return merged[aes] = mergeDomains(domains);
-    });
-    return merged;
-  };
+  /*
+  # CLASSES & HELPER
+  */
 
   NumericDomain = (function() {
 
@@ -522,6 +515,26 @@
       case 'cat':
         return new CategoricalDomain(params);
     }
+  };
+
+  makeDomainSet = function(layerObj, guideSpec, strictmode) {
+    var domain;
+    domain = {};
+    _.each(_.keys(layerObj.mapping), function(aes) {
+      if (strictmode) return domain[aes] = makeDomain(guideSpec[aes]);
+    });
+    return domain;
+  };
+
+  mergeDomainSets = function(domainSets) {
+    var merged;
+    merged = {};
+    _.each(aesthetics, function(aes) {
+      var domains;
+      domains = _.without(_.pluck(domainSets, aes), void 0);
+      if (domains.length > 0) return merged[aes] = mergeDomains(domains);
+    });
+    return merged;
   };
 
   domainMerge = {
@@ -579,136 +592,96 @@
     return domainMerge[types[0]](domains);
   };
 
-  Tick = (function() {
+  /*
+  # EXPORT
+  */
 
-    function Tick(params) {
-      this.location = params.location, this.value = params.value;
+  this.poly = poly;
+
+}).call(this);
+(function() {
+  var NotImplemented,
+    __hasProp = Object.prototype.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
+
+  NotImplemented = (function(_super) {
+
+    __extends(NotImplemented, _super);
+
+    function NotImplemented() {
+      NotImplemented.__super__.constructor.apply(this, arguments);
     }
 
-    return Tick;
+    return NotImplemented;
+
+  })(Error);
+
+}).call(this);
+(function() {
+  var Graph, poly;
+
+  poly = this.poly || {};
+
+  Graph = (function() {
+
+    function Graph(spec) {
+      var graphSpec;
+      graphSpec = spec;
+    }
+
+    return Graph;
 
   })();
 
-  tickFactory = function(scale, formatter) {
-    return function(value) {
-      return new Tick({
-        location: scale(value),
-        value: formatter(value)
-      });
-    };
-  };
-
-  getStep = function(span, numticks) {
-    var error, step;
-    step = Math.pow(10, Math.floor(Math.log(span / numticks) / Math.LN10));
-    error = numticks / span * step;
-    if (error < 0.15) {
-      step *= 10;
-    } else if (error <= 0.35) {
-      step *= 5;
-    } else if (error <= 0.75) {
-      step *= 2;
-    }
-    return step;
-  };
-
-  tickValues = {
-    'cat': function(domain, numticks) {
-      return domain.levels;
-    },
-    'num': function(domain, numticks) {
-      var max, min, step, ticks, tmp;
-      min = domain.min, max = domain.max;
-      step = getStep(max - min, numticks);
-      tmp = Math.ceil(min / step) * step;
-      ticks = [];
-      while (tmp < max) {
-        ticks.push(tmp);
-        tmp += step;
-      }
-      return ticks;
-    },
-    'num-log': function(domain, numticks) {
-      var exp, lg, lgmax, lgmin, max, min, num, step, tmp;
-      min = domain.min, max = domain.max;
-      lg = function(v) {
-        return Math.log(v) / Math.LN10;
+  poly.chart = function(spec) {
+    var dims, domains, layers, scales, ticks;
+    if (spec.strict == null) spec.strict = false;
+    layers = [];
+    if (spec.layers == null) spec.layers = [];
+    _.each(spec.layers, function(layerSpec) {
+      var callback;
+      callback = function(statData, metaData) {
+        var layerObj;
+        layerObj = poly.layer.make(layerSpec, statData, metaData);
+        layerObj.calculate();
+        return layers.push(layerObj);
       };
-      exp = function(v) {
-        return Math.exp(v * Math.LN10);
-      };
-      lgmin = Math.max(lg(min), 0);
-      lgmax = lg(max);
-      step = getStep(lgmax - lgmin, numticks);
-      tmp = Math.ceil(lgmin / step) * step;
-      while (tmp < (lgmax + poly["const"].epsilon)) {
-        if (tmp % 1 !== 0 && tmp % 1 <= 0.1) {
-          tmp += step;
-          continue;
-        } else if (tmp % 1 > poly["const"].epsilon) {
-          num = Math.floor(tmp) + lg(10 * (tmp % 1));
-          if (num % 1 === 0) {
-            tmp += step;
-            continue;
-          }
-        }
-        num = exp(num);
-        if (num < min || num > max) {
-          tmp += step;
-          continue;
-        }
-        ticks.push(num);
-      }
-      return ticks;
-    },
-    'date': function(domain, numticks) {
-      return 2;
+      return poly.data.process(layerSpec.data, layerSpec, spec.strict, callback);
+    });
+    domains = {};
+    ticks = {};
+    if (spec.guides) {
+      if (spec.guides == null) spec.guides = {};
+      domains = poly.domain.make(layers, spec.guides, spec.strict);
     }
-  };
-
-  makeTicks = function(domain, guideSpec, range, scale) {
-    var formatter, numticks, ticks, _ref;
-    if (guideSpec.ticks != null) {
-      ticks = guideSpec.ticks;
-    } else {
-      numticks = (_ref = guideSpec.numticks) != null ? _ref : 5;
-      if (domain.type === 'num' && guideSpec.transform === 'log') {
-        ticks = tickValues['num-log'](domain, numticks);
-      } else {
-        ticks = tickValues[domain.type](domain, numticks);
-      }
-    }
-    scale = scale || function(x) {
-      return x;
+    _.each(domains, function(domain, aes) {
+      var _ref;
+      return ticks[aes] = poly.tick.make(domain, (_ref = spec.guides[aes]) != null ? _ref : []);
+    });
+    dims = poly.dim.make(spec, ticks);
+    scales = poly.scale.make(spec.guide, domains, dims);
+    return {
+      layers: layers,
+      guides: domains,
+      ticks: ticks,
+      dims: dims,
+      scales: scales
     };
-    formatter = function(x) {
-      return x;
-    };
-    if (guideSpec.labels) {
-      formatter = function(x) {
-        var _ref2;
-        return (_ref2 = guideSpec.labels[x]) != null ? _ref2 : x;
-      };
-    } else if (guideSpec.formatter) {
-      formatter = guideSpec.formatter;
-    }
-    return ticks = _.map(ticks, tickFactory(scale, formatter));
-  };
-
-  poly.guide = {
-    makeGuides: makeGuides,
-    makeTicks: makeTicks
   };
 
   this.poly = poly;
 
 }).call(this);
 (function() {
-  var Bar, Layer, Line, Point, aesthetics, defaults, makeLayer, poly, sf, toStrictMode,
+  var Bar, Layer, Line, Point, aesthetics, defaults, poly, sf,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
   poly = this.poly || {};
+
+  /*
+  # CONSTANTS
+  */
 
   aesthetics = poly["const"].aes;
 
@@ -723,7 +696,13 @@
     'shape': 1
   };
 
-  toStrictMode = function(spec) {
+  /*
+  # GLOBALS
+  */
+
+  poly.layer = {};
+
+  poly.layer.toStrictMode = function(spec) {
     _.each(aesthetics, function(aes) {
       if (spec[aes] && _.isString(spec[aes])) {
         return spec[aes] = {
@@ -734,11 +713,26 @@
     return spec;
   };
 
+  poly.layer.make = function(layerSpec, statData) {
+    switch (layerSpec.type) {
+      case 'point':
+        return new Point(layerSpec, statData);
+      case 'line':
+        return new Line(layerSpec, statData);
+      case 'bar':
+        return new Bar(layerSpec, statData);
+    }
+  };
+
+  /*
+  # CLASSES
+  */
+
   Layer = (function() {
 
     function Layer(layerSpec, statData, metaData) {
       var aes, _i, _len;
-      this.spec = toStrictMode(layerSpec);
+      this.spec = poly.layer.toStrictMode(layerSpec);
       this.mapping = {};
       this.consts = {};
       for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
@@ -944,21 +938,9 @@
 
   })(Layer);
 
-  makeLayer = function(layerSpec, statData) {
-    switch (layerSpec.type) {
-      case 'point':
-        return new Point(layerSpec, statData);
-      case 'line':
-        return new Line(layerSpec, statData);
-      case 'bar':
-        return new Bar(layerSpec, statData);
-    }
-  };
-
-  poly.layer = {
-    toStrictMode: toStrictMode,
-    makeLayer: makeLayer
-  };
+  /*
+  # EXPORT
+  */
 
   this.poly = poly;
 
@@ -967,6 +949,162 @@
   var poly;
 
   poly = this.poly || {};
+
+  /*
+  # GLOBALS
+  */
+
+  poly.scale = {};
+
+  poly.scale.make = function(guideSpec, domains, dims) {
+    return {};
+  };
+
+  /*
+  # CLASSES
+  */
+
+  /*
+  # EXPORT
+  */
+
+  this.poly = poly;
+
+}).call(this);
+(function() {
+  var Tick, getStep, poly, tickFactory, tickValues;
+
+  poly = this.poly || {};
+
+  /*
+  # GLOBALS
+  */
+
+  poly.tick = {};
+
+  poly.tick.make = function(domain, guideSpec, range, scale) {
+    var formatter, numticks, ticks, _ref;
+    if (guideSpec.ticks != null) {
+      ticks = guideSpec.ticks;
+    } else {
+      numticks = (_ref = guideSpec.numticks) != null ? _ref : 5;
+      if (domain.type === 'num' && guideSpec.transform === 'log') {
+        ticks = tickValues['num-log'](domain, numticks);
+      } else {
+        ticks = tickValues[domain.type](domain, numticks);
+      }
+    }
+    scale = scale || function(x) {
+      return x;
+    };
+    formatter = function(x) {
+      return x;
+    };
+    if (guideSpec.labels) {
+      formatter = function(x) {
+        var _ref2;
+        return (_ref2 = guideSpec.labels[x]) != null ? _ref2 : x;
+      };
+    } else if (guideSpec.formatter) {
+      formatter = guideSpec.formatter;
+    }
+    return ticks = _.map(ticks, tickFactory(scale, formatter));
+  };
+
+  /*
+  # CLASSES & HELPERS
+  */
+
+  Tick = (function() {
+
+    function Tick(params) {
+      this.location = params.location, this.value = params.value;
+    }
+
+    return Tick;
+
+  })();
+
+  tickFactory = function(scale, formatter) {
+    return function(value) {
+      return new Tick({
+        location: scale(value),
+        value: formatter(value)
+      });
+    };
+  };
+
+  getStep = function(span, numticks) {
+    var error, step;
+    step = Math.pow(10, Math.floor(Math.log(span / numticks) / Math.LN10));
+    error = numticks / span * step;
+    if (error < 0.15) {
+      step *= 10;
+    } else if (error <= 0.35) {
+      step *= 5;
+    } else if (error <= 0.75) {
+      step *= 2;
+    }
+    return step;
+  };
+
+  tickValues = {
+    'cat': function(domain, numticks) {
+      return domain.levels;
+    },
+    'num': function(domain, numticks) {
+      var max, min, step, ticks, tmp;
+      min = domain.min, max = domain.max;
+      step = getStep(max - min, numticks);
+      tmp = Math.ceil(min / step) * step;
+      ticks = [];
+      while (tmp < max) {
+        ticks.push(tmp);
+        tmp += step;
+      }
+      return ticks;
+    },
+    'num-log': function(domain, numticks) {
+      var exp, lg, lgmax, lgmin, max, min, num, step, tmp;
+      min = domain.min, max = domain.max;
+      lg = function(v) {
+        return Math.log(v) / Math.LN10;
+      };
+      exp = function(v) {
+        return Math.exp(v * Math.LN10);
+      };
+      lgmin = Math.max(lg(min), 0);
+      lgmax = lg(max);
+      step = getStep(lgmax - lgmin, numticks);
+      tmp = Math.ceil(lgmin / step) * step;
+      while (tmp < (lgmax + poly["const"].epsilon)) {
+        if (tmp % 1 !== 0 && tmp % 1 <= 0.1) {
+          tmp += step;
+          continue;
+        } else if (tmp % 1 > poly["const"].epsilon) {
+          num = Math.floor(tmp) + lg(10 * (tmp % 1));
+          if (num % 1 === 0) {
+            tmp += step;
+            continue;
+          }
+        }
+        num = exp(num);
+        if (num < min || num > max) {
+          tmp += step;
+          continue;
+        }
+        ticks.push(num);
+      }
+      return ticks;
+    },
+    'date': function(domain, numticks) {
+      return 2;
+    }
+  };
+
+  /*
+  # EXPORT
+  */
 
   this.poly = poly;
 

@@ -1,6 +1,8 @@
 poly = @poly || {}
 
-# constants
+###
+# CONSTANTS
+###
 aesthetics = poly.const.aes
 sf = poly.const.scaleFns
 defaults = {
@@ -12,16 +14,30 @@ defaults = {
   'shape': 1
 }
 
-toStrictMode = (spec) ->
-  # wrap aes mapping defined by a string with an object
+###
+# GLOBALS
+###
+poly.layer = {}
+
+# wrap aes mapping defined by a string with an object
+poly.layer.toStrictMode = (spec) ->
   _.each aesthetics, (aes) ->
     if spec[aes] and _.isString spec[aes] then spec[aes] = { var: spec[aes] }
   return spec
 
+poly.layer.make = (layerSpec, statData) ->
+  switch layerSpec.type
+    when 'point' then return new Point(layerSpec, statData)
+    when 'line' then return new Line(layerSpec, statData)
+    when 'bar' then return new Bar(layerSpec, statData)
+
+###
+# CLASSES
+###
 class Layer
   constructor: (layerSpec, statData, metaData) ->
     # spec
-    @spec = toStrictMode layerSpec
+    @spec = poly.layer.toStrictMode layerSpec
     @mapping = {}
     @consts = {}
     for aes in aesthetics
@@ -105,16 +121,7 @@ class Bar extends Layer
         y2: item.$upper
         fill: @getValue item, 'color'
       ]
-
-makeLayer = (layerSpec, statData) ->
-  switch layerSpec.type
-    when 'point' then return new Point(layerSpec, statData)
-    when 'line' then return new Line(layerSpec, statData)
-    when 'bar' then return new Bar(layerSpec, statData)
-
-poly.layer =
-  toStrictMode : toStrictMode
-  makeLayer : makeLayer
-
+###
 # EXPORT
+###
 @poly = poly

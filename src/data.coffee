@@ -1,11 +1,31 @@
 poly = @poly || {}
-# DATA REALTED
+
+###
+# GLOBALS
+###
 class Data
   constructor: (params) ->
     {@url, @json} = params
     @frontEnd = !@url
+poly.Data = Data
 
-# TRANFORMS
+poly.data = {}
+poly.data.process = (dataObj, layerSpec, strictmode, callback) ->
+  dataSpec = extractDataSpec(layerSpec)
+  if dataObj.frontEnd
+    if strictmode
+      callback dataObj.json, layerSpec
+    else
+      frontendProcess(dataSpec, dataObj.json, callback)
+  else
+    if strictmode
+      console.log 'wtf, cant use strict mode here'
+    else
+      backendProcess(dataSpec, dataObj, callback)
+
+###
+# TRANSFORMS
+###
 transforms =
   'bin' : (key, transSpec) ->
     {name, binwidth} = transSpec
@@ -24,8 +44,9 @@ transforms =
 transformFactory = (key, transSpec) ->
   transforms[transSpec.trans](key, transSpec)
 
+###
 # FILTERS
-
+###
 filters =
   'lt' : (x, value) -> x < value
   'le' : (x, value) -> x <= value
@@ -44,8 +65,9 @@ filterFactory = (filterSpec) ->
       if not f(item) then return false
     return true
 
+###
 # STATS
-
+###
 statistics =
   sum : (spec) -> (values) -> _.reduce(values, ((v, m) -> v + m), 0)
   count : (spec) -> (values) -> values.length
@@ -64,8 +86,9 @@ statisticFactory = (statSpecs) ->
     _.each statFuncs, (stats, name) -> rep[name] = stats(data)
     return rep
 
+###
 # META
-
+###
 calculateMeta = (key, metaSpec, data) ->
   # note: data = array
   {sort, stat, limit, asc} = metaSpec
@@ -87,8 +110,9 @@ calculateMeta = (key, metaSpec, data) ->
   values = _.uniq _.pluck data, key
   return meta: { levels: values, sorted: true}, filter: { in: values}
 
+###
 # GENERAL PROCESSING
-
+###
 extractDataSpec = (layerSpec) -> {}
 
 frontendProcess = (dataSpec, rawData, callback) ->
@@ -127,22 +151,12 @@ backendProcess = (dataSpec, rawData, callback) ->
   # computation
   console.log 'backendProcess'
 
-processData = (dataObj, layerSpec, strictmode, callback) ->
-  dataSpec = extractDataSpec(layerSpec)
-  if dataObj.frontEnd
-    if strictmode
-      callback dataObj.json, layerSpec
-    else
-      frontendProcess(dataSpec, dataObj.json, callback)
-  else
-    if strictmode
-      console.log 'wtf, cant use strict mode here'
-    else
-      backendProcess(dataSpec, dataObj, callback)
+###
+# DEBUG
+###
+poly.data.frontendProcess = frontendProcess
 
+###
 # EXPORT
-poly.Data = Data
-poly.data =
-  frontendProcess: frontendProcess
-  processData: processData
+###
 @poly = poly

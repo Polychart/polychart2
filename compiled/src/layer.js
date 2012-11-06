@@ -1,9 +1,13 @@
 (function() {
-  var Bar, Layer, Line, Point, aesthetics, defaults, makeLayer, poly, sf, toStrictMode,
+  var Bar, Layer, Line, Point, aesthetics, defaults, poly, sf,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
   poly = this.poly || {};
+
+  /*
+  # CONSTANTS
+  */
 
   aesthetics = poly["const"].aes;
 
@@ -18,7 +22,13 @@
     'shape': 1
   };
 
-  toStrictMode = function(spec) {
+  /*
+  # GLOBALS
+  */
+
+  poly.layer = {};
+
+  poly.layer.toStrictMode = function(spec) {
     _.each(aesthetics, function(aes) {
       if (spec[aes] && _.isString(spec[aes])) {
         return spec[aes] = {
@@ -29,11 +39,26 @@
     return spec;
   };
 
+  poly.layer.make = function(layerSpec, statData) {
+    switch (layerSpec.type) {
+      case 'point':
+        return new Point(layerSpec, statData);
+      case 'line':
+        return new Line(layerSpec, statData);
+      case 'bar':
+        return new Bar(layerSpec, statData);
+    }
+  };
+
+  /*
+  # CLASSES
+  */
+
   Layer = (function() {
 
     function Layer(layerSpec, statData, metaData) {
       var aes, _i, _len;
-      this.spec = toStrictMode(layerSpec);
+      this.spec = poly.layer.toStrictMode(layerSpec);
       this.mapping = {};
       this.consts = {};
       for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
@@ -239,21 +264,9 @@
 
   })(Layer);
 
-  makeLayer = function(layerSpec, statData) {
-    switch (layerSpec.type) {
-      case 'point':
-        return new Point(layerSpec, statData);
-      case 'line':
-        return new Line(layerSpec, statData);
-      case 'bar':
-        return new Bar(layerSpec, statData);
-    }
-  };
-
-  poly.layer = {
-    toStrictMode: toStrictMode,
-    makeLayer: makeLayer
-  };
+  /*
+  # EXPORT
+  */
 
   this.poly = poly;
 

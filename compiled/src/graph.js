@@ -15,7 +15,7 @@
   })();
 
   poly.chart = function(spec) {
-    var guides, layers, ticks;
+    var dims, domains, layers, scales, ticks;
     if (spec.strict == null) spec.strict = false;
     layers = [];
     if (spec.layers == null) spec.layers = [];
@@ -23,26 +23,30 @@
       var callback;
       callback = function(statData, metaData) {
         var layerObj;
-        layerObj = poly.layer.makeLayer(layerSpec, statData, metaData);
+        layerObj = poly.layer.make(layerSpec, statData, metaData);
         layerObj.calculate();
         return layers.push(layerObj);
       };
-      return poly.data.processData(layerSpec.data, layerSpec, spec.strict, callback);
+      return poly.data.process(layerSpec.data, layerSpec, spec.strict, callback);
     });
-    guides = {};
+    domains = {};
     ticks = {};
     if (spec.guides) {
       if (spec.guides == null) spec.guides = {};
-      guides = poly.guide.makeGuides(layers, spec.guides, spec.strict);
+      domains = poly.domain.make(layers, spec.guides, spec.strict);
     }
-    _.each(guides, function(domain, aes) {
+    _.each(domains, function(domain, aes) {
       var _ref;
-      return ticks[aes] = poly.guide.makeTicks(domain, (_ref = spec.guides[aes]) != null ? _ref : []);
+      return ticks[aes] = poly.tick.make(domain, (_ref = spec.guides[aes]) != null ? _ref : []);
     });
+    dims = poly.dim.make(spec, ticks);
+    scales = poly.scale.make(spec.guide, domains, dims);
     return {
       layers: layers,
-      guides: guides,
-      ticks: ticks
+      guides: domains,
+      ticks: ticks,
+      dims: dims,
+      scales: scales
     };
   };
 

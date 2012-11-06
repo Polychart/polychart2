@@ -1,8 +1,12 @@
 (function() {
-  var Data, backendProcess, calculateMeta, extractDataSpec, filterFactory, filters, frontendProcess, poly, processData, statisticFactory, statistics, transformFactory, transforms,
+  var Data, backendProcess, calculateMeta, extractDataSpec, filterFactory, filters, frontendProcess, poly, statisticFactory, statistics, transformFactory, transforms,
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   poly = this.poly || {};
+
+  /*
+  # GLOBALS
+  */
 
   Data = (function() {
 
@@ -14,6 +18,32 @@
     return Data;
 
   })();
+
+  poly.Data = Data;
+
+  poly.data = {};
+
+  poly.data.process = function(dataObj, layerSpec, strictmode, callback) {
+    var dataSpec;
+    dataSpec = extractDataSpec(layerSpec);
+    if (dataObj.frontEnd) {
+      if (strictmode) {
+        return callback(dataObj.json, layerSpec);
+      } else {
+        return frontendProcess(dataSpec, dataObj.json, callback);
+      }
+    } else {
+      if (strictmode) {
+        return console.log('wtf, cant use strict mode here');
+      } else {
+        return backendProcess(dataSpec, dataObj, callback);
+      }
+    }
+  };
+
+  /*
+  # TRANSFORMS
+  */
 
   transforms = {
     'bin': function(key, transSpec) {
@@ -58,6 +88,10 @@
     return transforms[transSpec.trans](key, transSpec);
   };
 
+  /*
+  # FILTERS
+  */
+
   filters = {
     'lt': function(x, value) {
       return x < value;
@@ -97,6 +131,10 @@
       return true;
     };
   };
+
+  /*
+  # STATS
+  */
 
   statistics = {
     sum: function(spec) {
@@ -143,6 +181,10 @@
     };
   };
 
+  /*
+  # META
+  */
+
   calculateMeta = function(key, metaSpec, data) {
     var asc, comparator, groupedData, limit, multiplier, sort, stat, statSpec, values;
     sort = metaSpec.sort, stat = metaSpec.stat, limit = metaSpec.limit, asc = metaSpec.asc;
@@ -173,6 +215,10 @@
       }
     };
   };
+
+  /*
+  # GENERAL PROCESSING
+  */
 
   extractDataSpec = function(layerSpec) {
     return {};
@@ -218,30 +264,15 @@
     return console.log('backendProcess');
   };
 
-  processData = function(dataObj, layerSpec, strictmode, callback) {
-    var dataSpec;
-    dataSpec = extractDataSpec(layerSpec);
-    if (dataObj.frontEnd) {
-      if (strictmode) {
-        return callback(dataObj.json, layerSpec);
-      } else {
-        return frontendProcess(dataSpec, dataObj.json, callback);
-      }
-    } else {
-      if (strictmode) {
-        return console.log('wtf, cant use strict mode here');
-      } else {
-        return backendProcess(dataSpec, dataObj, callback);
-      }
-    }
-  };
+  /*
+  # DEBUG
+  */
 
-  poly.Data = Data;
+  poly.data.frontendProcess = frontendProcess;
 
-  poly.data = {
-    frontendProcess: frontendProcess,
-    processData: processData
-  };
+  /*
+  # EXPORT
+  */
 
   this.poly = poly;
 
