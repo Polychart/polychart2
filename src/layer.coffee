@@ -38,9 +38,7 @@ class Layer
   constructor: (layerSpec, strict) ->
     @strict = strict
     @spec = poly.layer.toStrictMode layerSpec
-    @dataprocess = new poly.DataProcess layerSpec
-    @dataprocess.process @constructorCallback
-  constructorCallback: (statData, metaData) =>
+    # specs
     @mapping = {}
     @consts = {}
     for aes in aesthetics
@@ -48,11 +46,12 @@ class Layer
         if @spec[aes].var then @mapping[aes] = @spec[aes].var
         if @spec[aes].const then @consts[aes] = @spec[aes].const
     @defaults = defaults
-    # datas
-    @precalc = statData
+    # data
+    @dataprocess = new poly.DataProcess layerSpec
+    @dataprocess.process (statData, metaData) =>
+      @precalc = statData
+      @meta = metaData
     @postcalc = null
-    @meta = metaData
-    # geoms
     @geoms = null
   # calculation related
   calculate: () ->

@@ -28,6 +28,11 @@ class Graph
     # scale creation
     @scales = poly.scale.make(spec.guide, @domains, @dims)
     # rendering
+  render : (dom) =>
+    dom = document.getElementById(dom)
+    paper = poly.paper(dom, 300, 300)
+    _.each @layers, (layer) =>
+      poly.render layer.geoms, paper, @scales
 
 poly.chart = (spec) ->
   new Graph(spec)

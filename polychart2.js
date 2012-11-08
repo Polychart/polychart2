@@ -654,13 +654,15 @@
 
 }).call(this);
 (function() {
-  var Graph, poly;
+  var Graph, poly,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   poly = this.poly || {};
 
   Graph = (function() {
 
     function Graph(spec) {
+      this.render = __bind(this.render, this);
       var _this = this;
       this.spec = spec;
       if (spec.strict == null) spec.strict = false;
@@ -685,7 +687,18 @@
       });
       this.dims = poly.dim.make(spec, this.ticks);
       this.scales = poly.scale.make(spec.guide, this.domains, this.dims);
+      console.log(this.scales);
     }
+
+    Graph.prototype.render = function(dom) {
+      var paper,
+        _this = this;
+      dom = document.getElementById(dom);
+      paper = poly.paper(dom, 300, 300);
+      return _.each(this.layers, function(layer) {
+        return poly.render(layer.geoms, paper, _this.scales);
+      });
+    };
 
     return Graph;
 
@@ -700,7 +713,6 @@
 }).call(this);
 (function() {
   var Bar, Layer, Line, Point, aesthetics, defaults, poly, sf,
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -758,14 +770,10 @@
   Layer = (function() {
 
     function Layer(layerSpec, strict) {
-      this.constructorCallback = __bind(this.constructorCallback, this);      this.strict = strict;
+      var aes, _i, _len,
+        _this = this;
+      this.strict = strict;
       this.spec = poly.layer.toStrictMode(layerSpec);
-      this.dataprocess = new poly.DataProcess(layerSpec);
-      this.dataprocess.process(this.constructorCallback);
-    }
-
-    Layer.prototype.constructorCallback = function(statData, metaData) {
-      var aes, _i, _len;
       this.mapping = {};
       this.consts = {};
       for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
@@ -776,11 +784,14 @@
         }
       }
       this.defaults = defaults;
-      this.precalc = statData;
+      this.dataprocess = new poly.DataProcess(layerSpec);
+      this.dataprocess.process(function(statData, metaData) {
+        _this.precalc = statData;
+        return _this.meta = metaData;
+      });
       this.postcalc = null;
-      this.meta = metaData;
-      return this.geoms = null;
-    };
+      this.geoms = null;
+    }
 
     Layer.prototype.calculate = function() {
       this.layerDataCalc();
@@ -987,15 +998,105 @@
   # GLOBALS
   */
 
+  poly.paper = function(dom, w, h) {
+    return Raphael(dom, w, h);
+  };
+
+  poly.render = function(geoms, paper, scales) {
+    return _.each(geoms, function(geom) {
+      var evtData;
+      evtData = geom.evtData;
+      return _.each(geom.geoms, function(mark) {
+        return poly.point(mark, paper, scales);
+      });
+    });
+  };
+
+  poly.point = function(mark, paper, scales) {
+    var pt;
+    pt = paper.circle();
+    pt.attr('cx', scales.x(mark.x));
+    pt.attr('cy', scales.y(mark.y));
+    return pt.attr('r', 5);
+  };
+
+}).call(this);
+(function() {
+  var aesthetics, makeScale, poly, scale;
+
+  poly = this.poly || {};
+
+  /*
+  # CONSTANTS
+  */
+
+  aesthetics = poly["const"].aes;
+
+  /*
+  # GLOBALS
+  */
+
   poly.scale = {};
 
   poly.scale.make = function(guideSpec, domains, dims) {
-    return {};
+    var range, scales;
+    scales = {};
+    if (domains.x) {
+      range = {
+        type: 'num',
+        min: 0,
+        max: dims.chartWidth
+      };
+      scales.x = makeScale(domains.x, range);
+    }
+    if (domains.y) {
+      range = {
+        type: 'num',
+        min: 0,
+        max: dims.chartHeight
+      };
+      scales.y = makeScale(domains.y, range);
+    }
+    return scales;
   };
 
   /*
   # CLASSES
   */
+
+  makeScale = function(domain, range) {
+    if (domain.type === 'num' && range.type === 'num') {
+      return scale.numeric(domain, range, 2);
+    }
+  };
+
+  scale = {
+    'numeric': function(domain, range, space) {
+      var bw, m, x1, x2, y, y1, y2, _ref;
+      _ref = [range.max, range.min, domain.max, domain.min], y2 = _ref[0], y1 = _ref[1], x2 = _ref[2], x1 = _ref[3];
+      bw = domain.bw;
+      m = (y2 - y1) / (x2 - x1);
+      y = function(x) {
+        return m * (x - x1) + y1;
+      };
+      return function(val) {
+        if (_.isObject(val)) {
+          if (value.t === 'scalefn') {
+            if (value.f === 'upper') return y(val + bw) - space;
+            if (value.f === 'lower') return y(val) + space;
+            if (value.f === 'middle') return y(val + bw / 2);
+          }
+          console.log('wtf');
+        }
+        return y(val);
+      };
+    },
+    'identity': function() {
+      return function(x) {
+        return x;
+      };
+    }
+  };
 
   /*
   # EXPORT

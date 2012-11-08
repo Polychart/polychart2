@@ -1,11 +1,13 @@
 (function() {
-  var Graph, poly;
+  var Graph, poly,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   poly = this.poly || {};
 
   Graph = (function() {
 
     function Graph(spec) {
+      this.render = __bind(this.render, this);
       var _this = this;
       this.spec = spec;
       if (spec.strict == null) spec.strict = false;
@@ -30,7 +32,18 @@
       });
       this.dims = poly.dim.make(spec, this.ticks);
       this.scales = poly.scale.make(spec.guide, this.domains, this.dims);
+      console.log(this.scales);
     }
+
+    Graph.prototype.render = function(dom) {
+      var paper,
+        _this = this;
+      dom = document.getElementById(dom);
+      paper = poly.paper(dom, 300, 300);
+      return _.each(this.layers, function(layer) {
+        return poly.render(layer.geoms, paper, _this.scales);
+      });
+    };
 
     return Graph;
 

@@ -59,4 +59,40 @@
     return deepEqual(_.pluck(ticks.y, 'value'), ['One', 'Five', 3]);
   });
 
+  test("scale: x and v:", function() {
+    var domains, layers, scales, spec, _ref;
+    spec = {
+      layers: [sampleLayer],
+      strict: true,
+      guides: {
+        x: {
+          type: 'num',
+          min: 2,
+          max: 4,
+          bw: 3
+        },
+        y: {
+          type: 'num',
+          min: 1,
+          max: 3
+        }
+      }
+    };
+    _ref = poly.chart(spec), domains = _ref.domains, scales = _ref.scales, layers = _ref.layers;
+    equal(domains.x.type, 'num');
+    equal(domains.x.min, 2);
+    equal(domains.x.max, 4);
+    equal(domains.x.bw, 3);
+    equal(domains.y.type, 'num');
+    equal(domains.y.min, 1);
+    equal(domains.y.max, 3);
+    equal(scales.x(2), 0);
+    equal(scales.x(3), 150);
+    equal(scales.x(4), 300);
+    equal(scales.y(1), 0);
+    equal(scales.y(2), 150);
+    equal(scales.y(3), 300);
+    return deepEqual(layers[0].geoms, 0);
+  });
+
 }).call(this);
