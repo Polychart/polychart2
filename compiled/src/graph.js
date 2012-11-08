@@ -20,14 +20,10 @@
     layers = [];
     if (spec.layers == null) spec.layers = [];
     _.each(spec.layers, function(layerSpec) {
-      var callback;
-      callback = function(statData, metaData) {
-        var layerObj;
-        layerObj = poly.layer.make(layerSpec, statData, metaData);
-        layerObj.calculate();
-        return layers.push(layerObj);
-      };
-      return poly.data.process(layerSpec.data, layerSpec, spec.strict, callback);
+      var layerObj;
+      layerObj = poly.layer.make(layerSpec, spec.strict);
+      layerObj.calculate();
+      return layers.push(layerObj);
     });
     domains = {};
     ticks = {};

@@ -1,5 +1,6 @@
 (function() {
-  var Data, backendProcess, calculateMeta, extractDataSpec, filterFactory, filters, frontendProcess, poly, statisticFactory, statistics, transformFactory, transforms,
+  var Data, DataProcess, backendProcess, calculateMeta, extractDataSpec, filterFactory, filters, frontendProcess, poly, statisticFactory, statistics, transformFactory, transforms,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   poly = this.poly || {};
@@ -21,24 +22,64 @@
 
   poly.Data = Data;
 
+  DataProcess = (function() {
+
+    function DataProcess(layerSpec, strictmode) {
+      this.wrapper = __bind(this.wrapper, this);      this.dataObj = layerSpec.data;
+      this.dataSpec = extractDataSpec(layerSpec);
+      this.strictmode = strictmode;
+      this.statData = null;
+      this.metaData = {};
+    }
+
+    DataProcess.prototype.reprocess = function(newlayerSpec, callback) {
+      var newDataSpec;
+      newDataSpec = extractDataSpec(newlayerSpec);
+      if (_.isEqual(this.dataSpec, newDataSpec)) {
+        callback(this.statData, this.metaData);
+      }
+      this.dataSpec = newDataSpec;
+      return this.process(callback);
+    };
+
+    DataProcess.prototype.wrapper = function(callback) {
+      var _this = this;
+      return function(data, metaData) {
+        _this.statData = data;
+        _this.metaData = metaData;
+        return callback(_this.statData, _this.metaData);
+      };
+    };
+
+    DataProcess.prototype.process = function(callback) {
+      var wrappedCallback;
+      wrappedCallback = this.wrapper(callback);
+      if (this.dataObj.frontEnd) {
+        if (this.strictmode) {} else {
+          return frontendProcess(this.dataSpec, this.dataObj.json, wrappedCallback);
+        }
+      } else {
+        if (this.strictmode) {
+          return console.log('wtf, cant use strict mode here');
+        } else {
+          return backendProcess(this.dataSpec, this.dataObj, wrappedCallback);
+        }
+      }
+    };
+
+    return DataProcess;
+
+  })();
+
+  poly.DataProcess = DataProcess;
+
   poly.data = {};
 
   poly.data.process = function(dataObj, layerSpec, strictmode, callback) {
-    var dataSpec;
-    dataSpec = extractDataSpec(layerSpec);
-    if (dataObj.frontEnd) {
-      if (strictmode) {
-        return callback(dataObj.json, layerSpec);
-      } else {
-        return frontendProcess(dataSpec, dataObj.json, callback);
-      }
-    } else {
-      if (strictmode) {
-        return console.log('wtf, cant use strict mode here');
-      } else {
-        return backendProcess(dataSpec, dataObj, callback);
-      }
-    }
+    var d;
+    d = new DataProcess(layerSpec, strictmode);
+    d.process(callback);
+    return d;
   };
 
   /*

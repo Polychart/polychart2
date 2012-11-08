@@ -5,6 +5,7 @@ class Graph
   constructor: (spec) ->
     graphSpec = spec
 
+
 poly.chart = (spec) ->
   # modes
   spec.strict ?= false
@@ -12,11 +13,9 @@ poly.chart = (spec) ->
   layers = []
   spec.layers ?= []
   _.each spec.layers, (layerSpec) ->
-    callback = (statData, metaData) ->
-      layerObj = poly.layer.make layerSpec, statData, metaData
-      layerObj.calculate()
-      layers.push layerObj
-    poly.data.process layerSpec.data, layerSpec, spec.strict, callback
+    layerObj = poly.layer.make layerSpec, spec.strict
+    layerObj.calculate()
+    layers.push layerObj
   # domain calculation and guide merging
   domains = {}
   ticks = {}

@@ -25,19 +25,22 @@ poly.layer.toStrictMode = (spec) ->
     if spec[aes] and _.isString spec[aes] then spec[aes] = { var: spec[aes] }
   return spec
 
-poly.layer.make = (layerSpec, statData) ->
+poly.layer.make = (layerSpec, strictmode) ->
   switch layerSpec.type
-    when 'point' then return new Point(layerSpec, statData)
-    when 'line' then return new Line(layerSpec, statData)
-    when 'bar' then return new Bar(layerSpec, statData)
+    when 'point' then return new Point(layerSpec, strictmode)
+    when 'line' then return new Line(layerSpec, strictmode)
+    when 'bar' then return new Bar(layerSpec, strictmode)
 
 ###
 # CLASSES
 ###
 class Layer
-  constructor: (layerSpec, statData, metaData) ->
-    # spec
+  constructor: (layerSpec, strict) ->
+    @strict = strict
     @spec = poly.layer.toStrictMode layerSpec
+    @dataprocess = new poly.DataProcess layerSpec
+    @dataprocess.process @constructorCallback
+  constructorCallback: (statData, metaData) =>
     @mapping = {}
     @consts = {}
     for aes in aesthetics

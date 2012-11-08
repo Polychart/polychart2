@@ -131,7 +131,8 @@
 
 }).call(this);
 (function() {
-  var Data, backendProcess, calculateMeta, extractDataSpec, filterFactory, filters, frontendProcess, poly, statisticFactory, statistics, transformFactory, transforms,
+  var Data, DataProcess, backendProcess, calculateMeta, extractDataSpec, filterFactory, filters, frontendProcess, poly, statisticFactory, statistics, transformFactory, transforms,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   poly = this.poly || {};
@@ -153,24 +154,64 @@
 
   poly.Data = Data;
 
+  DataProcess = (function() {
+
+    function DataProcess(layerSpec, strictmode) {
+      this.wrapper = __bind(this.wrapper, this);      this.dataObj = layerSpec.data;
+      this.dataSpec = extractDataSpec(layerSpec);
+      this.strictmode = strictmode;
+      this.statData = null;
+      this.metaData = {};
+    }
+
+    DataProcess.prototype.reprocess = function(newlayerSpec, callback) {
+      var newDataSpec;
+      newDataSpec = extractDataSpec(newlayerSpec);
+      if (_.isEqual(this.dataSpec, newDataSpec)) {
+        callback(this.statData, this.metaData);
+      }
+      this.dataSpec = newDataSpec;
+      return this.process(callback);
+    };
+
+    DataProcess.prototype.wrapper = function(callback) {
+      var _this = this;
+      return function(data, metaData) {
+        _this.statData = data;
+        _this.metaData = metaData;
+        return callback(_this.statData, _this.metaData);
+      };
+    };
+
+    DataProcess.prototype.process = function(callback) {
+      var wrappedCallback;
+      wrappedCallback = this.wrapper(callback);
+      if (this.dataObj.frontEnd) {
+        if (this.strictmode) {} else {
+          return frontendProcess(this.dataSpec, this.dataObj.json, wrappedCallback);
+        }
+      } else {
+        if (this.strictmode) {
+          return console.log('wtf, cant use strict mode here');
+        } else {
+          return backendProcess(this.dataSpec, this.dataObj, wrappedCallback);
+        }
+      }
+    };
+
+    return DataProcess;
+
+  })();
+
+  poly.DataProcess = DataProcess;
+
   poly.data = {};
 
   poly.data.process = function(dataObj, layerSpec, strictmode, callback) {
-    var dataSpec;
-    dataSpec = extractDataSpec(layerSpec);
-    if (dataObj.frontEnd) {
-      if (strictmode) {
-        return callback(dataObj.json, layerSpec);
-      } else {
-        return frontendProcess(dataSpec, dataObj.json, callback);
-      }
-    } else {
-      if (strictmode) {
-        return console.log('wtf, cant use strict mode here');
-      } else {
-        return backendProcess(dataSpec, dataObj, callback);
-      }
-    }
+    var d;
+    d = new DataProcess(layerSpec, strictmode);
+    d.process(callback);
+    return d;
   };
 
   /*
@@ -639,14 +680,10 @@
     layers = [];
     if (spec.layers == null) spec.layers = [];
     _.each(spec.layers, function(layerSpec) {
-      var callback;
-      callback = function(statData, metaData) {
-        var layerObj;
-        layerObj = poly.layer.make(layerSpec, statData, metaData);
-        layerObj.calculate();
-        return layers.push(layerObj);
-      };
-      return poly.data.process(layerSpec.data, layerSpec, spec.strict, callback);
+      var layerObj;
+      layerObj = poly.layer.make(layerSpec, spec.strict);
+      layerObj.calculate();
+      return layers.push(layerObj);
     });
     domains = {};
     ticks = {};
@@ -674,6 +711,7 @@
 }).call(this);
 (function() {
   var Bar, Layer, Line, Point, aesthetics, defaults, poly, sf,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -713,14 +751,14 @@
     return spec;
   };
 
-  poly.layer.make = function(layerSpec, statData) {
+  poly.layer.make = function(layerSpec, strictmode) {
     switch (layerSpec.type) {
       case 'point':
-        return new Point(layerSpec, statData);
+        return new Point(layerSpec, strictmode);
       case 'line':
-        return new Line(layerSpec, statData);
+        return new Line(layerSpec, strictmode);
       case 'bar':
-        return new Bar(layerSpec, statData);
+        return new Bar(layerSpec, strictmode);
     }
   };
 
@@ -730,9 +768,15 @@
 
   Layer = (function() {
 
-    function Layer(layerSpec, statData, metaData) {
-      var aes, _i, _len;
+    function Layer(layerSpec, strict) {
+      this.constructorCallback = __bind(this.constructorCallback, this);      this.strict = strict;
       this.spec = poly.layer.toStrictMode(layerSpec);
+      this.dataprocess = new poly.DataProcess(layerSpec);
+      this.dataprocess.process(this.constructorCallback);
+    }
+
+    Layer.prototype.constructorCallback = function(statData, metaData) {
+      var aes, _i, _len;
       this.mapping = {};
       this.consts = {};
       for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
@@ -746,8 +790,8 @@
       this.precalc = statData;
       this.postcalc = null;
       this.meta = metaData;
-      this.geoms = null;
-    }
+      return this.geoms = null;
+    };
 
     Layer.prototype.calculate = function() {
       this.layerDataCalc();

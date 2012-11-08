@@ -9,19 +9,44 @@ class Data
     @frontEnd = !@url
 poly.Data = Data
 
+
+class DataProcess
+  constructor: (layerSpec, strictmode) ->
+    @dataObj = layerSpec.data
+    @dataSpec = extractDataSpec layerSpec
+    @strictmode = strictmode
+    @statData = null
+    @metaData = {}
+  process: (callback) ->
+    # wrap the callback first...
+    wrappedCallback = (data, metaData) =>
+      @statData = data
+      @metaData = metaData
+      callback @statData, @metaData
+    # actually calculate!
+    if @dataObj.frontEnd
+      if @strictmode
+      else
+        frontendProcess(@dataSpec, @dataObj.json, wrappedCallback)
+    else
+      if @strictmode
+        console.log 'wtf, cant use strict mode here'
+      else
+        backendProcess(@dataSpec, @dataObj, wrappedCallback)
+  reprocess: (newlayerSpec, callback) ->
+    newDataSpec = extractDataSpec newlayerSpec
+    if _.isEqual(@dataSpec, newDataSpec)
+      callback @statData, @metaData
+    @dataSpec = newDataSpec
+    @process callback
+
+poly.DataProcess = DataProcess
+
 poly.data = {}
 poly.data.process = (dataObj, layerSpec, strictmode, callback) ->
-  dataSpec = extractDataSpec(layerSpec)
-  if dataObj.frontEnd
-    if strictmode
-      callback dataObj.json, layerSpec
-    else
-      frontendProcess(dataSpec, dataObj.json, callback)
-  else
-    if strictmode
-      console.log 'wtf, cant use strict mode here'
-    else
-      backendProcess(dataSpec, dataObj, callback)
+  d = new DataProcess layerSpec, strictmode
+  d.process callback
+  d
 
 ###
 # TRANSFORMS

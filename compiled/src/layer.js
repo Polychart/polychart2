@@ -1,5 +1,6 @@
 (function() {
   var Bar, Layer, Line, Point, aesthetics, defaults, poly, sf,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -39,14 +40,14 @@
     return spec;
   };
 
-  poly.layer.make = function(layerSpec, statData) {
+  poly.layer.make = function(layerSpec, strictmode) {
     switch (layerSpec.type) {
       case 'point':
-        return new Point(layerSpec, statData);
+        return new Point(layerSpec, strictmode);
       case 'line':
-        return new Line(layerSpec, statData);
+        return new Line(layerSpec, strictmode);
       case 'bar':
-        return new Bar(layerSpec, statData);
+        return new Bar(layerSpec, strictmode);
     }
   };
 
@@ -56,9 +57,15 @@
 
   Layer = (function() {
 
-    function Layer(layerSpec, statData, metaData) {
-      var aes, _i, _len;
+    function Layer(layerSpec, strict) {
+      this.constructorCallback = __bind(this.constructorCallback, this);      this.strict = strict;
       this.spec = poly.layer.toStrictMode(layerSpec);
+      this.dataprocess = new poly.DataProcess(layerSpec);
+      this.dataprocess.process(this.constructorCallback);
+    }
+
+    Layer.prototype.constructorCallback = function(statData, metaData) {
+      var aes, _i, _len;
       this.mapping = {};
       this.consts = {};
       for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
@@ -72,8 +79,8 @@
       this.precalc = statData;
       this.postcalc = null;
       this.meta = metaData;
-      this.geoms = null;
-    }
+      return this.geoms = null;
+    };
 
     Layer.prototype.calculate = function() {
       this.layerDataCalc();
