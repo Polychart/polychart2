@@ -1,6 +1,5 @@
 (function() {
   var Data, DataProcess, backendProcess, calculateMeta, extractDataSpec, filterFactory, filters, frontendProcess, poly, statisticFactory, statistics, transformFactory, transforms,
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   poly = this.poly || {};
@@ -25,35 +24,21 @@
   DataProcess = (function() {
 
     function DataProcess(layerSpec, strictmode) {
-      this.wrapper = __bind(this.wrapper, this);      this.dataObj = layerSpec.data;
+      this.dataObj = layerSpec.data;
       this.dataSpec = extractDataSpec(layerSpec);
       this.strictmode = strictmode;
       this.statData = null;
       this.metaData = {};
     }
 
-    DataProcess.prototype.reprocess = function(newlayerSpec, callback) {
-      var newDataSpec;
-      newDataSpec = extractDataSpec(newlayerSpec);
-      if (_.isEqual(this.dataSpec, newDataSpec)) {
-        callback(this.statData, this.metaData);
-      }
-      this.dataSpec = newDataSpec;
-      return this.process(callback);
-    };
-
-    DataProcess.prototype.wrapper = function(callback) {
-      var _this = this;
-      return function(data, metaData) {
+    DataProcess.prototype.process = function(callback) {
+      var wrappedCallback,
+        _this = this;
+      wrappedCallback = function(data, metaData) {
         _this.statData = data;
         _this.metaData = metaData;
         return callback(_this.statData, _this.metaData);
       };
-    };
-
-    DataProcess.prototype.process = function(callback) {
-      var wrappedCallback;
-      wrappedCallback = this.wrapper(callback);
       if (this.dataObj.frontEnd) {
         if (this.strictmode) {} else {
           return frontendProcess(this.dataSpec, this.dataObj.json, wrappedCallback);
@@ -65,6 +50,16 @@
           return backendProcess(this.dataSpec, this.dataObj, wrappedCallback);
         }
       }
+    };
+
+    DataProcess.prototype.reprocess = function(newlayerSpec, callback) {
+      var newDataSpec;
+      newDataSpec = extractDataSpec(newlayerSpec);
+      if (_.isEqual(this.dataSpec, newDataSpec)) {
+        callback(this.statData, this.metaData);
+      }
+      this.dataSpec = newDataSpec;
+      return this.process(callback);
     };
 
     return DataProcess;

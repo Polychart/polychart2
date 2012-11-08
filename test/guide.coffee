@@ -14,14 +14,14 @@ test "domain: strict mode num & cat", ->
     guides:
       x: { type: 'num', min: 2, max: 4, bw : 3 }
       y: { type: 'cat', levels: [1,2,3], labels: {1: 'One', 2: 'Five'} }
-  {guides, ticks} = poly.chart spec
-  equal guides.x.type, 'num'
-  equal guides.x.min , 2
-  equal guides.x.max, 4
-  equal guides.x.bw, 3
-  equal guides.y.type, 'cat'
-  deepEqual guides.y.levels, [1,2,3]
-  equal guides.y.sorted, true
+  {domains, ticks} = poly.chart spec
+  equal domains.x.type, 'num'
+  equal domains.x.min , 2
+  equal domains.x.max, 4
+  equal domains.x.bw, 3
+  equal domains.y.type, 'cat'
+  deepEqual domains.y.levels, [1,2,3]
+  equal domains.y.sorted, true
 
   deepEqual _.pluck(ticks.x, 'location'), [2, 2.5, 3, 3.5]
   deepEqual _.pluck(ticks.y, 'location'), [1, 2, 3]

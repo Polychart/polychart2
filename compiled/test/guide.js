@@ -25,7 +25,7 @@
   };
 
   test("domain: strict mode num & cat", function() {
-    var guides, spec, ticks, _ref;
+    var domains, spec, ticks, _ref;
     spec = {
       layers: [sampleLayer],
       strict: true,
@@ -46,14 +46,14 @@
         }
       }
     };
-    _ref = poly.chart(spec), guides = _ref.guides, ticks = _ref.ticks;
-    equal(guides.x.type, 'num');
-    equal(guides.x.min, 2);
-    equal(guides.x.max, 4);
-    equal(guides.x.bw, 3);
-    equal(guides.y.type, 'cat');
-    deepEqual(guides.y.levels, [1, 2, 3]);
-    equal(guides.y.sorted, true);
+    _ref = poly.chart(spec), domains = _ref.domains, ticks = _ref.ticks;
+    equal(domains.x.type, 'num');
+    equal(domains.x.min, 2);
+    equal(domains.x.max, 4);
+    equal(domains.x.bw, 3);
+    equal(domains.y.type, 'cat');
+    deepEqual(domains.y.levels, [1, 2, 3]);
+    equal(domains.y.sorted, true);
     deepEqual(_.pluck(ticks.x, 'location'), [2, 2.5, 3, 3.5]);
     deepEqual(_.pluck(ticks.y, 'location'), [1, 2, 3]);
     return deepEqual(_.pluck(ticks.y, 'value'), ['One', 'Five', 3]);
