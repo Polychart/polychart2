@@ -24,6 +24,23 @@
     });
   };
 
+  /*
+  Produces a linear function that passes through two points.
+  Input:
+  - `x1`: x coordinate of the first point
+  - `y1`: y coordinate of the first point
+  - `x2`: x coordinate of the second point
+  - `y2`: y coordinate of the second point
+  Output:
+  - A function that, given the x-coord, returns the y-coord
+  */
+
+  poly.linear = function(x1, y1, x2, y2) {
+    return function(x) {
+      return (y2 - y1) / (x2 - x1) * (x - x1) + y1;
+    };
+  };
+
   this.poly = poly;
 
 }).call(this);

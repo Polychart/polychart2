@@ -86,12 +86,12 @@
     equal(domains.y.type, 'num');
     equal(domains.y.min, 1);
     equal(domains.y.max, 3);
-    equal(scales.x(2), 0);
-    equal(scales.x(3), 150);
-    equal(scales.x(4), 300);
-    equal(scales.y(1), 0);
-    equal(scales.y(2), 150);
-    equal(scales.y(3), 300);
+    equal(scales.x(2), 0 + 20);
+    equal(scales.x(3), 150 + 20);
+    equal(scales.x(4), 300 + 20);
+    equal(scales.y(1), 0 + 20);
+    equal(scales.y(2), 150 + 20);
+    equal(scales.y(3), 300 + 20);
     return deepEqual(layers[0].geoms, 0);
   });
 

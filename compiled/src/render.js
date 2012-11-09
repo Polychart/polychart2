@@ -15,12 +15,12 @@
   Helper function for rendering all the geoms of an object
   */
 
-  poly.render = function(geoms, paper, scales) {
+  poly.render = function(geoms, paper, scales, clipping) {
     return _.each(geoms, function(geom) {
       var evtData;
       evtData = geom.evtData;
-      return _.each(geom.geoms, function(mark) {
-        return poly.point(mark, paper, scales);
+      return _.each(geom.marks, function(mark) {
+        return poly.point(mark, paper, scales, clipping);
       });
     });
   };
@@ -29,12 +29,14 @@
   Rendering a single point
   */
 
-  poly.point = function(mark, paper, scales) {
+  poly.point = function(mark, paper, scales, clipping) {
     var pt;
     pt = paper.circle();
     pt.attr('cx', scales.x(mark.x));
     pt.attr('cy', scales.y(mark.y));
-    return pt.attr('r', 5);
+    pt.attr('r', 10);
+    pt.attr('fill', 'black');
+    return pt.attr('clip-rect', clipping);
   };
 
 }).call(this);

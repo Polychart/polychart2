@@ -15,4 +15,19 @@ poly.groupBy = (data, group) ->
     concat = (memo, g) -> "#{memo}#{g}:#{item[g]};"
     _.reduce group, concat, ""
 
+
+###
+Produces a linear function that passes through two points.
+Input:
+- `x1`: x coordinate of the first point
+- `y1`: y coordinate of the first point
+- `x2`: x coordinate of the second point
+- `y2`: y coordinate of the second point
+Output:
+- A function that, given the x-coord, returns the y-coord
+###
+poly.linear = (x1, y1, x2, y2) ->
+  (x) -> (y2-y1)/(x2-x1)*(x-x1) + y1
+
 @poly = poly
+

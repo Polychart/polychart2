@@ -27,7 +27,7 @@
     }
 
     Graph.prototype.merge = function() {
-      var spec,
+      var spec, _ref,
         _this = this;
       spec = this.spec;
       this.domains = {};
@@ -41,16 +41,18 @@
         return _this.ticks[aes] = poly.tick.make(domain, (_ref = spec.guides[aes]) != null ? _ref : []);
       });
       this.dims = poly.dim.make(spec, this.ticks);
-      return this.scales = poly.scale.make(spec.guide, this.domains, this.dims);
+      this.clipping = poly.dim.clipping(this.dims);
+      this.ranges = poly.dim.ranges(this.dims);
+      return _ref = poly.scale.make(spec.guide, this.domains, this.ranges), this.axis = _ref[0], this.scales = _ref[1], _ref;
     };
 
     Graph.prototype.render = function(dom) {
       var paper,
         _this = this;
       dom = document.getElementById(dom);
-      paper = poly.paper(dom, 300, 300);
+      paper = poly.paper(dom, this.dims.width, this.dims.height);
       return _.each(this.layers, function(layer) {
-        return poly.render(layer.marks, paper, _this.scales);
+        return poly.render(layer.geoms, paper, _this.scales, _this.clipping);
       });
     };
 
