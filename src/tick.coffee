@@ -4,17 +4,21 @@ poly = @poly || {}
 # GLOBALS
 ###
 poly.tick = {}
+
+###
+Produce an associate array of aesthetics to tick objects.
+###
 poly.tick.make = (domain, guideSpec, range, scale) ->
-  # ticks
+  # produce an array of just the tick locations
   if guideSpec.ticks?
-    ticks = guideSpec.ticks
+    ticks = guideSpec.ticks # provided by spec
   else
-    numticks = guideSpec.numticks ? 5
+    numticks = guideSpec.numticks ? 5 # use default
     if domain.type == 'num' and guideSpec.transform == 'log'
       ticks = tickValues['num-log'] domain, numticks
     else
       ticks = tickValues[domain.type] domain, numticks
-  # range
+  # turn each tick location to an actual tick object
   scale = scale || (x) -> x
   formatter = (x) -> x
   if guideSpec.labels
@@ -26,12 +30,23 @@ poly.tick.make = (domain, guideSpec, range, scale) ->
 ###
 # CLASSES & HELPERS
 ###
+
+###
+Tick Object.
+###
 class Tick
   constructor: (params) -> {@location, @value} = params
 
+###
+Helper function for creating a function that creates ticks
+###
 tickFactory = (scale, formatter) ->
   (value) -> new Tick(location:scale(value), value:formatter(value))
 
+###
+Helper function for determining the size of each "step" (distance between
+ticks) for numeric scales
+###
 getStep = (span, numticks) ->
   step = Math.pow(10, Math.floor(Math.log(span / numticks) / Math.LN10))
   error = numticks / span * step
@@ -40,9 +55,12 @@ getStep = (span, numticks) ->
   else if error <= 0.75 then step *= 2
   return step
 
+###
+Function for calculating the location of ticks.
+###
 tickValues =
   'cat' : (domain, numticks) ->
-    return domain.levels
+    return domain.levels #TODO
   'num' : (domain, numticks) ->
     {min, max} = domain
     step = getStep max-min, numticks
@@ -75,7 +93,7 @@ tickValues =
         continue
       ticks.push num
     ticks
-  'date' : (domain, numticks) ->
+  'date' : (domain, numticks) -> #TODO
     return 2
 
 ###

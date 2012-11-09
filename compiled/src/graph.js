@@ -8,18 +8,28 @@
 
     function Graph(spec) {
       this.render = __bind(this.render, this);
-      var _this = this;
+      this.merge = __bind(this.merge, this);
+      var merge, _ref,
+        _this = this;
       this.spec = spec;
-      if (spec.strict == null) spec.strict = false;
-      this.strict = spec.strict;
+      this.strict = (_ref = spec.strict) != null ? _ref : false;
       this.layers = [];
       if (spec.layers == null) spec.layers = [];
       _.each(spec.layers, function(layerSpec) {
         var layerObj;
         layerObj = poly.layer.make(layerSpec, spec.strict);
-        layerObj.calculate();
         return _this.layers.push(layerObj);
       });
+      merge = _.after(this.layers.length, this.merge);
+      _.each(this.layers, function(layerObj) {
+        return layerObj.calculate(merge);
+      });
+    }
+
+    Graph.prototype.merge = function() {
+      var spec,
+        _this = this;
+      spec = this.spec;
       this.domains = {};
       if (spec.guides) {
         if (spec.guides == null) spec.guides = {};
@@ -31,9 +41,8 @@
         return _this.ticks[aes] = poly.tick.make(domain, (_ref = spec.guides[aes]) != null ? _ref : []);
       });
       this.dims = poly.dim.make(spec, this.ticks);
-      this.scales = poly.scale.make(spec.guide, this.domains, this.dims);
-      console.log(this.scales);
-    }
+      return this.scales = poly.scale.make(spec.guide, this.domains, this.dims);
+    };
 
     Graph.prototype.render = function(dom) {
       var paper,
@@ -41,7 +50,7 @@
       dom = document.getElementById(dom);
       paper = poly.paper(dom, 300, 300);
       return _.each(this.layers, function(layer) {
-        return poly.render(layer.geoms, paper, _this.scales);
+        return poly.render(layer.marks, paper, _this.scales);
       });
     };
 

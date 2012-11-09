@@ -1,5 +1,10 @@
 poly = @poly || {}
 
+###
+CONSTANTS
+---------
+These are constants that are referred to throughout the coebase
+###
 poly.const =
   aes : ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id']
   scaleFns :

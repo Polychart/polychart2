@@ -8,7 +8,14 @@ aesthetics = poly.const.aes
 ###
 # GLOBALS
 ###
+
 poly.domain = {}
+
+###
+Produce a domain set for each layer based on both the information in each
+layer and the specification of the guides, then merge them into one domain
+set.
+###
 poly.domain.make = (layers, guideSpec, strictmode) ->
   domainSets = []
   _.each layers, (layerObj) ->
@@ -18,6 +25,10 @@ poly.domain.make = (layers, guideSpec, strictmode) ->
 ###
 # CLASSES & HELPER
 ###
+
+###
+Domain classes
+###
 class NumericDomain
   constructor: (params) -> {@type, @min, @max, @bw} = params
 class DateDomain
@@ -25,19 +36,30 @@ class DateDomain
 class CategoricalDomain
   constructor: (params) -> {@type, @levels, @sorted} = params
 
+###
+Public-ish interface for making different domain types
+###
 makeDomain = (params) ->
   switch params.type
     when 'num' then return new NumericDomain(params)
     when 'date' then return new DateDomain(params)
     when 'cat' then return new CategoricalDomain(params)
 
+###
+Make a domain set. A domain set is an associate array of domains, with the
+keys being aesthetics
+###
 makeDomainSet = (layerObj, guideSpec, strictmode) ->
   domain = {}
   _.each _.keys(layerObj.mapping), (aes) ->
     if strictmode
       domain[aes] = makeDomain guideSpec[aes]
-  return domain
+  domain
 
+###
+Merge an array of domain sets: i.e. merge all the domains that shares the
+same aesthetics.
+###
 mergeDomainSets = (domainSets) ->
   merged = {}
   _.each aesthetics, (aes) ->
@@ -46,6 +68,12 @@ mergeDomainSets = (domainSets) ->
       merged[aes] = mergeDomains(domains)
   merged
 
+###
+Helper for merging domains of the same type. Two domains of the same type
+can be merged if they share the same properties:
+ - For numeric/date variables all domains must have the same binwidth parameter
+ - For categorial variables, sorted domains must have any categories in common
+###
 domainMerge =
   'num' : (domains) ->
     bw = _.uniq _.map(domains, (d) -> d.bw)
@@ -66,6 +94,10 @@ domainMerge =
     levels = _.union.apply @, sortedLevels.concat(unsortedLevels)
     return makeDomain type: 'cat', levels: levels, sorted: true
 
+###
+Merge an array of domains: Two domains can be merged if they are of the
+same type, and they share certain properties.
+###
 mergeDomains = (domains) ->
   types = _.uniq _.map(domains, (d) -> d.type)
   if types.length > 1

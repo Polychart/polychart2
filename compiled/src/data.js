@@ -1,11 +1,16 @@
 (function() {
-  var Data, DataProcess, backendProcess, calculateMeta, extractDataSpec, filterFactory, filters, frontendProcess, poly, statisticFactory, statistics, transformFactory, transforms,
+  var Data, DataProcess, backendProcess, calculateMeta, calculateStats, extractDataSpec, filterFactory, filters, frontendProcess, poly, statistics, statsFactory, transformFactory, transforms,
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   poly = this.poly || {};
 
   /*
   # GLOBALS
+  */
+
+  /*
+  Generalized data object that either contains JSON format of a dataset,
+  or knows how to retrieve data from some source.
   */
 
   Data = (function() {
@@ -20,6 +25,11 @@
   })();
 
   poly.Data = Data;
+
+  /*
+  Wrapper around the data processing piece that keeps track of the kind of
+  data processing to be done.
+  */
 
   DataProcess = (function() {
 
@@ -40,7 +50,9 @@
         return callback(_this.statData, _this.metaData);
       };
       if (this.dataObj.frontEnd) {
-        if (this.strictmode) {} else {
+        if (this.strictmode) {
+          return wrappedCallback(this.dataObj.json, {});
+        } else {
           return frontendProcess(this.dataSpec, this.dataObj.json, wrappedCallback);
         }
       } else {
@@ -68,6 +80,10 @@
 
   poly.DataProcess = DataProcess;
 
+  /*
+  Temporary
+  */
+
   poly.data = {};
 
   poly.data.process = function(dataObj, layerSpec, strictmode, callback) {
@@ -78,7 +94,11 @@
   };
 
   /*
-  # TRANSFORMS
+  TRANSFORMS
+  ----------
+  Key:value pair of available transformations to a function that creates that
+  transformation. Also, a metadata description of the transformation is returned
+  when appropriate. (e.g for binning)
   */
 
   transforms = {
@@ -120,12 +140,20 @@
     }
   };
 
+  /*
+  Helper function to figures out which transformation to create, then creates it
+  */
+
   transformFactory = function(key, transSpec) {
     return transforms[transSpec.trans](key, transSpec);
   };
 
   /*
-  # FILTERS
+  FILTERS
+  ----------
+  Key:value pair of available filtering operations to filtering function. The
+  filtering function returns true iff the data item satisfies the filtering 
+  criteria.
   */
 
   filters = {
@@ -145,6 +173,10 @@
       return __indexOf.call(value, x) >= 0;
     }
   };
+
+  /*
+  Helper function to figures out which filter to create, then creates it
+  */
 
   filterFactory = function(filterSpec) {
     var filterFuncs;
@@ -169,7 +201,11 @@
   };
 
   /*
-  # STATS
+  STATISTICS
+  ----------
+  Key:value pair of available statistics operations to a function that creates
+  the appropriate statistical function given the spec. Each statistics function
+  produces one atomic value for each group of data.
   */
 
   statistics = {
@@ -192,45 +228,59 @@
     }
   };
 
-  statisticFactory = function(statSpecs) {
-    var group, statFuncs;
-    group = statSpecs.group;
+  /*
+  Helper function to figures out which statistics to create, then creates it
+  */
+
+  statsFactory = function(statSpec) {
+    return statistics[statSpec.stat](statSpec);
+  };
+
+  /*
+  Calculate statistics
+  */
+
+  calculateStats = function(data, statSpecs) {
+    var groupedData, statFuncs;
     statFuncs = {};
     _.each(statSpecs.stats, function(statSpec) {
-      var key, name, stat, statFn;
-      stat = statSpec.stat, key = statSpec.key, name = statSpec.name;
-      statFn = statistics[stat](statSpec);
+      var key, name, statFn;
+      key = statSpec.key, name = statSpec.name;
+      statFn = statsFactory(statSpec);
       return statFuncs[name] = function(data) {
         return statFn(_.pluck(data, key));
       };
     });
-    return function(data) {
+    groupedData = poly.groupBy(data, statSpecs.group);
+    return _.map(groupedData, function(data) {
       var rep;
       rep = {};
-      _.each(group, function(g) {
+      _.each(statSpecs.group, function(g) {
         return rep[g] = data[0][g];
       });
       _.each(statFuncs, function(stats, name) {
         return rep[name] = stats(data);
       });
       return rep;
-    };
+    });
   };
 
   /*
-  # META
+  META
+  ----
+  Calculations of meta properties including sorting and limiting based on the
+  values of statistical calculations
   */
 
   calculateMeta = function(key, metaSpec, data) {
-    var asc, comparator, groupedData, limit, multiplier, sort, stat, statSpec, values;
+    var asc, comparator, limit, multiplier, sort, stat, statSpec, values;
     sort = metaSpec.sort, stat = metaSpec.stat, limit = metaSpec.limit, asc = metaSpec.asc;
     if (stat) {
       statSpec = {
         stats: [stat],
         group: [key]
       };
-      groupedData = poly.groupBy(data, statSpec.group);
-      data = _.map(groupedData, statisticFactory(statSpec));
+      data = calculateStats(data, statSpec);
     }
     multiplier = asc ? 1 : -1;
     comparator = function(a, b) {
@@ -253,20 +303,30 @@
   };
 
   /*
-  # GENERAL PROCESSING
+  GENERAL PROCESSING
+  ------------------
+  Coordinating the actual work being done
+  */
+
+  /*
+  Given a layer spec, extract the data calculations that needs to be done.
   */
 
   extractDataSpec = function(layerSpec) {
     return {};
   };
 
+  /*
+  Perform the necessary computation in the front end
+  */
+
   frontendProcess = function(dataSpec, rawData, callback) {
-    var addMeta, additionalFilter, data, groupedData, metaData;
+    var addMeta, additionalFilter, data, metaData;
     data = _.clone(rawData);
     metaData = {};
     addMeta = function(key, meta) {
-      if (metaData[key] == null) metaData[key] = {};
-      return _.extend(metaData[key], meta);
+      var _ref;
+      return _.extend((_ref = metaData[key]) != null ? _ref : {}, meta);
     };
     if (dataSpec.trans) {
       _.each(dataSpec.trans, function(transSpec, key) {
@@ -289,19 +349,20 @@
       });
       data = _.filter(data, filterFactory(additionalFilter));
     }
-    if (dataSpec.stats) {
-      groupedData = poly.groupBy(data, dataSpec.stats.group);
-      data = _.map(groupedData, statisticFactory(dataSpec.stats));
-    }
+    if (dataSpec.stats) data = calculateStats(data, dataSpec.stats);
     return callback(data, metaData);
   };
+
+  /*
+  Perform the necessary computation in the backend
+  */
 
   backendProcess = function(dataSpec, rawData, callback) {
     return console.log('backendProcess');
   };
 
   /*
-  # DEBUG
+  For debug purposes only
   */
 
   poly.data.frontendProcess = frontendProcess;

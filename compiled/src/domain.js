@@ -15,6 +15,12 @@
 
   poly.domain = {};
 
+  /*
+  Produce a domain set for each layer based on both the information in each
+  layer and the specification of the guides, then merge them into one domain
+  set.
+  */
+
   poly.domain.make = function(layers, guideSpec, strictmode) {
     var domainSets;
     domainSets = [];
@@ -26,6 +32,10 @@
 
   /*
   # CLASSES & HELPER
+  */
+
+  /*
+  Domain classes
   */
 
   NumericDomain = (function() {
@@ -58,6 +68,10 @@
 
   })();
 
+  /*
+  Public-ish interface for making different domain types
+  */
+
   makeDomain = function(params) {
     switch (params.type) {
       case 'num':
@@ -69,6 +83,11 @@
     }
   };
 
+  /*
+  Make a domain set. A domain set is an associate array of domains, with the
+  keys being aesthetics
+  */
+
   makeDomainSet = function(layerObj, guideSpec, strictmode) {
     var domain;
     domain = {};
@@ -77,6 +96,11 @@
     });
     return domain;
   };
+
+  /*
+  Merge an array of domain sets: i.e. merge all the domains that shares the
+  same aesthetics.
+  */
 
   mergeDomainSets = function(domainSets) {
     var merged;
@@ -88,6 +112,13 @@
     });
     return merged;
   };
+
+  /*
+  Helper for merging domains of the same type. Two domains of the same type
+  can be merged if they share the same properties:
+   - For numeric/date variables all domains must have the same binwidth parameter
+   - For categorial variables, sorted domains must have any categories in common
+  */
 
   domainMerge = {
     'num': function(domains) {
@@ -134,6 +165,11 @@
       });
     }
   };
+
+  /*
+  Merge an array of domains: Two domains can be merged if they are of the
+  same type, and they share certain properties.
+  */
 
   mergeDomains = function(domains) {
     var types;

@@ -9,6 +9,10 @@
 
   poly.tick = {};
 
+  /*
+  Produce an associate array of aesthetics to tick objects.
+  */
+
   poly.tick.make = function(domain, guideSpec, range, scale) {
     var formatter, numticks, ticks, _ref;
     if (guideSpec.ticks != null) {
@@ -42,6 +46,10 @@
   # CLASSES & HELPERS
   */
 
+  /*
+  Tick Object.
+  */
+
   Tick = (function() {
 
     function Tick(params) {
@@ -52,6 +60,10 @@
 
   })();
 
+  /*
+  Helper function for creating a function that creates ticks
+  */
+
   tickFactory = function(scale, formatter) {
     return function(value) {
       return new Tick({
@@ -60,6 +72,11 @@
       });
     };
   };
+
+  /*
+  Helper function for determining the size of each "step" (distance between
+  ticks) for numeric scales
+  */
 
   getStep = function(span, numticks) {
     var error, step;
@@ -74,6 +91,10 @@
     }
     return step;
   };
+
+  /*
+  Function for calculating the location of ticks.
+  */
 
   tickValues = {
     'cat': function(domain, numticks) {

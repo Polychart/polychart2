@@ -3,6 +3,17 @@
 
   poly = this.poly || {};
 
+  /*
+  Group an array of data items by the value of certain columns.
+  
+  Input:
+  - `data`: an array of data items
+  - `group`: an array of column keys, to group by
+  Output:
+  - an associate array of key: array of data, with the appropriate grouping
+    the `key` is a string of format "columnKey:value;colunmKey2:value2;..."
+  */
+
   poly.groupBy = function(data, group) {
     return _.groupBy(data, function(item) {
       var concat;
@@ -21,6 +32,12 @@
 
   poly = this.poly || {};
 
+  /*
+  CONSTANTS
+  ---------
+  These are constants that are referred to throughout the coebase
+  */
+
   poly["const"] = {
     aes: ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id'],
     scaleFns: {
@@ -78,6 +95,12 @@
 
   poly = this.poly || {};
 
+  /*
+  CONSTANTS
+  ---------
+  These are constants that are referred to throughout the coebase
+  */
+
   poly["const"] = {
     aes: ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id'],
     scaleFns: {
@@ -131,13 +154,18 @@
 
 }).call(this);
 (function() {
-  var Data, DataProcess, backendProcess, calculateMeta, extractDataSpec, filterFactory, filters, frontendProcess, poly, statisticFactory, statistics, transformFactory, transforms,
+  var Data, DataProcess, backendProcess, calculateMeta, calculateStats, extractDataSpec, filterFactory, filters, frontendProcess, poly, statistics, statsFactory, transformFactory, transforms,
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   poly = this.poly || {};
 
   /*
   # GLOBALS
+  */
+
+  /*
+  Generalized data object that either contains JSON format of a dataset,
+  or knows how to retrieve data from some source.
   */
 
   Data = (function() {
@@ -152,6 +180,11 @@
   })();
 
   poly.Data = Data;
+
+  /*
+  Wrapper around the data processing piece that keeps track of the kind of
+  data processing to be done.
+  */
 
   DataProcess = (function() {
 
@@ -172,7 +205,9 @@
         return callback(_this.statData, _this.metaData);
       };
       if (this.dataObj.frontEnd) {
-        if (this.strictmode) {} else {
+        if (this.strictmode) {
+          return wrappedCallback(this.dataObj.json, {});
+        } else {
           return frontendProcess(this.dataSpec, this.dataObj.json, wrappedCallback);
         }
       } else {
@@ -200,6 +235,10 @@
 
   poly.DataProcess = DataProcess;
 
+  /*
+  Temporary
+  */
+
   poly.data = {};
 
   poly.data.process = function(dataObj, layerSpec, strictmode, callback) {
@@ -210,7 +249,11 @@
   };
 
   /*
-  # TRANSFORMS
+  TRANSFORMS
+  ----------
+  Key:value pair of available transformations to a function that creates that
+  transformation. Also, a metadata description of the transformation is returned
+  when appropriate. (e.g for binning)
   */
 
   transforms = {
@@ -252,12 +295,20 @@
     }
   };
 
+  /*
+  Helper function to figures out which transformation to create, then creates it
+  */
+
   transformFactory = function(key, transSpec) {
     return transforms[transSpec.trans](key, transSpec);
   };
 
   /*
-  # FILTERS
+  FILTERS
+  ----------
+  Key:value pair of available filtering operations to filtering function. The
+  filtering function returns true iff the data item satisfies the filtering 
+  criteria.
   */
 
   filters = {
@@ -277,6 +328,10 @@
       return __indexOf.call(value, x) >= 0;
     }
   };
+
+  /*
+  Helper function to figures out which filter to create, then creates it
+  */
 
   filterFactory = function(filterSpec) {
     var filterFuncs;
@@ -301,7 +356,11 @@
   };
 
   /*
-  # STATS
+  STATISTICS
+  ----------
+  Key:value pair of available statistics operations to a function that creates
+  the appropriate statistical function given the spec. Each statistics function
+  produces one atomic value for each group of data.
   */
 
   statistics = {
@@ -324,45 +383,59 @@
     }
   };
 
-  statisticFactory = function(statSpecs) {
-    var group, statFuncs;
-    group = statSpecs.group;
+  /*
+  Helper function to figures out which statistics to create, then creates it
+  */
+
+  statsFactory = function(statSpec) {
+    return statistics[statSpec.stat](statSpec);
+  };
+
+  /*
+  Calculate statistics
+  */
+
+  calculateStats = function(data, statSpecs) {
+    var groupedData, statFuncs;
     statFuncs = {};
     _.each(statSpecs.stats, function(statSpec) {
-      var key, name, stat, statFn;
-      stat = statSpec.stat, key = statSpec.key, name = statSpec.name;
-      statFn = statistics[stat](statSpec);
+      var key, name, statFn;
+      key = statSpec.key, name = statSpec.name;
+      statFn = statsFactory(statSpec);
       return statFuncs[name] = function(data) {
         return statFn(_.pluck(data, key));
       };
     });
-    return function(data) {
+    groupedData = poly.groupBy(data, statSpecs.group);
+    return _.map(groupedData, function(data) {
       var rep;
       rep = {};
-      _.each(group, function(g) {
+      _.each(statSpecs.group, function(g) {
         return rep[g] = data[0][g];
       });
       _.each(statFuncs, function(stats, name) {
         return rep[name] = stats(data);
       });
       return rep;
-    };
+    });
   };
 
   /*
-  # META
+  META
+  ----
+  Calculations of meta properties including sorting and limiting based on the
+  values of statistical calculations
   */
 
   calculateMeta = function(key, metaSpec, data) {
-    var asc, comparator, groupedData, limit, multiplier, sort, stat, statSpec, values;
+    var asc, comparator, limit, multiplier, sort, stat, statSpec, values;
     sort = metaSpec.sort, stat = metaSpec.stat, limit = metaSpec.limit, asc = metaSpec.asc;
     if (stat) {
       statSpec = {
         stats: [stat],
         group: [key]
       };
-      groupedData = poly.groupBy(data, statSpec.group);
-      data = _.map(groupedData, statisticFactory(statSpec));
+      data = calculateStats(data, statSpec);
     }
     multiplier = asc ? 1 : -1;
     comparator = function(a, b) {
@@ -385,20 +458,30 @@
   };
 
   /*
-  # GENERAL PROCESSING
+  GENERAL PROCESSING
+  ------------------
+  Coordinating the actual work being done
+  */
+
+  /*
+  Given a layer spec, extract the data calculations that needs to be done.
   */
 
   extractDataSpec = function(layerSpec) {
     return {};
   };
 
+  /*
+  Perform the necessary computation in the front end
+  */
+
   frontendProcess = function(dataSpec, rawData, callback) {
-    var addMeta, additionalFilter, data, groupedData, metaData;
+    var addMeta, additionalFilter, data, metaData;
     data = _.clone(rawData);
     metaData = {};
     addMeta = function(key, meta) {
-      if (metaData[key] == null) metaData[key] = {};
-      return _.extend(metaData[key], meta);
+      var _ref;
+      return _.extend((_ref = metaData[key]) != null ? _ref : {}, meta);
     };
     if (dataSpec.trans) {
       _.each(dataSpec.trans, function(transSpec, key) {
@@ -421,19 +504,20 @@
       });
       data = _.filter(data, filterFactory(additionalFilter));
     }
-    if (dataSpec.stats) {
-      groupedData = poly.groupBy(data, dataSpec.stats.group);
-      data = _.map(groupedData, statisticFactory(dataSpec.stats));
-    }
+    if (dataSpec.stats) data = calculateStats(data, dataSpec.stats);
     return callback(data, metaData);
   };
+
+  /*
+  Perform the necessary computation in the backend
+  */
 
   backendProcess = function(dataSpec, rawData, callback) {
     return console.log('backendProcess');
   };
 
   /*
-  # DEBUG
+  For debug purposes only
   */
 
   poly.data.frontendProcess = frontendProcess;
@@ -499,6 +583,12 @@
 
   poly.domain = {};
 
+  /*
+  Produce a domain set for each layer based on both the information in each
+  layer and the specification of the guides, then merge them into one domain
+  set.
+  */
+
   poly.domain.make = function(layers, guideSpec, strictmode) {
     var domainSets;
     domainSets = [];
@@ -510,6 +600,10 @@
 
   /*
   # CLASSES & HELPER
+  */
+
+  /*
+  Domain classes
   */
 
   NumericDomain = (function() {
@@ -542,6 +636,10 @@
 
   })();
 
+  /*
+  Public-ish interface for making different domain types
+  */
+
   makeDomain = function(params) {
     switch (params.type) {
       case 'num':
@@ -553,6 +651,11 @@
     }
   };
 
+  /*
+  Make a domain set. A domain set is an associate array of domains, with the
+  keys being aesthetics
+  */
+
   makeDomainSet = function(layerObj, guideSpec, strictmode) {
     var domain;
     domain = {};
@@ -561,6 +664,11 @@
     });
     return domain;
   };
+
+  /*
+  Merge an array of domain sets: i.e. merge all the domains that shares the
+  same aesthetics.
+  */
 
   mergeDomainSets = function(domainSets) {
     var merged;
@@ -572,6 +680,13 @@
     });
     return merged;
   };
+
+  /*
+  Helper for merging domains of the same type. Two domains of the same type
+  can be merged if they share the same properties:
+   - For numeric/date variables all domains must have the same binwidth parameter
+   - For categorial variables, sorted domains must have any categories in common
+  */
 
   domainMerge = {
     'num': function(domains) {
@@ -619,6 +734,11 @@
     }
   };
 
+  /*
+  Merge an array of domains: Two domains can be merged if they are of the
+  same type, and they share certain properties.
+  */
+
   mergeDomains = function(domains) {
     var types;
     types = _.uniq(_.map(domains, function(d) {
@@ -663,18 +783,28 @@
 
     function Graph(spec) {
       this.render = __bind(this.render, this);
-      var _this = this;
+      this.merge = __bind(this.merge, this);
+      var merge, _ref,
+        _this = this;
       this.spec = spec;
-      if (spec.strict == null) spec.strict = false;
-      this.strict = spec.strict;
+      this.strict = (_ref = spec.strict) != null ? _ref : false;
       this.layers = [];
       if (spec.layers == null) spec.layers = [];
       _.each(spec.layers, function(layerSpec) {
         var layerObj;
         layerObj = poly.layer.make(layerSpec, spec.strict);
-        layerObj.calculate();
         return _this.layers.push(layerObj);
       });
+      merge = _.after(this.layers.length, this.merge);
+      _.each(this.layers, function(layerObj) {
+        return layerObj.calculate(merge);
+      });
+    }
+
+    Graph.prototype.merge = function() {
+      var spec,
+        _this = this;
+      spec = this.spec;
       this.domains = {};
       if (spec.guides) {
         if (spec.guides == null) spec.guides = {};
@@ -686,9 +816,8 @@
         return _this.ticks[aes] = poly.tick.make(domain, (_ref = spec.guides[aes]) != null ? _ref : []);
       });
       this.dims = poly.dim.make(spec, this.ticks);
-      this.scales = poly.scale.make(spec.guide, this.domains, this.dims);
-      console.log(this.scales);
-    }
+      return this.scales = poly.scale.make(spec.guide, this.domains, this.dims);
+    };
 
     Graph.prototype.render = function(dom) {
       var paper,
@@ -696,7 +825,7 @@
       dom = document.getElementById(dom);
       paper = poly.paper(dom, 300, 300);
       return _.each(this.layers, function(layer) {
-        return poly.render(layer.geoms, paper, _this.scales);
+        return poly.render(layer.marks, paper, _this.scales);
       });
     };
 
@@ -713,14 +842,11 @@
 }).call(this);
 (function() {
   var Bar, Layer, Line, Point, aesthetics, defaults, poly, sf,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
   poly = this.poly || {};
-
-  /*
-  # CONSTANTS
-  */
 
   aesthetics = poly["const"].aes;
 
@@ -735,11 +861,14 @@
     'shape': 1
   };
 
-  /*
-  # GLOBALS
-  */
-
   poly.layer = {};
+
+  /*
+  Turns a 'non-strict' layer spec to a strict one. Specifically, the function
+  (1) wraps aes mapping defined by a string in an object: "col" -> {var: "col"}
+  (2) puts all the level/min/max filtering into the "filter" group
+  See the layer spec definition for more information.
+  */
 
   poly.layer.toStrictMode = function(spec) {
     _.each(aesthetics, function(aes) {
@@ -751,6 +880,10 @@
     });
     return spec;
   };
+
+  /*
+  Public interface to making different layer types.
+  */
 
   poly.layer.make = function(layerSpec, strictmode) {
     switch (layerSpec.type) {
@@ -764,16 +897,17 @@
   };
 
   /*
-  # CLASSES
+  Base class for all layers
   */
 
   Layer = (function() {
 
     function Layer(layerSpec, strict) {
-      var aes, _i, _len,
-        _this = this;
+      this.calculate = __bind(this.calculate, this);
+      var aes, _i, _len;
       this.strict = strict;
       this.spec = poly.layer.toStrictMode(layerSpec);
+      this.defaults = defaults;
       this.mapping = {};
       this.consts = {};
       for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
@@ -783,30 +917,24 @@
           if (this.spec[aes]["const"]) this.consts[aes] = this.spec[aes]["const"];
         }
       }
-      this.defaults = defaults;
-      this.dataprocess = new poly.DataProcess(layerSpec);
-      this.dataprocess.process(function(statData, metaData) {
-        _this.precalc = statData;
-        return _this.meta = metaData;
-      });
-      this.postcalc = null;
-      this.geoms = null;
     }
 
-    Layer.prototype.calculate = function() {
-      this.layerDataCalc();
-      return this.geomCalc();
+    Layer.prototype.calculate = function(callback) {
+      var _this = this;
+      this.dataprocess = new poly.DataProcess(this.spec);
+      return this.dataprocess.process(function(statData, metaData) {
+        _this.statData = statData;
+        _this.meta = metaData;
+        _this._calcGeoms();
+        return callback();
+      });
     };
 
-    Layer.prototype.layerDataCalc = function() {
-      return this.postcalc = this.precalc;
-    };
-
-    Layer.prototype.geomCalc = function() {
+    Layer.prototype._calcGeoms = function() {
       return this.geoms = {};
     };
 
-    Layer.prototype.getValue = function(item, aes) {
+    Layer.prototype._getValue = function(item, aes) {
       if (this.mapping[aes]) return item[this.mapping[aes]];
       if (this.consts[aes]) return sf.identity(this.consts[aes]);
       return sf.identity(this.defaults[aes]);
@@ -824,9 +952,9 @@
       Point.__super__.constructor.apply(this, arguments);
     }
 
-    Point.prototype.geomCalc = function() {
+    Point.prototype._calcGeoms = function() {
       var _this = this;
-      return this.geoms = _.map(this.postcalc, function(item) {
+      return this.geoms = _.map(this.statData, function(item) {
         var evtData;
         evtData = {};
         _.each(item, function(v, k) {
@@ -835,12 +963,12 @@
           };
         });
         return {
-          geoms: [
+          marks: [
             {
               type: 'point',
-              x: _this.getValue(item, 'x'),
-              y: _this.getValue(item, 'y'),
-              color: _this.getValue(item, 'color')
+              x: _this._getValue(item, 'x'),
+              y: _this._getValue(item, 'y'),
+              color: _this._getValue(item, 'color')
             }
           ],
           evtData: evtData
@@ -860,12 +988,7 @@
       Line.__super__.constructor.apply(this, arguments);
     }
 
-    Line.prototype.layerDataCalc = function() {
-      this.ys = this.mapping['y'] ? _.uniq(_.pluck(this.precalc, this.mapping['y'])) : [];
-      return this.postcalc = _.clone(this.precalc);
-    };
-
-    Line.prototype.geomCalc = function() {
+    Line.prototype._calcGeoms = function() {
       var datas, group, k,
         _this = this;
       group = (function() {
@@ -878,7 +1001,7 @@
         }
         return _results;
       }).call(this);
-      datas = poly.groupBy(this.postcalc, group);
+      datas = poly.groupBy(this.statData, group);
       return this.geoms = _.map(datas, function(data) {
         var evtData, item;
         evtData = {};
@@ -888,7 +1011,7 @@
           };
         });
         return {
-          geoms: [
+          marks: [
             {
               type: 'line',
               x: (function() {
@@ -896,7 +1019,7 @@
                 _results = [];
                 for (_i = 0, _len = data.length; _i < _len; _i++) {
                   item = data[_i];
-                  _results.push(this.getValue(item, 'x'));
+                  _results.push(this._getValue(item, 'x'));
                 }
                 return _results;
               }).call(_this),
@@ -905,11 +1028,11 @@
                 _results = [];
                 for (_i = 0, _len = data.length; _i < _len; _i++) {
                   item = data[_i];
-                  _results.push(this.getValue(item, 'y'));
+                  _results.push(this._getValue(item, 'y'));
                 }
                 return _results;
               }).call(_this),
-              color: _this.getValue(data[0], 'color')
+              color: _this._getValue(data[0], 'color')
             }
           ],
           evtData: evtData
@@ -929,13 +1052,12 @@
       Bar.__super__.constructor.apply(this, arguments);
     }
 
-    Bar.prototype.layerDataCalc = function() {
+    Bar.prototype._calcGeoms = function() {
       var datas, group,
         _this = this;
-      this.postcalc = _.clone(this.precalc);
       group = this.mapping.x != null ? [this.mapping.x] : [];
-      datas = poly.groupBy(this.postcalc, group);
-      return _.each(datas, function(data) {
+      datas = poly.groupBy(this.statData, group);
+      _.each(datas, function(data) {
         var tmp, yval;
         tmp = 0;
         yval = _this.mapping.y != null ? (function(item) {
@@ -949,11 +1071,7 @@
           return item.$upper = tmp;
         });
       });
-    };
-
-    Bar.prototype.geomCalc = function() {
-      var _this = this;
-      return this.geoms = _.map(this.postcalc, function(item) {
+      return this.geoms = _.map(this.statData, function(item) {
         var evtData;
         evtData = {};
         _.each(item, function(v, k) {
@@ -964,14 +1082,14 @@
           }
         });
         return {
-          geoms: [
+          marks: [
             {
               type: 'rect',
-              x1: sf.lower(_this.getValue(item, 'x')),
-              x2: sf.upper(_this.getValue(item, 'x')),
+              x1: sf.lower(_this._getValue(item, 'x')),
+              x2: sf.upper(_this._getValue(item, 'x')),
               y1: item.$lower,
               y2: item.$upper,
-              fill: _this.getValue(item, 'color')
+              fill: _this._getValue(item, 'color')
             }
           ]
         };
@@ -1002,6 +1120,10 @@
     return Raphael(dom, w, h);
   };
 
+  /*
+  Helper function for rendering all the geoms of an object
+  */
+
   poly.render = function(geoms, paper, scales) {
     return _.each(geoms, function(geom) {
       var evtData;
@@ -1011,6 +1133,10 @@
       });
     });
   };
+
+  /*
+  Rendering a single point
+  */
 
   poly.point = function(mark, paper, scales) {
     var pt;
@@ -1116,6 +1242,10 @@
 
   poly.tick = {};
 
+  /*
+  Produce an associate array of aesthetics to tick objects.
+  */
+
   poly.tick.make = function(domain, guideSpec, range, scale) {
     var formatter, numticks, ticks, _ref;
     if (guideSpec.ticks != null) {
@@ -1149,6 +1279,10 @@
   # CLASSES & HELPERS
   */
 
+  /*
+  Tick Object.
+  */
+
   Tick = (function() {
 
     function Tick(params) {
@@ -1159,6 +1293,10 @@
 
   })();
 
+  /*
+  Helper function for creating a function that creates ticks
+  */
+
   tickFactory = function(scale, formatter) {
     return function(value) {
       return new Tick({
@@ -1167,6 +1305,11 @@
       });
     };
   };
+
+  /*
+  Helper function for determining the size of each "step" (distance between
+  ticks) for numeric scales
+  */
 
   getStep = function(span, numticks) {
     var error, step;
@@ -1181,6 +1324,10 @@
     }
     return step;
   };
+
+  /*
+  Function for calculating the location of ticks.
+  */
 
   tickValues = {
     'cat': function(domain, numticks) {
@@ -1247,6 +1394,17 @@
   var poly;
 
   poly = this.poly || {};
+
+  /*
+  Group an array of data items by the value of certain columns.
+  
+  Input:
+  - `data`: an array of data items
+  - `group`: an array of column keys, to group by
+  Output:
+  - an associate array of key: array of data, with the appropriate grouping
+    the `key` is a string of format "columnKey:value;colunmKey2:value2;..."
+  */
 
   poly.groupBy = function(data, group) {
     return _.groupBy(data, function(item) {

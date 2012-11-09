@@ -1,19 +1,24 @@
 poly = @poly || {}
 
-# GRAPHS
+# Graph Object
 class Graph
   constructor: (spec) ->
     @spec = spec
     # mode
-    spec.strict ?= false
-    @strict = spec.strict
-    # data and layer calculation
+    @strict = spec.strict ? false
+    # creation of layers
     @layers = []
     spec.layers ?= []
     _.each spec.layers, (layerSpec) =>
       layerObj = poly.layer.make layerSpec, spec.strict
-      layerObj.calculate()
       @layers.push layerObj
+    # calculation of statistics & layers
+    merge = _.after(@layers.length, @merge)
+    _.each @layers, (layerObj) ->
+      layerObj.calculate(merge)
+
+  merge: () =>
+    spec = @spec
     # domain calculation and guide merging
     @domains = {}
     if spec.guides # for now, skip when guides are not defined
@@ -32,7 +37,7 @@ class Graph
     dom = document.getElementById(dom)
     paper = poly.paper(dom, 300, 300)
     _.each @layers, (layer) =>
-      poly.render layer.geoms, paper, @scales
+      poly.render layer.marks, paper, @scales
 
 poly.chart = (spec) ->
   new Graph(spec)

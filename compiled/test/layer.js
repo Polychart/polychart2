@@ -29,16 +29,16 @@
     layers = poly.chart(spec).layers;
     layer = layers[0];
     equal(layer.geoms.length, 2);
-    equal(layer.geoms[0].geoms[0].type, 'point');
-    equal(layer.geoms[0].geoms[0].x, 2);
-    equal(layer.geoms[0].geoms[0].y, 4);
-    deepEqual(layer.geoms[0].geoms[0].color, poly["const"].scaleFns.identity(layer.defaults.color));
+    equal(layer.geoms[0].marks[0].type, 'point');
+    equal(layer.geoms[0].marks[0].x, 2);
+    equal(layer.geoms[0].marks[0].y, 4);
+    deepEqual(layer.geoms[0].marks[0].color, poly["const"].scaleFns.identity(layer.defaults.color));
     deepEqual(layer.geoms[0].evtData.x["in"], [2]);
     deepEqual(layer.geoms[0].evtData.y["in"], [4]);
-    equal(layer.geoms[1].geoms[0].type, 'point');
-    equal(layer.geoms[1].geoms[0].x, 3);
-    equal(layer.geoms[1].geoms[0].y, 3);
-    deepEqual(layer.geoms[1].geoms[0].color, poly["const"].scaleFns.identity(layer.defaults.color));
+    equal(layer.geoms[1].marks[0].type, 'point');
+    equal(layer.geoms[1].marks[0].x, 3);
+    equal(layer.geoms[1].marks[0].y, 3);
+    deepEqual(layer.geoms[1].marks[0].color, poly["const"].scaleFns.identity(layer.defaults.color));
     deepEqual(layer.geoms[1].evtData.x["in"], [3]);
     return deepEqual(layer.geoms[1].evtData.y["in"], [3]);
   });
@@ -70,10 +70,10 @@
     layers = poly.chart(spec).layers;
     layer = layers[0];
     equal(layer.geoms.length, 1);
-    equal(layer.geoms[0].geoms[0].type, 'line');
-    deepEqual(layer.geoms[0].geoms[0].x, [2, 3]);
-    deepEqual(layer.geoms[0].geoms[0].y, [4, 3]);
-    deepEqual(layer.geoms[0].geoms[0].color, poly["const"].scaleFns.identity(layer.defaults.color));
+    equal(layer.geoms[0].marks[0].type, 'line');
+    deepEqual(layer.geoms[0].marks[0].x, [2, 3]);
+    deepEqual(layer.geoms[0].marks[0].y, [4, 3]);
+    deepEqual(layer.geoms[0].marks[0].color, poly["const"].scaleFns.identity(layer.defaults.color));
     deepEqual(layer.geoms[0].evtData, {});
     jsondata = [
       {
@@ -111,14 +111,14 @@
     layers = poly.chart(spec).layers;
     layer = layers[0];
     equal(layer.geoms.length, 2);
-    equal(layer.geoms[0].geoms[0].type, 'line');
-    deepEqual(layer.geoms[0].geoms[0].x, [2, 3]);
-    deepEqual(layer.geoms[0].geoms[0].y, [4, 3]);
-    deepEqual(layer.geoms[0].geoms[0].color, 'A');
+    equal(layer.geoms[0].marks[0].type, 'line');
+    deepEqual(layer.geoms[0].marks[0].x, [2, 3]);
+    deepEqual(layer.geoms[0].marks[0].y, [4, 3]);
+    deepEqual(layer.geoms[0].marks[0].color, 'A');
     deepEqual(layer.geoms[0].evtData.z["in"], ['A']);
-    deepEqual(layer.geoms[1].geoms[0].x, [1, 5]);
-    deepEqual(layer.geoms[1].geoms[0].y, [4, 3]);
-    deepEqual(layer.geoms[1].geoms[0].color, 2);
+    deepEqual(layer.geoms[1].marks[0].x, [1, 5]);
+    deepEqual(layer.geoms[1].marks[0].y, [4, 3]);
+    deepEqual(layer.geoms[1].marks[0].color, 2);
     return deepEqual(layer.geoms[1].evtData.z["in"], [2]);
   });
 
@@ -149,16 +149,16 @@
     layers = poly.chart(spec).layers;
     layer = layers[0];
     equal(layer.geoms.length, 2);
-    equal(layer.geoms[0].geoms[0].type, 'rect');
-    deepEqual(layer.geoms[0].geoms[0].x1, poly["const"].scaleFns.lower('A'));
-    deepEqual(layer.geoms[0].geoms[0].x2, poly["const"].scaleFns.upper('A'));
-    equal(layer.geoms[0].geoms[0].y1, 0);
-    equal(layer.geoms[0].geoms[0].y2, 4);
-    equal(layer.geoms[1].geoms[0].type, 'rect');
-    deepEqual(layer.geoms[1].geoms[0].x1, poly["const"].scaleFns.lower('A'));
-    deepEqual(layer.geoms[1].geoms[0].x2, poly["const"].scaleFns.upper('A'));
-    equal(layer.geoms[1].geoms[0].y1, 4);
-    return equal(layer.geoms[1].geoms[0].y2, 7);
+    equal(layer.geoms[0].marks[0].type, 'rect');
+    deepEqual(layer.geoms[0].marks[0].x1, poly["const"].scaleFns.lower('A'));
+    deepEqual(layer.geoms[0].marks[0].x2, poly["const"].scaleFns.upper('A'));
+    equal(layer.geoms[0].marks[0].y1, 0);
+    equal(layer.geoms[0].marks[0].y2, 4);
+    equal(layer.geoms[1].marks[0].type, 'rect');
+    deepEqual(layer.geoms[1].marks[0].x1, poly["const"].scaleFns.lower('A'));
+    deepEqual(layer.geoms[1].marks[0].x2, poly["const"].scaleFns.upper('A'));
+    equal(layer.geoms[1].marks[0].y1, 4);
+    return equal(layer.geoms[1].marks[0].y2, 7);
   });
 
 }).call(this);

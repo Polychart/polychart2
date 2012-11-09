@@ -3,22 +3,32 @@ poly = @poly || {}
 ###
 # GLOBALS
 ###
+
+###
+Generalized data object that either contains JSON format of a dataset,
+or knows how to retrieve data from some source.
+###
 class Data
   constructor: (params) ->
     {@url, @json} = params
     @frontEnd = !@url
 poly.Data = Data
 
-
+###
+Wrapper around the data processing piece that keeps track of the kind of
+data processing to be done.
+###
 class DataProcess
+  ## save the specs
   constructor: (layerSpec, strictmode) ->
     @dataObj = layerSpec.data
     @dataSpec = extractDataSpec layerSpec
     @strictmode = strictmode
     @statData = null
     @metaData = {}
+  ## calculate things...
   process: (callback) ->
-    # wrap the callback first...
+    # save a copy of the data/meta before going to callback
     wrappedCallback = (data, metaData) =>
       @statData = data
       @metaData = metaData
@@ -26,6 +36,7 @@ class DataProcess
     # actually calculate!
     if @dataObj.frontEnd
       if @strictmode
+        wrappedCallback @dataObj.json, {}
       else
         frontendProcess(@dataSpec, @dataObj.json, wrappedCallback)
     else
@@ -33,15 +44,18 @@ class DataProcess
         console.log 'wtf, cant use strict mode here'
       else
         backendProcess(@dataSpec, @dataObj, wrappedCallback)
+  ## recalculate (for interaction!)
   reprocess: (newlayerSpec, callback) ->
     newDataSpec = extractDataSpec newlayerSpec
     if _.isEqual(@dataSpec, newDataSpec)
       callback @statData, @metaData
     @dataSpec = newDataSpec
     @process callback
-
 poly.DataProcess = DataProcess
 
+###
+Temporary
+###
 poly.data = {}
 poly.data.process = (dataObj, layerSpec, strictmode, callback) ->
   d = new DataProcess layerSpec, strictmode
@@ -49,7 +63,11 @@ poly.data.process = (dataObj, layerSpec, strictmode, callback) ->
   d
 
 ###
-# TRANSFORMS
+TRANSFORMS
+----------
+Key:value pair of available transformations to a function that creates that
+transformation. Also, a metadata description of the transformation is returned
+when appropriate. (e.g for binning)
 ###
 transforms =
   'bin' : (key, transSpec) ->
@@ -66,11 +84,18 @@ transforms =
       item[name] = lastn.shift()
     return trans: lagFn, meta:undefined
 
+###
+Helper function to figures out which transformation to create, then creates it
+###
 transformFactory = (key, transSpec) ->
   transforms[transSpec.trans](key, transSpec)
 
 ###
-# FILTERS
+FILTERS
+----------
+Key:value pair of available filtering operations to filtering function. The
+filtering function returns true iff the data item satisfies the filtering 
+criteria.
 ###
 filters =
   'lt' : (x, value) -> x < value
@@ -79,6 +104,9 @@ filters =
   'ge' : (x, value) -> x >= value
   'in' : (x, value) -> x in value
 
+###
+Helper function to figures out which filter to create, then creates it
+###
 filterFactory = (filterSpec) ->
   filterFuncs = []
   _.each filterSpec, (spec, key) ->
@@ -91,37 +119,53 @@ filterFactory = (filterSpec) ->
     return true
 
 ###
-# STATS
+STATISTICS
+----------
+Key:value pair of available statistics operations to a function that creates
+the appropriate statistical function given the spec. Each statistics function
+produces one atomic value for each group of data.
 ###
 statistics =
   sum : (spec) -> (values) -> _.reduce(values, ((v, m) -> v + m), 0)
   count : (spec) -> (values) -> values.length
   uniq : (spec) -> (values) -> (_.uniq values).length
 
-statisticFactory = (statSpecs) ->
-  group = statSpecs.group
+###
+Helper function to figures out which statistics to create, then creates it
+###
+statsFactory = (statSpec) ->
+  statistics[statSpec.stat](statSpec)
+
+###
+Calculate statistics
+###
+calculateStats = (data, statSpecs) ->
+  # define stat functions
   statFuncs = {}
   _.each statSpecs.stats, (statSpec) ->
-    {stat, key, name} = statSpec
-    statFn = statistics[stat](statSpec)
+    {key, name} = statSpec
+    statFn = statsFactory statSpec
     statFuncs[name] = (data) -> statFn _.pluck(data, key)
-  (data) ->
+  # calculate the statistics for each group
+  groupedData = poly.groupBy data, statSpecs.group
+  _.map groupedData, (data) ->
     rep = {}
-    _.each group, (g) -> rep[g] = data[0][g] # define a representative
-    _.each statFuncs, (stats, name) -> rep[name] = stats(data)
+    _.each statSpecs.group, (g) -> rep[g] = data[0][g] # define a representative
+    _.each statFuncs, (stats, name) -> rep[name] = stats(data) # calc stats
     return rep
 
 ###
-# META
+META
+----
+Calculations of meta properties including sorting and limiting based on the
+values of statistical calculations
 ###
 calculateMeta = (key, metaSpec, data) ->
-  # note: data = array
   {sort, stat, limit, asc} = metaSpec
-  # stats
+  # group the data by the key
   if stat
     statSpec = stats: [stat], group: [key]
-    groupedData = poly.groupBy data, statSpec.group
-    data = _.map groupedData, statisticFactory(statSpec)
+    data = calculateStats(data, statSpec)
   # sorting
   multiplier = if asc then 1 else -1
   comparator = (a, b) ->
@@ -136,18 +180,24 @@ calculateMeta = (key, metaSpec, data) ->
   return meta: { levels: values, sorted: true}, filter: { in: values}
 
 ###
-# GENERAL PROCESSING
+GENERAL PROCESSING
+------------------
+Coordinating the actual work being done
+###
+
+###
+Given a layer spec, extract the data calculations that needs to be done.
 ###
 extractDataSpec = (layerSpec) -> {}
 
+###
+Perform the necessary computation in the front end
+###
 frontendProcess = (dataSpec, rawData, callback) ->
-  # TODO add metadata computation to binning
   data = _.clone(rawData)
   # metaData and related f'ns
   metaData = {}
-  addMeta = (key, meta) ->
-    metaData[key] ?= {}
-    _.extend metaData[key], meta
+  addMeta = (key, meta) -> _.extend (metaData[key] ? {}), meta
   # transforms
   if dataSpec.trans
     _.each dataSpec.trans, (transSpec, key) ->
@@ -167,17 +217,19 @@ frontendProcess = (dataSpec, rawData, callback) ->
     data = _.filter data, filterFactory(additionalFilter)
   # stats
   if dataSpec.stats
-    groupedData = poly.groupBy data, dataSpec.stats.group
-    data = _.map groupedData, statisticFactory(dataSpec.stats)
+    data = calculateStats(data, dataSpec.stats)
   # done
   callback(data, metaData)
 
+###
+Perform the necessary computation in the backend
+###
 backendProcess = (dataSpec, rawData, callback) ->
   # computation
   console.log 'backendProcess'
 
 ###
-# DEBUG
+For debug purposes only
 ###
 poly.data.frontendProcess = frontendProcess
 

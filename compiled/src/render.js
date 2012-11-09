@@ -11,6 +11,10 @@
     return Raphael(dom, w, h);
   };
 
+  /*
+  Helper function for rendering all the geoms of an object
+  */
+
   poly.render = function(geoms, paper, scales) {
     return _.each(geoms, function(geom) {
       var evtData;
@@ -20,6 +24,10 @@
       });
     });
   };
+
+  /*
+  Rendering a single point
+  */
 
   poly.point = function(mark, paper, scales) {
     var pt;
