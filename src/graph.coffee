@@ -38,6 +38,7 @@ class Graph
   render : (dom) =>
     dom = document.getElementById(dom)
     paper = poly.paper(dom, @dims.width, @dims.height)
+    # render each layer
     _.each @layers, (layer) =>
       poly.render layer.geoms, paper, @scales, @clipping
     # render axes

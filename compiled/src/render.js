@@ -1,5 +1,5 @@
 (function() {
-  var poly;
+  var poly, renderMark, renderPoint;
 
   poly = this.poly || {};
 
@@ -16,11 +16,11 @@
   */
 
   poly.render = function(geoms, paper, scales, clipping) {
+    var render;
+    render = renderMark(paper, scales, clipping);
     return _.each(geoms, function(geom) {
-      var evtData;
-      evtData = geom.evtData;
       return _.each(geom.marks, function(mark) {
-        return poly.point(mark, paper, scales, clipping);
+        return render(mark, geom.evtData);
       });
     });
   };
@@ -29,14 +29,29 @@
   Rendering a single point
   */
 
-  poly.point = function(mark, paper, scales, clipping) {
+  renderMark = function(paper, scales, clipping) {
+    return function(mark, evtData) {
+      var pt;
+      pt = null;
+      switch (mark.type) {
+        case 'point':
+          pt = renderPoint(paper, scales, mark);
+      }
+      if (pt) {
+        pt.attr('clip-rect', clipping);
+        pt.data('data', evtData);
+      }
+      return pt;
+    };
+  };
+
+  renderPoint = function(paper, scales, mark) {
     var pt;
     pt = paper.circle();
     pt.attr('cx', scales.x(mark.x));
     pt.attr('cy', scales.y(mark.y));
     pt.attr('r', 10);
-    pt.attr('fill', 'black');
-    return pt.attr('clip-rect', clipping);
+    return pt.attr('fill', 'black');
   };
 
 }).call(this);
