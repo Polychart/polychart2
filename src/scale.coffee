@@ -10,25 +10,47 @@ aesthetics = poly.const.aes
 ###
 poly.scale = {}
 
-poly.scale.make = (guideSpec, domains, range) ->
-  scales = {}
-  axis = {}
-  # x axis
-  if domains.x
-    axis.s = poly.scale.linear() # TODO: read from spec
-    scales.x = axis.s.make(domains.x, range.x)
-  # y axis
-  if domains.y
-    axis.s = poly.scale.linear()# TODO: read from spec
-    scales.y = axis.s.make(domains.y, range.y)
-  # How to scales work?
-  [axis, scales]
+poly.scale.make = (guideSpec, domains) ->
+  return new ScaleSet(guideSpec, domains)
+
+class ScaleSet
+  constructor: (guideSpec, domains) ->
+    inspec = (a) -> guideSpec and guideSpec[a]? and guideSpec[a].scale?
+    @factory =
+      x : if inspec('x') then guideSpec.x.scale else poly.scale.linear()
+      y : if inspec('y') then guideSpec.y.scale else poly.scale.linear()
+    @domains = domains
+    @domainx = @domains.x
+    @domainy = @domains.y
+  getScaleFns: (ranges) ->
+    @ranges = ranges
+    @scales = {}
+    if @domainx
+      @scales.x = @factory.x.construct(@domainx, @ranges.x)
+    if @domainy
+      @scales.y = @factory.y.construct(@domainy, @ranges.y)
+    return @scales
+  setXDomain: (d) -> @domainsx = d
+  setYDomain: (d) -> @domainsy = d
+  resetDomains: () ->
+    @domainx = @domains.x
+    @domainy = @domains.y
+  getAxes: () ->
+  getLegends: () ->
 
 ###
 # CLASSES
 ###
+
+
+###
+Scales here are objects that can construct functions that takes a value from
+the data, and returns another value that is suitable for rendering an
+attribute of that value.
+###
 class Scale
   constructor: (params) ->
+  guide: () -> # get a guide out of this
   construct: (domain) ->
     switch domain.type
       when 'num' then return @_constructNum domain
@@ -38,15 +60,14 @@ class Scale
   _constructDate: (domain) -> console.log 'wtf not impl'
   _constructCat: (domain) -> console.log 'wtf not impl'
 
-class Axis extends Scale
-  make: (domain, range) ->
-    @originalDomain = domain
+###
+Position Scales for the x- and y-axes
+###
+class PositionScale extends Scale
+  construct: (domain, range) ->
     @range = range
-    @construct domain
-  remake: (domain) ->
-    @construct domain
-  # wrapper for provideing scalefns
-  wrapper : (y) -> (val) ->
+    super(domain)
+  _wrapper : (y) -> (val) ->
     space = 2
     if _.isObject(val)
       if value.t is 'scalefn'
@@ -55,16 +76,18 @@ class Axis extends Scale
         if value.f is 'middle' then return y(val+domain.bw/2)
       console.log 'wtf'
     y(val)
-class Linear extends Axis
+class Linear extends PositionScale
   _constructNum: (domain) ->
-    @wrapper poly.linear(domain.min, @range.min, domain.max, @range.max)
-class Log extends Axis
+    @_wrapper poly.linear(domain.min, @range.min, domain.max, @range.max)
+class Log extends PositionScale
   _constructNum: (domain) ->
     lg = Math.log
     ylin = poly.linear lg(domain.min), @range.min, lg(domain.max), @range.max
-    @wrapper (x) -> ylin lg(x)
+    @_wrapper (x) -> ylin lg(x)
 
-
+###
+Other, legend-type scales for the x- and y-axes
+###
 class Area extends Scale
   _constructNum: (domain) -> #range = [0, 1]
     ylin = linear(Math.sqrt domain.max, Math.sqrt domain.min)
@@ -89,6 +112,7 @@ class Identity extends Scale
 
 poly.scale.linear = (params) -> new Linear(params)
 poly.scale.log = (params) -> new Log(params)
+
 
 ###
 # EXPORT

@@ -8,22 +8,14 @@ poly.paper = (dom, w, h) -> Raphael(dom, w, h)
 ###
 Helper function for rendering all the geoms of an object
 ###
-poly.render = (geoms, paper, scales, clipping) ->
-  render = renderMark paper, scales, clipping
-  _.each geoms, (geom) ->
-    _.each geom.marks, (mark) ->
-      render mark, geom.evtData
-
-###
-Rendering a single point
-###
-renderMark = (paper, scales, clipping) -> (mark, evtData) ->
+poly.render = (id, paper, scales, clipping) -> (mark, evtData) ->
   pt = null
   switch mark.type
     when 'point' then pt = renderPoint(paper, scales, mark)
   if pt
     pt.attr('clip-rect', clipping)
-    pt.data('data', evtData)
+    pt.click () -> eve(id+".click", @, evtData)
+    pt.hover () -> eve(id+".hover", @, evtData)
   pt
 
 renderPoint = (paper, scales, mark) ->

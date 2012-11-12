@@ -1,5 +1,5 @@
 (function() {
-  var Area, Axis, Brewer, Gradient, Gradient2, Identity, Linear, Log, Scale, Shape, aesthetics, poly,
+  var Area, Brewer, Gradient, Gradient2, Identity, Linear, Log, PositionScale, Scale, ScaleSet, Shape, aesthetics, poly,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -17,28 +17,74 @@
 
   poly.scale = {};
 
-  poly.scale.make = function(guideSpec, domains, range) {
-    var axis, scales;
-    scales = {};
-    axis = {};
-    if (domains.x) {
-      axis.s = poly.scale.linear();
-      scales.x = axis.s.make(domains.x, range.x);
-    }
-    if (domains.y) {
-      axis.s = poly.scale.linear();
-      scales.y = axis.s.make(domains.y, range.y);
-    }
-    return [axis, scales];
+  poly.scale.make = function(guideSpec, domains) {
+    return new ScaleSet(guideSpec, domains);
   };
+
+  ScaleSet = (function() {
+
+    function ScaleSet(guideSpec, domains) {
+      var inspec;
+      inspec = function(a) {
+        return guideSpec && (guideSpec[a] != null) && (guideSpec[a].scale != null);
+      };
+      this.factory = {
+        x: inspec('x') ? guideSpec.x.scale : poly.scale.linear(),
+        y: inspec('y') ? guideSpec.y.scale : poly.scale.linear()
+      };
+      this.domains = domains;
+      this.domainx = this.domains.x;
+      this.domainy = this.domains.y;
+    }
+
+    ScaleSet.prototype.getScaleFns = function(ranges) {
+      this.ranges = ranges;
+      this.scales = {};
+      if (this.domainx) {
+        this.scales.x = this.factory.x.construct(this.domainx, this.ranges.x);
+      }
+      if (this.domainy) {
+        this.scales.y = this.factory.y.construct(this.domainy, this.ranges.y);
+      }
+      return this.scales;
+    };
+
+    ScaleSet.prototype.setXDomain = function(d) {
+      return this.domainsx = d;
+    };
+
+    ScaleSet.prototype.setYDomain = function(d) {
+      return this.domainsy = d;
+    };
+
+    ScaleSet.prototype.resetDomains = function() {
+      this.domainx = this.domains.x;
+      return this.domainy = this.domains.y;
+    };
+
+    ScaleSet.prototype.getAxes = function() {};
+
+    ScaleSet.prototype.getLegends = function() {};
+
+    return ScaleSet;
+
+  })();
 
   /*
   # CLASSES
   */
 
+  /*
+  Scales here are objects that can construct functions that takes a value from
+  the data, and returns another value that is suitable for rendering an
+  attribute of that value.
+  */
+
   Scale = (function() {
 
     function Scale(params) {}
+
+    Scale.prototype.guide = function() {};
 
     Scale.prototype.construct = function(domain) {
       switch (domain.type) {
@@ -67,25 +113,24 @@
 
   })();
 
-  Axis = (function(_super) {
+  /*
+  Position Scales for the x- and y-axes
+  */
 
-    __extends(Axis, _super);
+  PositionScale = (function(_super) {
 
-    function Axis() {
-      Axis.__super__.constructor.apply(this, arguments);
+    __extends(PositionScale, _super);
+
+    function PositionScale() {
+      PositionScale.__super__.constructor.apply(this, arguments);
     }
 
-    Axis.prototype.make = function(domain, range) {
-      this.originalDomain = domain;
+    PositionScale.prototype.construct = function(domain, range) {
       this.range = range;
-      return this.construct(domain);
+      return PositionScale.__super__.construct.call(this, domain);
     };
 
-    Axis.prototype.remake = function(domain) {
-      return this.construct(domain);
-    };
-
-    Axis.prototype.wrapper = function(y) {
+    PositionScale.prototype._wrapper = function(y) {
       return function(val) {
         var space;
         space = 2;
@@ -101,7 +146,7 @@
       };
     };
 
-    return Axis;
+    return PositionScale;
 
   })(Scale);
 
@@ -114,12 +159,12 @@
     }
 
     Linear.prototype._constructNum = function(domain) {
-      return this.wrapper(poly.linear(domain.min, this.range.min, domain.max, this.range.max));
+      return this._wrapper(poly.linear(domain.min, this.range.min, domain.max, this.range.max));
     };
 
     return Linear;
 
-  })(Axis);
+  })(PositionScale);
 
   Log = (function(_super) {
 
@@ -133,14 +178,18 @@
       var lg, ylin;
       lg = Math.log;
       ylin = poly.linear(lg(domain.min), this.range.min, lg(domain.max), this.range.max);
-      return this.wrapper(function(x) {
+      return this._wrapper(function(x) {
         return ylin(lg(x));
       });
     };
 
     return Log;
 
-  })(Axis);
+  })(PositionScale);
+
+  /*
+  Other, legend-type scales for the x- and y-axes
+  */
 
   Area = (function(_super) {
 

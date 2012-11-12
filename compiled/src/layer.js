@@ -61,6 +61,7 @@
   Layer = (function() {
 
     function Layer(layerSpec, strict) {
+      this.render = __bind(this.render, this);
       this.calculate = __bind(this.calculate, this);
       var aes, _i, _len;
       this.strict = strict;
@@ -86,6 +87,16 @@
         _this._calcGeoms();
         return callback();
       });
+    };
+
+    Layer.prototype.render = function(paper, render) {
+      paper.setStart();
+      _.each(this.geoms, function(geom) {
+        return _.each(geom.marks, function(mark) {
+          return render(mark, geom.evtData);
+        });
+      });
+      return this.objects = paper.setFinish();
     };
 
     Layer.prototype._calcGeoms = function() {

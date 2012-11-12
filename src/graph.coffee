@@ -3,6 +3,7 @@ poly = @poly || {}
 # Graph Object
 class Graph
   constructor: (spec) ->
+    @graphId = _.uniqueId('graph_')
     @spec = spec
     # mode
     @strict = spec.strict ? false
@@ -24,23 +25,29 @@ class Graph
     if spec.guides # for now, skip when guides are not defined
       spec.guides ?= {}
       @domains = poly.domain.make @layers, spec.guides, spec.strict
-    # tick calculation (this needs to change completely)
+    # make the scales...?
+    @scaleSet = poly.scale.make spec.guides, @domains
+    # make the legends & axes?
+    @axes = @scaleSet.getAxes()
+    @legends = @scaleSet.getLegends()
+    # dimension calculation
+    @dims = poly.dim.make spec, @axes, @legends # calls guessdim internally
+    # rendering stuff...
+    @ranges = poly.dim.ranges @dims
+    @scales = @scaleSet.getScaleFns @ranges
+
+    # LEGACY: tick calculation
     @ticks = {}
     _.each @domains, (domain, aes) =>
       @ticks[aes] = poly.tick.make(domain, spec.guides[aes] ? [])
-    # dimension calculation
-    @dims = poly.dim.make spec, @ticks
-    @clipping = poly.dim.clipping @dims
-    @ranges = poly.dim.ranges @dims
-    # scale creation
-    [@axis, @scales] = poly.scale.make(spec.guide, @domains, @ranges)
 
   render : (dom) =>
     dom = document.getElementById(dom)
     paper = poly.paper(dom, @dims.width, @dims.height)
+    @clipping = poly.dim.clipping @dims
     # render each layer
-    _.each @layers, (layer) =>
-      poly.render layer.geoms, paper, @scales, @clipping
+    render = poly.render @graphId, paper, @scales, @clipping
+    _.each @layers, (layer) => layer.render(paper, render)
     # render axes
 
 poly.chart = (spec) ->

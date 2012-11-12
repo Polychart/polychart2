@@ -20,6 +20,22 @@ poly.dim.make = (spec, ticks) ->
     guideBottom: 10
   }
 
+poly.dim.guess = (spec) ->
+  return {
+    width: 320
+    height: 320
+    chartWidth: 300
+    chartHeight: 300
+    paddingLeft: 10
+    paddingRight: 10
+    paddingTop: 10
+    paddingBottom: 10
+    guideLeft: 10
+    guideRight: 10
+    guideTop: 10
+    guideBottom: 10
+  }
+
 poly.dim.clipping = (dim) ->
   x = dim.paddingLeft + dim.guideLeft
   y = dim.paddingTop + dim.guideTop

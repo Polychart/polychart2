@@ -574,6 +574,23 @@
     };
   };
 
+  poly.dim.guess = function(spec) {
+    return {
+      width: 320,
+      height: 320,
+      chartWidth: 300,
+      chartHeight: 300,
+      paddingLeft: 10,
+      paddingRight: 10,
+      paddingTop: 10,
+      paddingBottom: 10,
+      guideLeft: 10,
+      guideRight: 10,
+      guideTop: 10,
+      guideBottom: 10
+    };
+  };
+
   poly.dim.clipping = function(dim) {
     var h, w, x, y;
     x = dim.paddingLeft + dim.guideLeft;
@@ -827,6 +844,7 @@
       this.merge = __bind(this.merge, this);
       var merge, _ref,
         _this = this;
+      this.graphId = _.uniqueId('graph_');
       this.spec = spec;
       this.strict = (_ref = spec.strict) != null ? _ref : false;
       this.layers = [];
@@ -843,7 +861,7 @@
     }
 
     Graph.prototype.merge = function() {
-      var spec, _ref,
+      var spec,
         _this = this;
       spec = this.spec;
       this.domains = {};
@@ -851,24 +869,28 @@
         if (spec.guides == null) spec.guides = {};
         this.domains = poly.domain.make(this.layers, spec.guides, spec.strict);
       }
+      this.scaleSet = poly.scale.make(spec.guides, this.domains);
+      this.axes = this.scaleSet.getAxes();
+      this.legends = this.scaleSet.getLegends();
+      this.dims = poly.dim.make(spec, this.axes, this.legends);
+      this.ranges = poly.dim.ranges(this.dims);
+      this.scales = this.scaleSet.getScaleFns(this.ranges);
       this.ticks = {};
-      _.each(this.domains, function(domain, aes) {
+      return _.each(this.domains, function(domain, aes) {
         var _ref;
         return _this.ticks[aes] = poly.tick.make(domain, (_ref = spec.guides[aes]) != null ? _ref : []);
       });
-      this.dims = poly.dim.make(spec, this.ticks);
-      this.clipping = poly.dim.clipping(this.dims);
-      this.ranges = poly.dim.ranges(this.dims);
-      return _ref = poly.scale.make(spec.guide, this.domains, this.ranges), this.axis = _ref[0], this.scales = _ref[1], _ref;
     };
 
     Graph.prototype.render = function(dom) {
-      var paper,
+      var paper, render,
         _this = this;
       dom = document.getElementById(dom);
       paper = poly.paper(dom, this.dims.width, this.dims.height);
+      this.clipping = poly.dim.clipping(this.dims);
+      render = poly.render(this.graphId, paper, this.scales, this.clipping);
       return _.each(this.layers, function(layer) {
-        return poly.render(layer.geoms, paper, _this.scales, _this.clipping);
+        return layer.render(paper, render);
       });
     };
 
@@ -946,6 +968,7 @@
   Layer = (function() {
 
     function Layer(layerSpec, strict) {
+      this.render = __bind(this.render, this);
       this.calculate = __bind(this.calculate, this);
       var aes, _i, _len;
       this.strict = strict;
@@ -971,6 +994,16 @@
         _this._calcGeoms();
         return callback();
       });
+    };
+
+    Layer.prototype.render = function(paper, render) {
+      paper.setStart();
+      _.each(this.geoms, function(geom) {
+        return _.each(geom.marks, function(mark) {
+          return render(mark, geom.evtData);
+        });
+      });
+      return this.objects = paper.setFinish();
     };
 
     Layer.prototype._calcGeoms = function() {
@@ -1151,7 +1184,7 @@
 
 }).call(this);
 (function() {
-  var poly, renderMark, renderPoint;
+  var poly, renderPoint;
 
   poly = this.poly || {};
 
@@ -1167,21 +1200,7 @@
   Helper function for rendering all the geoms of an object
   */
 
-  poly.render = function(geoms, paper, scales, clipping) {
-    var render;
-    render = renderMark(paper, scales, clipping);
-    return _.each(geoms, function(geom) {
-      return _.each(geom.marks, function(mark) {
-        return render(mark, geom.evtData);
-      });
-    });
-  };
-
-  /*
-  Rendering a single point
-  */
-
-  renderMark = function(paper, scales, clipping) {
+  poly.render = function(id, paper, scales, clipping) {
     return function(mark, evtData) {
       var pt;
       pt = null;
@@ -1191,7 +1210,12 @@
       }
       if (pt) {
         pt.attr('clip-rect', clipping);
-        pt.data('data', evtData);
+        pt.click(function() {
+          return eve(id + ".click", this, evtData);
+        });
+        pt.hover(function() {
+          return eve(id + ".hover", this, evtData);
+        });
       }
       return pt;
     };
@@ -1208,7 +1232,7 @@
 
 }).call(this);
 (function() {
-  var Area, Axis, Brewer, Gradient, Gradient2, Identity, Linear, Log, Scale, Shape, aesthetics, poly,
+  var Area, Brewer, Gradient, Gradient2, Identity, Linear, Log, PositionScale, Scale, ScaleSet, Shape, aesthetics, poly,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -1226,28 +1250,74 @@
 
   poly.scale = {};
 
-  poly.scale.make = function(guideSpec, domains, range) {
-    var axis, scales;
-    scales = {};
-    axis = {};
-    if (domains.x) {
-      axis.s = poly.scale.linear();
-      scales.x = axis.s.make(domains.x, range.x);
-    }
-    if (domains.y) {
-      axis.s = poly.scale.linear();
-      scales.y = axis.s.make(domains.y, range.y);
-    }
-    return [axis, scales];
+  poly.scale.make = function(guideSpec, domains) {
+    return new ScaleSet(guideSpec, domains);
   };
+
+  ScaleSet = (function() {
+
+    function ScaleSet(guideSpec, domains) {
+      var inspec;
+      inspec = function(a) {
+        return guideSpec && (guideSpec[a] != null) && (guideSpec[a].scale != null);
+      };
+      this.factory = {
+        x: inspec('x') ? guideSpec.x.scale : poly.scale.linear(),
+        y: inspec('y') ? guideSpec.y.scale : poly.scale.linear()
+      };
+      this.domains = domains;
+      this.domainx = this.domains.x;
+      this.domainy = this.domains.y;
+    }
+
+    ScaleSet.prototype.getScaleFns = function(ranges) {
+      this.ranges = ranges;
+      this.scales = {};
+      if (this.domainx) {
+        this.scales.x = this.factory.x.construct(this.domainx, this.ranges.x);
+      }
+      if (this.domainy) {
+        this.scales.y = this.factory.y.construct(this.domainy, this.ranges.y);
+      }
+      return this.scales;
+    };
+
+    ScaleSet.prototype.setXDomain = function(d) {
+      return this.domainsx = d;
+    };
+
+    ScaleSet.prototype.setYDomain = function(d) {
+      return this.domainsy = d;
+    };
+
+    ScaleSet.prototype.resetDomains = function() {
+      this.domainx = this.domains.x;
+      return this.domainy = this.domains.y;
+    };
+
+    ScaleSet.prototype.getAxes = function() {};
+
+    ScaleSet.prototype.getLegends = function() {};
+
+    return ScaleSet;
+
+  })();
 
   /*
   # CLASSES
   */
 
+  /*
+  Scales here are objects that can construct functions that takes a value from
+  the data, and returns another value that is suitable for rendering an
+  attribute of that value.
+  */
+
   Scale = (function() {
 
     function Scale(params) {}
+
+    Scale.prototype.guide = function() {};
 
     Scale.prototype.construct = function(domain) {
       switch (domain.type) {
@@ -1276,25 +1346,24 @@
 
   })();
 
-  Axis = (function(_super) {
+  /*
+  Position Scales for the x- and y-axes
+  */
 
-    __extends(Axis, _super);
+  PositionScale = (function(_super) {
 
-    function Axis() {
-      Axis.__super__.constructor.apply(this, arguments);
+    __extends(PositionScale, _super);
+
+    function PositionScale() {
+      PositionScale.__super__.constructor.apply(this, arguments);
     }
 
-    Axis.prototype.make = function(domain, range) {
-      this.originalDomain = domain;
+    PositionScale.prototype.construct = function(domain, range) {
       this.range = range;
-      return this.construct(domain);
+      return PositionScale.__super__.construct.call(this, domain);
     };
 
-    Axis.prototype.remake = function(domain) {
-      return this.construct(domain);
-    };
-
-    Axis.prototype.wrapper = function(y) {
+    PositionScale.prototype._wrapper = function(y) {
       return function(val) {
         var space;
         space = 2;
@@ -1310,7 +1379,7 @@
       };
     };
 
-    return Axis;
+    return PositionScale;
 
   })(Scale);
 
@@ -1323,12 +1392,12 @@
     }
 
     Linear.prototype._constructNum = function(domain) {
-      return this.wrapper(poly.linear(domain.min, this.range.min, domain.max, this.range.max));
+      return this._wrapper(poly.linear(domain.min, this.range.min, domain.max, this.range.max));
     };
 
     return Linear;
 
-  })(Axis);
+  })(PositionScale);
 
   Log = (function(_super) {
 
@@ -1342,14 +1411,18 @@
       var lg, ylin;
       lg = Math.log;
       ylin = poly.linear(lg(domain.min), this.range.min, lg(domain.max), this.range.max);
-      return this.wrapper(function(x) {
+      return this._wrapper(function(x) {
         return ylin(lg(x));
       });
     };
 
     return Log;
 
-  })(Axis);
+  })(PositionScale);
+
+  /*
+  Other, legend-type scales for the x- and y-axes
+  */
 
   Area = (function(_super) {
 

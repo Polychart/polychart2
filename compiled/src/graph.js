@@ -11,6 +11,7 @@
       this.merge = __bind(this.merge, this);
       var merge, _ref,
         _this = this;
+      this.graphId = _.uniqueId('graph_');
       this.spec = spec;
       this.strict = (_ref = spec.strict) != null ? _ref : false;
       this.layers = [];
@@ -27,7 +28,7 @@
     }
 
     Graph.prototype.merge = function() {
-      var spec, _ref,
+      var spec,
         _this = this;
       spec = this.spec;
       this.domains = {};
@@ -35,24 +36,28 @@
         if (spec.guides == null) spec.guides = {};
         this.domains = poly.domain.make(this.layers, spec.guides, spec.strict);
       }
+      this.scaleSet = poly.scale.make(spec.guides, this.domains);
+      this.axes = this.scaleSet.getAxes();
+      this.legends = this.scaleSet.getLegends();
+      this.dims = poly.dim.make(spec, this.axes, this.legends);
+      this.ranges = poly.dim.ranges(this.dims);
+      this.scales = this.scaleSet.getScaleFns(this.ranges);
       this.ticks = {};
-      _.each(this.domains, function(domain, aes) {
+      return _.each(this.domains, function(domain, aes) {
         var _ref;
         return _this.ticks[aes] = poly.tick.make(domain, (_ref = spec.guides[aes]) != null ? _ref : []);
       });
-      this.dims = poly.dim.make(spec, this.ticks);
-      this.clipping = poly.dim.clipping(this.dims);
-      this.ranges = poly.dim.ranges(this.dims);
-      return _ref = poly.scale.make(spec.guide, this.domains, this.ranges), this.axis = _ref[0], this.scales = _ref[1], _ref;
     };
 
     Graph.prototype.render = function(dom) {
-      var paper,
+      var paper, render,
         _this = this;
       dom = document.getElementById(dom);
       paper = poly.paper(dom, this.dims.width, this.dims.height);
+      this.clipping = poly.dim.clipping(this.dims);
+      render = poly.render(this.graphId, paper, this.scales, this.clipping);
       return _.each(this.layers, function(layer) {
-        return poly.render(layer.geoms, paper, _this.scales, _this.clipping);
+        return layer.render(paper, render);
       });
     };
 

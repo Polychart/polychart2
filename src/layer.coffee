@@ -68,6 +68,15 @@ class Layer
       @meta = metaData
       @_calcGeoms()
       callback()
+  render: (paper, render) =>
+    paper.setStart()
+    _.each @geoms, (geom) ->
+      _.each geom.marks, (mark) ->
+        render mark, geom.evtData
+    @objects = paper.setFinish() #TODO -- store each INDIVIDUAL object
+    #eve.on '*.click', (a) -> console.log(this); console.log a
+    #eve.on '*.hover', (a) -> console.log('hover', this)
+
   # layer level calculation resulting in geometric objects
   _calcGeoms: () -> @geoms = {}
   # helper for getting the value of a particular aesthetic from an item

@@ -1,5 +1,5 @@
 (function() {
-  var poly, renderMark, renderPoint;
+  var poly, renderPoint;
 
   poly = this.poly || {};
 
@@ -15,21 +15,7 @@
   Helper function for rendering all the geoms of an object
   */
 
-  poly.render = function(geoms, paper, scales, clipping) {
-    var render;
-    render = renderMark(paper, scales, clipping);
-    return _.each(geoms, function(geom) {
-      return _.each(geom.marks, function(mark) {
-        return render(mark, geom.evtData);
-      });
-    });
-  };
-
-  /*
-  Rendering a single point
-  */
-
-  renderMark = function(paper, scales, clipping) {
+  poly.render = function(id, paper, scales, clipping) {
     return function(mark, evtData) {
       var pt;
       pt = null;
@@ -39,7 +25,12 @@
       }
       if (pt) {
         pt.attr('clip-rect', clipping);
-        pt.data('data', evtData);
+        pt.click(function() {
+          return eve(id + ".click", this, evtData);
+        });
+        pt.hover(function() {
+          return eve(id + ".hover", this, evtData);
+        });
       }
       return pt;
     };
