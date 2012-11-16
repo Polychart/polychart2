@@ -10,32 +10,42 @@ aesthetics = poly.const.aes
 ###
 poly.scale = {}
 
-poly.scale.make = (guideSpec, domains) ->
-  return new ScaleSet(guideSpec, domains)
+poly.scale.make = (guideSpec, domains, ranges) ->
+  return new ScaleSet(guideSpec, domains, ranges)
 
 class ScaleSet
-  constructor: (guideSpec, domains) ->
+  constructor: (guideSpec, domains, ranges) ->
     inspec = (a) -> guideSpec and guideSpec[a]? and guideSpec[a].scale?
+    @guideSpec = guideSpec
     @factory =
       x : if inspec('x') then guideSpec.x.scale else poly.scale.linear()
       y : if inspec('y') then guideSpec.y.scale else poly.scale.linear()
     @domains = domains
     @domainx = @domains.x
     @domainy = @domains.y
-  getScaleFns: (ranges) ->
     @ranges = ranges
+  setRanges: (ranges) -> @ranges = ranges
+  getScaleFns: () ->
     @scales = {}
     if @domainx
       @scales.x = @factory.x.construct(@domainx, @ranges.x)
     if @domainy
       @scales.y = @factory.y.construct(@domainy, @ranges.y)
-    return @scales
-  setXDomain: (d) -> @domainsx = d
-  setYDomain: (d) -> @domainsy = d
+    @scales
+  setXDomain: (d) -> @domainx = d; @getScaleFns()
+  setYDomain: (d) -> @domainy = d; @getScaleFns()
   resetDomains: () ->
     @domainx = @domains.x
     @domainy = @domains.y
   getAxes: () ->
+    @getScaleFns()
+    axes = {}
+    get = (a) => if @guideSpec and @guideSpec[a] then @guideSpec[a] else {}
+    if @factory.x and @domainx
+      axes.x = poly.guide.axis @domainx, @factory.x, @scales.x, get('x')
+    if @factory.y and @domainy
+      axes.y = poly.guide.axis @domainy, @factory.y, @scales.y, get('y')
+    axes
   getLegends: () ->
 
 ###
@@ -59,6 +69,14 @@ class Scale
   _constructNum: (domain) -> console.log 'wtf not impl'
   _constructDate: (domain) -> console.log 'wtf not impl'
   _constructCat: (domain) -> console.log 'wtf not impl'
+  tickType: (domain) ->
+    switch domain.type
+      when 'num' then return @_tickNum domain
+      when 'date' then return @_tickDate domain
+      when 'cat' then return @_tickCat domain
+  _tickNum: () -> 'num'
+  _tickDate: () -> 'date'
+  _tickCat: () -> 'cat'
 
 ###
 Position Scales for the x- and y-axes
@@ -79,11 +97,13 @@ class PositionScale extends Scale
 class Linear extends PositionScale
   _constructNum: (domain) ->
     @_wrapper poly.linear(domain.min, @range.min, domain.max, @range.max)
+  _constructCat: (domain) -> (x) -> 20
 class Log extends PositionScale
   _constructNum: (domain) ->
     lg = Math.log
     ylin = poly.linear lg(domain.min), @range.min, lg(domain.max), @range.max
     @_wrapper (x) -> ylin lg(x)
+  _tickNum: () -> 'num-log'
 
 ###
 Other, legend-type scales for the x- and y-axes

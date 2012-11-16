@@ -26,20 +26,19 @@ class Graph
       spec.guides ?= {}
       @domains = poly.domain.make @layers, spec.guides, spec.strict
     # make the scales...?
-    @scaleSet = poly.scale.make spec.guides, @domains
+    tmpRanges = poly.dim.ranges poly.dim.guess @spec
+    @scaleSet = poly.scale.make spec.guides, @domains, tmpRanges
     # make the legends & axes?
     @axes = @scaleSet.getAxes()
     @legends = @scaleSet.getLegends()
     # dimension calculation
     @dims = poly.dim.make spec, @axes, @legends # calls guessdim internally
     # rendering stuff...
-    @ranges = poly.dim.ranges @dims
-    @scales = @scaleSet.getScaleFns @ranges
+    @scaleSet.setRanges poly.dim.ranges(@dims)
+    @scales = @scaleSet.getScaleFns()
 
     # LEGACY: tick calculation
-    @ticks = {}
-    _.each @domains, (domain, aes) =>
-      @ticks[aes] = poly.tick.make(domain, spec.guides[aes] ? [])
+    @ticks = @axes
 
   render : (dom) =>
     dom = document.getElementById(dom)

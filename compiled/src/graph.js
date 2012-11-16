@@ -28,25 +28,21 @@
     }
 
     Graph.prototype.merge = function() {
-      var spec,
-        _this = this;
+      var spec, tmpRanges;
       spec = this.spec;
       this.domains = {};
       if (spec.guides) {
         if (spec.guides == null) spec.guides = {};
         this.domains = poly.domain.make(this.layers, spec.guides, spec.strict);
       }
-      this.scaleSet = poly.scale.make(spec.guides, this.domains);
+      tmpRanges = poly.dim.ranges(poly.dim.guess(this.spec));
+      this.scaleSet = poly.scale.make(spec.guides, this.domains, tmpRanges);
       this.axes = this.scaleSet.getAxes();
       this.legends = this.scaleSet.getLegends();
       this.dims = poly.dim.make(spec, this.axes, this.legends);
-      this.ranges = poly.dim.ranges(this.dims);
-      this.scales = this.scaleSet.getScaleFns(this.ranges);
-      this.ticks = {};
-      return _.each(this.domains, function(domain, aes) {
-        var _ref;
-        return _this.ticks[aes] = poly.tick.make(domain, (_ref = spec.guides[aes]) != null ? _ref : []);
-      });
+      this.scaleSet.setRanges(poly.dim.ranges(this.dims));
+      this.scales = this.scaleSet.getScaleFns();
+      return this.ticks = this.axes;
     };
 
     Graph.prototype.render = function(dom) {

@@ -17,17 +17,18 @@
 
   poly.scale = {};
 
-  poly.scale.make = function(guideSpec, domains) {
-    return new ScaleSet(guideSpec, domains);
+  poly.scale.make = function(guideSpec, domains, ranges) {
+    return new ScaleSet(guideSpec, domains, ranges);
   };
 
   ScaleSet = (function() {
 
-    function ScaleSet(guideSpec, domains) {
+    function ScaleSet(guideSpec, domains, ranges) {
       var inspec;
       inspec = function(a) {
         return guideSpec && (guideSpec[a] != null) && (guideSpec[a].scale != null);
       };
+      this.guideSpec = guideSpec;
       this.factory = {
         x: inspec('x') ? guideSpec.x.scale : poly.scale.linear(),
         y: inspec('y') ? guideSpec.y.scale : poly.scale.linear()
@@ -35,10 +36,14 @@
       this.domains = domains;
       this.domainx = this.domains.x;
       this.domainy = this.domains.y;
+      this.ranges = ranges;
     }
 
-    ScaleSet.prototype.getScaleFns = function(ranges) {
-      this.ranges = ranges;
+    ScaleSet.prototype.setRanges = function(ranges) {
+      return this.ranges = ranges;
+    };
+
+    ScaleSet.prototype.getScaleFns = function() {
       this.scales = {};
       if (this.domainx) {
         this.scales.x = this.factory.x.construct(this.domainx, this.ranges.x);
@@ -50,11 +55,13 @@
     };
 
     ScaleSet.prototype.setXDomain = function(d) {
-      return this.domainsx = d;
+      this.domainx = d;
+      return this.getScaleFns();
     };
 
     ScaleSet.prototype.setYDomain = function(d) {
-      return this.domainsy = d;
+      this.domainy = d;
+      return this.getScaleFns();
     };
 
     ScaleSet.prototype.resetDomains = function() {
@@ -62,7 +69,26 @@
       return this.domainy = this.domains.y;
     };
 
-    ScaleSet.prototype.getAxes = function() {};
+    ScaleSet.prototype.getAxes = function() {
+      var axes, get,
+        _this = this;
+      this.getScaleFns();
+      axes = {};
+      get = function(a) {
+        if (_this.guideSpec && _this.guideSpec[a]) {
+          return _this.guideSpec[a];
+        } else {
+          return {};
+        }
+      };
+      if (this.factory.x && this.domainx) {
+        axes.x = poly.guide.axis(this.domainx, this.factory.x, this.scales.x, get('x'));
+      }
+      if (this.factory.y && this.domainy) {
+        axes.y = poly.guide.axis(this.domainy, this.factory.y, this.scales.y, get('y'));
+      }
+      return axes;
+    };
 
     ScaleSet.prototype.getLegends = function() {};
 
@@ -107,6 +133,29 @@
 
     Scale.prototype._constructCat = function(domain) {
       return console.log('wtf not impl');
+    };
+
+    Scale.prototype.tickType = function(domain) {
+      switch (domain.type) {
+        case 'num':
+          return this._tickNum(domain);
+        case 'date':
+          return this._tickDate(domain);
+        case 'cat':
+          return this._tickCat(domain);
+      }
+    };
+
+    Scale.prototype._tickNum = function() {
+      return 'num';
+    };
+
+    Scale.prototype._tickDate = function() {
+      return 'date';
+    };
+
+    Scale.prototype._tickCat = function() {
+      return 'cat';
     };
 
     return Scale;
@@ -162,6 +211,12 @@
       return this._wrapper(poly.linear(domain.min, this.range.min, domain.max, this.range.max));
     };
 
+    Linear.prototype._constructCat = function(domain) {
+      return function(x) {
+        return 20;
+      };
+    };
+
     return Linear;
 
   })(PositionScale);
@@ -181,6 +236,10 @@
       return this._wrapper(function(x) {
         return ylin(lg(x));
       });
+    };
+
+    Log.prototype._tickNum = function() {
+      return 'num-log';
     };
 
     return Log;

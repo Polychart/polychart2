@@ -13,21 +13,14 @@
   Produce an associate array of aesthetics to tick objects.
   */
 
-  poly.tick.make = function(domain, guideSpec, range, scale) {
+  poly.tick.make = function(domain, scale, guideSpec, type) {
     var formatter, numticks, ticks, _ref;
     if (guideSpec.ticks != null) {
       ticks = guideSpec.ticks;
     } else {
       numticks = (_ref = guideSpec.numticks) != null ? _ref : 5;
-      if (domain.type === 'num' && guideSpec.transform === 'log') {
-        ticks = tickValues['num-log'](domain, numticks);
-      } else {
-        ticks = tickValues[domain.type](domain, numticks);
-      }
+      ticks = tickValues[type](domain, numticks);
     }
-    scale = scale || function(x) {
-      return x;
-    };
     formatter = function(x) {
       return x;
     };

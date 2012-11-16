@@ -8,24 +8,21 @@ poly.tick = {}
 ###
 Produce an associate array of aesthetics to tick objects.
 ###
-poly.tick.make = (domain, guideSpec, range, scale) ->
-  # produce an array of just the tick locations
+poly.tick.make = (domain, scale, guideSpec, type) ->
   if guideSpec.ticks?
     ticks = guideSpec.ticks # provided by spec
   else
     numticks = guideSpec.numticks ? 5 # use default
-    if domain.type == 'num' and guideSpec.transform == 'log'
-      ticks = tickValues['num-log'] domain, numticks
-    else
-      ticks = tickValues[domain.type] domain, numticks
+    ticks = tickValues[type] domain, numticks
   # turn each tick location to an actual tick object
-  scale = scale || (x) -> x
   formatter = (x) -> x
   if guideSpec.labels
     formatter = (x) -> guideSpec.labels[x] ? x
   else if guideSpec.formatter
     formatter = guideSpec.formatter
   ticks = _.map ticks, tickFactory(scale, formatter)
+ 
+
 
 ###
 # CLASSES & HELPERS
