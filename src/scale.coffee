@@ -40,11 +40,19 @@ class ScaleSet
   getAxes: () ->
     @getScaleFns()
     axes = {}
-    get = (a) => if @guideSpec and @guideSpec[a] then @guideSpec[a] else {}
+    getparams = (a) =>
+      domain: @domains[a]
+      factory: @factory[a]
+      scale: @scales[a]
+      guideSpec: if @guideSpec and @guideSpec[a] then @guideSpec[a] else {}
     if @factory.x and @domainx
-      axes.x = poly.guide.axis @domainx, @factory.x, @scales.x, get('x')
+      params = getparams 'x'
+      params.domain = @domainx
+      axes.x = poly.guide.axis params
     if @factory.y and @domainy
-      axes.y = poly.guide.axis @domainy, @factory.y, @scales.y, get('y')
+      params = getparams 'y'
+      params.domain = @domainy
+      axes.y = poly.guide.axis params
     axes
   getLegends: () ->
 

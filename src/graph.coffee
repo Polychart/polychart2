@@ -38,7 +38,8 @@ class Graph
     @scales = @scaleSet.getScaleFns()
 
     # LEGACY: tick calculation
-    @ticks = @axes
+    @ticks = {}
+    _.each @axes, (v, k) => @ticks[k] = v.ticks
 
   render : (dom) =>
     dom = document.getElementById(dom)
