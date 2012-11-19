@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      // for testing IE, remove array.indexOf
+      // delete Array.prototype.indexOf;
+    </script>
+    <script type="text/javascript" src="lib/raphael.js"></script>
+    <script type="text/javascript" src="lib/underscore.js"></script>
+    <script type="text/javascript" src="polychart2.js"></script>
+  </head>
+  <body>
+    <div id="hello"></div>
+    <div id="hello2"></div>
+    <script type="text/javascript">
+    jsondata = [ { x: 2, y: 1 }, { x: 3, y: 3 } ];
+    data = new poly.Data({ json: jsondata });
+    sampleLayer = { data: data, type: 'point', x: 'x', y: 'y' };
+    spec = {
+      layers: [sampleLayer],
+      strict: true,
+      guides: {
+        x: { type: 'num', min: 0, max: 4, bw: 3 },
+        y: { type: 'num', min: 0, max: 4 }
+      }
+    };
+    c = poly.chart(spec)
+    c.render('hello')
+
+    /*
+    p2 = Raphael("hello2", 30,30)
+    eve("*", function() {
+      console.log(2)
+      p2.circle(15,15,5)
+    }) */
+    </script>
+
+  </body>
+</html>
+
