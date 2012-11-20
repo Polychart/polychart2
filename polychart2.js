@@ -1119,6 +1119,25 @@
       return function(values) {
         return (_.uniq(values)).length;
       };
+    },
+    min: function(spec) {
+      return function(values) {
+        return _.min(values);
+      };
+    },
+    max: function(spec) {
+      return function(values) {
+        return _.max(values);
+      };
+    },
+    median: function(spec) {
+      return function(values) {
+        debugger;
+        var mid;
+        mid = values.length / 2;
+        if (mid % 1 !== 0) return values[Math.floor(mid)];
+        return (values[mid - 1] + values[mid]) / 2;
+      };
     }
   };
 

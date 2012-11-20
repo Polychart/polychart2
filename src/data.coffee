@@ -129,6 +129,12 @@ statistics =
   sum : (spec) -> (values) -> _.reduce(values, ((v, m) -> v + m), 0)
   count : (spec) -> (values) -> values.length
   uniq : (spec) -> (values) -> (_.uniq values).length
+  min: (spec) -> (values) -> _.min(values)
+  max: (spec) -> (values) -> _.max(values)
+  median: (spec) -> (values) ->
+    mid = values.length / 2
+    if mid % 1 != 0 then return values[Math.floor(mid)]
+    return (values[mid-1] + values[mid])/2
 
 ###
 Helper function to figures out which statistics to create, then creates it

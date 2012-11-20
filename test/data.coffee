@@ -140,7 +140,7 @@ test "filtering", ->
       {x: 3.4, y: 3, z:'B'}
     ]
 
-test "statistics - sum", ->
+test "statistics - count", ->
   data = [
     {x: 'A', y: 1, z:1}
     {x: 'A', y: 1, z:2}
@@ -206,6 +206,33 @@ test "statistics - sum", ->
       {x: 'A', z:2, 'uniq(y)': 1, 'count(y)':3}
       {x: 'B', z:1, 'uniq(y)': 1, 'count(y)':2}
       {x: 'B', z:2, 'uniq(y)': 1, 'count(y)':2}
+    ]
+
+
+
+  data = [
+    {x: 'A', y: 1, z:1}
+    {x: 'A', y: 2, z:2}
+    {x: 'A', y: 3, z:1}
+    {x: 'A', y: 4, z:2}
+    {x: 'A', y: 5, z:1}
+    {x: 'B', y: 1, z:1}
+    {x: 'B', y: 2, z:2}
+    {x: 'B', y: 3, z:1}
+    {x: 'B', y: 4, z:2}
+  ]
+  spec =
+    stats:
+      stats: [
+        {key: 'y', stat: 'min', name: 'min(y)'}
+        {key: 'y', stat: 'max', name: 'max(y)'}
+        {key: 'y', stat: 'median', name: 'median(y)'}
+      ]
+      group: ['x']
+  trans = poly.data.frontendProcess spec, data, (x) -> x
+  deepEqual trans, [
+      {x: 'A', 'min(y)': 1, 'max(y)': 5, 'median(y)': 3}
+      {x: 'B', 'min(y)': 1, 'max(y)': 4, 'median(y)': 2.5}
     ]
 
 test "meta sorting", ->
