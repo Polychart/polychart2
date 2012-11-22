@@ -32,7 +32,9 @@ poly.linear = (x1, y1, x2, y2) ->
 ###
 given a sorted list and a midpoint calculate the median
 ###
-poly.median = (values, mid) ->
+poly.median = (values, sorted=false) ->
+    if not sorted then values = _.sortBy(values, (x)->x)
+    mid = values.length/2
     if mid % 1 != 0 then return values[Math.floor(mid)]
     return (values[mid-1]+values[mid])/2
 

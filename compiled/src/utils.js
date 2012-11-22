@@ -49,7 +49,17 @@
   */
 
 
-  poly.median = function(values, mid) {
+  poly.median = function(values, sorted) {
+    var mid;
+    if (sorted == null) {
+      sorted = false;
+    }
+    if (!sorted) {
+      values = _.sortBy(values, function(x) {
+        return x;
+      });
+    }
+    mid = values.length / 2;
     if (mid % 1 !== 0) {
       return values[Math.floor(mid)];
     }

@@ -250,12 +250,7 @@
     },
     median: function(spec) {
       return function(values) {
-        var mid, sortedValues;
-        mid = values.length / 2;
-        sortedValues = _.sortBy(values, function(x) {
-          return x;
-        });
-        return poly.median(sortedValues, mid);
+        return poly.median(values);
       };
     },
     box: function(spec) {
@@ -284,7 +279,7 @@
         return {
           q1: _.min(splitValues["true"]),
           q2: q2,
-          q3: poly.median(sortedValues, mid),
+          q3: poly.median(sortedValues, true),
           q4: q4,
           q5: _.max(splitValues["true"]),
           outliers: splitValues["false"]

@@ -131,10 +131,7 @@ statistics =
   uniq : (spec) -> (values) -> (_.uniq values).length
   min: (spec) -> (values) -> _.min(values)
   max: (spec) -> (values) -> _.max(values)
-  median: (spec) -> (values) ->
-    mid = values.length/2
-    sortedValues = _.sortBy(values, (x)->x)
-    poly.median(sortedValues, mid)
+  median: (spec) -> (values) -> poly.median(values)
   box: (spec) -> (values) ->
     len = values.length
     mid = len/2
@@ -155,7 +152,7 @@ statistics =
     return {
         q1: _.min(splitValues.true)
         q2: q2
-        q3: poly.median(sortedValues, mid)
+        q3: poly.median(sortedValues, true)
         q4: q4
         q5: _.max(splitValues.true)
         outliers: splitValues.false
