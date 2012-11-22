@@ -29,5 +29,12 @@ Output:
 poly.linear = (x1, y1, x2, y2) ->
   (x) -> (y2-y1)/(x2-x1)*(x-x1) + y1
 
+###
+given a sorted list and a midpoint calculate the median
+###
+poly.median = (values, mid) ->
+    if mid % 1 != 0 then return values[Math.floor(mid)]
+    return (values[mid-1]+values[mid])/2
+
 @poly = poly
 

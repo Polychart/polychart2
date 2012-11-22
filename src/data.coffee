@@ -94,7 +94,7 @@ transformFactory = (key, transSpec) ->
 FILTERS
 ----------
 Key:value pair of available filtering operations to filtering function. The
-filtering function returns true iff the data item satisfies the filtering 
+filtering function returns true iff the data item satisfies the filtering
 criteria.
 ###
 filters =
@@ -132,10 +132,34 @@ statistics =
   min: (spec) -> (values) -> _.min(values)
   max: (spec) -> (values) -> _.max(values)
   median: (spec) -> (values) ->
-    mid = values.length / 2
-    if mid % 1 != 0 then return values[Math.floor(mid)]
-    return (values[mid-1] + values[mid])/2
-
+    mid = values.length/2
+    sortedValues = _.sortBy(values, (x)->x)
+    poly.median(sortedValues, mid)
+  box: (spec) -> (values) ->
+    len = values.length
+    mid = len/2
+    sortedValues = _.sortBy(values, (x)->x)
+    quarter = Math.ceil(mid)/2
+    if quarter % 1 != 0
+        quarter = Math.floor(quarter)
+        q2 = sortedValues[quarter]
+        q4 = sortedValues[(len-1)-quarter]
+    else
+        q2 = (sortedValues[quarter] + sortedValues[quarter-1])/2
+        q4 = (sortedValues[len-quarter] + sortedValues[(len-quarter)-1])/2
+    iqr = q4-q2
+    lowerBound = q2-(1.5*iqr)
+    upperBound = q4+(1.5*iqr)
+    splitValues = _.groupBy(sortedValues,
+                            (v) -> v >= lowerBound and v <= upperBound)
+    return {
+        q1: _.min(splitValues.true)
+        q2: q2
+        q3: poly.median(sortedValues, mid)
+        q4: q4
+        q5: _.max(splitValues.true)
+        outliers: splitValues.false
+           }
 ###
 Helper function to figures out which statistics to create, then creates it
 ###

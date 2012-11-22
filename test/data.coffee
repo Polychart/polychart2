@@ -208,8 +208,6 @@ test "statistics - count", ->
       {x: 'B', z:2, 'uniq(y)': 1, 'count(y)':2}
     ]
 
-
-
   data = [
     {x: 'A', y: 1, z:1}
     {x: 'A', y: 2, z:2}
@@ -233,6 +231,31 @@ test "statistics - count", ->
   deepEqual trans, [
       {x: 'A', 'min(y)': 1, 'max(y)': 5, 'median(y)': 3}
       {x: 'B', 'min(y)': 1, 'max(y)': 4, 'median(y)': 2.5}
+    ]
+
+  data = [
+    {x: 'A', y: 15, z:1}
+    {x: 'A', y: 3, z:2}
+    {x: 'A', y: 4, z:1}
+    {x: 'A', y: 1, z:2}
+    {x: 'A', y: 2, z:1}
+    {x: 'A', y: 6, z:2}
+    {x: 'A', y: 5, z:1}
+    {x: 'B', y: 1, z:1}
+    {x: 'B', y: 2, z:2}
+    {x: 'B', y: 3, z:1}
+    {x: 'B', y: 4, z:2}
+  ]
+  spec =
+    stats:
+      stats: [
+        key: 'y', stat: 'box', name: 'box(y)'
+      ]
+      group: ['x']
+  trans = poly.data.frontendProcess spec, data, (x) -> x
+  deepEqual trans, [
+      {x: 'A', 'box(y)': {q1:1, q2:2.5, q3:4, q4:5.5, q5:6, outliers:[15]}}
+      {x: 'B', 'box(y)': {q1:1, q2:1.5, q3:2.5, q4:3.5, q5:4, outliers:undefined}}
     ]
 
 test "meta sorting", ->
