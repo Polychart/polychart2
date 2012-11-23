@@ -152,6 +152,8 @@ test "statistics - count", ->
     {x: 'B', y: 1, z:2}
     {x: 'B', y: 1, z:1}
     {x: 'B', y: 1, z:2}
+    {x: 'B', y: undefined, z:1}
+    {x: 'B', y: null, z:2}
   ]
   spec =
     stats:

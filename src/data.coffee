@@ -126,9 +126,10 @@ the appropriate statistical function given the spec. Each statistics function
 produces one atomic value for each group of data.
 ###
 statistics =
-  sum : (spec) -> (values) -> _.reduce(values, ((v, m) -> v + m), 0)
-  count : (spec) -> (values) -> values.length
-  uniq : (spec) -> (values) -> (_.uniq values).length
+  sum : (spec) -> (values) -> _.reduce(_.without(values, undefined, null),
+                                                 ((v, m) -> v + m), 0)
+  count : (spec) -> (values) -> _.without(values, undefined, null).length
+  uniq : (spec) -> (values) -> (_.uniq(_.without(values, undefined, null))).length
   min: (spec) -> (values) -> _.min(values)
   max: (spec) -> (values) -> _.max(values)
   median: (spec) -> (values) -> poly.median(values)

@@ -223,19 +223,19 @@
   statistics = {
     sum: function(spec) {
       return function(values) {
-        return _.reduce(values, (function(v, m) {
+        return _.reduce(_.without(values, void 0, null), (function(v, m) {
           return v + m;
         }), 0);
       };
     },
     count: function(spec) {
       return function(values) {
-        return values.length;
+        return _.without(values, void 0, null).length;
       };
     },
     uniq: function(spec) {
       return function(values) {
-        return (_.uniq(values)).length;
+        return (_.uniq(_.without(values, void 0, null))).length;
       };
     },
     min: function(spec) {
