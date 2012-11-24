@@ -41,7 +41,7 @@ class DataProcess
         frontendProcess(@dataSpec, @dataObj.json, wrappedCallback)
     else
       if @strictmode
-        console.log 'wtf, cant use strict mode here'
+        throw new poly.StrictModeError()
       else
         backendProcess(@dataSpec, @dataObj, wrappedCallback)
   ## recalculate (for interaction!)

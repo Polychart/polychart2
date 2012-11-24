@@ -17,7 +17,7 @@
     Guide.prototype.getHeight = function() {};
 
     Guide.prototype.render = function(paper, render, scales) {
-      return console.log('wtf not impl');
+      throw new poly.NotImplemented("render is not implemented");
     };
 
     return Guide;

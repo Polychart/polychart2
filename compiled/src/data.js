@@ -61,7 +61,7 @@
         }
       } else {
         if (this.strictmode) {
-          return console.log('wtf, cant use strict mode here');
+          throw new poly.StrictModeError();
         } else {
           return backendProcess(this.dataSpec, this.dataObj, wrappedCallback);
         }

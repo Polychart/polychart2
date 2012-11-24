@@ -8,7 +8,7 @@ class Guide
     @ticks = []
   getWidth: () ->  # approximate
   getHeight: () -> # approximate
-  render: (paper, render, scales) -> console.log 'wtf not impl'
+  render: (paper, render, scales) -> throw new poly.NotImplemented("render is not implemented")
 
 class Axis
   constructor: (params) ->

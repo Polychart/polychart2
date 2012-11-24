@@ -74,9 +74,12 @@ class Scale
       when 'num' then return @_constructNum domain
       when 'date' then return @_constructDate domain
       when 'cat' then return @_constructCat domain
-  _constructNum: (domain) -> console.log 'wtf not impl'
-  _constructDate: (domain) -> console.log 'wtf not impl'
-  _constructCat: (domain) -> console.log 'wtf not impl'
+  _constructNum: (domain) ->
+    throw new poly.NotImplemented("_constructNum is not implemented")
+  _constructDate: (domain) ->
+    throw new poly.NotImplemented("_constructDate is not implemented")
+  _constructCat: (domain) ->
+    throw new poly.NotImplemented("_constructCat is not implemented")
   tickType: (domain) ->
     switch domain.type
       when 'num' then return @_tickNum domain
@@ -100,7 +103,7 @@ class PositionScale extends Scale
         if value.f is 'upper' then return y(val+domain.bw) - space
         if value.f is 'lower' then return y(val) + space
         if value.f is 'middle' then return y(val+domain.bw/2)
-      console.log 'wtf'
+      throw new poly.UnexpectedObject("Expected a value instead of an object")
     y(val)
 class Linear extends PositionScale
   _constructNum: (domain) ->

@@ -78,7 +78,7 @@ domainMerge =
   'num' : (domains) ->
     bw = _.uniq _.map(domains, (d) -> d.bw)
     if bw.length > 1
-      console.log 'wtf'
+      throw new poly.LengthError("All binwidths are not of the same length")
     bw = bw[0] ? undefined
     min = _.min _.map(domains, (d) -> d.min)
     max = _.max _.map(domains, (d) -> d.max)
@@ -89,7 +89,7 @@ domainMerge =
     unsortedLevels =
       _.chain(domains).filter((d) -> !d.sorted).map((d) -> d.levels).value()
     if sortedLevels.length > 0 and _.intersection.apply @, sortedLevels
-      console.log 'wtf'
+      throw new poly.UnknownError()
     sortedLevels = [_.flatten(sortedLevels, true)]
     levels = _.union.apply @, sortedLevels.concat(unsortedLevels)
     return makeDomain type: 'cat', levels: levels, sorted: true
@@ -101,7 +101,7 @@ same type, and they share certain properties.
 mergeDomains = (domains) ->
   types = _.uniq _.map(domains, (d) -> d.type)
   if types.length > 1
-    console.log 'wtf'
+    throw new poly.TypeError("Not all domains are of the same type")
   domainMerge[types[0]](domains)
 
 ###

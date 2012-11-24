@@ -134,15 +134,15 @@
     };
 
     Scale.prototype._constructNum = function(domain) {
-      return console.log('wtf not impl');
+      throw new poly.NotImplemented("_constructNum is not implemented");
     };
 
     Scale.prototype._constructDate = function(domain) {
-      return console.log('wtf not impl');
+      throw new poly.NotImplemented("_constructDate is not implemented");
     };
 
     Scale.prototype._constructCat = function(domain) {
-      return console.log('wtf not impl');
+      throw new poly.NotImplemented("_constructCat is not implemented");
     };
 
     Scale.prototype.tickType = function(domain) {
@@ -206,7 +206,7 @@
               return y(val + domain.bw / 2);
             }
           }
-          console.log('wtf');
+          throw new poly.UnexpectedObject("Expected a value instead of an object");
         }
         return y(val);
       };
