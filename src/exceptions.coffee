@@ -23,5 +23,5 @@ poly.LengthError = LengthError
 
 class UnknownError extends Error
   constructor: (@message = "Unknown error") ->
-    @name = "UnknownnError"
+    @name = "UnknownError"
 poly.UnknownError = UnknownError

@@ -72,7 +72,7 @@
 
     function UnknownError(message) {
       this.message = message != null ? message : "Unknown error";
-      this.name = "UnknownnError";
+      this.name = "UnknownError";
     }
 
     return UnknownError;
