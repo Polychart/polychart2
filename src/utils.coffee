@@ -48,3 +48,18 @@ poly.counter = () ->
   i = 0
   () -> i++
 
+
+###
+Given an OLD array and NEW array, split the points in (OLD union NEW) into
+three sets: 
+  - deleted
+  - kept
+  - added
+TODO: make this a one-pass algorithm
+###
+poly.compare = (oldarr, newarr) ->
+  deleted : _.difference(oldarr, newarr)
+  kept    : _.intersection(newarr, oldarr)
+  added   : _.difference(newarr, oldarr)
+
+

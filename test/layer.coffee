@@ -12,14 +12,14 @@ test "point", ->
   {layers} = poly.chart spec
   layer = layers[0]
 
-  equal layer.geoms[0].marks[0].type, 'point'
+  equal layer.geoms[0].marks[0].type, 'circle'
   equal layer.geoms[0].marks[0].x, 2
   equal layer.geoms[0].marks[0].y, 4
   deepEqual layer.geoms[0].marks[0].color, poly.const.scaleFns.identity(layer.defaults.color)
   deepEqual layer.geoms[0].evtData.x.in, [2]
   deepEqual layer.geoms[0].evtData.y.in, [4]
 
-  equal layer.geoms[1].marks[0].type, 'point'
+  equal layer.geoms[1].marks[0].type, 'circle'
   equal layer.geoms[1].marks[0].x, 3
   equal layer.geoms[1].marks[0].y, 3
   deepEqual layer.geoms[1].marks[0].color, poly.const.scaleFns.identity(layer.defaults.color)

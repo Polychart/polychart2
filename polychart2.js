@@ -72,6 +72,23 @@
     };
   };
 
+  /*
+  Given an OLD array and NEW array, split the points in (OLD union NEW) into
+  three sets: 
+    - deleted
+    - kept
+    - added
+  TODO: make this a one-pass algorithm
+  */
+
+  poly.compare = function(oldarr, newarr) {
+    return {
+      deleted: _.difference(oldarr, newarr),
+      kept: _.intersection(newarr, oldarr),
+      added: _.difference(newarr, oldarr)
+    };
+  };
+
 }).call(this);
 (function() {
   var poly;
@@ -1477,6 +1494,7 @@
   Layer = (function() {
 
     function Layer(layerSpec, strict) {
+      this.animate = __bind(this.animate, this);
       this.render = __bind(this.render, this);
       this.calculate = __bind(this.calculate, this);
       var aes, _i, _len;
@@ -1505,18 +1523,57 @@
       });
     };
 
-    Layer.prototype.render = function(paper, render) {
-      paper.setStart();
-      _.each(this.geoms, function(geom) {
-        return _.each(geom.marks, function(mark) {
-          return render(mark, geom.evtData);
-        });
-      });
-      return this.objects = paper.setFinish();
-    };
-
     Layer.prototype._calcGeoms = function() {
       return this.geoms = {};
+    };
+
+    Layer.prototype.render = function(render) {
+      var _this = this;
+      this.rendered = {};
+      return _.each(this.geoms, function(geom, id) {
+        return _this.rendered[id] = _this._add(render, geom);
+      });
+    };
+
+    Layer.prototype.animate = function(render) {
+      var added, deleted, kept, newrendered, _ref,
+        _this = this;
+      this.rendered = this.rendered || {};
+      newrendered = {};
+      _ref = poly.compare(_.keys(this.rendered), _.keys(this.geoms)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
+      _.each(deleted, function(id) {
+        return _this._delete(render, _this.rendered[id]);
+      });
+      _.each(added, function(id) {
+        return newrendered[id] = _this._add(render, _this.geoms[id]);
+      });
+      return _.each(kept, function(id) {
+        return newrendered[id] = _this._modify(render, _this.rendered[id], _this.geoms[id]);
+      });
+    };
+
+    Layer.prototype._delete = function(render, points) {
+      return _.each(points, function(pt, id2) {
+        return render.remove(pt);
+      });
+    };
+
+    Layer.prototype._modify = function(render, points, geom) {
+      var objs;
+      objs = {};
+      _.each(geom.marks, function(mark, id2) {
+        return objs[id2] = render.animate(points[id2], mark, geom.evtData);
+      });
+      return objs;
+    };
+
+    Layer.prototype._add = function(render, geom) {
+      var objs;
+      objs = {};
+      _.each(geom.marks, function(mark, id2) {
+        return objs[id2] = render.add(mark, geom.evtData);
+      });
+      return objs;
     };
 
     Layer.prototype._getValue = function(item, aes) {
@@ -1562,14 +1619,14 @@
           };
         });
         return _this.geoms[idfn(item)] = {
-          marks: [
-            {
-              type: 'point',
+          marks: {
+            0: {
+              type: 'circle',
               x: _this._getValue(item, 'x'),
               y: _this._getValue(item, 'y'),
               color: _this._getValue(item, 'color')
             }
-          ],
+          },
           evtData: evtData
         };
       });
@@ -1613,8 +1670,8 @@
           };
         });
         return _this.geoms[idfn(sample)] = {
-          marks: [
-            {
+          marks: {
+            0: {
               type: 'line',
               x: (function() {
                 var _i, _len, _results;
@@ -1636,7 +1693,7 @@
               }).call(_this),
               color: _this._getValue(sample, 'color')
             }
-          ],
+          },
           evtData: evtData
         };
       });
@@ -1686,8 +1743,8 @@
           }
         });
         return _this.geoms[idfn(item)] = {
-          marks: [
-            {
+          marks: {
+            0: {
               type: 'rect',
               x1: sf.lower(_this._getValue(item, 'x')),
               x2: sf.upper(_this._getValue(item, 'x')),
@@ -1695,7 +1752,7 @@
               y2: item.$upper,
               fill: _this._getValue(item, 'color')
             }
-          ]
+          }
         };
       });
     };
@@ -1790,7 +1847,7 @@
 
 }).call(this);
 (function() {
-  var poly, renderCircle;
+  var poly, renderer;
 
   poly = this.poly || {};
 
@@ -1804,17 +1861,17 @@
 
   /*
   Helper function for rendering all the geoms of an object
+  
+  TODO: 
+  - make add & remove animations
+  - make everything animateWith some standard object
   */
 
   poly.render = function(id, paper, scales, clipping) {
-    return function(mark, evtData) {
-      var pt;
-      pt = null;
-      switch (mark.type) {
-        case 'point':
-          pt = renderCircle(paper, scales, mark);
-      }
-      if (pt) {
+    return {
+      add: function(mark, evtData) {
+        var pt;
+        pt = renderer[mark.type].render(paper, scales, mark);
         pt.attr('clip-rect', clipping);
         pt.click(function() {
           return eve(id + ".click", this, evtData);
@@ -1822,18 +1879,50 @@
         pt.hover(function() {
           return eve(id + ".hover", this, evtData);
         });
+        return pt;
+      },
+      remove: function(pt) {
+        return pt.remove();
+      },
+      animate: function(pt, mark, evtData) {
+        var attr;
+        attr = renderer[mark.type].attr(scales, mark);
+        pt.animate(attr);
+        pt.unclick();
+        pt.click(function() {
+          return eve(id + ".click", this, evtData);
+        });
+        pt.unhover();
+        pt.hover(function() {
+          return eve(id + ".hover", this, evtData);
+        });
+        return pt;
       }
-      return pt;
     };
   };
 
-  renderCircle = function(paper, scales, mark) {
-    var pt;
-    pt = paper.circle();
-    pt.attr('cx', scales.x(mark.x));
-    pt.attr('cy', scales.y(mark.y));
-    pt.attr('r', 10);
-    return pt.attr('fill', 'black');
+  renderer = {
+    circle: {
+      render: function(paper, scales, mark) {
+        var pt;
+        pt = paper.circle();
+        _.each(renderer.circle.attr(scales, mark), function(v, k) {
+          return pt.attr(k, v);
+        });
+        return pt;
+      },
+      attr: function(scales, mark) {
+        return {
+          cx: scales.x(mark.x),
+          cy: scales.y(mark.y),
+          r: 10,
+          fill: 'black'
+        };
+      },
+      animate: function(pt, scales, mark) {
+        return pt.animate(attr);
+      }
+    }
   };
 
 }).call(this);
@@ -1846,11 +1935,15 @@
   Graph = (function() {
 
     function Graph(spec) {
+      this.animate = __bind(this.animate, this);
       this.render = __bind(this.render, this);
-      this.merge = __bind(this.merge, this);
+      this.merge = __bind(this.merge, this);      this.graphId = _.uniqueId('graph_');
+      this.make(spec);
+    }
+
+    Graph.prototype.make = function(spec) {
       var merge, _ref,
         _this = this;
-      this.graphId = _.uniqueId('graph_');
       this.spec = spec;
       this.strict = (_ref = spec.strict) != null ? _ref : false;
       this.layers = [];
@@ -1861,10 +1954,10 @@
         return _this.layers.push(layerObj);
       });
       merge = _.after(this.layers.length, this.merge);
-      _.each(this.layers, function(layerObj) {
+      return _.each(this.layers, function(layerObj) {
         return layerObj.calculate(merge);
       });
-    }
+    };
 
     Graph.prototype.merge = function() {
       var spec, tmpRanges,
@@ -1889,14 +1982,23 @@
     };
 
     Graph.prototype.render = function(dom) {
-      var paper, render,
+      var render,
         _this = this;
-      dom = document.getElementById(dom);
-      paper = poly.paper(dom, this.dims.width, this.dims.height);
+      this.dom = document.getElementById(dom);
+      this.paper = poly.paper(dom, this.dims.width, this.dims.height);
       this.clipping = poly.dim.clipping(this.dims);
-      render = poly.render(this.graphId, paper, this.scales, this.clipping);
+      render = poly.render(this.graphId, this.paper, this.scales, this.clipping);
       return _.each(this.layers, function(layer) {
-        return layer.render(paper, render);
+        return layer.render(render);
+      });
+    };
+
+    Graph.prototype.animate = function() {
+      var render,
+        _this = this;
+      render = poly.render(this.graphId, this.paper, this.scales, this.clipping);
+      return _.each(this.layers, function(layer) {
+        return layer.animate(_this.paper, render);
       });
     };
 

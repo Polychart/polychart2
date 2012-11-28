@@ -4,9 +4,10 @@ poly = @poly || {}
 class Graph
   constructor: (spec) ->
     @graphId = _.uniqueId('graph_')
+    @make(spec)
+
+  make: (spec) ->
     @spec = spec
-    # mode
-    @strict = spec.strict ? false
     # creation of layers
     @layers = []
     spec.layers ?= []
@@ -21,13 +22,13 @@ class Graph
   merge: () =>
     spec = @spec
     # domain calculation and guide merging
-    @domains = {}
+    domains = {}
     if spec.guides # for now, skip when guides are not defined
       spec.guides ?= {}
-      @domains = poly.domain.make @layers, spec.guides, spec.strict
+      domains = poly.domain.make @layers, spec.guides, spec.strict
     # make the scales...?
     tmpRanges = poly.dim.ranges poly.dim.guess @spec
-    @scaleSet = poly.scale.make spec.guides, @domains, tmpRanges
+    @scaleSet = poly.scale.make spec.guides, domains, tmpRanges
     # make the legends & axes?
     @axes = @scaleSet.getAxes()
     @legends = @scaleSet.getLegends()
@@ -35,22 +36,25 @@ class Graph
     @dims = poly.dim.make spec, @axes, @legends # calls guessdim internally
     # rendering stuff...
     @scaleSet.setRanges poly.dim.ranges(@dims)
-    @scales = @scaleSet.getScaleFns()
 
     # LEGACY: tick calculation
     @ticks = {}
     _.each @axes, (v, k) => @ticks[k] = v.ticks
 
   render : (dom) =>
-    dom = document.getElementById(dom)
-    paper = poly.paper(dom, @dims.width, @dims.height)
+    @dom = document.getElementById(dom)
+    @paper = poly.paper(dom, @dims.width, @dims.height)
+    scales = @scaleSet.getScaleFns()
     @clipping = poly.dim.clipping @dims
     # render each layer
-    render = poly.render @graphId, paper, @scales, @clipping
-    _.each @layers, (layer) => layer.render(paper, render)
+    render = poly.render @graphId, @paper, scales, @clipping
+    _.each @layers, (layer) => layer.render(render)
     # render axes
 
-poly.chart = (spec) ->
-  new Graph(spec)
+  animate : () =>
+    render = poly.render @graphId, @paper, scales, @clipping
+    _.each @layers, (layer) => layer.animate(@paper, render)
+
+poly.chart = (spec) -> new Graph(spec)
 
 @poly = poly

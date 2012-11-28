@@ -72,4 +72,21 @@
     };
   };
 
+  /*
+  Given an OLD array and NEW array, split the points in (OLD union NEW) into
+  three sets: 
+    - deleted
+    - kept
+    - added
+  TODO: make this a one-pass algorithm
+  */
+
+  poly.compare = function(oldarr, newarr) {
+    return {
+      deleted: _.difference(oldarr, newarr),
+      kept: _.intersection(newarr, oldarr),
+      added: _.difference(newarr, oldarr)
+    };
+  };
+
 }).call(this);

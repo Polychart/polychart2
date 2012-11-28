@@ -61,6 +61,7 @@
   Layer = (function() {
 
     function Layer(layerSpec, strict) {
+      this.animate = __bind(this.animate, this);
       this.render = __bind(this.render, this);
       this.calculate = __bind(this.calculate, this);
       var aes, _i, _len;
@@ -89,18 +90,57 @@
       });
     };
 
-    Layer.prototype.render = function(paper, render) {
-      paper.setStart();
-      _.each(this.geoms, function(geom) {
-        return _.each(geom.marks, function(mark) {
-          return render(mark, geom.evtData);
-        });
-      });
-      return this.objects = paper.setFinish();
-    };
-
     Layer.prototype._calcGeoms = function() {
       return this.geoms = {};
+    };
+
+    Layer.prototype.render = function(render) {
+      var _this = this;
+      this.rendered = {};
+      return _.each(this.geoms, function(geom, id) {
+        return _this.rendered[id] = _this._add(render, geom);
+      });
+    };
+
+    Layer.prototype.animate = function(render) {
+      var added, deleted, kept, newrendered, _ref,
+        _this = this;
+      this.rendered = this.rendered || {};
+      newrendered = {};
+      _ref = poly.compare(_.keys(this.rendered), _.keys(this.geoms)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
+      _.each(deleted, function(id) {
+        return _this._delete(render, _this.rendered[id]);
+      });
+      _.each(added, function(id) {
+        return newrendered[id] = _this._add(render, _this.geoms[id]);
+      });
+      return _.each(kept, function(id) {
+        return newrendered[id] = _this._modify(render, _this.rendered[id], _this.geoms[id]);
+      });
+    };
+
+    Layer.prototype._delete = function(render, points) {
+      return _.each(points, function(pt, id2) {
+        return render.remove(pt);
+      });
+    };
+
+    Layer.prototype._modify = function(render, points, geom) {
+      var objs;
+      objs = {};
+      _.each(geom.marks, function(mark, id2) {
+        return objs[id2] = render.animate(points[id2], mark, geom.evtData);
+      });
+      return objs;
+    };
+
+    Layer.prototype._add = function(render, geom) {
+      var objs;
+      objs = {};
+      _.each(geom.marks, function(mark, id2) {
+        return objs[id2] = render.add(mark, geom.evtData);
+      });
+      return objs;
     };
 
     Layer.prototype._getValue = function(item, aes) {
@@ -146,14 +186,14 @@
           };
         });
         return _this.geoms[idfn(item)] = {
-          marks: [
-            {
-              type: 'point',
+          marks: {
+            0: {
+              type: 'circle',
               x: _this._getValue(item, 'x'),
               y: _this._getValue(item, 'y'),
               color: _this._getValue(item, 'color')
             }
-          ],
+          },
           evtData: evtData
         };
       });
@@ -197,8 +237,8 @@
           };
         });
         return _this.geoms[idfn(sample)] = {
-          marks: [
-            {
+          marks: {
+            0: {
               type: 'line',
               x: (function() {
                 var _i, _len, _results;
@@ -220,7 +260,7 @@
               }).call(_this),
               color: _this._getValue(sample, 'color')
             }
-          ],
+          },
           evtData: evtData
         };
       });
@@ -270,8 +310,8 @@
           }
         });
         return _this.geoms[idfn(item)] = {
-          marks: [
-            {
+          marks: {
+            0: {
               type: 'rect',
               x1: sf.lower(_this._getValue(item, 'x')),
               x2: sf.upper(_this._getValue(item, 'x')),
@@ -279,7 +319,7 @@
               y2: item.$upper,
               fill: _this._getValue(item, 'color')
             }
-          ]
+          }
         };
       });
     };

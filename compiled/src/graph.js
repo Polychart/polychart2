@@ -7,11 +7,15 @@
   Graph = (function() {
 
     function Graph(spec) {
+      this.animate = __bind(this.animate, this);
       this.render = __bind(this.render, this);
-      this.merge = __bind(this.merge, this);
+      this.merge = __bind(this.merge, this);      this.graphId = _.uniqueId('graph_');
+      this.make(spec);
+    }
+
+    Graph.prototype.make = function(spec) {
       var merge, _ref,
         _this = this;
-      this.graphId = _.uniqueId('graph_');
       this.spec = spec;
       this.strict = (_ref = spec.strict) != null ? _ref : false;
       this.layers = [];
@@ -22,10 +26,10 @@
         return _this.layers.push(layerObj);
       });
       merge = _.after(this.layers.length, this.merge);
-      _.each(this.layers, function(layerObj) {
+      return _.each(this.layers, function(layerObj) {
         return layerObj.calculate(merge);
       });
-    }
+    };
 
     Graph.prototype.merge = function() {
       var spec, tmpRanges,
@@ -50,14 +54,23 @@
     };
 
     Graph.prototype.render = function(dom) {
-      var paper, render,
+      var render,
         _this = this;
-      dom = document.getElementById(dom);
-      paper = poly.paper(dom, this.dims.width, this.dims.height);
+      this.dom = document.getElementById(dom);
+      this.paper = poly.paper(dom, this.dims.width, this.dims.height);
       this.clipping = poly.dim.clipping(this.dims);
-      render = poly.render(this.graphId, paper, this.scales, this.clipping);
+      render = poly.render(this.graphId, this.paper, this.scales, this.clipping);
       return _.each(this.layers, function(layer) {
-        return layer.render(paper, render);
+        return layer.render(render);
+      });
+    };
+
+    Graph.prototype.animate = function() {
+      var render,
+        _this = this;
+      render = poly.render(this.graphId, this.paper, this.scales, this.clipping);
+      return _.each(this.layers, function(layer) {
+        return layer.animate(_this.paper, render);
       });
     };
 

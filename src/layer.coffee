@@ -49,11 +49,13 @@ poly.layer.make = (layerSpec, strictmode) ->
 Base class for all layers
 ###
 class Layer
-  # mostly just read and interpret the the spec
+  defaults : defaults
   constructor: (layerSpec, strict) ->
     @strict = strict
+    @setup layerSpec
+  # mostly just read and interpret the the spec
+  setup: (layerSpec) ->
     @spec = poly.layer.toStrictMode layerSpec
-    @defaults = defaults
     @mapping = {}     # aesthetic mappings
     @consts = {}      # constants supplied by the spec
     for aes in aesthetics
@@ -68,17 +70,31 @@ class Layer
       @meta = metaData
       @_calcGeoms()
       callback()
-  render: (paper, render) =>
-    paper.setStart()
-    _.each @geoms, (geom) ->
-      _.each geom.marks, (mark) ->
-        render mark, geom.evtData
-    @objects = paper.setFinish() #TODO -- store each INDIVIDUAL object
-    #eve.on '*.click', (a) -> console.log(this); console.log a
-    #eve.on '*.hover', (a) -> console.log('hover', this)
-
-  # layer level calculation resulting in geometric objects
-  _calcGeoms: () -> @geoms = {}
+  _calcGeoms: () -> @geoms = {} # layer level geom calculation
+  # render and animation functions!
+  render: (render) =>
+    @rendered = {}
+    _.each @geoms, (geom, id) => @rendered[id] = @_add render, geom
+  animate: (render) =>
+    @rendered = @rendered || {}
+    newrendered = {}
+    {deleted, kept, added} = poly.compare _.keys(@rendered), _.keys(@geoms)
+    _.each deleted, (id) => @_delete render, @rendered[id]
+    _.each added, (id) => newrendered[id] = @_add render, @geoms[id]
+    _.each kept, (id) =>
+      newrendered[id] = @_modify render, @rendered[id], @geoms[id]
+  _delete : (render, points) ->
+    _.each points, (pt, id2) -> render.remove pt
+  _modify: (render, points, geom) ->
+    objs = {}
+    _.each geom.marks, (mark, id2) ->
+      objs[id2] = render.animate points[id2], mark, geom.evtData
+    objs
+  _add: (render, geom) ->
+    objs = {}
+    _.each geom.marks, (mark, id2) ->
+      objs[id2] = render.add mark, geom.evtData
+    objs
   # helper for getting the value of a particular aesthetic from an item
   _getValue: (item, aes) ->
     if @mapping[aes] then return item[@mapping[aes]]
@@ -96,12 +112,12 @@ class Point extends Layer
       _.each item, (v, k) ->
         evtData[k] = { in : [v] }
       @geoms[idfn item] =
-        marks: [
-          type: 'point'
-          x: @_getValue item, 'x'
-          y: @_getValue item, 'y'
-          color: @_getValue item, 'color'
-        ]
+        marks:
+          0:
+            type: 'circle'
+            x: @_getValue item, 'x'
+            y: @_getValue item, 'y'
+            color: @_getValue item, 'color'
         evtData: evtData
 
 class Line extends Layer
@@ -120,12 +136,12 @@ class Line extends Layer
       _.each group, (key) -> evtData[key] = { in : [sample[key]] }
       # identity
       @geoms[idfn sample] =
-        marks: [
-          type: 'line'
-          x: (@_getValue item, 'x' for item in data)
-          y: (@_getValue item, 'y' for item in data)
-          color: @_getValue sample, 'color'
-        ]
+        marks:
+          0:
+            type: 'line'
+            x: (@_getValue item, 'x' for item in data)
+            y: (@_getValue item, 'y' for item in data)
+            color: @_getValue sample, 'color'
         evtData: evtData
 
 class Bar extends Layer
@@ -146,14 +162,14 @@ class Bar extends Layer
       evtData = {}
       _.each item, (v, k) -> if k isnt 'y' then evtData[k] = { in: [v] }
       @geoms[idfn item] =
-        marks: [
-          type: 'rect'
-          x1: sf.lower @_getValue(item, 'x')
-          x2: sf.upper @_getValue(item, 'x')
-          y1: item.$lower
-          y2: item.$upper
-          fill: @_getValue item, 'color'
-        ]
+        marks:
+          0:
+            type: 'rect'
+            x1: sf.lower @_getValue(item, 'x')
+            x2: sf.upper @_getValue(item, 'x')
+            y1: item.$lower
+            y2: item.$upper
+            fill: @_getValue item, 'color'
 ###
 # EXPORT
 ###

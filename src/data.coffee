@@ -51,6 +51,7 @@ class DataProcess
       callback @statData, @metaData
     @dataSpec = newDataSpec
     @process callback
+
 poly.DataProcess = DataProcess
 
 ###
