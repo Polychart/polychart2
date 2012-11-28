@@ -84,20 +84,25 @@ class Layer
     if @mapping[aes] then return item[@mapping[aes]]
     if @consts[aes] then return sf.identity(@consts[aes])
     return sf.identity(@defaults[aes])
+  _getIdFunc: () ->
+    if @mapping['id']? then (item) => @_getValue item, 'id' else poly.counter()
 
 class Point extends Layer
   _calcGeoms: () ->
-    @geoms = _.map @statData, (item) =>
+    idfn = @_getIdFunc()
+    @geoms = {}
+    _.each @statData, (item) =>
       evtData = {}
       _.each item, (v, k) ->
         evtData[k] = { in : [v] }
-      marks: [
-        type: 'point'
-        x: @_getValue item, 'x'
-        y: @_getValue item, 'y'
-        color: @_getValue item, 'color'
-      ]
-      evtData: evtData
+      @geoms[idfn item] =
+        marks: [
+          type: 'point'
+          x: @_getValue item, 'x'
+          y: @_getValue item, 'y'
+          color: @_getValue item, 'color'
+        ]
+        evtData: evtData
 
 class Line extends Layer
   _calcGeoms: () ->
@@ -105,16 +110,23 @@ class Line extends Layer
     # TODO: fill in missing points
     group = (@mapping[k] for k in _.without(_.keys(@mapping), 'x', 'y'))
     datas = poly.groupBy @statData, group
-    @geoms = _.map datas, (data) => # produce one line per group
+    idfn = @_getIdFunc()
+    @geoms = {}
+    _.each datas, (data) => # produce one line per group
+      # use the first data point as a sample
+      sample = data[0] # use this as a sample data
+      # create the eventData
       evtData = {}
-      _.each group, (key) -> evtData[key] = { in : [data[0][key]] }
-      marks: [
-        type: 'line'
-        x: (@_getValue item, 'x' for item in data)
-        y: (@_getValue item, 'y' for item in data)
-        color: @_getValue data[0], 'color'
-      ]
-      evtData: evtData
+      _.each group, (key) -> evtData[key] = { in : [sample[key]] }
+      # identity
+      @geoms[idfn sample] =
+        marks: [
+          type: 'line'
+          x: (@_getValue item, 'x' for item in data)
+          y: (@_getValue item, 'y' for item in data)
+          color: @_getValue sample, 'color'
+        ]
+        evtData: evtData
 
 class Bar extends Layer
   _calcGeoms: () ->
@@ -128,17 +140,20 @@ class Bar extends Layer
         item.$lower = tmp
         tmp += yval(item)
         item.$upper = tmp
-    @geoms = _.map @statData, (item) =>
+    idfn = @_getIdFunc()
+    @geoms = {}
+    _.each @statData, (item) =>
       evtData = {}
       _.each item, (v, k) -> if k isnt 'y' then evtData[k] = { in: [v] }
-      marks: [
-        type: 'rect'
-        x1: sf.lower @_getValue(item, 'x')
-        x2: sf.upper @_getValue(item, 'x')
-        y1: item.$lower
-        y2: item.$upper
-        fill: @_getValue item, 'color'
-      ]
+      @geoms[idfn item] =
+        marks: [
+          type: 'rect'
+          x1: sf.lower @_getValue(item, 'x')
+          x2: sf.upper @_getValue(item, 'x')
+          y1: item.$lower
+          y2: item.$upper
+          fill: @_getValue item, 'color'
+        ]
 ###
 # EXPORT
 ###

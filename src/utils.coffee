@@ -40,3 +40,11 @@ poly.median = (values, sorted=false) ->
 
 @poly = poly
 
+
+###
+Produces a function that counts how many times it has been called
+###
+poly.counter = () ->
+  i = 0
+  () -> i++
+
