@@ -36,8 +36,8 @@ class DataProcess
   ## calculate things...
   make : (spec, callback) ->
     dataSpec = extractDataSpec spec
-    if prevSpec? and prevSpec == dataSpec
-      return callback @statData, @metaData
+    #if prevSpec? and prevSpec == dataSpec
+    #  return callback @statData, @metaData
 
     wrappedCallback = @_wrap callback
     if @dataObj.frontEnd

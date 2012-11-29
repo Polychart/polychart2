@@ -23,7 +23,7 @@ poly.render = (id, paper, scales, clipping) ->
     pt.remove()
   animate: (pt, mark, evtData) ->
     attr = renderer[mark.type].attr scales, mark
-    pt.animate attr
+    pt.animate attr, 300
     pt.unclick() # <-- ?!?!?!
     pt.click () -> eve(id+".click", @, evtData)
     pt.unhover() # <-- ?!?!?!

@@ -39,7 +39,7 @@
       animate: function(pt, mark, evtData) {
         var attr;
         attr = renderer[mark.type].attr(scales, mark);
-        pt.animate(attr);
+        pt.animate(attr, 300);
         pt.unclick();
         pt.click(function() {
           return eve(id + ".click", this, evtData);

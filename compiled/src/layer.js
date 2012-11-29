@@ -100,7 +100,6 @@
       var spec,
         _this = this;
       spec = poly.layer.toStrictMode(layerSpec);
-      if (this.prevSpec && spec === this.prevSpec) return callback();
       this._makeMappings(spec);
       this.dataprocess.make(spec, function(statData, metaData) {
         _this.statData = statData;

@@ -1067,9 +1067,6 @@
     DataProcess.prototype.make = function(spec, callback) {
       var dataSpec, wrappedCallback;
       dataSpec = extractDataSpec(spec);
-      if ((typeof prevSpec !== "undefined" && prevSpec !== null) && prevSpec === dataSpec) {
-        return callback(this.statData, this.metaData);
-      }
       wrappedCallback = this._wrap(callback);
       if (this.dataObj.frontEnd) {
         if (this.strictmode) {
@@ -1545,7 +1542,6 @@
       var spec,
         _this = this;
       spec = poly.layer.toStrictMode(layerSpec);
-      if (this.prevSpec && spec === this.prevSpec) return callback();
       this._makeMappings(spec);
       this.dataprocess.make(spec, function(statData, metaData) {
         _this.statData = statData;
@@ -1912,7 +1908,7 @@
       animate: function(pt, mark, evtData) {
         var attr;
         attr = renderer[mark.type].attr(scales, mark);
-        pt.animate(attr);
+        pt.animate(attr, 300);
         pt.unclick();
         pt.click(function() {
           return eve(id + ".click", this, evtData);

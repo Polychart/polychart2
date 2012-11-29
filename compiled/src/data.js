@@ -54,9 +54,6 @@
     DataProcess.prototype.make = function(spec, callback) {
       var dataSpec, wrappedCallback;
       dataSpec = extractDataSpec(spec);
-      if ((typeof prevSpec !== "undefined" && prevSpec !== null) && prevSpec === dataSpec) {
-        return callback(this.statData, this.metaData);
-      }
       wrappedCallback = this._wrap(callback);
       if (this.dataObj.frontEnd) {
         if (this.strictmode) {

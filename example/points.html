@@ -27,12 +27,12 @@
     c = poly.chart(spec)
     c.render('hello')
 
-    window.rerender = function() {
+    setTimeout(function() {
       jsondata2 = [ { x: 3, y: 1.5 }, { x: 2, y: 3 } ];
-      spec.layers[0].data = new poly.Data({json:jsondata2})
+      data.update(jsondata2)
       c.make(spec)
-      c.animate()
-    }
+      c.render()
+    }, 1000)
 
     /*
     p2 = Raphael("hello2", 30,30)
