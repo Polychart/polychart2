@@ -12,6 +12,9 @@ class Data
   constructor: (params) ->
     {@url, @json} = params
     @frontEnd = !@url
+  update: (json) ->
+    @json = json
+
 poly.Data = Data
 
 ###
@@ -22,35 +25,37 @@ class DataProcess
   ## save the specs
   constructor: (layerSpec, strictmode) ->
     @dataObj = layerSpec.data
-    @dataSpec = extractDataSpec layerSpec
+    @initialSpec = extractDataSpec layerSpec
+    @prevSpec = null
     @strictmode = strictmode
     @statData = null
     @metaData = {}
+
+  reset : (callback) -> @make @initialSpec, callback
+
   ## calculate things...
-  process: (callback) ->
-    # save a copy of the data/meta before going to callback
-    wrappedCallback = (data, metaData) =>
-      @statData = data
-      @metaData = metaData
-      callback @statData, @metaData
-    # actually calculate!
+  make : (spec, callback) ->
+    dataSpec = extractDataSpec spec
+    if prevSpec? and prevSpec == dataSpec
+      return callback @statData, @metaData
+
+    wrappedCallback = @_wrap callback
     if @dataObj.frontEnd
       if @strictmode
         wrappedCallback @dataObj.json, {}
       else
-        frontendProcess(@dataSpec, @dataObj.json, wrappedCallback)
+        frontendProcess(dataSpec, @dataObj.json, wrappedCallback)
     else
       if @strictmode
         throw new poly.StrictModeError()
       else
-        backendProcess(@dataSpec, @dataObj, wrappedCallback)
-  ## recalculate (for interaction!)
-  reprocess: (newlayerSpec, callback) ->
-    newDataSpec = extractDataSpec newlayerSpec
-    if _.isEqual(@dataSpec, newDataSpec)
-      callback @statData, @metaData
-    @dataSpec = newDataSpec
-    @process callback
+        backendProcess(dataSpec, @dataObj, wrappedCallback)
+
+  _wrap : (callback) => (data, metaData) =>
+    # save a copy of the data/meta before going to callback
+    @statData = data
+    @metaData = metaData
+    callback @statData, @metaData
 
 poly.DataProcess = DataProcess
 

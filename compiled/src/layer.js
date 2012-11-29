@@ -60,34 +60,55 @@
 
   Layer = (function() {
 
+    Layer.prototype.defaults = defaults;
+
     function Layer(layerSpec, strict) {
-      this.animate = __bind(this.animate, this);
       this.render = __bind(this.render, this);
-      this.calculate = __bind(this.calculate, this);
-      var aes, _i, _len;
-      this.strict = strict;
-      this.spec = poly.layer.toStrictMode(layerSpec);
-      this.defaults = defaults;
-      this.mapping = {};
-      this.consts = {};
-      for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
-        aes = aesthetics[_i];
-        if (this.spec[aes]) {
-          if (this.spec[aes]["var"]) this.mapping[aes] = this.spec[aes]["var"];
-          if (this.spec[aes]["const"]) this.consts[aes] = this.spec[aes]["const"];
-        }
-      }
+      this._makeMappings = __bind(this._makeMappings, this);
+      this.reset = __bind(this.reset, this);      this.initialSpec = poly.layer.toStrictMode(layerSpec);
+      this.prevSpec = null;
+      this.dataprocess = new poly.DataProcess(this.initialSpec, strict);
+      this.pts = {};
     }
 
-    Layer.prototype.calculate = function(callback) {
-      var _this = this;
-      this.dataprocess = new poly.DataProcess(this.spec);
-      return this.dataprocess.process(function(statData, metaData) {
+    Layer.prototype.reset = function() {
+      return this.make(this.initialSpec);
+    };
+
+    Layer.prototype._makeMappings = function(spec) {
+      var aes, _i, _len, _results;
+      this.mapping = {};
+      this.consts = {};
+      _results = [];
+      for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
+        aes = aesthetics[_i];
+        if (spec[aes]) {
+          if (spec[aes]["var"]) this.mapping[aes] = spec[aes]["var"];
+          if (spec[aes]["const"]) {
+            _results.push(this.consts[aes] = spec[aes]["const"]);
+          } else {
+            _results.push(void 0);
+          }
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+
+    Layer.prototype.make = function(layerSpec, callback) {
+      var spec,
+        _this = this;
+      spec = poly.layer.toStrictMode(layerSpec);
+      if (this.prevSpec && spec === this.prevSpec) return callback();
+      this._makeMappings(spec);
+      this.dataprocess.make(spec, function(statData, metaData) {
         _this.statData = statData;
         _this.meta = metaData;
         _this._calcGeoms();
         return callback();
       });
+      return this.prevSpec = spec;
     };
 
     Layer.prototype._calcGeoms = function() {
@@ -95,28 +116,20 @@
     };
 
     Layer.prototype.render = function(render) {
-      var _this = this;
-      this.rendered = {};
-      return _.each(this.geoms, function(geom, id) {
-        return _this.rendered[id] = _this._add(render, geom);
-      });
-    };
-
-    Layer.prototype.animate = function(render) {
-      var added, deleted, kept, newrendered, _ref,
+      var added, deleted, kept, newpts, _ref,
         _this = this;
-      this.rendered = this.rendered || {};
-      newrendered = {};
-      _ref = poly.compare(_.keys(this.rendered), _.keys(this.geoms)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
+      newpts = {};
+      _ref = poly.compare(_.keys(this.pts), _.keys(this.geoms)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
       _.each(deleted, function(id) {
-        return _this._delete(render, _this.rendered[id]);
+        return _this._delete(render, _this.pts[id]);
       });
       _.each(added, function(id) {
-        return newrendered[id] = _this._add(render, _this.geoms[id]);
+        return newpts[id] = _this._add(render, _this.geoms[id]);
       });
-      return _.each(kept, function(id) {
-        return newrendered[id] = _this._modify(render, _this.rendered[id], _this.geoms[id]);
+      _.each(kept, function(id) {
+        return newpts[id] = _this._modify(render, _this.pts[id], _this.geoms[id]);
       });
+      return this.pts = newpts;
     };
 
     Layer.prototype._delete = function(render, points) {

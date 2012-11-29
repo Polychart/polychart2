@@ -50,39 +50,46 @@ Base class for all layers
 ###
 class Layer
   defaults : defaults
+
   constructor: (layerSpec, strict) ->
-    @strict = strict
-    @setup layerSpec
-  # mostly just read and interpret the the spec
-  setup: (layerSpec) ->
-    @spec = poly.layer.toStrictMode layerSpec
-    @mapping = {}     # aesthetic mappings
-    @consts = {}      # constants supplied by the spec
+    @initialSpec = poly.layer.toStrictMode layerSpec
+    @prevSpec = null
+    @dataprocess = new poly.DataProcess @initialSpec, strict
+    @pts = {}
+
+  reset : () => @make @initialSpec
+
+  _makeMappings: (spec) =>
+    @mapping = {}      # aesthetic mappings
+    @consts = {}       # constants supplied by the spec
     for aes in aesthetics
-      if @spec[aes]
-        if @spec[aes].var then @mapping[aes] = @spec[aes].var
-        if @spec[aes].const then @consts[aes] = @spec[aes].const
-  # processing the data: calculate statistics and layer level calculations
-  calculate: (callback) =>
-    @dataprocess = new poly.DataProcess @spec #TODO: remove new
-    @dataprocess.process (statData, metaData) =>
+      if spec[aes]
+        if spec[aes].var then @mapping[aes] = spec[aes].var
+        if spec[aes].const then @consts[aes] = spec[aes].const
+
+  make: (layerSpec, callback) -> # mostly just read and interpret the the spec
+    spec = poly.layer.toStrictMode layerSpec
+    if @prevSpec and spec == @prevSpec
+      return callback()
+    @_makeMappings spec
+    @dataprocess.make spec, (statData, metaData) =>
       @statData = statData
       @meta = metaData
       @_calcGeoms()
       callback()
+    @prevSpec = spec
+
   _calcGeoms: () -> @geoms = {} # layer level geom calculation
+ 
   # render and animation functions!
   render: (render) =>
-    @rendered = {}
-    _.each @geoms, (geom, id) => @rendered[id] = @_add render, geom
-  animate: (render) =>
-    @rendered = @rendered || {}
-    newrendered = {}
-    {deleted, kept, added} = poly.compare _.keys(@rendered), _.keys(@geoms)
-    _.each deleted, (id) => @_delete render, @rendered[id]
-    _.each added, (id) => newrendered[id] = @_add render, @geoms[id]
+    newpts = {}
+    {deleted, kept, added} = poly.compare _.keys(@pts), _.keys(@geoms)
+    _.each deleted, (id) => @_delete render, @pts[id]
+    _.each added, (id) => newpts[id] = @_add render, @geoms[id]
     _.each kept, (id) =>
-      newrendered[id] = @_modify render, @rendered[id], @geoms[id]
+      newpts[id] = @_modify render, @pts[id], @geoms[id]
+    @pts = newpts
   _delete : (render, points) ->
     _.each points, (pt, id2) -> render.remove pt
   _modify: (render, points, geom) ->
@@ -95,6 +102,7 @@ class Layer
     _.each geom.marks, (mark, id2) ->
       objs[id2] = render.add mark, geom.evtData
     objs
+
   # helper for getting the value of a particular aesthetic from an item
   _getValue: (item, aes) ->
     if @mapping[aes] then return item[@mapping[aes]]

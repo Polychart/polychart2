@@ -20,11 +20,18 @@ class ScaleSet
     @factory =
       x : if inspec('x') then guideSpec.x.scale else poly.scale.linear()
       y : if inspec('y') then guideSpec.y.scale else poly.scale.linear()
+    @ranges = ranges
+    @setDomains domains
+  setDomains: (domains) ->
     @domains = domains
     @domainx = @domains.x
     @domainy = @domains.y
-    @ranges = ranges
   setRanges: (ranges) -> @ranges = ranges
+  setXDomain: (d) -> @domainx = d; @getScaleFns()
+  setYDomain: (d) -> @domainy = d; @getScaleFns()
+  resetDomains: () ->
+    @domainx = @domains.x
+    @domainy = @domains.y
   getScaleFns: () ->
     @scales = {}
     if @domainx
@@ -32,11 +39,6 @@ class ScaleSet
     if @domainy
       @scales.y = @factory.y.construct(@domainy, @ranges.y)
     @scales
-  setXDomain: (d) -> @domainx = d; @getScaleFns()
-  setYDomain: (d) -> @domainy = d; @getScaleFns()
-  resetDomains: () ->
-    @domainx = @domains.x
-    @domainy = @domains.y
   getAxes: () ->
     @getScaleFns()
     axes = {}

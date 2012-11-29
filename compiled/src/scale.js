@@ -33,25 +33,18 @@
         x: inspec('x') ? guideSpec.x.scale : poly.scale.linear(),
         y: inspec('y') ? guideSpec.y.scale : poly.scale.linear()
       };
+      this.ranges = ranges;
+      this.setDomains(domains);
+    }
+
+    ScaleSet.prototype.setDomains = function(domains) {
       this.domains = domains;
       this.domainx = this.domains.x;
-      this.domainy = this.domains.y;
-      this.ranges = ranges;
-    }
+      return this.domainy = this.domains.y;
+    };
 
     ScaleSet.prototype.setRanges = function(ranges) {
       return this.ranges = ranges;
-    };
-
-    ScaleSet.prototype.getScaleFns = function() {
-      this.scales = {};
-      if (this.domainx) {
-        this.scales.x = this.factory.x.construct(this.domainx, this.ranges.x);
-      }
-      if (this.domainy) {
-        this.scales.y = this.factory.y.construct(this.domainy, this.ranges.y);
-      }
-      return this.scales;
     };
 
     ScaleSet.prototype.setXDomain = function(d) {
@@ -67,6 +60,17 @@
     ScaleSet.prototype.resetDomains = function() {
       this.domainx = this.domains.x;
       return this.domainy = this.domains.y;
+    };
+
+    ScaleSet.prototype.getScaleFns = function() {
+      this.scales = {};
+      if (this.domainx) {
+        this.scales.x = this.factory.x.construct(this.domainx, this.ranges.x);
+      }
+      if (this.domainy) {
+        this.scales.y = this.factory.y.construct(this.domainy, this.ranges.y);
+      }
+      return this.scales;
     };
 
     ScaleSet.prototype.getAxes = function() {

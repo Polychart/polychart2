@@ -674,25 +674,18 @@
         x: inspec('x') ? guideSpec.x.scale : poly.scale.linear(),
         y: inspec('y') ? guideSpec.y.scale : poly.scale.linear()
       };
+      this.ranges = ranges;
+      this.setDomains(domains);
+    }
+
+    ScaleSet.prototype.setDomains = function(domains) {
       this.domains = domains;
       this.domainx = this.domains.x;
-      this.domainy = this.domains.y;
-      this.ranges = ranges;
-    }
+      return this.domainy = this.domains.y;
+    };
 
     ScaleSet.prototype.setRanges = function(ranges) {
       return this.ranges = ranges;
-    };
-
-    ScaleSet.prototype.getScaleFns = function() {
-      this.scales = {};
-      if (this.domainx) {
-        this.scales.x = this.factory.x.construct(this.domainx, this.ranges.x);
-      }
-      if (this.domainy) {
-        this.scales.y = this.factory.y.construct(this.domainy, this.ranges.y);
-      }
-      return this.scales;
     };
 
     ScaleSet.prototype.setXDomain = function(d) {
@@ -708,6 +701,17 @@
     ScaleSet.prototype.resetDomains = function() {
       this.domainx = this.domains.x;
       return this.domainy = this.domains.y;
+    };
+
+    ScaleSet.prototype.getScaleFns = function() {
+      this.scales = {};
+      if (this.domainx) {
+        this.scales.x = this.factory.x.construct(this.domainx, this.ranges.x);
+      }
+      if (this.domainy) {
+        this.scales.y = this.factory.y.construct(this.domainy, this.ranges.y);
+      }
+      return this.scales;
     };
 
     ScaleSet.prototype.getAxes = function() {
@@ -1009,6 +1013,7 @@
 }).call(this);
 (function() {
   var Data, DataProcess, backendProcess, calculateMeta, calculateStats, extractDataSpec, filterFactory, filters, frontendProcess, poly, statistics, statsFactory, transformFactory, transforms,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   poly = this.poly || {};
@@ -1029,6 +1034,10 @@
       this.frontEnd = !this.url;
     }
 
+    Data.prototype.update = function(json) {
+      return this.json = json;
+    };
+
     return Data;
 
   })();
@@ -1043,44 +1052,47 @@
   DataProcess = (function() {
 
     function DataProcess(layerSpec, strictmode) {
-      this.dataObj = layerSpec.data;
-      this.dataSpec = extractDataSpec(layerSpec);
+      this._wrap = __bind(this._wrap, this);      this.dataObj = layerSpec.data;
+      this.initialSpec = extractDataSpec(layerSpec);
+      this.prevSpec = null;
       this.strictmode = strictmode;
       this.statData = null;
       this.metaData = {};
     }
 
-    DataProcess.prototype.process = function(callback) {
-      var wrappedCallback,
-        _this = this;
-      wrappedCallback = function(data, metaData) {
-        _this.statData = data;
-        _this.metaData = metaData;
-        return callback(_this.statData, _this.metaData);
-      };
+    DataProcess.prototype.reset = function(callback) {
+      return this.make(this.initialSpec, callback);
+    };
+
+    DataProcess.prototype.make = function(spec, callback) {
+      var dataSpec, wrappedCallback;
+      dataSpec = extractDataSpec(spec);
+      if ((typeof prevSpec !== "undefined" && prevSpec !== null) && prevSpec === dataSpec) {
+        return callback(this.statData, this.metaData);
+      }
+      wrappedCallback = this._wrap(callback);
       if (this.dataObj.frontEnd) {
         if (this.strictmode) {
           return wrappedCallback(this.dataObj.json, {});
         } else {
-          return frontendProcess(this.dataSpec, this.dataObj.json, wrappedCallback);
+          return frontendProcess(dataSpec, this.dataObj.json, wrappedCallback);
         }
       } else {
         if (this.strictmode) {
           throw new poly.StrictModeError();
         } else {
-          return backendProcess(this.dataSpec, this.dataObj, wrappedCallback);
+          return backendProcess(dataSpec, this.dataObj, wrappedCallback);
         }
       }
     };
 
-    DataProcess.prototype.reprocess = function(newlayerSpec, callback) {
-      var newDataSpec;
-      newDataSpec = extractDataSpec(newlayerSpec);
-      if (_.isEqual(this.dataSpec, newDataSpec)) {
-        callback(this.statData, this.metaData);
-      }
-      this.dataSpec = newDataSpec;
-      return this.process(callback);
+    DataProcess.prototype._wrap = function(callback) {
+      var _this = this;
+      return function(data, metaData) {
+        _this.statData = data;
+        _this.metaData = metaData;
+        return callback(_this.statData, _this.metaData);
+      };
     };
 
     return DataProcess;
@@ -1493,34 +1505,55 @@
 
   Layer = (function() {
 
+    Layer.prototype.defaults = defaults;
+
     function Layer(layerSpec, strict) {
-      this.animate = __bind(this.animate, this);
       this.render = __bind(this.render, this);
-      this.calculate = __bind(this.calculate, this);
-      var aes, _i, _len;
-      this.strict = strict;
-      this.spec = poly.layer.toStrictMode(layerSpec);
-      this.defaults = defaults;
-      this.mapping = {};
-      this.consts = {};
-      for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
-        aes = aesthetics[_i];
-        if (this.spec[aes]) {
-          if (this.spec[aes]["var"]) this.mapping[aes] = this.spec[aes]["var"];
-          if (this.spec[aes]["const"]) this.consts[aes] = this.spec[aes]["const"];
-        }
-      }
+      this._makeMappings = __bind(this._makeMappings, this);
+      this.reset = __bind(this.reset, this);      this.initialSpec = poly.layer.toStrictMode(layerSpec);
+      this.prevSpec = null;
+      this.dataprocess = new poly.DataProcess(this.initialSpec, strict);
+      this.pts = {};
     }
 
-    Layer.prototype.calculate = function(callback) {
-      var _this = this;
-      this.dataprocess = new poly.DataProcess(this.spec);
-      return this.dataprocess.process(function(statData, metaData) {
+    Layer.prototype.reset = function() {
+      return this.make(this.initialSpec);
+    };
+
+    Layer.prototype._makeMappings = function(spec) {
+      var aes, _i, _len, _results;
+      this.mapping = {};
+      this.consts = {};
+      _results = [];
+      for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
+        aes = aesthetics[_i];
+        if (spec[aes]) {
+          if (spec[aes]["var"]) this.mapping[aes] = spec[aes]["var"];
+          if (spec[aes]["const"]) {
+            _results.push(this.consts[aes] = spec[aes]["const"]);
+          } else {
+            _results.push(void 0);
+          }
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+
+    Layer.prototype.make = function(layerSpec, callback) {
+      var spec,
+        _this = this;
+      spec = poly.layer.toStrictMode(layerSpec);
+      if (this.prevSpec && spec === this.prevSpec) return callback();
+      this._makeMappings(spec);
+      this.dataprocess.make(spec, function(statData, metaData) {
         _this.statData = statData;
         _this.meta = metaData;
         _this._calcGeoms();
         return callback();
       });
+      return this.prevSpec = spec;
     };
 
     Layer.prototype._calcGeoms = function() {
@@ -1528,28 +1561,20 @@
     };
 
     Layer.prototype.render = function(render) {
-      var _this = this;
-      this.rendered = {};
-      return _.each(this.geoms, function(geom, id) {
-        return _this.rendered[id] = _this._add(render, geom);
-      });
-    };
-
-    Layer.prototype.animate = function(render) {
-      var added, deleted, kept, newrendered, _ref,
+      var added, deleted, kept, newpts, _ref,
         _this = this;
-      this.rendered = this.rendered || {};
-      newrendered = {};
-      _ref = poly.compare(_.keys(this.rendered), _.keys(this.geoms)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
+      newpts = {};
+      _ref = poly.compare(_.keys(this.pts), _.keys(this.geoms)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
       _.each(deleted, function(id) {
-        return _this._delete(render, _this.rendered[id]);
+        return _this._delete(render, _this.pts[id]);
       });
       _.each(added, function(id) {
-        return newrendered[id] = _this._add(render, _this.geoms[id]);
+        return newpts[id] = _this._add(render, _this.geoms[id]);
       });
-      return _.each(kept, function(id) {
-        return newrendered[id] = _this._modify(render, _this.rendered[id], _this.geoms[id]);
+      _.each(kept, function(id) {
+        return newpts[id] = _this._modify(render, _this.pts[id], _this.geoms[id]);
       });
+      return this.pts = newpts;
     };
 
     Layer.prototype._delete = function(render, points) {
@@ -1935,70 +1960,130 @@
   Graph = (function() {
 
     function Graph(spec) {
+      this._legacy = __bind(this._legacy, this);
       this.animate = __bind(this.animate, this);
+      this.remerge = __bind(this.remerge, this);
       this.render = __bind(this.render, this);
-      this.merge = __bind(this.merge, this);      this.graphId = _.uniqueId('graph_');
+      this.merge = __bind(this.merge, this);
+      this.reset = __bind(this.reset, this);      this.graphId = _.uniqueId('graph_');
+      this.layers = null;
+      this.scaleSet = null;
+      this.axes = null;
+      this.legends = null;
+      this.dims = null;
+      this.paper = null;
+      this.initial_spec = spec;
       this.make(spec);
     }
 
+    Graph.prototype.reset = function() {
+      return this.make(this.initial_spec);
+    };
+
     Graph.prototype.make = function(spec) {
-      var merge, _ref,
-        _this = this;
+      var merge;
       this.spec = spec;
-      this.strict = (_ref = spec.strict) != null ? _ref : false;
-      this.layers = [];
       if (spec.layers == null) spec.layers = [];
-      _.each(spec.layers, function(layerSpec) {
-        var layerObj;
-        layerObj = poly.layer.make(layerSpec, spec.strict);
-        return _this.layers.push(layerObj);
-      });
+      if (this.layers == null) this.layers = this._makeLayers(this.spec);
       merge = _.after(this.layers.length, this.merge);
-      return _.each(this.layers, function(layerObj) {
-        return layerObj.calculate(merge);
+      return _.each(this.layers, function(layerObj, id) {
+        return layerObj.make(spec.layers[id], merge);
       });
     };
 
     Graph.prototype.merge = function() {
-      var spec, tmpRanges,
-        _this = this;
-      spec = this.spec;
-      this.domains = {};
-      if (spec.guides) {
-        if (spec.guides == null) spec.guides = {};
-        this.domains = poly.domain.make(this.layers, spec.guides, spec.strict);
+      var domains;
+      domains = this._makeDomains(this.spec, this.layers);
+      if (this.scaleSet != null) {
+        this.scaleSet.setDomains(domains);
+      } else {
+        this.scaleSet = this._makeScaleSet(this.spec, domains);
       }
-      tmpRanges = poly.dim.ranges(poly.dim.guess(this.spec));
-      this.scaleSet = poly.scale.make(spec.guides, this.domains, tmpRanges);
-      this.axes = this.scaleSet.getAxes();
-      this.legends = this.scaleSet.getLegends();
-      this.dims = poly.dim.make(spec, this.axes, this.legends);
-      this.scaleSet.setRanges(poly.dim.ranges(this.dims));
-      this.scales = this.scaleSet.getScaleFns();
-      this.ticks = {};
-      return _.each(this.axes, function(v, k) {
-        return _this.ticks[k] = v.ticks;
-      });
+      if (this.dims == null) {
+        this.dims = this._makeDimensions(this.spec, this.scaleSet);
+      }
+      if (this.ranges == null) this.ranges = poly.dim.ranges(this.dims);
+      this.scaleSet.setRanges(this.ranges);
+      return this._legacy(domains);
     };
 
     Graph.prototype.render = function(dom) {
-      var render,
+      var clipping, render, scales,
         _this = this;
-      this.dom = document.getElementById(dom);
-      this.paper = poly.paper(dom, this.dims.width, this.dims.height);
-      this.clipping = poly.dim.clipping(this.dims);
-      render = poly.render(this.graphId, this.paper, this.scales, this.clipping);
+      if (this.paper == null) {
+        this.paper = this._makePaper(dom, this.dims.width, this.dims.height);
+      }
+      scales = this.scaleSet.getScaleFns();
+      clipping = poly.dim.clipping(this.dims);
+      render = poly.render(this.graphId, this.paper, scales, clipping);
       return _.each(this.layers, function(layer) {
         return layer.render(render);
       });
     };
 
+    Graph.prototype.remake = function(spec) {
+      var remerge;
+      this.spec = spec;
+      remerge = _.after(this.layers.length, this.remerge);
+      return _.each(this.layers, function(layer, k) {
+        layer.reset(spec.layers[k]);
+        return layer.recalculate(remerge);
+      });
+    };
+
+    Graph.prototype.remerge = function() {
+      var domains;
+      return domains = this._makeDomains(this.spec, this.layers);
+    };
+
     Graph.prototype.animate = function() {
-      var render,
+      var clipping, render, scales,
         _this = this;
-      render = poly.render(this.graphId, this.paper, this.scales, this.clipping);
+      scales = this.scaleSet.getScaleFns();
+      clipping = poly.dim.clipping(this.dims);
+      render = poly.render(this.graphId, this.paper, scales, this.clipping);
       return _.each(this.layers, function(layer) {
         return layer.animate(_this.paper, render);
+      });
+    };
+
+    Graph.prototype._makeLayers = function(spec) {
+      return _.map(spec.layers, function(layerSpec) {
+        return poly.layer.make(layerSpec, spec.strict);
+      });
+    };
+
+    Graph.prototype._makeDomains = function(spec, layers) {
+      var domains;
+      domains = {};
+      if (spec.guides) {
+        if (spec.guides == null) spec.guides = {};
+        domains = poly.domain.make(layers, spec.guides, spec.strict);
+      }
+      return domains;
+    };
+
+    Graph.prototype._makeScaleSet = function(spec, domains) {
+      var tmpRanges;
+      tmpRanges = poly.dim.ranges(poly.dim.guess(spec));
+      return poly.scale.make(spec.guides, domains, tmpRanges);
+    };
+
+    Graph.prototype._makeDimensions = function(spec, scaleSet) {
+      return poly.dim.make(spec, scaleSet.getAxes(), scaleSet.getLegends());
+    };
+
+    Graph.prototype._makePaper = function(dom, width, height) {
+      return poly.paper(document.getElementById(dom), width, height);
+    };
+
+    Graph.prototype._legacy = function(domains) {
+      var _this = this;
+      this.domains = domains;
+      this.scales = this.scaleSet.getScaleFns();
+      this.ticks = {};
+      return _.each(this.axes, function(v, k) {
+        return _this.ticks[k] = v.ticks;
       });
     };
 

@@ -1,5 +1,6 @@
 (function() {
   var Data, DataProcess, backendProcess, calculateMeta, calculateStats, extractDataSpec, filterFactory, filters, frontendProcess, poly, statistics, statsFactory, transformFactory, transforms,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   poly = this.poly || {};
@@ -20,6 +21,10 @@
       this.frontEnd = !this.url;
     }
 
+    Data.prototype.update = function(json) {
+      return this.json = json;
+    };
+
     return Data;
 
   })();
@@ -34,44 +39,47 @@
   DataProcess = (function() {
 
     function DataProcess(layerSpec, strictmode) {
-      this.dataObj = layerSpec.data;
-      this.dataSpec = extractDataSpec(layerSpec);
+      this._wrap = __bind(this._wrap, this);      this.dataObj = layerSpec.data;
+      this.initialSpec = extractDataSpec(layerSpec);
+      this.prevSpec = null;
       this.strictmode = strictmode;
       this.statData = null;
       this.metaData = {};
     }
 
-    DataProcess.prototype.process = function(callback) {
-      var wrappedCallback,
-        _this = this;
-      wrappedCallback = function(data, metaData) {
-        _this.statData = data;
-        _this.metaData = metaData;
-        return callback(_this.statData, _this.metaData);
-      };
+    DataProcess.prototype.reset = function(callback) {
+      return this.make(this.initialSpec, callback);
+    };
+
+    DataProcess.prototype.make = function(spec, callback) {
+      var dataSpec, wrappedCallback;
+      dataSpec = extractDataSpec(spec);
+      if ((typeof prevSpec !== "undefined" && prevSpec !== null) && prevSpec === dataSpec) {
+        return callback(this.statData, this.metaData);
+      }
+      wrappedCallback = this._wrap(callback);
       if (this.dataObj.frontEnd) {
         if (this.strictmode) {
           return wrappedCallback(this.dataObj.json, {});
         } else {
-          return frontendProcess(this.dataSpec, this.dataObj.json, wrappedCallback);
+          return frontendProcess(dataSpec, this.dataObj.json, wrappedCallback);
         }
       } else {
         if (this.strictmode) {
           throw new poly.StrictModeError();
         } else {
-          return backendProcess(this.dataSpec, this.dataObj, wrappedCallback);
+          return backendProcess(dataSpec, this.dataObj, wrappedCallback);
         }
       }
     };
 
-    DataProcess.prototype.reprocess = function(newlayerSpec, callback) {
-      var newDataSpec;
-      newDataSpec = extractDataSpec(newlayerSpec);
-      if (_.isEqual(this.dataSpec, newDataSpec)) {
-        callback(this.statData, this.metaData);
-      }
-      this.dataSpec = newDataSpec;
-      return this.process(callback);
+    DataProcess.prototype._wrap = function(callback) {
+      var _this = this;
+      return function(data, metaData) {
+        _this.statData = data;
+        _this.metaData = metaData;
+        return callback(_this.statData, _this.metaData);
+      };
     };
 
     return DataProcess;
