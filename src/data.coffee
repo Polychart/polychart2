@@ -38,7 +38,6 @@ class DataProcess
     dataSpec = extractDataSpec spec
     #if prevSpec? and prevSpec == dataSpec
     #  return callback @statData, @metaData
-
     wrappedCallback = @_wrap callback
     if @dataObj.frontEnd
       if @strictmode

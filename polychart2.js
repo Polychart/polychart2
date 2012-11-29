@@ -1957,8 +1957,6 @@
 
     function Graph(spec) {
       this._legacy = __bind(this._legacy, this);
-      this.animate = __bind(this.animate, this);
-      this.remerge = __bind(this.remerge, this);
       this.render = __bind(this.render, this);
       this.merge = __bind(this.merge, this);
       this.reset = __bind(this.reset, this);      this.graphId = _.uniqueId('graph_');
@@ -2004,7 +2002,7 @@
     };
 
     Graph.prototype.render = function(dom) {
-      var clipping, render, scales,
+      var axes, clipping, render, scales,
         _this = this;
       if (this.paper == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height);
@@ -2012,35 +2010,10 @@
       scales = this.scaleSet.getScaleFns();
       clipping = poly.dim.clipping(this.dims);
       render = poly.render(this.graphId, this.paper, scales, clipping);
-      return _.each(this.layers, function(layer) {
+      _.each(this.layers, function(layer) {
         return layer.render(render);
       });
-    };
-
-    Graph.prototype.remake = function(spec) {
-      var remerge;
-      this.spec = spec;
-      remerge = _.after(this.layers.length, this.remerge);
-      return _.each(this.layers, function(layer, k) {
-        layer.reset(spec.layers[k]);
-        return layer.recalculate(remerge);
-      });
-    };
-
-    Graph.prototype.remerge = function() {
-      var domains;
-      return domains = this._makeDomains(this.spec, this.layers);
-    };
-
-    Graph.prototype.animate = function() {
-      var clipping, render, scales,
-        _this = this;
-      scales = this.scaleSet.getScaleFns();
-      clipping = poly.dim.clipping(this.dims);
-      render = poly.render(this.graphId, this.paper, scales, this.clipping);
-      return _.each(this.layers, function(layer) {
-        return layer.animate(_this.paper, render);
-      });
+      return axes = this.scaleSet.getAxes();
     };
 
     Graph.prototype._makeLayers = function(spec) {
@@ -2074,11 +2047,13 @@
     };
 
     Graph.prototype._legacy = function(domains) {
-      var _this = this;
+      var axes,
+        _this = this;
       this.domains = domains;
       this.scales = this.scaleSet.getScaleFns();
+      axes = this.scaleSet.getAxes();
       this.ticks = {};
-      return _.each(this.axes, function(v, k) {
+      return _.each(axes, function(v, k) {
         return _this.ticks[k] = v.ticks;
       });
     };

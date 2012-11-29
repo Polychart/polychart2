@@ -21,8 +21,6 @@ poly.tick.make = (domain, scale, guideSpec, type) ->
   else if guideSpec.formatter
     formatter = guideSpec.formatter
   ticks = _.map ticks, tickFactory(scale, formatter)
- 
-
 
 ###
 # CLASSES & HELPERS

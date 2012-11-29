@@ -46,21 +46,7 @@ class Graph
     render = poly.render @graphId, @paper, scales, clipping
     _.each @layers, (layer) => layer.render(render)
     # render axes
-
-  remake: (spec) ->
-    @spec = spec
-    remerge = _.after(@layers.length, @remerge)
-    _.each @layers, (layer, k) ->
-      layer.reset spec.layers[k]
-      layer.recalculate remerge
-  remerge: () =>
-    domains = @_makeDomains @spec, @layers
-
-  animate : () =>
-    scales = @scaleSet.getScaleFns()
-    clipping = poly.dim.clipping @dims
-    render = poly.render @graphId, @paper, scales, @clipping
-    _.each @layers, (layer) => layer.animate(@paper, render)
+    axes = @scaleSet.getAxes()
 
   _makeLayers: (spec) ->
     _.map spec.layers, (layerSpec) -> poly.layer.make(layerSpec, spec.strict)
@@ -77,14 +63,13 @@ class Graph
     poly.dim.make spec, scaleSet.getAxes(), scaleSet.getLegends()
   _makePaper: (dom, width, height) ->
     poly.paper document.getElementById(dom), width, height
-
-
   _legacy: (domains) =>
     # LEGACY: tick calculation
     @domains = domains
     @scales = @scaleSet.getScaleFns()
+    axes = @scaleSet.getAxes()
     @ticks = {}
-    _.each @axes, (v, k) => @ticks[k] = v.ticks
+    _.each axes, (v, k) => @ticks[k] = v.ticks
 
 poly.chart = (spec) -> new Graph(spec)
 
