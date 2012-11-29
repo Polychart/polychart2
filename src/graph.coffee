@@ -38,7 +38,6 @@ class Graph
     @scaleSet.setRanges @ranges
     @_legacy(domains)
 
-
   render : (dom) =>
     @paper ?= @_makePaper dom, @dims.width, @dims.height
     scales = @scaleSet.getScaleFns()
