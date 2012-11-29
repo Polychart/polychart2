@@ -582,15 +582,19 @@
 
 }).call(this);
 (function() {
-  var Axis, Guide, Legend, poly;
+  var Axis, Guide, Legend, poly, sf,
+    __hasProp = Object.prototype.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
   poly = this.poly || {};
+
+  sf = poly["const"].scaleFns;
 
   Guide = (function() {
 
     function Guide(params) {
       this.scales = params.scales, this.guideSpec = params.guideSpec;
-      this.position = 'left';
+      this.position = 'right';
       this.ticks = [];
     }
 
@@ -606,19 +610,43 @@
 
   })();
 
-  Axis = (function() {
+  Axis = (function(_super) {
+
+    __extends(Axis, _super);
 
     function Axis(params) {
-      this.domain = params.domain, this.factory = params.factory, this.scale = params.scale, this.guideSpec = params.guideSpec;
-      this.position = 'left';
+      this.domain = params.domain, this.factory = params.factory, this.scale = params.scale, this.guideSpec = params.guideSpec, this.type = params.type;
+      this.position = this.type === 'x' ? 'bottom' : 'left';
       this.ticks = poly.tick.make(this.domain, this.scale, this.guideSpec, this.factory.tickType(this.domain));
     }
 
-    Axis.prototype.render = function(paper, render, scales) {};
+    Axis.prototype._renderHline = function(dim, renderer) {
+      var hline;
+      hline = {
+        type: 'hline',
+        y: sf.identity(dim.paddingTop + dim.guideTop + dim.chartHeight + 1)
+      };
+      return renderer.add(hline, {});
+    };
+
+    Axis.prototype._renderVline = function(dim, renderer) {
+      var vline;
+      vline = {
+        type: 'vline',
+        x: sf.identity(dim.paddingLeft + dim.guideLeft - 1)
+      };
+      return renderer.add(vline, {});
+    };
+
+    Axis.prototype.render = function(dim, renderer) {
+      if (this.type === 'x') this._renderHline(dim, renderer);
+      if (this.type === 'y') this._renderVline(dim, renderer);
+      return _.each(this.ticks, function(t) {});
+    };
 
     return Axis;
 
-  })();
+  })(Guide);
 
   Legend = (function() {
 
@@ -730,11 +758,13 @@
       if (this.factory.x && this.domainx) {
         params = getparams('x');
         params.domain = this.domainx;
+        params.type = 'x';
         axes.x = poly.guide.axis(params);
       }
       if (this.factory.y && this.domainy) {
         params = getparams('y');
         params.domain = this.domainy;
+        params.type = 'y';
         axes.y = poly.guide.axis(params);
       }
       return axes;
@@ -830,18 +860,19 @@
     };
 
     PositionScale.prototype._wrapper = function(y) {
-      return function(val) {
+      return function(value) {
         var space;
         space = 2;
-        if (_.isObject(val)) {
+        if (_.isObject(value)) {
           if (value.t === 'scalefn') {
+            if (value.f === 'identity') return value.v;
             if (value.f === 'upper') return y(val + domain.bw) - space;
             if (value.f === 'lower') return y(val) + space;
             if (value.f === 'middle') return y(val + domain.bw / 2);
           }
           throw new poly.UnexpectedObject("Expected a value instead of an object");
         }
-        return y(val);
+        return y(value);
       };
     };
 
@@ -1802,8 +1833,8 @@
 
   poly.dim.make = function(spec, ticks) {
     return {
-      width: 320,
-      height: 320,
+      width: 340,
+      height: 340,
       chartWidth: 300,
       chartHeight: 300,
       paddingLeft: 10,
@@ -1819,8 +1850,8 @@
 
   poly.dim.guess = function(spec) {
     return {
-      width: 320,
-      height: 320,
+      width: 340,
+      height: 340,
       chartWidth: 300,
       chartHeight: 300,
       paddingLeft: 10,
@@ -1835,12 +1866,19 @@
   };
 
   poly.dim.clipping = function(dim) {
-    var h, w, x, y;
-    x = dim.paddingLeft + dim.guideLeft;
-    y = dim.paddingTop + dim.guideTop;
-    w = dim.width;
-    h = dim.height;
-    return [x, y, w, h];
+    var gb, gl, gt, h, pl, pt, w;
+    pl = dim.paddingLeft;
+    gl = dim.guideLeft;
+    pt = dim.paddingTop;
+    gt = dim.guideTop;
+    gb = dim.guideBottom;
+    w = dim.chartWidth;
+    h = dim.chartHeight;
+    return {
+      main: [pl + gl, pt + gt, w, h],
+      left: [pl, pt + gt, gl, h + 1],
+      bottom: [pl + gl - 1, pt + gt + h, w + 1, gb]
+    };
   };
 
   poly.dim.ranges = function(dim) {
@@ -1868,7 +1906,7 @@
 
 }).call(this);
 (function() {
-  var poly, renderer;
+  var poly, renderer, _makePath;
 
   poly = this.poly || {};
 
@@ -1943,7 +1981,88 @@
       animate: function(pt, scales, mark) {
         return pt.animate(attr);
       }
+    },
+    line: {
+      render: function(paper, scales, mark) {
+        var pt;
+        pt = paper.path();
+        _.each(renderer.line.attr(scales, mark), function(v, k) {
+          return pt.attr(k, v);
+        });
+        return pt;
+      },
+      attr: function(scales, mark) {
+        var xs, ys;
+        xs = _.map(mark.x(scales.x));
+        ys = _.map(mark.y(scales.y));
+        return {
+          path: _makePath(xs, ys),
+          stroke: 'black'
+        };
+      },
+      animate: function(pt, scales, mark) {
+        return pt.animate(attr);
+      }
+    },
+    hline: {
+      render: function(paper, scales, mark) {
+        var pt;
+        pt = paper.path();
+        _.each(renderer.hline.attr(scales, mark), function(v, k) {
+          return pt.attr(k, v);
+        });
+        return pt;
+      },
+      attr: function(scales, mark) {
+        var y;
+        y = scales.y(mark.y);
+        return {
+          path: _makePath([0, 100000], [y, y]),
+          stroke: 'black',
+          'stroke-width': '1px'
+        };
+      },
+      animate: function(pt, scales, mark) {
+        return pt.animate(attr);
+      }
+    },
+    vline: {
+      render: function(paper, scales, mark) {
+        var pt;
+        pt = paper.path();
+        _.each(renderer.vline.attr(scales, mark), function(v, k) {
+          return pt.attr(k, v);
+        });
+        return pt;
+      },
+      attr: function(scales, mark) {
+        var x;
+        x = scales.x(mark.x);
+        return {
+          path: _makePath([x, x], [0, 100000]),
+          stroke: 'black',
+          'stroke-width': '1px'
+        };
+      },
+      animate: function(pt, scales, mark) {
+        return pt.animate(attr);
+      }
     }
+  };
+
+  _makePath = function(xs, ys) {
+    var str;
+    str = '';
+    _.each(xs, function(x, i) {
+      var y;
+      y = ys[i];
+      if (str === '') {
+        return str += 'M' + x + ' ' + y;
+      } else {
+        return str += ' L' + x + ' ' + y;
+      }
+    });
+    return str + ' Z';
   };
 
 }).call(this);
@@ -2002,18 +2121,20 @@
     };
 
     Graph.prototype.render = function(dom) {
-      var axes, clipping, render, scales,
+      var axes, clipping, renderer, scales,
         _this = this;
       if (this.paper == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height);
       }
       scales = this.scaleSet.getScaleFns();
       clipping = poly.dim.clipping(this.dims);
-      render = poly.render(this.graphId, this.paper, scales, clipping);
+      renderer = poly.render(this.graphId, this.paper, scales, clipping.main);
       _.each(this.layers, function(layer) {
-        return layer.render(render);
+        return layer.render(renderer);
       });
-      return axes = this.scaleSet.getAxes();
+      axes = this.scaleSet.getAxes();
+      axes.y.render(this.dims, poly.render(this.graphId, this.paper, scales, clipping.left));
+      return axes.x.render(this.dims, poly.render(this.graphId, this.paper, scales, clipping.bottom));
     };
 
     Graph.prototype._makeLayers = function(spec) {

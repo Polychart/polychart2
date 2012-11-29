@@ -53,18 +53,20 @@
     };
 
     Graph.prototype.render = function(dom) {
-      var axes, clipping, render, scales,
+      var axes, clipping, renderer, scales,
         _this = this;
       if (this.paper == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height);
       }
       scales = this.scaleSet.getScaleFns();
       clipping = poly.dim.clipping(this.dims);
-      render = poly.render(this.graphId, this.paper, scales, clipping);
+      renderer = poly.render(this.graphId, this.paper, scales, clipping.main);
       _.each(this.layers, function(layer) {
-        return layer.render(render);
+        return layer.render(renderer);
       });
-      return axes = this.scaleSet.getAxes();
+      axes = this.scaleSet.getAxes();
+      axes.y.render(this.dims, poly.render(this.graphId, this.paper, scales, clipping.left));
+      return axes.x.render(this.dims, poly.render(this.graphId, this.paper, scales, clipping.bottom));
     };
 
     Graph.prototype._makeLayers = function(spec) {

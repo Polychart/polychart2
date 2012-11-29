@@ -37,9 +37,52 @@ renderer =
       _.each renderer.circle.attr(scales, mark), (v, k) -> pt.attr(k, v)
       pt
     attr: (scales, mark) ->
+      # handle the case when mark.FOO does not exist
       cx: scales.x(mark.x)
       cy: scales.y(mark.y)
       r: 10
       fill: 'black'
-    animate: (pt, scales, mark) ->
-      pt.animate attr
+    animate: (pt, scales, mark) -> pt.animate attr
+  line:
+    render: (paper, scales, mark) ->
+      pt = paper.path()
+      _.each renderer.line.attr(scales, mark), (v, k) -> pt.attr(k, v)
+      pt
+    attr: (scales, mark) ->
+      xs = _.map mark.x scales.x
+      ys = _.map mark.y scales.y
+      path: _makePath xs, ys
+      stroke: 'black'
+    animate: (pt, scales, mark) -> pt.animate attr
+  hline:
+    render: (paper, scales, mark) ->
+      pt = paper.path()
+      _.each renderer.hline.attr(scales, mark), (v, k) -> pt.attr(k, v)
+      pt
+    attr: (scales, mark) ->
+      y = scales.y mark.y
+      path: _makePath([0, 100000], [y, y])
+      stroke: 'black'
+      'stroke-width': '1px'
+    animate: (pt, scales, mark) -> pt.animate attr
+
+  vline:
+    render: (paper, scales, mark) ->
+      pt = paper.path()
+      _.each renderer.vline.attr(scales, mark), (v, k) -> pt.attr(k, v)
+      pt
+    attr: (scales, mark) ->
+      x = scales.x mark.x
+      path: _makePath([x, x], [0, 100000])
+      stroke: 'black'
+      'stroke-width': '1px'
+    animate: (pt, scales, mark) -> pt.animate attr
+
+_makePath = (xs, ys) ->
+  str = ''
+  _.each xs, (x, i) ->
+    y = ys[i]
+    if str == '' then str+='M'+x+' '+y
+    else str +=' L'+x+' '+y
+  str + ' Z'
+

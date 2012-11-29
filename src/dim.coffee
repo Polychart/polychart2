@@ -6,8 +6,8 @@ poly = @poly || {}
 poly.dim = {}
 poly.dim.make = (spec, ticks) ->
   return {
-    width: 320
-    height: 320
+    width: 340
+    height: 340
     chartWidth: 300
     chartHeight: 300
     paddingLeft: 10
@@ -22,8 +22,8 @@ poly.dim.make = (spec, ticks) ->
 
 poly.dim.guess = (spec) ->
   return {
-    width: 320
-    height: 320
+    width: 340
+    height: 340
     chartWidth: 300
     chartHeight: 300
     paddingLeft: 10
@@ -37,11 +37,17 @@ poly.dim.guess = (spec) ->
   }
 
 poly.dim.clipping = (dim) ->
-  x = dim.paddingLeft + dim.guideLeft
-  y = dim.paddingTop + dim.guideTop
-  w = dim.width
-  h = dim.height
-  return [x, y, w, h]
+  pl = dim.paddingLeft
+  gl = dim.guideLeft
+  pt = dim.paddingTop
+  gt = dim.guideTop
+  gb = dim.guideBottom
+  w = dim.chartWidth
+  h = dim.chartHeight
+
+  main: [pl+gl, pt+gt, w, h]
+  left: [pl, pt+gt, gl, h+1]
+  bottom: [pl+gl-1, pt+gt+h, w+1, gb]
 
 poly.dim.ranges = (dim) ->
   x:

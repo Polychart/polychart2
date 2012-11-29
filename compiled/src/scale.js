@@ -89,11 +89,13 @@
       if (this.factory.x && this.domainx) {
         params = getparams('x');
         params.domain = this.domainx;
+        params.type = 'x';
         axes.x = poly.guide.axis(params);
       }
       if (this.factory.y && this.domainy) {
         params = getparams('y');
         params.domain = this.domainy;
+        params.type = 'y';
         axes.y = poly.guide.axis(params);
       }
       return axes;
@@ -189,18 +191,19 @@
     };
 
     PositionScale.prototype._wrapper = function(y) {
-      return function(val) {
+      return function(value) {
         var space;
         space = 2;
-        if (_.isObject(val)) {
+        if (_.isObject(value)) {
           if (value.t === 'scalefn') {
+            if (value.f === 'identity') return value.v;
             if (value.f === 'upper') return y(val + domain.bw) - space;
             if (value.f === 'lower') return y(val) + space;
             if (value.f === 'middle') return y(val + domain.bw / 2);
           }
           throw new poly.UnexpectedObject("Expected a value instead of an object");
         }
-        return y(val);
+        return y(value);
       };
     };
 

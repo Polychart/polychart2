@@ -11,8 +11,8 @@
 
   poly.dim.make = function(spec, ticks) {
     return {
-      width: 320,
-      height: 320,
+      width: 340,
+      height: 340,
       chartWidth: 300,
       chartHeight: 300,
       paddingLeft: 10,
@@ -28,8 +28,8 @@
 
   poly.dim.guess = function(spec) {
     return {
-      width: 320,
-      height: 320,
+      width: 340,
+      height: 340,
       chartWidth: 300,
       chartHeight: 300,
       paddingLeft: 10,
@@ -44,12 +44,19 @@
   };
 
   poly.dim.clipping = function(dim) {
-    var h, w, x, y;
-    x = dim.paddingLeft + dim.guideLeft;
-    y = dim.paddingTop + dim.guideTop;
-    w = dim.width;
-    h = dim.height;
-    return [x, y, w, h];
+    var gb, gl, gt, h, pl, pt, w;
+    pl = dim.paddingLeft;
+    gl = dim.guideLeft;
+    pt = dim.paddingTop;
+    gt = dim.guideTop;
+    gb = dim.guideBottom;
+    w = dim.chartWidth;
+    h = dim.chartHeight;
+    return {
+      main: [pl + gl, pt + gt, w, h],
+      left: [pl, pt + gt, gl, h + 1],
+      bottom: [pl + gl - 1, pt + gt + h, w + 1, gb]
+    };
   };
 
   poly.dim.ranges = function(dim) {

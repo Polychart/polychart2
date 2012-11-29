@@ -50,10 +50,12 @@ class ScaleSet
     if @factory.x and @domainx
       params = getparams 'x'
       params.domain = @domainx
+      params.type = 'x'
       axes.x = poly.guide.axis params
     if @factory.y and @domainy
       params = getparams 'y'
       params.domain = @domainy
+      params.type = 'y'
       axes.y = poly.guide.axis params
     axes
   getLegends: () ->
@@ -98,15 +100,16 @@ class PositionScale extends Scale
   construct: (domain, range) ->
     @range = range
     super(domain)
-  _wrapper : (y) -> (val) ->
+  _wrapper : (y) -> (value) ->
     space = 2
-    if _.isObject(val)
+    if _.isObject(value)
       if value.t is 'scalefn'
+        if value.f is 'identity' then return value.v
         if value.f is 'upper' then return y(val+domain.bw) - space
         if value.f is 'lower' then return y(val) + space
         if value.f is 'middle' then return y(val+domain.bw/2)
       throw new poly.UnexpectedObject("Expected a value instead of an object")
-    y(val)
+    y(value)
 class Linear extends PositionScale
   _constructNum: (domain) ->
     @_wrapper poly.linear(domain.min, @range.min, domain.max, @range.max)
