@@ -1,5 +1,5 @@
 (function() {
-  var Area, Brewer, Gradient, Gradient2, Identity, Linear, Log, PositionScale, Scale, ScaleSet, Shape, aesthetics, poly,
+  var Area, Brewer, Color, Gradient, Gradient2, Identity, Linear, Log, PositionScale, Scale, ScaleSet, Shape, aesthetics, poly,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -34,7 +34,9 @@
       this.guideSpec = guideSpec;
       this.factory = {
         x: inspec('x') ? guideSpec.x.scale : poly.scale.linear(),
-        y: inspec('y') ? guideSpec.y.scale : poly.scale.linear()
+        y: inspec('y') ? guideSpec.y.scale : poly.scale.linear(),
+        color: inspec('color') ? guideSpec.color.scale : poly.scale.color(),
+        size: inspec('size') ? guideSpec.size.scale : poly.scale.area()
       };
       this.ranges = ranges;
       this.setDomains(domains);
@@ -70,6 +72,12 @@
       }
       if (this.domainy) {
         this.scales.y = this.factory.y.construct(this.domainy, this.ranges.y);
+      }
+      if (this.domains.color) {
+        this.scales.color = this.factory.color.construct(this.domains.color);
+      }
+      if (this.domains.size) {
+        this.scales.size = this.factory.size.construct(this.domains.size);
       }
       return this.scales;
     };
@@ -311,14 +319,47 @@
     }
 
     Area.prototype._constructNum = function(domain) {
-      var ylin;
-      ylin = linear(Math.sqrt(domain.max, Math.sqrt(domain.min)));
-      return wrapper(function(x) {
-        return ylin(Math.sqrt(x));
-      });
+      var min, sq, ylin;
+      min = domain.min === 0 ? 0 : 1;
+      sq = Math.sqrt;
+      ylin = poly.linear(sq(domain.min), min, sq(domain.max), 10);
+      return function(x) {
+        return ylin(sq(x));
+      };
     };
 
     return Area;
+
+  })(Scale);
+
+  Color = (function(_super) {
+
+    __extends(Color, _super);
+
+    function Color() {
+      Color.__super__.constructor.apply(this, arguments);
+    }
+
+    Color.prototype._constructCat = function(domain) {
+      var h, n;
+      n = domain.levels.length;
+      h = function(v) {
+        return _.indexOf(domain.levels, v) / n + 1 / (2 * n);
+      };
+      return function(value) {
+        return Raphael.getRGB("hsl(" + h(value) + ",0.5,0.5)").hex;
+      };
+    };
+
+    Color.prototype._constructNum = function(domain) {
+      var h;
+      h = poly.linear(domain.min, 0, domain.max, 1);
+      return function(value) {
+        return Raphael.getRGB("hsl(0.5," + h(value) + ",0.5)").hex;
+      };
+    };
+
+    return Color;
 
   })(Scale);
 
@@ -404,6 +445,14 @@
 
   poly.scale.log = function(params) {
     return new Log(params);
+  };
+
+  poly.scale.area = function(params) {
+    return new Area(params);
+  };
+
+  poly.scale.color = function(params) {
+    return new Color(params);
   };
 
   /*

@@ -10,7 +10,7 @@ defaults = {                # global default values for aesthetics
   'x': sf.novalue()
   'y': sf.novalue()
   'color': 'steelblue'
-  'size': 1
+  'size': 2
   'opacity': 0.7
   'shape': 1
 }
@@ -49,7 +49,7 @@ poly.layer.make = (layerSpec, strictmode) ->
 Base class for all layers
 ###
 class Layer
-  defaults : defaults
+  defaults : _.extend(defaults, {'size':7})
 
   constructor: (layerSpec, strict) ->
     @initialSpec = poly.layer.toStrictMode layerSpec
@@ -126,6 +126,7 @@ class Point extends Layer
             x: @_getValue item, 'x'
             y: @_getValue item, 'y'
             color: @_getValue item, 'color'
+            size: @_getValue item, 'size'
         evtData: evtData
 
 class Line extends Layer

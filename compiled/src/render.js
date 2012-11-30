@@ -1,5 +1,5 @@
 (function() {
-  var poly, renderer, _makePath;
+  var poly, renderer, _makePath, _maybeApply;
 
   poly = this.poly || {};
 
@@ -53,6 +53,16 @@
     };
   };
 
+  _maybeApply = function(scale, value) {
+    if (scale != null) {
+      return scale(value);
+    } else if (_.isObject(value)) {
+      return value.v;
+    } else {
+      return value;
+    }
+  };
+
   renderer = {
     circle: {
       render: function(paper, scales, mark) {
@@ -67,8 +77,10 @@
         return {
           cx: scales.x(mark.x),
           cy: scales.y(mark.y),
-          r: 10,
-          fill: 'black'
+          r: _maybeApply(scales.size, mark.size),
+          fill: _maybeApply(scales.color, mark.color),
+          stroke: _maybeApply(scales.color, mark.color),
+          'stroke-width': '0px'
         };
       },
       animate: function(pt, scales, mark) {
@@ -155,7 +167,7 @@
         return {
           x: scales.x(mark.x),
           y: scales.y(mark.y),
-          text: scales.text != null ? scales.text(mark.text) : mark.text,
+          text: _maybeApply(scales.text, mark.text),
           'text-anchor': (_ref = mark['text-anchor']) != null ? _ref : 'left',
           r: 10,
           fill: 'black'

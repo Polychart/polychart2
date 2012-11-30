@@ -859,7 +859,7 @@
 
 }).call(this);
 (function() {
-  var Area, Brewer, Gradient, Gradient2, Identity, Linear, Log, PositionScale, Scale, ScaleSet, Shape, aesthetics, poly,
+  var Area, Brewer, Color, Gradient, Gradient2, Identity, Linear, Log, PositionScale, Scale, ScaleSet, Shape, aesthetics, poly,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -894,7 +894,9 @@
       this.guideSpec = guideSpec;
       this.factory = {
         x: inspec('x') ? guideSpec.x.scale : poly.scale.linear(),
-        y: inspec('y') ? guideSpec.y.scale : poly.scale.linear()
+        y: inspec('y') ? guideSpec.y.scale : poly.scale.linear(),
+        color: inspec('color') ? guideSpec.color.scale : poly.scale.color(),
+        size: inspec('size') ? guideSpec.size.scale : poly.scale.area()
       };
       this.ranges = ranges;
       this.setDomains(domains);
@@ -930,6 +932,12 @@
       }
       if (this.domainy) {
         this.scales.y = this.factory.y.construct(this.domainy, this.ranges.y);
+      }
+      if (this.domains.color) {
+        this.scales.color = this.factory.color.construct(this.domains.color);
+      }
+      if (this.domains.size) {
+        this.scales.size = this.factory.size.construct(this.domains.size);
       }
       return this.scales;
     };
@@ -1171,14 +1179,47 @@
     }
 
     Area.prototype._constructNum = function(domain) {
-      var ylin;
-      ylin = linear(Math.sqrt(domain.max, Math.sqrt(domain.min)));
-      return wrapper(function(x) {
-        return ylin(Math.sqrt(x));
-      });
+      var min, sq, ylin;
+      min = domain.min === 0 ? 0 : 1;
+      sq = Math.sqrt;
+      ylin = poly.linear(sq(domain.min), min, sq(domain.max), 10);
+      return function(x) {
+        return ylin(sq(x));
+      };
     };
 
     return Area;
+
+  })(Scale);
+
+  Color = (function(_super) {
+
+    __extends(Color, _super);
+
+    function Color() {
+      Color.__super__.constructor.apply(this, arguments);
+    }
+
+    Color.prototype._constructCat = function(domain) {
+      var h, n;
+      n = domain.levels.length;
+      h = function(v) {
+        return _.indexOf(domain.levels, v) / n + 1 / (2 * n);
+      };
+      return function(value) {
+        return Raphael.getRGB("hsl(" + h(value) + ",0.5,0.5)").hex;
+      };
+    };
+
+    Color.prototype._constructNum = function(domain) {
+      var h;
+      h = poly.linear(domain.min, 0, domain.max, 1);
+      return function(value) {
+        return Raphael.getRGB("hsl(0.5," + h(value) + ",0.5)").hex;
+      };
+    };
+
+    return Color;
 
   })(Scale);
 
@@ -1264,6 +1305,14 @@
 
   poly.scale.log = function(params) {
     return new Log(params);
+  };
+
+  poly.scale.area = function(params) {
+    return new Area(params);
+  };
+
+  poly.scale.color = function(params) {
+    return new Color(params);
   };
 
   /*
@@ -1718,7 +1767,7 @@
     'x': sf.novalue(),
     'y': sf.novalue(),
     'color': 'steelblue',
-    'size': 1,
+    'size': 2,
     'opacity': 0.7,
     'shape': 1
   };
@@ -1764,11 +1813,13 @@
 
   Layer = (function() {
 
-    Layer.prototype.defaults = defaults;
+    Layer.prototype.defaults = _.extend(defaults, {
+      'size': 7
+    });
 
     function Layer(layerSpec, strict) {
-      this.render = __bind(this.render, this);
       this._makeMappings = __bind(this._makeMappings, this);
+      this.render = __bind(this.render, this);
       this.reset = __bind(this.reset, this);      this.initialSpec = poly.layer.toStrictMode(layerSpec);
       this.prevSpec = null;
       this.dataprocess = new poly.DataProcess(this.initialSpec, strict);
@@ -1777,27 +1828,6 @@
 
     Layer.prototype.reset = function() {
       return this.make(this.initialSpec);
-    };
-
-    Layer.prototype._makeMappings = function(spec) {
-      var aes, _i, _len, _results;
-      this.mapping = {};
-      this.consts = {};
-      _results = [];
-      for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
-        aes = aesthetics[_i];
-        if (spec[aes]) {
-          if (spec[aes]["var"]) this.mapping[aes] = spec[aes]["var"];
-          if (spec[aes]["const"]) {
-            _results.push(this.consts[aes] = spec[aes]["const"]);
-          } else {
-            _results.push(void 0);
-          }
-        } else {
-          _results.push(void 0);
-        }
-      }
-      return _results;
     };
 
     Layer.prototype.make = function(layerSpec, callback) {
@@ -1859,6 +1889,27 @@
       return objs;
     };
 
+    Layer.prototype._makeMappings = function(spec) {
+      var aes, _i, _len, _results;
+      this.mapping = {};
+      this.consts = {};
+      _results = [];
+      for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
+        aes = aesthetics[_i];
+        if (spec[aes]) {
+          if (spec[aes]["var"]) this.mapping[aes] = spec[aes]["var"];
+          if (spec[aes]["const"]) {
+            _results.push(this.consts[aes] = spec[aes]["const"]);
+          } else {
+            _results.push(void 0);
+          }
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+
     Layer.prototype._getValue = function(item, aes) {
       if (this.mapping[aes]) return item[this.mapping[aes]];
       if (this.consts[aes]) return sf.identity(this.consts[aes]);
@@ -1907,7 +1958,8 @@
               type: 'circle',
               x: _this._getValue(item, 'x'),
               y: _this._getValue(item, 'y'),
-              color: _this._getValue(item, 'color')
+              color: _this._getValue(item, 'color'),
+              size: _this._getValue(item, 'size')
             }
           },
           evtData: evtData
@@ -2137,7 +2189,7 @@
 
 }).call(this);
 (function() {
-  var poly, renderer, _makePath;
+  var poly, renderer, _makePath, _maybeApply;
 
   poly = this.poly || {};
 
@@ -2191,6 +2243,16 @@
     };
   };
 
+  _maybeApply = function(scale, value) {
+    if (scale != null) {
+      return scale(value);
+    } else if (_.isObject(value)) {
+      return value.v;
+    } else {
+      return value;
+    }
+  };
+
   renderer = {
     circle: {
       render: function(paper, scales, mark) {
@@ -2205,8 +2267,10 @@
         return {
           cx: scales.x(mark.x),
           cy: scales.y(mark.y),
-          r: 10,
-          fill: 'black'
+          r: _maybeApply(scales.size, mark.size),
+          fill: _maybeApply(scales.color, mark.color),
+          stroke: _maybeApply(scales.color, mark.color),
+          'stroke-width': '0px'
         };
       },
       animate: function(pt, scales, mark) {
@@ -2293,7 +2357,7 @@
         return {
           x: scales.x(mark.x),
           y: scales.y(mark.y),
-          text: scales.text != null ? scales.text(mark.text) : mark.text,
+          text: _maybeApply(scales.text, mark.text),
           'text-anchor': (_ref = mark['text-anchor']) != null ? _ref : 'left',
           r: 10,
           fill: 'black'

@@ -14,7 +14,7 @@
     'x': sf.novalue(),
     'y': sf.novalue(),
     'color': 'steelblue',
-    'size': 1,
+    'size': 2,
     'opacity': 0.7,
     'shape': 1
   };
@@ -60,11 +60,13 @@
 
   Layer = (function() {
 
-    Layer.prototype.defaults = defaults;
+    Layer.prototype.defaults = _.extend(defaults, {
+      'size': 7
+    });
 
     function Layer(layerSpec, strict) {
-      this.render = __bind(this.render, this);
       this._makeMappings = __bind(this._makeMappings, this);
+      this.render = __bind(this.render, this);
       this.reset = __bind(this.reset, this);      this.initialSpec = poly.layer.toStrictMode(layerSpec);
       this.prevSpec = null;
       this.dataprocess = new poly.DataProcess(this.initialSpec, strict);
@@ -73,27 +75,6 @@
 
     Layer.prototype.reset = function() {
       return this.make(this.initialSpec);
-    };
-
-    Layer.prototype._makeMappings = function(spec) {
-      var aes, _i, _len, _results;
-      this.mapping = {};
-      this.consts = {};
-      _results = [];
-      for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
-        aes = aesthetics[_i];
-        if (spec[aes]) {
-          if (spec[aes]["var"]) this.mapping[aes] = spec[aes]["var"];
-          if (spec[aes]["const"]) {
-            _results.push(this.consts[aes] = spec[aes]["const"]);
-          } else {
-            _results.push(void 0);
-          }
-        } else {
-          _results.push(void 0);
-        }
-      }
-      return _results;
     };
 
     Layer.prototype.make = function(layerSpec, callback) {
@@ -155,6 +136,27 @@
       return objs;
     };
 
+    Layer.prototype._makeMappings = function(spec) {
+      var aes, _i, _len, _results;
+      this.mapping = {};
+      this.consts = {};
+      _results = [];
+      for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
+        aes = aesthetics[_i];
+        if (spec[aes]) {
+          if (spec[aes]["var"]) this.mapping[aes] = spec[aes]["var"];
+          if (spec[aes]["const"]) {
+            _results.push(this.consts[aes] = spec[aes]["const"]);
+          } else {
+            _results.push(void 0);
+          }
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+
     Layer.prototype._getValue = function(item, aes) {
       if (this.mapping[aes]) return item[this.mapping[aes]];
       if (this.consts[aes]) return sf.identity(this.consts[aes]);
@@ -203,7 +205,8 @@
               type: 'circle',
               x: _this._getValue(item, 'x'),
               y: _this._getValue(item, 'y'),
-              color: _this._getValue(item, 'color')
+              color: _this._getValue(item, 'color'),
+              size: _this._getValue(item, 'size')
             }
           },
           evtData: evtData

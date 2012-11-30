@@ -30,6 +30,9 @@ poly.render = (id, paper, scales, clipping) ->
     pt.hover () -> eve(id+".hover", @, evtData)
     pt
 
+_maybeApply = (scale, value) ->
+  if scale? then scale(value) else if _.isObject(value) then value.v else value
+
 renderer =
   circle:
     render: (paper, scales, mark) ->
@@ -40,8 +43,10 @@ renderer =
       # handle the case when mark.FOO does not exist
       cx: scales.x(mark.x)
       cy: scales.y(mark.y)
-      r: 10
-      fill: 'black'
+      r: _maybeApply scales.size, mark.size
+      fill: _maybeApply scales.color, mark.color
+      stroke: _maybeApply scales.color, mark.color
+      'stroke-width': '0px'
     animate: (pt, scales, mark) -> pt.animate attr
   line:
     render: (paper, scales, mark) ->
@@ -84,7 +89,7 @@ renderer =
     attr: (scales, mark) ->
       x: scales.x(mark.x)
       y: scales.y(mark.y)
-      text: if scales.text? then scales.text(mark.text) else mark.text
+      text: _maybeApply  scales.text, mark.text
       'text-anchor' : mark['text-anchor'] ? 'left'
       r: 10
       fill: 'black'

@@ -20,6 +20,8 @@ class ScaleSet
     @factory =
       x : if inspec('x') then guideSpec.x.scale else poly.scale.linear()
       y : if inspec('y') then guideSpec.y.scale else poly.scale.linear()
+      color: if inspec('color') then guideSpec.color.scale else poly.scale.color()
+      size : if inspec('size') then guideSpec.size.scale else poly.scale.area()
     @ranges = ranges
     @setDomains domains
   setDomains: (domains) ->
@@ -38,6 +40,10 @@ class ScaleSet
       @scales.x = @factory.x.construct(@domainx, @ranges.x)
     if @domainy
       @scales.y = @factory.y.construct(@domainy, @ranges.y)
+    if @domains.color
+      @scales.color = @factory.color.construct(@domains.color)
+    if @domains.size
+      @scales.size = @factory.size.construct(@domains.size)
     @scales
   getAxes: () ->
     @getScaleFns()
@@ -149,8 +155,19 @@ Other, legend-type scales for the x- and y-axes
 ###
 class Area extends Scale
   _constructNum: (domain) -> #range = [0, 1]
-    ylin = linear(Math.sqrt domain.max, Math.sqrt domain.min)
-    wrapper (x) -> ylin Math.sqrt(x)
+    min = if domain.min == 0 then 0 else 1
+    sq = Math.sqrt
+    ylin = poly.linear sq(domain.min), min, sq(domain.max), 10
+    (x) -> ylin sq(x)
+
+class Color extends Scale
+  _constructCat: (domain) -> #TEMPORARY
+    n = domain.levels.length
+    h = (v) -> _.indexOf(domain.levels, v) / n + 1/(2*n)
+    (value) -> Raphael.getRGB("hsl("+h(value)+",0.5,0.5)").hex
+  _constructNum: (domain) -> #TEMPORARY
+    h = poly.linear domain.min, 0, domain.max, 1
+    (value) -> Raphael.getRGB("hsl(0.5,"+h(value)+",0.5)").hex
 
 class Brewer extends Scale
   _constructCat: (domain) ->
@@ -171,6 +188,9 @@ class Identity extends Scale
 
 poly.scale.linear = (params) -> new Linear(params)
 poly.scale.log = (params) -> new Log(params)
+
+poly.scale.area = (params) -> new Area(params)
+poly.scale.color = (params) -> new Color(params)
 
 
 ###
