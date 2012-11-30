@@ -119,7 +119,24 @@ class PositionScale extends Scale
 class Linear extends PositionScale
   _constructNum: (domain) ->
     @_wrapper poly.linear(domain.min, @range.min, domain.max, @range.max)
-  _constructCat: (domain) -> (x) -> 20
+  _wrapper2 : (step, y) -> (value) ->
+    space = 2
+    if _.isObject(value)
+      if value.t is 'scalefn'
+        if value.f is 'identity' then return value.v
+        if value.f is 'upper' then return y(value.v) + step - space
+        if value.f is 'lower' then return y(value.v) + space
+        if value.f is 'middle' then return y(value.v) + step/2
+      throw new poly.UnexpectedObject("wtf is this object?")
+    y(value) + step/2
+
+  _constructCat: (domain) ->
+    step = (@range.max - @range.min) / domain.levels.length
+    y = (x) =>
+      i = _.indexOf(domain.levels, x)
+      if i == -1 then null else @range.min + i*step
+    @_wrapper2 step, y
+
 class Log extends PositionScale
   _constructNum: (domain) ->
     lg = Math.log

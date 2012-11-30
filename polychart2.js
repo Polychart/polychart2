@@ -1096,10 +1096,37 @@
       return this._wrapper(poly.linear(domain.min, this.range.min, domain.max, this.range.max));
     };
 
-    Linear.prototype._constructCat = function(domain) {
-      return function(x) {
-        return 20;
+    Linear.prototype._wrapper2 = function(step, y) {
+      return function(value) {
+        var space;
+        space = 2;
+        if (_.isObject(value)) {
+          if (value.t === 'scalefn') {
+            if (value.f === 'identity') return value.v;
+            if (value.f === 'upper') return y(value.v) + step - space;
+            if (value.f === 'lower') return y(value.v) + space;
+            if (value.f === 'middle') return y(value.v) + step / 2;
+          }
+          throw new poly.UnexpectedObject("wtf is this object?");
+        }
+        return y(value) + step / 2;
       };
+    };
+
+    Linear.prototype._constructCat = function(domain) {
+      var step, y,
+        _this = this;
+      step = (this.range.max - this.range.min) / domain.levels.length;
+      y = function(x) {
+        var i;
+        i = _.indexOf(domain.levels, x);
+        if (i === -1) {
+          return null;
+        } else {
+          return _this.range.min + i * step;
+        }
+      };
+      return this._wrapper2(step, y);
     };
 
     return Linear;
