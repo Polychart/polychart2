@@ -1260,15 +1260,15 @@
     }
 
     Gradient.prototype._constructNum = function(domain) {
-      var h, l, lower, s, upper,
+      var b, g, lower, r, upper,
         _this = this;
       lower = Raphael.color(this.lower);
       upper = Raphael.color(this.upper);
-      h = poly.linear(domain.min, lower.h, domain.max, upper.h);
-      s = poly.linear(domain.min, lower.s, domain.max, upper.s);
-      l = poly.linear(domain.min, lower.l, domain.max, upper.l);
+      r = poly.linear(domain.min, lower.r, domain.max, upper.r);
+      g = poly.linear(domain.min, lower.g, domain.max, upper.g);
+      b = poly.linear(domain.min, lower.b, domain.max, upper.b);
       return function(value) {
-        return Raphael.hsl(h(value), s(value), l(value));
+        return Raphael.rgb(r(value), g(value), b(value));
       };
     };
 

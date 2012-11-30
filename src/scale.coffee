@@ -186,10 +186,10 @@ class Gradient extends Scale
   _constructNum: (domain) =>
     lower = Raphael.color(@lower)
     upper = Raphael.color(@upper)
-    h = poly.linear domain.min, lower.h, domain.max, upper.h
-    s = poly.linear domain.min, lower.s, domain.max, upper.s
-    l = poly.linear domain.min, lower.l, domain.max, upper.l
-    (value) => Raphael.hsl h(value), s(value), l(value)
+    r = poly.linear domain.min, lower.r, domain.max, upper.r
+    g = poly.linear domain.min, lower.g, domain.max, upper.g
+    b = poly.linear domain.min, lower.b, domain.max, upper.b
+    (value) => Raphael.rgb r(value), g(value), b(value)
 
 class Gradient2 extends Scale
   constructor: (params) -> {lower, zero, upper} = params
