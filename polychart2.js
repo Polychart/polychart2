@@ -444,8 +444,8 @@
   Produce an associate array of aesthetics to tick objects.
   */
 
-  poly.tick.make = function(domain, scale, guideSpec, type) {
-    var formatter, numticks, ticks, _ref;
+  poly.tick.make = function(domain, guideSpec, type) {
+    var formatter, numticks, tickfn, tickobjs, ticks, _ref;
     if (guideSpec.ticks != null) {
       ticks = guideSpec.ticks;
     } else {
@@ -463,7 +463,12 @@
     } else if (guideSpec.formatter) {
       formatter = guideSpec.formatter;
     }
-    return ticks = _.map(ticks, tickFactory(scale, formatter));
+    tickobjs = {};
+    tickfn = tickFactory(formatter);
+    _.each(ticks, function(t) {
+      return tickobjs[t] = tickfn(t);
+    });
+    return tickobjs;
   };
 
   /*
@@ -488,10 +493,10 @@
   Helper function for creating a function that creates ticks
   */
 
-  tickFactory = function(scale, formatter) {
+  tickFactory = function(formatter) {
     return function(value) {
       return new Tick({
-        location: scale(value),
+        location: value,
         value: formatter(value)
       });
     };
@@ -583,6 +588,7 @@
 }).call(this);
 (function() {
   var Axis, Guide, Legend, poly, sf,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -615,33 +621,137 @@
     __extends(Axis, _super);
 
     function Axis(params) {
-      this.domain = params.domain, this.factory = params.factory, this.scale = params.scale, this.guideSpec = params.guideSpec, this.type = params.type;
+      this._tickToTextFn = __bind(this._tickToTextFn, this);
+      this._tickToGeomFn = __bind(this._tickToGeomFn, this);
+      this.render = __bind(this.render, this);
+      this._renderline = __bind(this._renderline, this);
+      this.make = __bind(this.make, this);      this.type = params.type;
       this.position = this.type === 'x' ? 'bottom' : 'left';
-      this.ticks = poly.tick.make(this.domain, this.scale, this.guideSpec, this.factory.tickType(this.domain));
+      this.oldticks = null;
+      this.rendered = false;
+      this.ticks = {};
+      this.pts = {};
+      this.make(params);
     }
 
-    Axis.prototype._renderHline = function(dim, renderer) {
-      var hline;
-      hline = {
-        type: 'hline',
-        y: sf.identity(dim.paddingTop + dim.guideTop + dim.chartHeight + 1)
-      };
-      return renderer.add(hline, {});
+    Axis.prototype.make = function(params) {
+      this.domain = params.domain, this.factory = params.factory, this.scale = params.scale, this.guideSpec = params.guideSpec;
+      this.oldticks = this.ticks;
+      return this.ticks = poly.tick.make(this.domain, this.guideSpec, this.factory.tickType(this.domain));
     };
 
-    Axis.prototype._renderVline = function(dim, renderer) {
-      var vline;
-      vline = {
-        type: 'vline',
-        x: sf.identity(dim.paddingLeft + dim.guideLeft - 1)
-      };
-      return renderer.add(vline, {});
+    Axis.prototype._renderline = function(renderer, axisDim) {
+      var x, x1, x2, y, y1, y2;
+      if (this.type === 'x') {
+        y = sf.identity(axisDim.bottom);
+        x1 = sf.identity(axisDim.left);
+        x2 = sf.identity(axisDim.left + axisDim.width);
+        return renderer.add({
+          type: 'line',
+          y: [y, y],
+          x: [x1, x2]
+        });
+      } else {
+        x = sf.identity(axisDim.left);
+        y1 = sf.identity(axisDim.top);
+        y2 = sf.identity(axisDim.top + axisDim.height);
+        return renderer.add({
+          type: 'line',
+          x: [x, x],
+          y: [y1, y2]
+        });
+      }
     };
 
     Axis.prototype.render = function(dim, renderer) {
-      if (this.type === 'x') this._renderHline(dim, renderer);
-      if (this.type === 'y') this._renderVline(dim, renderer);
-      return _.each(this.ticks, function(t) {});
+      var added, axisDim, deleted, geomfn, kept, newpts, textfn, _ref,
+        _this = this;
+      axisDim = {
+        top: dim.paddingTop + dim.guideTop,
+        left: dim.paddingLeft + dim.guideLeft,
+        bottom: dim.paddingTop + dim.guideTop + dim.chartHeight,
+        width: dim.chartWidth,
+        height: dim.chartHeight
+      };
+      if (!this.rendered) this._renderline(renderer, axisDim);
+      _ref = poly.compare(_.keys(this.pts), _.keys(this.ticks)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
+      geomfn = this._tickToGeomFn(axisDim);
+      textfn = this._tickToTextFn(axisDim);
+      newpts = {};
+      _.each(kept, function(t) {
+        return newpts[t] = _this._modify(renderer, _this.pts[t], _this.ticks[t], geomfn, textfn);
+      });
+      _.each(added, function(t) {
+        return newpts[t] = _this._add(renderer, _this.ticks[t], geomfn, textfn);
+      });
+      _.each(deleted, function(t) {
+        return _this._delete(renderer, _this.pts[t]);
+      });
+      this.pts = newpts;
+      return this.rendered = true;
+    };
+
+    Axis.prototype._tickToGeomFn = function(axisDim) {
+      if (this.type === 'x') {
+        return function(tick) {
+          return {
+            type: 'line',
+            x: [tick.location, tick.location],
+            y: [sf.identity(axisDim.bottom), sf.identity(axisDim.bottom + 5)]
+          };
+        };
+      }
+      return function(tick) {
+        return {
+          type: 'line',
+          x: [sf.identity(axisDim.left), sf.identity(axisDim.left - 5)],
+          y: [tick.location, tick.location]
+        };
+      };
+    };
+
+    Axis.prototype._tickToTextFn = function(axisDim) {
+      if (this.type === 'x') {
+        return function(tick) {
+          return {
+            type: 'text',
+            x: tick.location,
+            y: sf.identity(axisDim.bottom + 15),
+            text: tick.value,
+            'text-anchor': 'middle'
+          };
+        };
+      }
+      return function(tick) {
+        return {
+          type: 'text',
+          x: sf.identity(axisDim.left - 7),
+          y: tick.location,
+          text: tick.value,
+          'text-anchor': 'end'
+        };
+      };
+    };
+
+    Axis.prototype._add = function(renderer, tick, geomfn, textfn) {
+      var obj;
+      obj = {};
+      obj.tick = renderer.add(geomfn(tick));
+      obj.text = renderer.add(textfn(tick));
+      return obj;
+    };
+
+    Axis.prototype._delete = function(renderer, pt) {
+      renderer.remove(pt.tick);
+      return renderer.remove(pt.text);
+    };
+
+    Axis.prototype._modify = function(renderer, pt, tick, geomfn, textfn) {
+      var obj;
+      obj = [];
+      obj.tick = renderer.animate(pt.tick, geomfn(tick));
+      obj.text = renderer.animate(pt.text, textfn(tick));
+      return obj;
     };
 
     return Axis;
@@ -669,6 +779,7 @@
 }).call(this);
 (function() {
   var Area, Brewer, Gradient, Gradient2, Identity, Linear, Log, PositionScale, Scale, ScaleSet, Shape, aesthetics, poly,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -693,6 +804,8 @@
   ScaleSet = (function() {
 
     function ScaleSet(guideSpec, domains, ranges) {
+      this._makeAxes = __bind(this._makeAxes, this);
+      this._getparams = __bind(this._getparams, this);
       var inspec;
       inspec = function(a) {
         return guideSpec && (guideSpec[a] != null) && (guideSpec[a].scale != null);
@@ -717,13 +830,11 @@
     };
 
     ScaleSet.prototype.setXDomain = function(d) {
-      this.domainx = d;
-      return this.getScaleFns();
+      return this.domainx = d;
     };
 
     ScaleSet.prototype.setYDomain = function(d) {
-      this.domainy = d;
-      return this.getScaleFns();
+      return this.domainy = d;
     };
 
     ScaleSet.prototype.resetDomains = function() {
@@ -743,26 +854,38 @@
     };
 
     ScaleSet.prototype.getAxes = function() {
-      var axes, getparams, params,
-        _this = this;
+      var _this = this;
       this.getScaleFns();
-      axes = {};
-      getparams = function(a) {
-        return {
-          domain: _this.domains[a],
-          factory: _this.factory[a],
-          scale: _this.scales[a],
-          guideSpec: _this.guideSpec && _this.guideSpec[a] ? _this.guideSpec[a] : {}
-        };
+      if (this.axes != null) {
+        _.each(this.axes, function(axis, a) {
+          return axis.make(_this._getparams(a));
+        });
+      } else {
+        this.axes = this._makeAxes();
+      }
+      return this.axes;
+    };
+
+    ScaleSet.prototype._getparams = function(a) {
+      return {
+        domain: this.domains[a],
+        factory: this.factory[a],
+        scale: this.scales[a],
+        guideSpec: this.guideSpec && this.guideSpec[a] ? this.guideSpec[a] : {}
       };
+    };
+
+    ScaleSet.prototype._makeAxes = function() {
+      var axes, params;
+      axes = {};
       if (this.factory.x && this.domainx) {
-        params = getparams('x');
+        params = this._getparams('x');
         params.domain = this.domainx;
         params.type = 'x';
         axes.x = poly.guide.axis(params);
       }
       if (this.factory.y && this.domainy) {
-        params = getparams('y');
+        params = this._getparams('y');
         params.domain = this.domainy;
         params.type = 'y';
         axes.y = poly.guide.axis(params);
@@ -1833,35 +1956,35 @@
 
   poly.dim.make = function(spec, ticks) {
     return {
-      width: 340,
-      height: 340,
+      width: 360,
+      height: 360,
       chartWidth: 300,
       chartHeight: 300,
       paddingLeft: 10,
       paddingRight: 10,
       paddingTop: 10,
       paddingBottom: 10,
-      guideLeft: 10,
+      guideLeft: 20,
       guideRight: 10,
       guideTop: 10,
-      guideBottom: 10
+      guideBottom: 20
     };
   };
 
   poly.dim.guess = function(spec) {
     return {
-      width: 340,
-      height: 340,
+      width: 360,
+      height: 360,
       chartWidth: 300,
       chartHeight: 300,
       paddingLeft: 10,
       paddingRight: 10,
       paddingTop: 10,
       paddingBottom: 10,
-      guideLeft: 10,
+      guideLeft: 20,
       guideRight: 10,
       guideTop: 10,
-      guideBottom: 10
+      guideBottom: 20
     };
   };
 
@@ -1876,8 +1999,8 @@
     h = dim.chartHeight;
     return {
       main: [pl + gl, pt + gt, w, h],
-      left: [pl, pt + gt, gl, h + 1],
-      bottom: [pl + gl - 1, pt + gt + h, w + 1, gb]
+      left: [pl, pt, gl + 1, gt + h + gb + 1],
+      bottom: [pl, pt + gt + h - 1, gl + w + 1, gb + 1]
     };
   };
 
@@ -1993,8 +2116,8 @@
       },
       attr: function(scales, mark) {
         var xs, ys;
-        xs = _.map(mark.x(scales.x));
-        ys = _.map(mark.y(scales.y));
+        xs = _.map(mark.x, scales.x);
+        ys = _.map(mark.y, scales.y);
         return {
           path: _makePath(xs, ys),
           stroke: 'black'
@@ -2042,6 +2165,30 @@
           path: _makePath([x, x], [0, 100000]),
           stroke: 'black',
           'stroke-width': '1px'
+        };
+      },
+      animate: function(pt, scales, mark) {
+        return pt.animate(attr);
+      }
+    },
+    text: {
+      render: function(paper, scales, mark) {
+        var pt;
+        pt = paper.text();
+        _.each(renderer.text.attr(scales, mark), function(v, k) {
+          return pt.attr(k, v);
+        });
+        return pt;
+      },
+      attr: function(scales, mark) {
+        var _ref;
+        return {
+          x: scales.x(mark.x),
+          y: scales.y(mark.y),
+          text: scales.text != null ? scales.text(mark.text) : mark.text,
+          'text-anchor': (_ref = mark['text-anchor']) != null ? _ref : 'left',
+          r: 10,
+          fill: 'black'
         };
       },
       animate: function(pt, scales, mark) {

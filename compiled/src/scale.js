@@ -1,5 +1,6 @@
 (function() {
   var Area, Brewer, Gradient, Gradient2, Identity, Linear, Log, PositionScale, Scale, ScaleSet, Shape, aesthetics, poly,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -24,6 +25,8 @@
   ScaleSet = (function() {
 
     function ScaleSet(guideSpec, domains, ranges) {
+      this._makeAxes = __bind(this._makeAxes, this);
+      this._getparams = __bind(this._getparams, this);
       var inspec;
       inspec = function(a) {
         return guideSpec && (guideSpec[a] != null) && (guideSpec[a].scale != null);
@@ -48,13 +51,11 @@
     };
 
     ScaleSet.prototype.setXDomain = function(d) {
-      this.domainx = d;
-      return this.getScaleFns();
+      return this.domainx = d;
     };
 
     ScaleSet.prototype.setYDomain = function(d) {
-      this.domainy = d;
-      return this.getScaleFns();
+      return this.domainy = d;
     };
 
     ScaleSet.prototype.resetDomains = function() {
@@ -74,26 +75,38 @@
     };
 
     ScaleSet.prototype.getAxes = function() {
-      var axes, getparams, params,
-        _this = this;
+      var _this = this;
       this.getScaleFns();
-      axes = {};
-      getparams = function(a) {
-        return {
-          domain: _this.domains[a],
-          factory: _this.factory[a],
-          scale: _this.scales[a],
-          guideSpec: _this.guideSpec && _this.guideSpec[a] ? _this.guideSpec[a] : {}
-        };
+      if (this.axes != null) {
+        _.each(this.axes, function(axis, a) {
+          return axis.make(_this._getparams(a));
+        });
+      } else {
+        this.axes = this._makeAxes();
+      }
+      return this.axes;
+    };
+
+    ScaleSet.prototype._getparams = function(a) {
+      return {
+        domain: this.domains[a],
+        factory: this.factory[a],
+        scale: this.scales[a],
+        guideSpec: this.guideSpec && this.guideSpec[a] ? this.guideSpec[a] : {}
       };
+    };
+
+    ScaleSet.prototype._makeAxes = function() {
+      var axes, params;
+      axes = {};
       if (this.factory.x && this.domainx) {
-        params = getparams('x');
+        params = this._getparams('x');
         params.domain = this.domainx;
         params.type = 'x';
         axes.x = poly.guide.axis(params);
       }
       if (this.factory.y && this.domainy) {
-        params = getparams('y');
+        params = this._getparams('y');
         params.domain = this.domainy;
         params.type = 'y';
         axes.y = poly.guide.axis(params);

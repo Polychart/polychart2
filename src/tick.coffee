@@ -8,7 +8,7 @@ poly.tick = {}
 ###
 Produce an associate array of aesthetics to tick objects.
 ###
-poly.tick.make = (domain, scale, guideSpec, type) ->
+poly.tick.make = (domain, guideSpec, type) ->
   if guideSpec.ticks?
     ticks = guideSpec.ticks # provided by spec
   else
@@ -20,7 +20,10 @@ poly.tick.make = (domain, scale, guideSpec, type) ->
     formatter = (x) -> guideSpec.labels[x] ? x
   else if guideSpec.formatter
     formatter = guideSpec.formatter
-  ticks = _.map ticks, tickFactory(scale, formatter)
+  tickobjs = {}
+  tickfn = tickFactory(formatter)
+  _.each ticks, (t) -> tickobjs[t] = tickfn t
+  tickobjs
 
 ###
 # CLASSES & HELPERS
@@ -35,8 +38,8 @@ class Tick
 ###
 Helper function for creating a function that creates ticks
 ###
-tickFactory = (scale, formatter) ->
-  (value) -> new Tick(location:scale(value), value:formatter(value))
+tickFactory = (formatter) ->
+  (value) -> new Tick(location:value, value:formatter(value))
 
 ###
 Helper function for determining the size of each "step" (distance between

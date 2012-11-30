@@ -13,26 +13,52 @@
     <div id="hello"></div>
     <div id="hello2"></div>
     <script type="text/javascript">
-    jsondata = [ { x: 2, y: 1 }, { x: 3, y: 3 } ];
-    data = new poly.Data({ json: jsondata });
-    sampleLayer = { data: data, type: 'point', x: 'x', y: 'y' };
-    spec = {
-      layers: [sampleLayer],
-      strict: true,
-      guides: {
-        x: { type: 'num', min: 0, max: 4, bw: 3 },
-        y: { type: 'num', min: 0, max: 4 }
+    function one() { return Math.random() * 10 }
+    function pair() { return {x: one(), y: one()} }
+    function construct() {
+      var i, data = [];
+      for (i = 0; i < 10; i++) {
+        data.push(pair())
       }
-    };
-    c = poly.chart(spec)
+      return {
+        xmin: _.min(_.pluck(data, 'x'))-1,
+        ymin: _.min(_.pluck(data, 'y'))-1,
+        xmax: _.max(_.pluck(data, 'x'))+1,
+        ymax: _.max(_.pluck(data, 'y'))+1,
+        data: data
+      }
+    }
+    spec = function() {
+      var dt = construct()
+      var jsondata = dt.data
+      var data = new poly.Data({ json: jsondata });
+      var sampleLayer = { data: data, type: 'point', x: 'x', y: 'y' };
+      return {
+        data : jsondata,
+        spec : {
+          layers: [sampleLayer],
+          strict: true,
+          guides: {
+            x: { type: 'num', min: dt.xmin, max: dt.xmax },
+            y: { type: 'num', min: dt.ymin, max: dt.ymax }
+          }
+        }
+      };
+    }
+
+    initspec = spec().spec
+    c = poly.chart(window.initspec)
     c.render('hello')
 
-    setTimeout(function() {
-      jsondata2 = [ { x: 3, y: 1.5 }, { x: 2, y: 3 } ];
-      data.update(jsondata2)
-      c.make(spec)
+    function redraw() {
+      var newspec = spec()
+      initspec.layers[0].data.update(newspec.data)
+      c.make(newspec.spec)
       c.render()
-    }, 1000)
+      setTimeout(redraw, 1000);
+    }
+
+    setTimeout(redraw, 1000)
 
     /*
     p2 = Raphael("hello2", 30,30)

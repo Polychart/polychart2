@@ -49,8 +49,8 @@ renderer =
       _.each renderer.line.attr(scales, mark), (v, k) -> pt.attr(k, v)
       pt
     attr: (scales, mark) ->
-      xs = _.map mark.x scales.x
-      ys = _.map mark.y scales.y
+      xs = _.map mark.x, scales.x
+      ys = _.map mark.y, scales.y
       path: _makePath xs, ys
       stroke: 'black'
     animate: (pt, scales, mark) -> pt.animate attr
@@ -65,7 +65,6 @@ renderer =
       stroke: 'black'
       'stroke-width': '1px'
     animate: (pt, scales, mark) -> pt.animate attr
-
   vline:
     render: (paper, scales, mark) ->
       pt = paper.path()
@@ -76,6 +75,19 @@ renderer =
       path: _makePath([x, x], [0, 100000])
       stroke: 'black'
       'stroke-width': '1px'
+    animate: (pt, scales, mark) -> pt.animate attr
+  text:
+    render: (paper, scales, mark) ->
+      pt = paper.text()
+      _.each renderer.text.attr(scales, mark), (v, k) -> pt.attr(k, v)
+      pt
+    attr: (scales, mark) ->
+      x: scales.x(mark.x)
+      y: scales.y(mark.y)
+      text: if scales.text? then scales.text(mark.text) else mark.text
+      'text-anchor' : mark['text-anchor'] ? 'left'
+      r: 10
+      fill: 'black'
     animate: (pt, scales, mark) -> pt.animate attr
 
 _makePath = (xs, ys) ->

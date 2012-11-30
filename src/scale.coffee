@@ -27,8 +27,8 @@ class ScaleSet
     @domainx = @domains.x
     @domainy = @domains.y
   setRanges: (ranges) -> @ranges = ranges
-  setXDomain: (d) -> @domainx = d; @getScaleFns()
-  setYDomain: (d) -> @domainy = d; @getScaleFns()
+  setXDomain: (d) -> @domainx = d
+  setYDomain: (d) -> @domainy = d
   resetDomains: () ->
     @domainx = @domains.x
     @domainy = @domains.y
@@ -41,19 +41,25 @@ class ScaleSet
     @scales
   getAxes: () ->
     @getScaleFns()
-    axes = {}
-    getparams = (a) =>
+    if @axes?
+      _.each @axes, (axis, a) => axis.make @_getparams(a)
+    else
+      @axes = @_makeAxes()
+    @axes
+  _getparams : (a) =>
       domain: @domains[a]
       factory: @factory[a]
       scale: @scales[a]
       guideSpec: if @guideSpec and @guideSpec[a] then @guideSpec[a] else {}
+  _makeAxes : () =>
+    axes = {}
     if @factory.x and @domainx
-      params = getparams 'x'
+      params = @_getparams 'x'
       params.domain = @domainx
       params.type = 'x'
       axes.x = poly.guide.axis params
     if @factory.y and @domainy
-      params = getparams 'y'
+      params = @_getparams 'y'
       params.domain = @domainy
       params.type = 'y'
       axes.y = poly.guide.axis params

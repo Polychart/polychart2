@@ -23,8 +23,8 @@ test "domain: strict mode num & cat", ->
   deepEqual domains.y.levels, [1,2,3]
   equal domains.y.sorted, true
 
-  deepEqual _.pluck(ticks.x, 'location'), [20, 95, 170, 245]
-  deepEqual _.pluck(ticks.y, 'location'), [20, 20, 20]
+  deepEqual _.pluck(ticks.x, 'location'), [2, 3, 2.5, 3.5]
+  deepEqual _.pluck(ticks.y, 'location'), [1, 2, 3]
   deepEqual _.pluck(ticks.y, 'value'), ['One', 'Five', 3]
 
 test "scale: x and v:", ->
@@ -43,9 +43,9 @@ test "scale: x and v:", ->
   equal domains.y.min , 1
   equal domains.y.max, 3
 
-  equal scales.x(2), 0+20
-  equal scales.x(3), 150+20
-  equal scales.x(4), 300+20
+  equal scales.x(2), 0+30
+  equal scales.x(3), 150+30
+  equal scales.x(4), 300+30
   equal scales.y(3), 0+20
   equal scales.y(2), 150+20
   equal scales.y(1), 300+20

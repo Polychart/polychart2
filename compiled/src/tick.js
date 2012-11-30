@@ -13,8 +13,8 @@
   Produce an associate array of aesthetics to tick objects.
   */
 
-  poly.tick.make = function(domain, scale, guideSpec, type) {
-    var formatter, numticks, ticks, _ref;
+  poly.tick.make = function(domain, guideSpec, type) {
+    var formatter, numticks, tickfn, tickobjs, ticks, _ref;
     if (guideSpec.ticks != null) {
       ticks = guideSpec.ticks;
     } else {
@@ -32,7 +32,12 @@
     } else if (guideSpec.formatter) {
       formatter = guideSpec.formatter;
     }
-    return ticks = _.map(ticks, tickFactory(scale, formatter));
+    tickobjs = {};
+    tickfn = tickFactory(formatter);
+    _.each(ticks, function(t) {
+      return tickobjs[t] = tickfn(t);
+    });
+    return tickobjs;
   };
 
   /*
@@ -57,10 +62,10 @@
   Helper function for creating a function that creates ticks
   */
 
-  tickFactory = function(scale, formatter) {
+  tickFactory = function(formatter) {
     return function(value) {
       return new Tick({
-        location: scale(value),
+        location: value,
         value: formatter(value)
       });
     };

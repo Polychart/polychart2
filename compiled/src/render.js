@@ -86,8 +86,8 @@
       },
       attr: function(scales, mark) {
         var xs, ys;
-        xs = _.map(mark.x(scales.x));
-        ys = _.map(mark.y(scales.y));
+        xs = _.map(mark.x, scales.x);
+        ys = _.map(mark.y, scales.y);
         return {
           path: _makePath(xs, ys),
           stroke: 'black'
@@ -135,6 +135,30 @@
           path: _makePath([x, x], [0, 100000]),
           stroke: 'black',
           'stroke-width': '1px'
+        };
+      },
+      animate: function(pt, scales, mark) {
+        return pt.animate(attr);
+      }
+    },
+    text: {
+      render: function(paper, scales, mark) {
+        var pt;
+        pt = paper.text();
+        _.each(renderer.text.attr(scales, mark), function(v, k) {
+          return pt.attr(k, v);
+        });
+        return pt;
+      },
+      attr: function(scales, mark) {
+        var _ref;
+        return {
+          x: scales.x(mark.x),
+          y: scales.y(mark.y),
+          text: scales.text != null ? scales.text(mark.text) : mark.text,
+          'text-anchor': (_ref = mark['text-anchor']) != null ? _ref : 'left',
+          r: 10,
+          fill: 'black'
         };
       },
       animate: function(pt, scales, mark) {
