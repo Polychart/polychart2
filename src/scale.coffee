@@ -15,13 +15,22 @@ poly.scale.make = (guideSpec, domains, ranges) ->
 
 class ScaleSet
   constructor: (guideSpec, domains, ranges) ->
-    inspec = (a) -> guideSpec and guideSpec[a]? and guideSpec[a].scale?
+    specScale = (a) ->
+      if guideSpec and guideSpec[a]? and guideSpec[a].scale?
+        return guideSpec.x.scale
+      return null
     @guideSpec = guideSpec
     @factory =
-      x : if inspec('x') then guideSpec.x.scale else poly.scale.linear()
-      y : if inspec('y') then guideSpec.y.scale else poly.scale.linear()
-      color: if inspec('color') then guideSpec.color.scale else poly.scale.color()
-      size : if inspec('size') then guideSpec.size.scale else poly.scale.area()
+      x : specScale('x') ? poly.scale.linear()
+      y : specScale('y') ? poly.scale.linear()
+    if domains.color?
+      if domains.color.type == 'cat'
+        @factory.color = specScale('color') ? poly.scale.color()
+      else
+        @factory.color = specScale('color') ?
+          poly.scale.gradient upper:'steelblue', lower:'red'
+    if domains.size?
+      @factory.size = specScale('size') || poly.scale.area()
     @ranges = ranges
     @setDomains domains
   setDomains: (domains) ->
@@ -164,17 +173,23 @@ class Color extends Scale
   _constructCat: (domain) -> #TEMPORARY
     n = domain.levels.length
     h = (v) -> _.indexOf(domain.levels, v) / n + 1/(2*n)
-    (value) -> Raphael.getRGB("hsl("+h(value)+",0.5,0.5)").hex
-  _constructNum: (domain) -> #TEMPORARY
+    (value) -> Raphael.hsl(h(value),0.5,0.5)
+  _constructNum: (domain) ->
     h = poly.linear domain.min, 0, domain.max, 1
-    (value) -> Raphael.getRGB("hsl(0.5,"+h(value)+",0.5)").hex
+    (value) -> Raphael.hsl(0.5,h(value),0.5)
 
 class Brewer extends Scale
   _constructCat: (domain) ->
 
 class Gradient extends Scale
-  constructor: (params) -> {lower, upper} = params
-  _constructCat: (domain) ->
+  constructor: (params) -> {@lower, @upper} = params
+  _constructNum: (domain) =>
+    lower = Raphael.color(@lower)
+    upper = Raphael.color(@upper)
+    h = poly.linear domain.min, lower.h, domain.max, upper.h
+    s = poly.linear domain.min, lower.s, domain.max, upper.s
+    l = poly.linear domain.min, lower.l, domain.max, upper.l
+    (value) => Raphael.hsl h(value), s(value), l(value)
 
 class Gradient2 extends Scale
   constructor: (params) -> {lower, zero, upper} = params
@@ -186,11 +201,12 @@ class Shape extends Scale
 class Identity extends Scale
   construct: (domain) -> (x) -> x
 
-poly.scale.linear = (params) -> new Linear(params)
-poly.scale.log = (params) -> new Log(params)
-
-poly.scale.area = (params) -> new Area(params)
-poly.scale.color = (params) -> new Color(params)
+poly.scale = _.extend poly.scale,
+  linear : (params) -> new Linear(params)
+  log : (params) -> new Log(params)
+  area : (params) -> new Area(params)
+  color : (params) -> new Color(params)
+  gradient : (params) -> new Gradient(params)
 
 
 ###

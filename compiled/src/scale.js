@@ -27,17 +27,31 @@
     function ScaleSet(guideSpec, domains, ranges) {
       this._makeAxes = __bind(this._makeAxes, this);
       this._getparams = __bind(this._getparams, this);
-      var inspec;
-      inspec = function(a) {
-        return guideSpec && (guideSpec[a] != null) && (guideSpec[a].scale != null);
+      var specScale, _ref, _ref2, _ref3, _ref4;
+      specScale = function(a) {
+        if (guideSpec && (guideSpec[a] != null) && (guideSpec[a].scale != null)) {
+          return guideSpec.x.scale;
+        }
+        return null;
       };
       this.guideSpec = guideSpec;
       this.factory = {
-        x: inspec('x') ? guideSpec.x.scale : poly.scale.linear(),
-        y: inspec('y') ? guideSpec.y.scale : poly.scale.linear(),
-        color: inspec('color') ? guideSpec.color.scale : poly.scale.color(),
-        size: inspec('size') ? guideSpec.size.scale : poly.scale.area()
+        x: (_ref = specScale('x')) != null ? _ref : poly.scale.linear(),
+        y: (_ref2 = specScale('y')) != null ? _ref2 : poly.scale.linear()
       };
+      if (domains.color != null) {
+        if (domains.color.type === 'cat') {
+          this.factory.color = (_ref3 = specScale('color')) != null ? _ref3 : poly.scale.color();
+        } else {
+          this.factory.color = (_ref4 = specScale('color')) != null ? _ref4 : poly.scale.gradient({
+            upper: 'steelblue',
+            lower: 'red'
+          });
+        }
+      }
+      if (domains.size != null) {
+        this.factory.size = specScale('size') || poly.scale.area();
+      }
       this.ranges = ranges;
       this.setDomains(domains);
     }
@@ -347,7 +361,7 @@
         return _.indexOf(domain.levels, v) / n + 1 / (2 * n);
       };
       return function(value) {
-        return Raphael.getRGB("hsl(" + h(value) + ",0.5,0.5)").hex;
+        return Raphael.hsl(h(value), 0.5, 0.5);
       };
     };
 
@@ -355,7 +369,7 @@
       var h;
       h = poly.linear(domain.min, 0, domain.max, 1);
       return function(value) {
-        return Raphael.getRGB("hsl(0.5," + h(value) + ",0.5)").hex;
+        return Raphael.hsl(0.5, h(value), 0.5);
       };
     };
 
@@ -382,11 +396,21 @@
     __extends(Gradient, _super);
 
     function Gradient(params) {
-      var lower, upper;
-      lower = params.lower, upper = params.upper;
+      this._constructNum = __bind(this._constructNum, this);      this.lower = params.lower, this.upper = params.upper;
     }
 
-    Gradient.prototype._constructCat = function(domain) {};
+    Gradient.prototype._constructNum = function(domain) {
+      var h, l, lower, s, upper,
+        _this = this;
+      lower = Raphael.color(this.lower);
+      upper = Raphael.color(this.upper);
+      h = poly.linear(domain.min, lower.h, domain.max, upper.h);
+      s = poly.linear(domain.min, lower.s, domain.max, upper.s);
+      l = poly.linear(domain.min, lower.l, domain.max, upper.l);
+      return function(value) {
+        return Raphael.hsl(h(value), s(value), l(value));
+      };
+    };
 
     return Gradient;
 
@@ -439,21 +463,23 @@
 
   })(Scale);
 
-  poly.scale.linear = function(params) {
-    return new Linear(params);
-  };
-
-  poly.scale.log = function(params) {
-    return new Log(params);
-  };
-
-  poly.scale.area = function(params) {
-    return new Area(params);
-  };
-
-  poly.scale.color = function(params) {
-    return new Color(params);
-  };
+  poly.scale = _.extend(poly.scale, {
+    linear: function(params) {
+      return new Linear(params);
+    },
+    log: function(params) {
+      return new Log(params);
+    },
+    area: function(params) {
+      return new Area(params);
+    },
+    color: function(params) {
+      return new Color(params);
+    },
+    gradient: function(params) {
+      return new Gradient(params);
+    }
+  });
 
   /*
   # EXPORT
