@@ -116,6 +116,7 @@ class PositionScale extends Scale
         if value.f is 'middle' then return y(value.v+domain.bw/2)
       throw new poly.UnexpectedObject("Expected a value instead of an object")
     y(value)
+
 class Linear extends PositionScale
   _constructNum: (domain) ->
     @_wrapper poly.linear(domain.min, @range.min, domain.max, @range.max)
@@ -129,7 +130,6 @@ class Linear extends PositionScale
         if value.f is 'middle' then return y(value.v) + step/2
       throw new poly.UnexpectedObject("wtf is this object?")
     y(value) + step/2
-
   _constructCat: (domain) ->
     step = (@range.max - @range.min) / domain.levels.length
     y = (x) =>

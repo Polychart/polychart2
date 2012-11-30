@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      // for testing IE, remove array.indexOf
+      // delete Array.prototype.indexOf;
+    </script>
+    <script type="text/javascript" src="lib/jquery-1.7.1.js"></script>
+    <script type="text/javascript" src="lib/raphael.js"></script>
+    <script type="text/javascript" src="lib/underscore.js"></script>
+    <script type="text/javascript" src="polychart2.js"></script>
+    <script type="text/javascript" src="example/test.js"></script>
+  </head>
+  <body>
+    <div id="hello"></div>
+    <script type="text/javascript">
+      var selection = location.hash.substr(1)
+      if (examples[selection] !== undefined) {
+        examples[selection]('hello')
+      } else {
+        $("#hello").append(
+        "<p>Click on one of the following, and then refresh the page</p>"
+        )
+        _.each(examples, function(v, k)  {
+          $('#hello').append(
+            $("<a href='#"+k+"'>"+k+"</a><br/>")
+          );
+        });
+      }
+    </script>
+
+  </body>
+</html>
+

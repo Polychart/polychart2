@@ -59,14 +59,6 @@ class Layer
 
   reset : () => @make @initialSpec
 
-  _makeMappings: (spec) =>
-    @mapping = {}      # aesthetic mappings
-    @consts = {}       # constants supplied by the spec
-    for aes in aesthetics
-      if spec[aes]
-        if spec[aes].var then @mapping[aes] = spec[aes].var
-        if spec[aes].const then @consts[aes] = spec[aes].const
-
   make: (layerSpec, callback) -> # mostly just read and interpret the the spec
     spec = poly.layer.toStrictMode layerSpec
     #if @prevSpec and spec == @prevSpec then return callback()
@@ -102,11 +94,20 @@ class Layer
       objs[id2] = render.add mark, geom.evtData
     objs
 
+  # helper function to get @mapping and @consts
+  _makeMappings: (spec) =>
+    @mapping = {}      # aesthetic mappings
+    @consts = {}       # constants supplied by the spec
+    for aes in aesthetics
+      if spec[aes]
+        if spec[aes].var then @mapping[aes] = spec[aes].var
+        if spec[aes].const then @consts[aes] = spec[aes].const
   # helper for getting the value of a particular aesthetic from an item
   _getValue: (item, aes) ->
     if @mapping[aes] then return item[@mapping[aes]]
     if @consts[aes] then return sf.identity(@consts[aes])
     return sf.identity(@defaults[aes])
+  # helper function to get an element's "id"
   _getIdFunc: () ->
     if @mapping['id']? then (item) => @_getValue item, 'id' else poly.counter()
 
