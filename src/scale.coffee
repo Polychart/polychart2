@@ -32,7 +32,6 @@ class ScaleSet
     if domains.size?
       @factory.size = specScale('size') || poly.scale.area()
     @ranges = ranges
-    @scales = {}
     @setDomains domains
   setDomains: (domains) ->
     @domains = domains
@@ -45,15 +44,14 @@ class ScaleSet
     @domainx = @domains.x
     @domainy = @domains.y
   getScaleFns: () ->
-    # always regenerate the x & y scale
+    @scales = {}
     if @domainx
       @scales.x = @factory.x.construct(@domainx, @ranges.x)
     if @domainy
       @scales.y = @factory.y.construct(@domainy, @ranges.y)
-    # don't regenerate the rest
-    if @domains.color and not @scales.color?
+    if @domains.color
       @scales.color = @factory.color.construct(@domains.color)
-    if @domains.size and not @scales.size?
+    if @domains.size
       @scales.size = @factory.size.construct(@domains.size)
     @scales
   getAxes: () ->
@@ -184,8 +182,7 @@ class Brewer extends Scale
   _constructCat: (domain) ->
 
 class Gradient extends Scale
-  constructor: (params) ->
-    {@lower, @upper} = params
+  constructor: (params) -> {@lower, @upper} = params
   _constructNum: (domain) =>
     lower = Raphael.color(@lower)
     upper = Raphael.color(@upper)

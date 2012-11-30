@@ -53,7 +53,6 @@
         this.factory.size = specScale('size') || poly.scale.area();
       }
       this.ranges = ranges;
-      this.scales = {};
       this.setDomains(domains);
     }
 
@@ -81,16 +80,17 @@
     };
 
     ScaleSet.prototype.getScaleFns = function() {
+      this.scales = {};
       if (this.domainx) {
         this.scales.x = this.factory.x.construct(this.domainx, this.ranges.x);
       }
       if (this.domainy) {
         this.scales.y = this.factory.y.construct(this.domainy, this.ranges.y);
       }
-      if (this.domains.color && !(this.scales.color != null)) {
+      if (this.domains.color) {
         this.scales.color = this.factory.color.construct(this.domains.color);
       }
-      if (this.domains.size && !(this.scales.size != null)) {
+      if (this.domains.size) {
         this.scales.size = this.factory.size.construct(this.domains.size);
       }
       return this.scales;
