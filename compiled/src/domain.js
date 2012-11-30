@@ -1,5 +1,5 @@
 (function() {
-  var CategoricalDomain, DateDomain, NumericDomain, aesthetics, domainMerge, flattenGeoms, makeDomain, makeDomainSet, mergeDomainSets, mergeDomains, poly;
+  var CategoricalDomain, DateDomain, NumericDomain, aesthetics, domainMerge, flattenGeoms, makeDomain, makeDomainSet, mergeDomainSets, mergeDomains, poly, typeOf;
 
   poly = this.poly || {};
 
@@ -92,7 +92,7 @@
     var domain;
     domain = {};
     _.each(_.keys(layerObj.mapping), function(aes) {
-      var fromspec, values, _ref, _ref2;
+      var fromspec, values, _ref, _ref2, _ref3;
       if (strictmode) {
         return domain[aes] = makeDomain(guideSpec[aes]);
       } else {
@@ -104,17 +104,28 @@
             return null;
           }
         };
-        domain[aes] = makeDomain({
-          type: 'num',
-          min: (_ref = fromspec('min')) != null ? _ref : _.min(values),
-          max: (_ref2 = fromspec('max')) != null ? _ref2 : _.max(values),
-          bw: fromspec('bw')
-        });
-        return console.log(domain[aes]);
+        if (typeOf(values) === 'num') {
+          return domain[aes] = makeDomain({
+            type: 'num',
+            min: (_ref = fromspec('min')) != null ? _ref : _.min(values),
+            max: (_ref2 = fromspec('max')) != null ? _ref2 : _.max(values),
+            bw: fromspec('bw')
+          });
+        } else {
+          return domain[aes] = makeDomain({
+            type: 'cat',
+            levels: (_ref3 = fromspec('levels')) != null ? _ref3 : _.uniq(values),
+            sorted: fromspec('levels') != null
+          });
+        }
       }
     });
     return domain;
   };
+
+  /*
+  VERY preliminary flatten function. Need to optimize
+  */
 
   flattenGeoms = function(geoms, aes) {
     var values;
@@ -125,6 +136,15 @@
       });
     });
     return values;
+  };
+
+  /*
+  VERY preliminary TYPEOF function. We need some serious optimization here
+  */
+
+  typeOf = function(values) {
+    if (_.all(values, _.isNumber)) return 'num';
+    return 'cat';
   };
 
   /*

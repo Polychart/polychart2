@@ -55,24 +55,42 @@ makeDomainSet = (layerObj, guideSpec, strictmode) ->
     if strictmode
       domain[aes] = makeDomain guideSpec[aes]
     else
+      # TODO: the un-optimized-ness of this seriously hurts
       values = flattenGeoms(layerObj.geoms, aes)
       fromspec = (item) -> if guideSpec[aes]? then guideSpec[aes][item] else null
-      # assume type = numeric for now :(
-      domain[aes] = makeDomain {
-        type: 'num'
-        min: fromspec('min') ? _.min(values)
-        max: fromspec('max') ? _.max(values)
-        bw: fromspec('bw')
-      }
-      console.log domain[aes]
+      if typeOf(values) == 'num'
+        domain[aes] = makeDomain {
+          type: 'num'
+          min: fromspec('min') ? _.min(values)
+          max: fromspec('max') ? _.max(values)
+          bw: fromspec('bw')
+        }
+      else
+        domain[aes] = makeDomain {
+          type: 'cat'
+          levels: fromspec('levels') ? _.uniq(values)
+          sorted : fromspec('levels')? #sorted = true <=> user specified
+        }
   domain
 
+###
+VERY preliminary flatten function. Need to optimize
+###
 flattenGeoms = (geoms, aes) ->
   values = []
   _.each geoms, (geom) ->
     _.each geom.marks, (mark) ->
       values = values.concat poly.flatten mark[aes]
   values
+
+###
+VERY preliminary TYPEOF function. We need some serious optimization here
+###
+typeOf = (values) ->
+  if _.all values, _.isNumber
+    return 'num'
+  return 'cat'
+
 
 ###
 Merge an array of domain sets: i.e. merge all the domains that shares the
