@@ -91,7 +91,8 @@
 
   /*
   Given an aesthetic mapping in the "geom" object, flatten it and extract only
-  the values from it
+  the values from it. This is so that even if a compound object is encoded in an
+  aestehtic, we have the correct set of values to calculate the min/max.
   
   TODO: handles the "novalue" case (when x or y has no mapping)
   */
@@ -360,10 +361,26 @@
     var domain;
     domain = {};
     _.each(_.keys(layerObj.mapping), function(aes) {
-      var values;
-      values = flattenGeoms(layerObj.geoms, aes);
-      console.log(values);
-      if (strictmode) return domain[aes] = makeDomain(guideSpec[aes]);
+      var fromspec, values, _ref, _ref2;
+      if (strictmode) {
+        return domain[aes] = makeDomain(guideSpec[aes]);
+      } else {
+        values = flattenGeoms(layerObj.geoms, aes);
+        fromspec = function(item) {
+          if (guideSpec[aes] != null) {
+            return guideSpec[aes][item];
+          } else {
+            return null;
+          }
+        };
+        domain[aes] = makeDomain({
+          type: 'num',
+          min: (_ref = fromspec('min')) != null ? _ref : _.min(values),
+          max: (_ref2 = fromspec('max')) != null ? _ref2 : _.max(values),
+          bw: fromspec('bw')
+        });
+        return console.log(domain[aes]);
+      }
     });
     return domain;
   };
@@ -850,6 +867,7 @@
     function ScaleSet(guideSpec, domains, ranges) {
       this._makeAxes = __bind(this._makeAxes, this);
       this._getparams = __bind(this._getparams, this);
+      debugger;
       var inspec;
       inspec = function(a) {
         return guideSpec && (guideSpec[a] != null) && (guideSpec[a].scale != null);
@@ -2335,13 +2353,8 @@
     };
 
     Graph.prototype._makeDomains = function(spec, layers) {
-      var domains;
-      domains = {};
-      if (spec.guides) {
-        if (spec.guides == null) spec.guides = {};
-        domains = poly.domain.make(layers, spec.guides, spec.strict);
-      }
-      return domains;
+      if (spec.guides == null) spec.guides = {};
+      return poly.domain.make(layers, spec.guides, spec.strict);
     };
 
     Graph.prototype._makeScaleSet = function(spec, domains) {

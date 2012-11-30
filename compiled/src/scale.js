@@ -27,6 +27,7 @@
     function ScaleSet(guideSpec, domains, ranges) {
       this._makeAxes = __bind(this._makeAxes, this);
       this._getparams = __bind(this._getparams, this);
+      debugger;
       var inspec;
       inspec = function(a) {
         return guideSpec && (guideSpec[a] != null) && (guideSpec[a].scale != null);

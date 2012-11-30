@@ -56,14 +56,15 @@ makeDomainSet = (layerObj, guideSpec, strictmode) ->
       domain[aes] = makeDomain guideSpec[aes]
     else
       values = flattenGeoms(layerObj.geoms, aes)
-      spec (item) -> if guideSpec[aes]? then guideSpec[aes].min else null
+      fromspec = (item) -> if guideSpec[aes]? then guideSpec[aes][item] else null
       # assume type = numeric for now :(
       domain[aes] = makeDomain {
         type: 'num'
-        min: spec('min') ? _.min(values)
-        max: spec('max') ? _.max(values)
-        bw: spec('bw')
+        min: fromspec('min') ? _.min(values)
+        max: fromspec('max') ? _.max(values)
+        bw: fromspec('bw')
       }
+      console.log domain[aes]
   domain
 
 flattenGeoms = (geoms, aes) ->

@@ -54,11 +54,8 @@ class Graph
   _makeLayers: (spec) ->
     _.map spec.layers, (layerSpec) -> poly.layer.make(layerSpec, spec.strict)
   _makeDomains: (spec, layers) ->
-    domains = {}
-    if spec.guides # for now, skip when guides are not defined
-      spec.guides ?= {}
-      domains = poly.domain.make layers, spec.guides, spec.strict
-    domains
+    spec.guides ?= {}
+    poly.domain.make layers, spec.guides, spec.strict
   _makeScaleSet: (spec, domains) ->
     tmpRanges = poly.dim.ranges poly.dim.guess spec
     poly.scale.make spec.guides, domains, tmpRanges

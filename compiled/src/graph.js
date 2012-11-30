@@ -76,13 +76,8 @@
     };
 
     Graph.prototype._makeDomains = function(spec, layers) {
-      var domains;
-      domains = {};
-      if (spec.guides) {
-        if (spec.guides == null) spec.guides = {};
-        domains = poly.domain.make(layers, spec.guides, spec.strict);
-      }
-      return domains;
+      if (spec.guides == null) spec.guides = {};
+      return poly.domain.make(layers, spec.guides, spec.strict);
     };
 
     Graph.prototype._makeScaleSet = function(spec, domains) {
