@@ -49,7 +49,6 @@ class Axis extends Guide
     geomfn = @_tickToGeomFn axisDim
     textfn = @_tickToTextFn axisDim
     newpts = {}
-
     _.each kept, (t) =>
       newpts[t] = @_modify renderer, @pts[t], @ticks[t], geomfn, textfn
     _.each added, (t) => newpts[t] = @_add renderer, @ticks[t], geomfn, textfn

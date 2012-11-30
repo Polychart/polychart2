@@ -1,5 +1,5 @@
 (function() {
-  var CategoricalDomain, DateDomain, NumericDomain, aesthetics, domainMerge, makeDomain, makeDomainSet, mergeDomainSets, mergeDomains, poly;
+  var CategoricalDomain, DateDomain, NumericDomain, aesthetics, domainMerge, flattenGeoms, makeDomain, makeDomainSet, mergeDomainSets, mergeDomains, poly;
 
   poly = this.poly || {};
 
@@ -92,9 +92,23 @@
     var domain;
     domain = {};
     _.each(_.keys(layerObj.mapping), function(aes) {
+      var values;
+      values = flattenGeoms(layerObj.geoms, aes);
+      console.log(values);
       if (strictmode) return domain[aes] = makeDomain(guideSpec[aes]);
     });
     return domain;
+  };
+
+  flattenGeoms = function(geoms, aes) {
+    var values;
+    values = [];
+    _.each(geoms, function(geom) {
+      return _.each(geom.marks, function(mark) {
+        return values = values.concat(poly.flatten(mark[aes]));
+      });
+    });
+    return values;
   };
 
   /*

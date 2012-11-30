@@ -89,6 +89,36 @@
     };
   };
 
+  /*
+  Given an aesthetic mapping in the "geom" object, flatten it and extract only
+  the values from it
+  
+  TODO: handles the "novalue" case (when x or y has no mapping)
+  */
+
+  poly.flatten = function(values) {
+    var flat;
+    flat = [];
+    if (values != null) {
+      if (_.isObject(values)) {
+        if (values.t === 'scalefn') {
+          flat.push(values.v);
+        } else {
+          _.each(values, function(v) {
+            return flat = flat.concat(poly.flatten(v));
+          });
+        }
+      } else if (_.isArray(values)) {
+        _.each(values, function(v) {
+          return flat = flat.concat(poly.flatten(v));
+        });
+      } else {
+        flat.push(values);
+      }
+    }
+    return flat;
+  };
+
 }).call(this);
 (function() {
   var poly;
@@ -237,7 +267,7 @@
 
 }).call(this);
 (function() {
-  var CategoricalDomain, DateDomain, NumericDomain, aesthetics, domainMerge, makeDomain, makeDomainSet, mergeDomainSets, mergeDomains, poly;
+  var CategoricalDomain, DateDomain, NumericDomain, aesthetics, domainMerge, flattenGeoms, makeDomain, makeDomainSet, mergeDomainSets, mergeDomains, poly;
 
   poly = this.poly || {};
 
@@ -330,9 +360,23 @@
     var domain;
     domain = {};
     _.each(_.keys(layerObj.mapping), function(aes) {
+      var values;
+      values = flattenGeoms(layerObj.geoms, aes);
+      console.log(values);
       if (strictmode) return domain[aes] = makeDomain(guideSpec[aes]);
     });
     return domain;
+  };
+
+  flattenGeoms = function(geoms, aes) {
+    var values;
+    values = [];
+    _.each(geoms, function(geom) {
+      return _.each(geom.marks, function(mark) {
+        return values = values.concat(poly.flatten(mark[aes]));
+      });
+    });
+    return values;
   };
 
   /*
@@ -989,9 +1033,9 @@
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
             if (value.f === 'identity') return value.v;
-            if (value.f === 'upper') return y(val + domain.bw) - space;
-            if (value.f === 'lower') return y(val) + space;
-            if (value.f === 'middle') return y(val + domain.bw / 2);
+            if (value.f === 'upper') return y(value.v + domain.bw) - space;
+            if (value.f === 'lower') return y(value.v) + space;
+            if (value.f === 'middle') return y(value.v + domain.bw / 2);
           }
           throw new poly.UnexpectedObject("Expected a value instead of an object");
         }

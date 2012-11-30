@@ -62,4 +62,25 @@ poly.compare = (oldarr, newarr) ->
   kept    : _.intersection(newarr, oldarr)
   added   : _.difference(newarr, oldarr)
 
+###
+Given an aesthetic mapping in the "geom" object, flatten it and extract only
+the values from it. This is so that even if a compound object is encoded in an
+aestehtic, we have the correct set of values to calculate the min/max.
+
+TODO: handles the "novalue" case (when x or y has no mapping)
+###
+poly.flatten = (values) ->
+  flat = []
+  if values?
+    if _.isObject values
+      if values.t is 'scalefn'
+        flat.push values.v
+      else
+        _.each values, (v) -> flat = flat.concat poly.flatten(v)
+    else if _.isArray values
+      _.each values, (v) -> flat = flat.concat poly.flatten(v)
+    else
+      flat.push values
+  return flat
+
 

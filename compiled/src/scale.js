@@ -210,9 +210,9 @@
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
             if (value.f === 'identity') return value.v;
-            if (value.f === 'upper') return y(val + domain.bw) - space;
-            if (value.f === 'lower') return y(val) + space;
-            if (value.f === 'middle') return y(val + domain.bw / 2);
+            if (value.f === 'upper') return y(value.v + domain.bw) - space;
+            if (value.f === 'lower') return y(value.v) + space;
+            if (value.f === 'middle') return y(value.v + domain.bw / 2);
           }
           throw new poly.UnexpectedObject("Expected a value instead of an object");
         }

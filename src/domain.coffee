@@ -54,7 +54,24 @@ makeDomainSet = (layerObj, guideSpec, strictmode) ->
   _.each _.keys(layerObj.mapping), (aes) ->
     if strictmode
       domain[aes] = makeDomain guideSpec[aes]
+    else
+      values = flattenGeoms(layerObj.geoms, aes)
+      spec (item) -> if guideSpec[aes]? then guideSpec[aes].min else null
+      # assume type = numeric for now :(
+      domain[aes] = makeDomain {
+        type: 'num'
+        min: spec('min') ? _.min(values)
+        max: spec('max') ? _.max(values)
+        bw: spec('bw')
+      }
   domain
+
+flattenGeoms = (geoms, aes) ->
+  values = []
+  _.each geoms, (geom) ->
+    _.each geom.marks, (mark) ->
+      values = values.concat poly.flatten mark[aes]
+  values
 
 ###
 Merge an array of domain sets: i.e. merge all the domains that shares the

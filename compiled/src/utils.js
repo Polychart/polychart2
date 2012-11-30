@@ -89,4 +89,34 @@
     };
   };
 
+  /*
+  Given an aesthetic mapping in the "geom" object, flatten it and extract only
+  the values from it
+  
+  TODO: handles the "novalue" case (when x or y has no mapping)
+  */
+
+  poly.flatten = function(values) {
+    var flat;
+    flat = [];
+    if (values != null) {
+      if (_.isObject(values)) {
+        if (values.t === 'scalefn') {
+          flat.push(values.v);
+        } else {
+          _.each(values, function(v) {
+            return flat = flat.concat(poly.flatten(v));
+          });
+        }
+      } else if (_.isArray(values)) {
+        _.each(values, function(v) {
+          return flat = flat.concat(poly.flatten(v));
+        });
+      } else {
+        flat.push(values);
+      }
+    }
+    return flat;
+  };
+
 }).call(this);

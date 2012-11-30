@@ -111,9 +111,9 @@ class PositionScale extends Scale
     if _.isObject(value)
       if value.t is 'scalefn'
         if value.f is 'identity' then return value.v
-        if value.f is 'upper' then return y(val+domain.bw) - space
-        if value.f is 'lower' then return y(val) + space
-        if value.f is 'middle' then return y(val+domain.bw/2)
+        if value.f is 'upper' then return y(value.v+domain.bw) - space
+        if value.f is 'lower' then return y(value.v) + space
+        if value.f is 'middle' then return y(value.v+domain.bw/2)
       throw new poly.UnexpectedObject("Expected a value instead of an object")
     y(value)
 class Linear extends PositionScale
