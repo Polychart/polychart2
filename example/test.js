@@ -54,7 +54,7 @@ examples = {
   'point3' : function(dom) {
     var jsondata = [{x:'A',y:'X'},{x:'B',y:'Y'},{x:'C',y:'Z'}]
     var data = new poly.Data({ json: jsondata });
-    var sampleLayer = { data: data, type: 'point', x: 'x', y: 'y' };
+    var sampleLayer = { data: data, type: 'point', x: 'x', y: 'y', color: {const:'#E01B6A'} };
     var spec =  { layers: [sampleLayer] }
     var c = poly.chart(spec)
     c.render(dom)

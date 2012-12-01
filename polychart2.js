@@ -188,7 +188,22 @@
         };
       }
     },
-    epsilon: Math.pow(10, -7)
+    epsilon: Math.pow(10, -7),
+    defaults: {
+      'x': {
+        v: null,
+        f: 'novalue',
+        t: 'scalefn'
+      },
+      'y': {
+        v: null,
+        f: 'novalue',
+        t: 'scalefn'
+      },
+      'color': 'steelblue',
+      'size': 2,
+      'opacity': 0.7
+    }
   };
 
   this.poly = poly;
@@ -897,7 +912,9 @@
 
   })(Axis);
 
-  Legend = (function() {
+  Legend = (function(_super) {
+
+    __extends(Legend, _super);
 
     Legend.prototype.TITLEHEIGHT = 15;
 
@@ -1003,7 +1020,7 @@
 
     return Legend;
 
-  })();
+  })(Guide);
 
   poly.guide = {};
 
@@ -1141,15 +1158,17 @@
         _.each(_.without(_.keys(this.domains), 'x', 'y'), function(aes) {
           var legend;
           legend = poly.guide.legend(aes);
-          legend.make({
-            domain: _this.domains[aes],
-            guideSpec: _this.getSpec(aes),
-            titletext: poly.getLabel(_this.layers, aes),
-            type: _this.factory[aes].tickType(_this.domains[aes])
-          });
           return _this.legends[aes] = legend;
         });
       }
+      _.each(this.legends, function(legend, aes) {
+        return legend.make({
+          domain: _this.domains[aes],
+          guideSpec: _this.getSpec(aes),
+          titletext: poly.getLabel(_this.layers, aes),
+          type: _this.factory[aes].tickType(_this.domains[aes])
+        });
+      });
       return this.legends;
     };
 

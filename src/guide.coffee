@@ -101,7 +101,7 @@ class YAxis extends Axis # assumes position = left
     text: tick.value
     'text-anchor' : 'end'
 
-class Legend
+class Legend extends Guide
   TITLEHEIGHT: 15
   TICKHEIGHT: 12
   SPACING: 10

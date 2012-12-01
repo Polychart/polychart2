@@ -55,7 +55,22 @@
         };
       }
     },
-    epsilon: Math.pow(10, -7)
+    epsilon: Math.pow(10, -7),
+    defaults: {
+      'x': {
+        v: null,
+        f: 'novalue',
+        t: 'scalefn'
+      },
+      'y': {
+        v: null,
+        f: 'novalue',
+        t: 'scalefn'
+      },
+      'color': 'steelblue',
+      'size': 2,
+      'opacity': 0.7
+    }
   };
 
   this.poly = poly;

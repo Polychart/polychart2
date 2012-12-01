@@ -120,15 +120,17 @@
         _.each(_.without(_.keys(this.domains), 'x', 'y'), function(aes) {
           var legend;
           legend = poly.guide.legend(aes);
-          legend.make({
-            domain: _this.domains[aes],
-            guideSpec: _this.getSpec(aes),
-            titletext: poly.getLabel(_this.layers, aes),
-            type: _this.factory[aes].tickType(_this.domains[aes])
-          });
           return _this.legends[aes] = legend;
         });
       }
+      _.each(this.legends, function(legend, aes) {
+        return legend.make({
+          domain: _this.domains[aes],
+          guideSpec: _this.getSpec(aes),
+          titletext: poly.getLabel(_this.layers, aes),
+          type: _this.factory[aes].tickType(_this.domains[aes])
+        });
+      });
       return this.legends;
     };
 

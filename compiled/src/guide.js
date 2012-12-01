@@ -215,7 +215,9 @@
 
   })(Axis);
 
-  Legend = (function() {
+  Legend = (function(_super) {
+
+    __extends(Legend, _super);
 
     Legend.prototype.TITLEHEIGHT = 15;
 
@@ -321,7 +323,7 @@
 
     return Legend;
 
-  })();
+  })(Guide);
 
   poly.guide = {};
 

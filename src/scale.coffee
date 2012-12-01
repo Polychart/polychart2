@@ -76,12 +76,13 @@ class ScaleSet
       @legends = {}
       _.each _.without(_.keys(@domains), 'x', 'y'), (aes) =>
         legend = poly.guide.legend aes
-        legend.make
-          domain: @domains[aes]
-          guideSpec: @getSpec aes
-          titletext: poly.getLabel @layers, aes
-          type: @factory[aes].tickType @domains[aes]
         @legends[aes] = legend
+    _.each @legends, (legend, aes) =>
+      legend.make
+        domain: @domains[aes]
+        guideSpec: @getSpec aes
+        titletext: poly.getLabel @layers, aes
+        type: @factory[aes].tickType @domains[aes]
     @legends
 
   _makeFactory : (guideSpec, domains, ranges) ->
