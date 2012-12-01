@@ -33,13 +33,14 @@ poly.tick.make = (domain, guideSpec, type) ->
 Tick Object.
 ###
 class Tick
-  constructor: (params) -> {@location, @value} = params
+  constructor: (params) -> {@location, @value, @index} = params
 
 ###
 Helper function for creating a function that creates ticks
 ###
 tickFactory = (formatter) ->
-  (value) -> new Tick(location:value, value:formatter(value))
+  i = 0
+  (value) -> new Tick(location:value, value:formatter(value), index:i++)
 
 ###
 Helper function for determining the size of each "step" (distance between

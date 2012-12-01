@@ -51,7 +51,7 @@
   Tick = (function() {
 
     function Tick(params) {
-      this.location = params.location, this.value = params.value;
+      this.location = params.location, this.value = params.value, this.index = params.index;
     }
 
     return Tick;
@@ -63,10 +63,13 @@
   */
 
   tickFactory = function(formatter) {
+    var i;
+    i = 0;
     return function(value) {
       return new Tick({
         location: value,
-        value: formatter(value)
+        value: formatter(value),
+        index: i++
       });
     };
   };

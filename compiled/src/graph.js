@@ -50,7 +50,7 @@
     };
 
     Graph.prototype.render = function(dom) {
-      var axes, clipping, legends, renderer, scales,
+      var axes, clipping, legends, offset, renderer, scales,
         _this = this;
       if (this.paper == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height);
@@ -61,10 +61,15 @@
       _.each(this.layers, function(layer) {
         return layer.render(renderer);
       });
+      renderer = poly.render(this.graphId, this.paper, scales);
       axes = this.scaleSet.makeAxes();
+      axes.y.render(this.dims, renderer);
+      axes.x.render(this.dims, renderer);
       legends = this.scaleSet.makeLegends();
-      axes.y.render(this.dims, poly.render(this.graphId, this.paper, scales));
-      return axes.x.render(this.dims, poly.render(this.graphId, this.paper, scales));
+      offset = 0;
+      return _.each(legends, function(legend) {
+        return offset += legend.render(_this.dims, renderer, offset);
+      });
     };
 
     Graph.prototype._makeLayers = function(spec) {

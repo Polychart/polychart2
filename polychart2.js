@@ -573,7 +573,7 @@
   Tick = (function() {
 
     function Tick(params) {
-      this.location = params.location, this.value = params.value;
+      this.location = params.location, this.value = params.value, this.index = params.index;
     }
 
     return Tick;
@@ -585,10 +585,13 @@
   */
 
   tickFactory = function(formatter) {
+    var i;
+    i = 0;
     return function(value) {
       return new Tick({
         location: value,
-        value: formatter(value)
+        value: formatter(value),
+        index: i++
       });
     };
   };
@@ -694,10 +697,6 @@
     Guide.prototype.getWidth = function() {};
 
     Guide.prototype.getHeight = function() {};
-
-    Guide.prototype.render = function(paper, render, scales) {
-      throw new poly.NotImplemented("render is not implemented");
-    };
 
     return Guide;
 
@@ -900,19 +899,107 @@
 
   Legend = (function() {
 
-    function Legend() {
-      this.rendered = false;
+    Legend.prototype.TITLEHEIGHT = 15;
+
+    Legend.prototype.TICKHEIGHT = 12;
+
+    Legend.prototype.SPACING = 10;
+
+    function Legend(aes) {
+      this.make = __bind(this.make, this);      this.rendered = false;
+      this.aes = aes;
+      this.title = null;
       this.ticks = {};
       this.pts = {};
     }
 
-    Legend.prototype.make = function(params) {};
+    Legend.prototype.make = function(params) {
+      var domain, guideSpec, type;
+      domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.titletext = params.titletext;
+      return this.ticks = poly.tick.make(domain, guideSpec, type);
+    };
 
-    Legend.prototype.render = function(paper, render, scales) {};
+    Legend.prototype.render = function(dim, renderer, offset) {
+      var added, deleted, kept, legendDim, newpts, _ref,
+        _this = this;
+      legendDim = {
+        top: dim.paddingTop + dim.guideTop + offset,
+        right: dim.paddingLeft + dim.guideLeft + dim.chartWidth,
+        width: dim.guideRight,
+        height: dim.chartHeight
+      };
+      if (this.title != null) {
+        this.title = renderer.animate(this.title, this._makeTitle(legendDim, this.titletext));
+      } else {
+        this.title = renderer.add(this._makeTitle(legendDim, this.titletext));
+      }
+      _ref = poly.compare(_.keys(this.pts), _.keys(this.ticks)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
+      newpts = {};
+      _.each(deleted, function(t) {
+        return _this._delete(renderer, _this.pts[t]);
+      });
+      _.each(kept, function(t) {
+        return newpts[t] = _this._modify(renderer, _this.pts[t], _this.ticks[t], legendDim);
+      });
+      _.each(added, function(t) {
+        return newpts[t] = _this._add(renderer, _this.ticks[t], legendDim);
+      });
+      this.pts = newpts;
+      return this.TITLEHEIGHT + this.TICKHEIGHT * (added.length + kept.length) + this.SPACING;
+    };
 
-    Legend.prototype._makeLabel = function(tick) {};
+    Legend.prototype._add = function(renderer, tick, legendDim) {
+      var obj;
+      obj = {};
+      obj.tick = renderer.add(this._makeTick(legendDim, tick));
+      obj.text = renderer.add(this._makeLabel(legendDim, tick));
+      return obj;
+    };
 
-    Legend.prototype._makeBox = function(tick) {};
+    Legend.prototype._delete = function(renderer, pt) {
+      renderer.remove(pt.tick);
+      return renderer.remove(pt.text);
+    };
+
+    Legend.prototype._modify = function(renderer, pt, tick, legendDim) {
+      var obj;
+      obj = [];
+      obj.tick = renderer.animate(pt.tick, this._makeTick(legendDim, tick));
+      obj.text = renderer.animate(pt.text, this._makeLabel(legendDim, tick));
+      return obj;
+    };
+
+    Legend.prototype._makeLabel = function(legendDim, tick) {
+      return {
+        type: 'text',
+        x: sf.identity(legendDim.right + 15),
+        y: sf.identity(legendDim.top + (15 + tick.index * 12) + 1),
+        text: tick.value,
+        'text-anchor': 'start'
+      };
+    };
+
+    Legend.prototype._makeTick = function(legendDim, tick) {
+      var obj;
+      obj = {
+        type: 'circle',
+        x: sf.identity(legendDim.right + 7),
+        y: sf.identity(legendDim.top + (15 + tick.index * 12)),
+        size: sf.identity(5)
+      };
+      obj[this.aes] = tick.location;
+      return obj;
+    };
+
+    Legend.prototype._makeTitle = function(legendDim, text) {
+      return {
+        type: 'text',
+        x: sf.identity(legendDim.right + 5),
+        y: sf.identity(legendDim.top),
+        text: text,
+        'text-anchor': 'start'
+      };
+    };
 
     return Legend;
 
@@ -923,6 +1010,10 @@
   poly.guide.axis = function(type) {
     if (type === 'x') return new XAxis();
     return new YAxis();
+  };
+
+  poly.guide.legend = function(aes) {
+    return new Legend(aes);
   };
 
   this.poly = poly;
@@ -960,7 +1051,7 @@
         y: poly.guide.axis('y')
       };
       this.ranges = tmpRanges;
-      this.legends = [];
+      this.legends = null;
     }
 
     ScaleSet.prototype.make = function(guideSpec, domains, layers) {
@@ -1019,33 +1110,47 @@
       return this.factory[aes].construct(this.domains[aes]);
     };
 
+    ScaleSet.prototype.getSpec = function(a) {
+      if ((this.guideSpec != null) && (this.guideSpec[a] != null)) {
+        return this.guideSpec[a];
+      } else {
+        return {};
+      }
+    };
+
     ScaleSet.prototype.makeAxes = function() {
-      var spec;
-      spec = function(a) {
-        if (this.guideSpec && this.guideSpec[a]) {
-          return this.guideSpec[a];
-        } else {
-          return {};
-        }
-      };
       this.axes.x.make({
         domain: this.domainx,
         type: this.factory.x.tickType(this.domainx),
-        guideSpec: spec('x'),
+        guideSpec: this.getSpec('x'),
         titletext: poly.getLabel(this.layers, 'x')
       });
       this.axes.y.make({
         domain: this.domainy,
-        type: this.factory.y.tickType(this.domainx),
-        guideSpec: spec('y'),
+        type: this.factory.y.tickType(this.domainy),
+        guideSpec: this.getSpec('y'),
         titletext: poly.getLabel(this.layers, 'y')
       });
       return this.axes;
     };
 
     ScaleSet.prototype.makeLegends = function(mapping) {
-      var _ref;
-      return (_ref = this.legends) != null ? _ref : this.legends = this._makeLegends();
+      var _this = this;
+      if (!(this.legends != null)) {
+        this.legends = {};
+        _.each(_.without(_.keys(this.domains), 'x', 'y'), function(aes) {
+          var legend;
+          legend = poly.guide.legend(aes);
+          legend.make({
+            domain: _this.domains[aes],
+            guideSpec: _this.getSpec(aes),
+            titletext: poly.getLabel(_this.layers, aes),
+            type: _this.factory[aes].tickType(_this.domains[aes])
+          });
+          return _this.legends[aes] = legend;
+        });
+      }
+      return this.legends;
     };
 
     ScaleSet.prototype._makeFactory = function(guideSpec, domains, ranges) {
@@ -1276,6 +1381,7 @@
       sq = Math.sqrt;
       ylin = poly.linear(sq(domain.min), min, sq(domain.max), 10);
       return function(x) {
+        if (_.isObject(x) && x.t === 'scalefn') if (x.f === 'identity') return x.v;
         return ylin(sq(x));
       };
     };
@@ -2599,7 +2705,7 @@
     };
 
     Graph.prototype.render = function(dom) {
-      var axes, clipping, legends, renderer, scales,
+      var axes, clipping, legends, offset, renderer, scales,
         _this = this;
       if (this.paper == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height);
@@ -2610,10 +2716,15 @@
       _.each(this.layers, function(layer) {
         return layer.render(renderer);
       });
+      renderer = poly.render(this.graphId, this.paper, scales);
       axes = this.scaleSet.makeAxes();
+      axes.y.render(this.dims, renderer);
+      axes.x.render(this.dims, renderer);
       legends = this.scaleSet.makeLegends();
-      axes.y.render(this.dims, poly.render(this.graphId, this.paper, scales));
-      return axes.x.render(this.dims, poly.render(this.graphId, this.paper, scales));
+      offset = 0;
+      return _.each(legends, function(legend) {
+        return offset += legend.render(_this.dims, renderer, offset);
+      });
     };
 
     Graph.prototype._makeLayers = function(spec) {

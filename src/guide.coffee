@@ -6,8 +6,6 @@ class Guide
   constructor: () ->
   getWidth: () ->  # approximate
   getHeight: () -> # approximate
-  render: (paper, render, scales) ->
-    throw new poly.NotImplemented("render is not implemented")
 
 class Axis extends Guide
   constructor: () ->
@@ -104,14 +102,72 @@ class YAxis extends Axis # assumes position = left
     'text-anchor' : 'end'
 
 class Legend
-  constructor: () ->
+  TITLEHEIGHT: 15
+  TICKHEIGHT: 12
+  SPACING: 10
+  constructor: (aes) ->
     @rendered = false
+    @aes = aes
+    @title = null
     @ticks = {}
     @pts = {}
-  make : (params) ->
-  render: (paper, render, scales) ->
-  _makeLabel: (tick) ->
-  _makeBox: (tick) ->
+  make: (params) =>
+    {domain, type, guideSpec, @titletext} = params
+    @ticks = poly.tick.make domain, guideSpec, type
+  render: (dim, renderer, offset) -> # assume position = RIGHT
+    legendDim =
+      top: dim.paddingTop + dim.guideTop + offset
+      right : dim.paddingLeft + dim.guideLeft + dim.chartWidth
+      width: dim.guideRight
+      height: dim.chartHeight
+    if @title?
+      @title = renderer.animate @title, @_makeTitle(legendDim, @titletext)
+    else
+      @title = renderer.add @_makeTitle(legendDim, @titletext)
+    {deleted, kept, added} = poly.compare _.keys(@pts), _.keys(@ticks)
+    newpts = {}
+    _.each deleted, (t) => @_delete renderer, @pts[t]
+    _.each kept, (t) =>
+      newpts[t] = @_modify renderer, @pts[t], @ticks[t], legendDim
+    _.each added, (t) => newpts[t] = @_add renderer, @ticks[t], legendDim
+    #return offset
+    @pts = newpts
+    @TITLEHEIGHT + @TICKHEIGHT*(added.length + kept.length) + @SPACING
+  _add: (renderer, tick, legendDim) ->
+    obj = {}
+    obj.tick = renderer.add @_makeTick(legendDim, tick)
+    obj.text = renderer.add @_makeLabel(legendDim, tick)
+    obj
+  _delete: (renderer, pt) ->
+    renderer.remove pt.tick
+    renderer.remove pt.text
+  _modify: (renderer, pt, tick, legendDim) ->
+    obj = []
+    obj.tick = renderer.animate pt.tick, @_makeTick(legendDim, tick)
+    obj.text = renderer.animate pt.text, @_makeLabel(legendDim, tick)
+    obj
+
+  _makeLabel: (legendDim, tick) ->
+    type: 'text'
+    x : sf.identity legendDim.right + 15
+    y : sf.identity legendDim.top + (15+tick.index*12) + 1
+    text: tick.value
+    'text-anchor' : 'start'
+  _makeTick: (legendDim, tick) ->
+    obj =
+      type: 'circle'
+      x : sf.identity legendDim.right + 7
+      y : sf.identity legendDim.top + (15+tick.index*12)
+      size: sf.identity 5
+    obj[@aes] = tick.location
+    obj
+  _makeTitle: (legendDim, text) ->
+    type: 'text'
+    x : sf.identity legendDim.right + 5
+    y : sf.identity legendDim.top
+    text: text
+    'text-anchor' : 'start'
+
 
 poly.guide = {}
 poly.guide.axis = (type) ->
@@ -119,5 +175,6 @@ poly.guide.axis = (type) ->
   if type == 'x'
     return new XAxis()
   return new YAxis()
+poly.guide.legend = (aes) -> return new Legend(aes)
 
 @poly = poly

@@ -16,10 +16,6 @@
 
     Guide.prototype.getHeight = function() {};
 
-    Guide.prototype.render = function(paper, render, scales) {
-      throw new poly.NotImplemented("render is not implemented");
-    };
-
     return Guide;
 
   })();
@@ -221,19 +217,107 @@
 
   Legend = (function() {
 
-    function Legend() {
-      this.rendered = false;
+    Legend.prototype.TITLEHEIGHT = 15;
+
+    Legend.prototype.TICKHEIGHT = 12;
+
+    Legend.prototype.SPACING = 10;
+
+    function Legend(aes) {
+      this.make = __bind(this.make, this);      this.rendered = false;
+      this.aes = aes;
+      this.title = null;
       this.ticks = {};
       this.pts = {};
     }
 
-    Legend.prototype.make = function(params) {};
+    Legend.prototype.make = function(params) {
+      var domain, guideSpec, type;
+      domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.titletext = params.titletext;
+      return this.ticks = poly.tick.make(domain, guideSpec, type);
+    };
 
-    Legend.prototype.render = function(paper, render, scales) {};
+    Legend.prototype.render = function(dim, renderer, offset) {
+      var added, deleted, kept, legendDim, newpts, _ref,
+        _this = this;
+      legendDim = {
+        top: dim.paddingTop + dim.guideTop + offset,
+        right: dim.paddingLeft + dim.guideLeft + dim.chartWidth,
+        width: dim.guideRight,
+        height: dim.chartHeight
+      };
+      if (this.title != null) {
+        this.title = renderer.animate(this.title, this._makeTitle(legendDim, this.titletext));
+      } else {
+        this.title = renderer.add(this._makeTitle(legendDim, this.titletext));
+      }
+      _ref = poly.compare(_.keys(this.pts), _.keys(this.ticks)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
+      newpts = {};
+      _.each(deleted, function(t) {
+        return _this._delete(renderer, _this.pts[t]);
+      });
+      _.each(kept, function(t) {
+        return newpts[t] = _this._modify(renderer, _this.pts[t], _this.ticks[t], legendDim);
+      });
+      _.each(added, function(t) {
+        return newpts[t] = _this._add(renderer, _this.ticks[t], legendDim);
+      });
+      this.pts = newpts;
+      return this.TITLEHEIGHT + this.TICKHEIGHT * (added.length + kept.length) + this.SPACING;
+    };
 
-    Legend.prototype._makeLabel = function(tick) {};
+    Legend.prototype._add = function(renderer, tick, legendDim) {
+      var obj;
+      obj = {};
+      obj.tick = renderer.add(this._makeTick(legendDim, tick));
+      obj.text = renderer.add(this._makeLabel(legendDim, tick));
+      return obj;
+    };
 
-    Legend.prototype._makeBox = function(tick) {};
+    Legend.prototype._delete = function(renderer, pt) {
+      renderer.remove(pt.tick);
+      return renderer.remove(pt.text);
+    };
+
+    Legend.prototype._modify = function(renderer, pt, tick, legendDim) {
+      var obj;
+      obj = [];
+      obj.tick = renderer.animate(pt.tick, this._makeTick(legendDim, tick));
+      obj.text = renderer.animate(pt.text, this._makeLabel(legendDim, tick));
+      return obj;
+    };
+
+    Legend.prototype._makeLabel = function(legendDim, tick) {
+      return {
+        type: 'text',
+        x: sf.identity(legendDim.right + 15),
+        y: sf.identity(legendDim.top + (15 + tick.index * 12) + 1),
+        text: tick.value,
+        'text-anchor': 'start'
+      };
+    };
+
+    Legend.prototype._makeTick = function(legendDim, tick) {
+      var obj;
+      obj = {
+        type: 'circle',
+        x: sf.identity(legendDim.right + 7),
+        y: sf.identity(legendDim.top + (15 + tick.index * 12)),
+        size: sf.identity(5)
+      };
+      obj[this.aes] = tick.location;
+      return obj;
+    };
+
+    Legend.prototype._makeTitle = function(legendDim, text) {
+      return {
+        type: 'text',
+        x: sf.identity(legendDim.right + 5),
+        y: sf.identity(legendDim.top),
+        text: text,
+        'text-anchor': 'start'
+      };
+    };
 
     return Legend;
 
@@ -244,6 +328,10 @@
   poly.guide.axis = function(type) {
     if (type === 'x') return new XAxis();
     return new YAxis();
+  };
+
+  poly.guide.legend = function(aes) {
+    return new Legend(aes);
   };
 
   this.poly = poly;

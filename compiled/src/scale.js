@@ -30,7 +30,7 @@
         y: poly.guide.axis('y')
       };
       this.ranges = tmpRanges;
-      this.legends = [];
+      this.legends = null;
     }
 
     ScaleSet.prototype.make = function(guideSpec, domains, layers) {
@@ -89,33 +89,47 @@
       return this.factory[aes].construct(this.domains[aes]);
     };
 
+    ScaleSet.prototype.getSpec = function(a) {
+      if ((this.guideSpec != null) && (this.guideSpec[a] != null)) {
+        return this.guideSpec[a];
+      } else {
+        return {};
+      }
+    };
+
     ScaleSet.prototype.makeAxes = function() {
-      var spec;
-      spec = function(a) {
-        if (this.guideSpec && this.guideSpec[a]) {
-          return this.guideSpec[a];
-        } else {
-          return {};
-        }
-      };
       this.axes.x.make({
         domain: this.domainx,
         type: this.factory.x.tickType(this.domainx),
-        guideSpec: spec('x'),
+        guideSpec: this.getSpec('x'),
         titletext: poly.getLabel(this.layers, 'x')
       });
       this.axes.y.make({
         domain: this.domainy,
-        type: this.factory.y.tickType(this.domainx),
-        guideSpec: spec('y'),
+        type: this.factory.y.tickType(this.domainy),
+        guideSpec: this.getSpec('y'),
         titletext: poly.getLabel(this.layers, 'y')
       });
       return this.axes;
     };
 
     ScaleSet.prototype.makeLegends = function(mapping) {
-      var _ref;
-      return (_ref = this.legends) != null ? _ref : this.legends = this._makeLegends();
+      var _this = this;
+      if (!(this.legends != null)) {
+        this.legends = {};
+        _.each(_.without(_.keys(this.domains), 'x', 'y'), function(aes) {
+          var legend;
+          legend = poly.guide.legend(aes);
+          legend.make({
+            domain: _this.domains[aes],
+            guideSpec: _this.getSpec(aes),
+            titletext: poly.getLabel(_this.layers, aes),
+            type: _this.factory[aes].tickType(_this.domains[aes])
+          });
+          return _this.legends[aes] = legend;
+        });
+      }
+      return this.legends;
     };
 
     ScaleSet.prototype._makeFactory = function(guideSpec, domains, ranges) {
@@ -346,6 +360,7 @@
       sq = Math.sqrt;
       ylin = poly.linear(sq(domain.min), min, sq(domain.max), 10);
       return function(x) {
+        if (_.isObject(x) && x.t === 'scalefn') if (x.f === 'identity') return x.v;
         return ylin(sq(x));
       };
     };

@@ -20,7 +20,7 @@ class ScaleSet
       y: poly.guide.axis 'y' # polar?
     }
     @ranges = tmpRanges
-    @legends = []
+    @legends = null
 
   make: (guideSpec, domains, layers) ->
     @guideSpec = guideSpec
@@ -56,27 +56,36 @@ class ScaleSet
   _makeYScale: () -> @factory.y.construct(@domainy, @ranges.y)
   _makeScale: (aes) -> @factory[aes].construct(@domains[aes])
 
+  getSpec : (a) -> if @guideSpec? and @guideSpec[a]? then @guideSpec[a] else {}
   makeAxes: () ->
-    spec = (a) -> if @guideSpec and @guideSpec[a] then @guideSpec[a] else {}
-    @axes.x.make {
+    @axes.x.make
       domain: @domainx
       type: @factory.x.tickType @domainx
-      guideSpec: spec('x')
-      titletext: poly.getLabel(@layers, 'x')
-    }
-    @axes.y.make {
+      guideSpec: @getSpec 'x'
+      titletext: poly.getLabel @layers, 'x'
+    @axes.y.make
       domain: @domainy
-      type: @factory.y.tickType @domainx
-      guideSpec: spec('y')
-      titletext: poly.getLabel(@layers, 'y')
+      type: @factory.y.tickType @domainy
+      guideSpec: @getSpec 'y'
+      titletext: poly.getLabel @layers, 'y'
       #titletext: poly.getLabel(@layers, 'y')
-    }
     @axes
   makeLegends: (mapping) ->
     # we'll have to be able to change this...
-    @legends ?= @_makeLegends()
+    if not @legends?
+      @legends = {}
+      _.each _.without(_.keys(@domains), 'x', 'y'), (aes) =>
+        legend = poly.guide.legend aes
+        legend.make
+          domain: @domains[aes]
+          guideSpec: @getSpec aes
+          titletext: poly.getLabel @layers, aes
+          type: @factory[aes].tickType @domains[aes]
+        @legends[aes] = legend
+    @legends
 
   _makeFactory : (guideSpec, domains, ranges) ->
+    # this function contains information about default scales!
     specScale = (a) ->
       if guideSpec and guideSpec[a]? and guideSpec[a].scale?
         return guideSpec.x.scale
@@ -180,7 +189,10 @@ class Area extends Scale
     min = if domain.min == 0 then 0 else 1
     sq = Math.sqrt
     ylin = poly.linear sq(domain.min), min, sq(domain.max), 10
-    (x) -> ylin sq(x)
+    (x) ->
+      if _.isObject(x) and x.t is 'scalefn'
+        if x.f is 'identity' then return x.v
+      ylin sq(x)
 
 class Color extends Scale
   _constructCat: (domain) -> #TEMPORARY
