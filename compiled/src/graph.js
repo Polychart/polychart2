@@ -63,8 +63,8 @@
       });
       axes = this.scaleSet.makeAxes();
       legends = this.scaleSet.makeLegends();
-      axes.y.render(this.dims, poly.render(this.graphId, this.paper, scales, clipping.left));
-      return axes.x.render(this.dims, poly.render(this.graphId, this.paper, scales, clipping.bottom));
+      axes.y.render(this.dims, poly.render(this.graphId, this.paper, scales));
+      return axes.x.render(this.dims, poly.render(this.graphId, this.paper, scales));
     };
 
     Graph.prototype._makeLayers = function(spec) {

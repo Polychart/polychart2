@@ -16,8 +16,8 @@ poly.scale.make = (guideSpec, domains, ranges) ->
 class ScaleSet
   constructor: (tmpRanges) ->
     @axes = {
-      x: poly.guide.axis 'x'
-      y: poly.guide.axis 'y'
+      x: poly.guide.axis 'x' # polar?
+      y: poly.guide.axis 'y' # polar?
     }
     @ranges = tmpRanges
     @legends = []
@@ -60,13 +60,16 @@ class ScaleSet
     spec = (a) -> if @guideSpec and @guideSpec[a] then @guideSpec[a] else {}
     @axes.x.make {
       domain: @domainx
-      factory: @factory.x
+      type: @factory.x.tickType @domainx
       guideSpec: spec('x')
+      titletext: poly.getLabel(@layers, 'x')
     }
     @axes.y.make {
       domain: @domainy
-      factory: @factory.y
+      type: @factory.y.tickType @domainx
       guideSpec: spec('y')
+      titletext: poly.getLabel(@layers, 'y')
+      #titletext: poly.getLabel(@layers, 'y')
     }
     @axes
   makeLegends: (mapping) ->

@@ -26,7 +26,7 @@
       add: function(mark, evtData) {
         var pt;
         pt = renderer.cartesian[mark.type].render(paper, scales, mark);
-        pt.attr('clip-rect', clipping);
+        if (clipping != null) pt.attr('clip-rect', clipping);
         pt.click(function() {
           return eve(id + ".click", this, evtData);
         });
@@ -120,6 +120,7 @@
         r: this._maybeApply(scales.size, mark.size),
         fill: this._maybeApply(scales.color, mark.color),
         stroke: this._maybeApply(scales.color, mark.color),
+        title: 'omgthisiscool!',
         'stroke-width': '0px'
       };
     };
@@ -219,8 +220,8 @@
     };
 
     Text.prototype.attr = function(scales, mark) {
-      var _ref;
-      return {
+      var m, _ref;
+      m = {
         x: scales.x(mark.x),
         y: scales.y(mark.y),
         text: this._maybeApply(scales.text, mark.text),
@@ -228,6 +229,8 @@
         r: 10,
         fill: 'black'
       };
+      if (mark.transform != null) m.transform = mark.transform;
+      return m;
     };
 
     return Text;

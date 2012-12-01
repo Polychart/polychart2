@@ -83,4 +83,11 @@ poly.flatten = (values) ->
       flat.push values
   return flat
 
-
+###
+GET LABEL
+###
+poly.getLabel = (layers, aes) ->
+  _.chain(layers)
+   .map((l) -> l.mapping[aes])
+   .without(null, undefined)
+   .uniq().value().join(' | ')

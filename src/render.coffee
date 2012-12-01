@@ -15,7 +15,7 @@ TODO:
 poly.render = (id, paper, scales, clipping) ->
   add: (mark, evtData) ->
     pt = renderer.cartesian[mark.type].render paper, scales, mark
-    pt.attr('clip-rect', clipping)
+    if clipping? then pt.attr('clip-rect', clipping)
     pt.click () -> eve(id+".click", @, evtData)
     pt.hover () -> eve(id+".hover", @, evtData)
     pt
@@ -52,6 +52,7 @@ class Circle extends Renderer # for both cartesian & polar
     r: @_maybeApply scales.size, mark.size
     fill: @_maybeApply scales.color, mark.color
     stroke: @_maybeApply scales.color, mark.color
+    title: 'omgthisiscool!'
     'stroke-width': '0px'
 
 class Line extends Renderer # for both cartesian & polar?
@@ -81,12 +82,15 @@ class VLine extends Renderer # for both cartesian & polar?
 class Text extends Renderer # for both cartesian & polar
   _make: (paper) -> paper.text()
   attr: (scales, mark) ->
-    x: scales.x(mark.x)
-    y: scales.y(mark.y)
-    text: @_maybeApply  scales.text, mark.text
-    'text-anchor' : mark['text-anchor'] ? 'left'
-    r: 10
-    fill: 'black'
+    m =
+      x: scales.x(mark.x)
+      y: scales.y(mark.y)
+      text: @_maybeApply  scales.text, mark.text
+      'text-anchor' : mark['text-anchor'] ? 'left'
+      r: 10
+      fill: 'black'
+    if mark.transform? then m.transform = mark.transform
+    m
 
 renderer =
   cartesian:

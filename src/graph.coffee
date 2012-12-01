@@ -47,8 +47,8 @@ class Graph
     axes = @scaleSet.makeAxes()
     legends = @scaleSet.makeLegends()
 
-    axes.y.render @dims, poly.render @graphId, @paper, scales, clipping.left
-    axes.x.render @dims, poly.render @graphId, @paper, scales, clipping.bottom
+    axes.y.render @dims, poly.render @graphId, @paper, scales#, clipping.left
+    axes.x.render @dims, poly.render @graphId, @paper, scales#, clipping.bottom
 
   _makeLayers: (spec) ->
     _.map spec.layers, (layerSpec) -> poly.layer.make(layerSpec, spec.strict)

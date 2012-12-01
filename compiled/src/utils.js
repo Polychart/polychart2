@@ -120,4 +120,14 @@
     return flat;
   };
 
+  /*
+  GET LABEL
+  */
+
+  poly.getLabel = function(layers, aes) {
+    return _.chain(layers).map(function(l) {
+      return l.mapping[aes];
+    }).without(null, void 0).uniq().value().join(' | ');
+  };
+
 }).call(this);

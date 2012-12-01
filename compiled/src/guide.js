@@ -30,16 +30,16 @@
 
     function Axis() {
       this.render = __bind(this.render, this);
-      this.make = __bind(this.make, this);      this.oldticks = null;
-      this.rendered = false;
+      this.make = __bind(this.make, this);      this.line = null;
+      this.title = null;
       this.ticks = {};
       this.pts = {};
     }
 
     Axis.prototype.make = function(params) {
-      this.domain = params.domain, this.factory = params.factory, this.guideSpec = params.guideSpec;
-      this.oldticks = this.ticks;
-      return this.ticks = poly.tick.make(this.domain, this.guideSpec, this.factory.tickType(this.domain));
+      var domain, guideSpec, type;
+      domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.titletext = params.titletext;
+      return this.ticks = poly.tick.make(domain, guideSpec, type);
     };
 
     Axis.prototype.render = function(dim, renderer) {
@@ -52,7 +52,12 @@
         width: dim.chartWidth,
         height: dim.chartHeight
       };
-      if (!this.rendered) this._renderline(renderer, axisDim);
+      if (this.line == null) this.line = this._renderline(renderer, axisDim);
+      if (this.title != null) {
+        this.title = renderer.animate(this.title, this._makeTitle(axisDim, this.titletext));
+      } else {
+        this.title = renderer.add(this._makeTitle(axisDim, this.titletext));
+      }
       _ref = poly.compare(_.keys(this.pts), _.keys(this.ticks)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
       newpts = {};
       _.each(kept, function(t) {
@@ -72,7 +77,7 @@
       var obj;
       obj = {};
       obj.tick = renderer.add(this._makeTick(axisDim, tick));
-      obj.text = renderer.add(this._makeText(axisDim, tick));
+      obj.text = renderer.add(this._makeLabel(axisDim, tick));
       return obj;
     };
 
@@ -85,7 +90,7 @@
       var obj;
       obj = [];
       obj.tick = renderer.animate(pt.tick, this._makeTick(axisDim, tick));
-      obj.text = renderer.animate(pt.text, this._makeText(axisDim, tick));
+      obj.text = renderer.animate(pt.text, this._makeLabel(axisDim, tick));
       return obj;
     };
 
@@ -93,11 +98,15 @@
       throw new poly.NotImplemented();
     };
 
+    Axis.prototype._makeTitle = function() {
+      throw new poly.NotImplemented();
+    };
+
     Axis.prototype._makeTick = function() {
       throw new poly.NotImplemented();
     };
 
-    Axis.prototype._makeText = function() {
+    Axis.prototype._makeLabel = function() {
       throw new poly.NotImplemented();
     };
 
@@ -110,7 +119,6 @@
     __extends(XAxis, _super);
 
     function XAxis() {
-      this._renderline = __bind(this._renderline, this);
       XAxis.__super__.constructor.apply(this, arguments);
     }
 
@@ -126,6 +134,16 @@
       });
     };
 
+    XAxis.prototype._makeTitle = function(axisDim, text) {
+      return {
+        type: 'text',
+        x: sf.identity(axisDim.left + axisDim.width / 2),
+        y: sf.identity(axisDim.bottom + 27),
+        text: text,
+        'text-anchor': 'middle'
+      };
+    };
+
     XAxis.prototype._makeTick = function(axisDim, tick) {
       return {
         type: 'line',
@@ -134,7 +152,7 @@
       };
     };
 
-    XAxis.prototype._makeText = function(axisDim, tick) {
+    XAxis.prototype._makeLabel = function(axisDim, tick) {
       return {
         type: 'text',
         x: tick.location,
@@ -153,7 +171,6 @@
     __extends(YAxis, _super);
 
     function YAxis() {
-      this._renderline = __bind(this._renderline, this);
       YAxis.__super__.constructor.apply(this, arguments);
     }
 
@@ -169,6 +186,17 @@
       });
     };
 
+    YAxis.prototype._makeTitle = function(axisDim, text) {
+      return {
+        type: 'text',
+        x: sf.identity(axisDim.left - 22),
+        y: sf.identity(axisDim.top + axisDim.height / 2),
+        text: text,
+        transform: 'r270',
+        'text-anchor': 'middle'
+      };
+    };
+
     YAxis.prototype._makeTick = function(axisDim, tick) {
       return {
         type: 'line',
@@ -177,7 +205,7 @@
       };
     };
 
-    YAxis.prototype._makeText = function(axisDim, tick) {
+    YAxis.prototype._makeLabel = function(axisDim, tick) {
       return {
         type: 'text',
         x: sf.identity(axisDim.left - 7),
@@ -193,9 +221,19 @@
 
   Legend = (function() {
 
-    function Legend() {}
+    function Legend() {
+      this.rendered = false;
+      this.ticks = {};
+      this.pts = {};
+    }
+
+    Legend.prototype.make = function(params) {};
 
     Legend.prototype.render = function(paper, render, scales) {};
+
+    Legend.prototype._makeLabel = function(tick) {};
+
+    Legend.prototype._makeBox = function(tick) {};
 
     return Legend;
 

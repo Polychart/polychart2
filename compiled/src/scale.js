@@ -100,13 +100,15 @@
       };
       this.axes.x.make({
         domain: this.domainx,
-        factory: this.factory.x,
-        guideSpec: spec('x')
+        type: this.factory.x.tickType(this.domainx),
+        guideSpec: spec('x'),
+        titletext: poly.getLabel(this.layers, 'x')
       });
       this.axes.y.make({
         domain: this.domainy,
-        factory: this.factory.y,
-        guideSpec: spec('y')
+        type: this.factory.y.tickType(this.domainx),
+        guideSpec: spec('y'),
+        titletext: poly.getLabel(this.layers, 'y')
       });
       return this.axes;
     };
