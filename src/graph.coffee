@@ -27,10 +27,8 @@ class Graph
   merge: () =>
     # make the scales...?
     domains = @_makeDomains @spec, @layers
-    if @scaleSet?
-      @scaleSet.setDomains domains
-    else
-      @scaleSet = @_makeScaleSet @spec, domains
+    @scaleSet ?= @_makeScaleSet()
+    @scaleSet.make @spec.guides, domains, @layers
     # dimension calculation
     @dims ?= @_makeDimensions @spec, @scaleSet
     @ranges ?= poly.dim.ranges @dims
@@ -46,7 +44,8 @@ class Graph
     renderer = poly.render @graphId, @paper, scales, clipping.main
     _.each @layers, (layer) => layer.render(renderer)
     # render axes
-    axes = @scaleSet.getAxes()
+    axes = @scaleSet.makeAxes()
+    legends = @scaleSet.makeLegends()
 
     axes.y.render @dims, poly.render @graphId, @paper, scales, clipping.left
     axes.x.render @dims, poly.render @graphId, @paper, scales, clipping.bottom
@@ -58,16 +57,16 @@ class Graph
     poly.domain.make layers, spec.guides, spec.strict
   _makeScaleSet: (spec, domains) ->
     tmpRanges = poly.dim.ranges poly.dim.guess spec
-    poly.scale.make spec.guides, domains, tmpRanges
+    poly.scale.make tmpRanges
   _makeDimensions: (spec, scaleSet) ->
-    poly.dim.make spec, scaleSet.getAxes(), scaleSet.getLegends()
+    poly.dim.make spec, scaleSet.makeAxes(), scaleSet.makeLegends()
   _makePaper: (dom, width, height) ->
     poly.paper document.getElementById(dom), width, height
   _legacy: (domains) =>
     # LEGACY: tick calculation
     @domains = domains
     @scales = @scaleSet.getScaleFns()
-    axes = @scaleSet.getAxes()
+    axes = @scaleSet.makeAxes()
     @ticks = {}
     _.each axes, (v, k) => @ticks[k] = v.ticks
 

@@ -39,11 +39,8 @@
     Graph.prototype.merge = function() {
       var domains;
       domains = this._makeDomains(this.spec, this.layers);
-      if (this.scaleSet != null) {
-        this.scaleSet.setDomains(domains);
-      } else {
-        this.scaleSet = this._makeScaleSet(this.spec, domains);
-      }
+      if (this.scaleSet == null) this.scaleSet = this._makeScaleSet();
+      this.scaleSet.make(this.spec.guides, domains, this.layers);
       if (this.dims == null) {
         this.dims = this._makeDimensions(this.spec, this.scaleSet);
       }
@@ -53,7 +50,7 @@
     };
 
     Graph.prototype.render = function(dom) {
-      var axes, clipping, renderer, scales,
+      var axes, clipping, legends, renderer, scales,
         _this = this;
       if (this.paper == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height);
@@ -64,7 +61,8 @@
       _.each(this.layers, function(layer) {
         return layer.render(renderer);
       });
-      axes = this.scaleSet.getAxes();
+      axes = this.scaleSet.makeAxes();
+      legends = this.scaleSet.makeLegends();
       axes.y.render(this.dims, poly.render(this.graphId, this.paper, scales, clipping.left));
       return axes.x.render(this.dims, poly.render(this.graphId, this.paper, scales, clipping.bottom));
     };
@@ -83,11 +81,11 @@
     Graph.prototype._makeScaleSet = function(spec, domains) {
       var tmpRanges;
       tmpRanges = poly.dim.ranges(poly.dim.guess(spec));
-      return poly.scale.make(spec.guides, domains, tmpRanges);
+      return poly.scale.make(tmpRanges);
     };
 
     Graph.prototype._makeDimensions = function(spec, scaleSet) {
-      return poly.dim.make(spec, scaleSet.getAxes(), scaleSet.getLegends());
+      return poly.dim.make(spec, scaleSet.makeAxes(), scaleSet.makeLegends());
     };
 
     Graph.prototype._makePaper = function(dom, width, height) {
@@ -99,7 +97,7 @@
         _this = this;
       this.domains = domains;
       this.scales = this.scaleSet.getScaleFns();
-      axes = this.scaleSet.getAxes();
+      axes = this.scaleSet.makeAxes();
       this.ticks = {};
       return _.each(axes, function(v, k) {
         return _this.ticks[k] = v.ticks;

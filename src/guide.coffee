@@ -4,7 +4,7 @@ sf = poly.const.scaleFns
 
 class Guide
   constructor: (params) ->
-    {@scales, @guideSpec} = params
+    {@guideSpec} = params
     @position = 'right'
     @ticks = []
   getWidth: () ->  # approximate
@@ -13,16 +13,14 @@ class Guide
     throw new poly.NotImplemented("render is not implemented")
 
 class Axis extends Guide
-  constructor: (params) ->
-    {@type} = params
+  constructor: (@type) ->
     @position = if @type == 'x' then 'bottom' else 'left'
     @oldticks = null
     @rendered = false
     @ticks = {}
     @pts = {}
-    @make params
   make: (params) =>
-    {@domain, @factory, @scale, @guideSpec} = params
+    {@domain, @factory, @guideSpec} = params
     @oldticks = @ticks
     @ticks = poly.tick.make @domain, @guideSpec, @factory.tickType(@domain)
   _renderline : (renderer, axisDim) =>

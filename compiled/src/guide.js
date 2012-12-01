@@ -11,7 +11,7 @@
   Guide = (function() {
 
     function Guide(params) {
-      this.scales = params.scales, this.guideSpec = params.guideSpec;
+      this.guideSpec = params.guideSpec;
       this.position = 'right';
       this.ticks = [];
     }
@@ -32,22 +32,22 @@
 
     __extends(Axis, _super);
 
-    function Axis(params) {
+    function Axis(type) {
+      this.type = type;
       this._tickToTextFn = __bind(this._tickToTextFn, this);
       this._tickToGeomFn = __bind(this._tickToGeomFn, this);
       this.render = __bind(this.render, this);
       this._renderline = __bind(this._renderline, this);
-      this.make = __bind(this.make, this);      this.type = params.type;
+      this.make = __bind(this.make, this);
       this.position = this.type === 'x' ? 'bottom' : 'left';
       this.oldticks = null;
       this.rendered = false;
       this.ticks = {};
       this.pts = {};
-      this.make(params);
     }
 
     Axis.prototype.make = function(params) {
-      this.domain = params.domain, this.factory = params.factory, this.scale = params.scale, this.guideSpec = params.guideSpec;
+      this.domain = params.domain, this.factory = params.factory, this.guideSpec = params.guideSpec;
       this.oldticks = this.ticks;
       return this.ticks = poly.tick.make(this.domain, this.guideSpec, this.factory.tickType(this.domain));
     };

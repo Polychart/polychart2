@@ -1,8 +1,8 @@
 (function() {
   var Area, Brewer, Color, Gradient, Gradient2, Identity, Linear, Log, PositionScale, Scale, ScaleSet, Shape, aesthetics, poly,
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   poly = this.poly || {};
 
@@ -24,119 +24,125 @@
 
   ScaleSet = (function() {
 
-    function ScaleSet(guideSpec, domains, ranges) {
-      this._makeAxes = __bind(this._makeAxes, this);
-      this._getparams = __bind(this._getparams, this);
-      var specScale, _ref, _ref2, _ref3, _ref4;
+    function ScaleSet(tmpRanges) {
+      this.axes = {
+        x: poly.guide.axis('x'),
+        y: poly.guide.axis('y')
+      };
+      this.ranges = tmpRanges;
+      this.legends = [];
+    }
+
+    ScaleSet.prototype.make = function(guideSpec, domains, layers) {
+      this.guideSpec = guideSpec;
+      this.layers = layers;
+      this.domains = domains;
+      this.domainx = this.domains.x;
+      this.domainy = this.domains.y;
+      this.factory = this._makeFactory(guideSpec, domains, this.ranges);
+      return this.scales = this.getScaleFns();
+    };
+
+    ScaleSet.prototype.setRanges = function(ranges) {
+      this.ranges = ranges;
+      return this.scales = this.getScaleFns();
+    };
+
+    ScaleSet.prototype.setXDomain = function(d) {
+      this.domainx = d;
+      return this.scales.x = this._makeXScale();
+    };
+
+    ScaleSet.prototype.setYDomain = function(d) {
+      this.domainy = d;
+      return this.scales.y = this._makeYScale();
+    };
+
+    ScaleSet.prototype.resetDomains = function() {
+      this.domainx = this.domains.x;
+      this.domainy = this.domains.y;
+      this.scales.x = this._makeXScale();
+      return this.scales.y = this._makeYScale();
+    };
+
+    ScaleSet.prototype.getScaleFns = function() {
+      var scales,
+        _this = this;
+      scales = {};
+      if (this.domainx) scales.x = this._makeXScale();
+      if (this.domainy) scales.y = this._makeYScale();
+      _.each(['color', 'size'], function(aes) {
+        if (_this.domains[aes]) return scales[aes] = _this._makeScale(aes);
+      });
+      return scales;
+    };
+
+    ScaleSet.prototype._makeXScale = function() {
+      return this.factory.x.construct(this.domainx, this.ranges.x);
+    };
+
+    ScaleSet.prototype._makeYScale = function() {
+      return this.factory.y.construct(this.domainy, this.ranges.y);
+    };
+
+    ScaleSet.prototype._makeScale = function(aes) {
+      return this.factory[aes].construct(this.domains[aes]);
+    };
+
+    ScaleSet.prototype.makeAxes = function() {
+      var spec;
+      spec = function(a) {
+        if (this.guideSpec && this.guideSpec[a]) {
+          return this.guideSpec[a];
+        } else {
+          return {};
+        }
+      };
+      this.axes.x.make({
+        domain: this.domainx,
+        factory: this.factory.x,
+        guideSpec: spec('x')
+      });
+      this.axes.y.make({
+        domain: this.domainy,
+        factory: this.factory.y,
+        guideSpec: spec('y')
+      });
+      return this.axes;
+    };
+
+    ScaleSet.prototype.makeLegends = function(mapping) {
+      var _ref;
+      return (_ref = this.legends) != null ? _ref : this.legends = this._makeLegends();
+    };
+
+    ScaleSet.prototype._makeFactory = function(guideSpec, domains, ranges) {
+      var factory, specScale, _ref, _ref2, _ref3, _ref4;
       specScale = function(a) {
         if (guideSpec && (guideSpec[a] != null) && (guideSpec[a].scale != null)) {
           return guideSpec.x.scale;
         }
         return null;
       };
-      this.guideSpec = guideSpec;
-      this.factory = {
+      factory = {
         x: (_ref = specScale('x')) != null ? _ref : poly.scale.linear(),
         y: (_ref2 = specScale('y')) != null ? _ref2 : poly.scale.linear()
       };
       if (domains.color != null) {
         if (domains.color.type === 'cat') {
-          this.factory.color = (_ref3 = specScale('color')) != null ? _ref3 : poly.scale.color();
+          factory.color = (_ref3 = specScale('color')) != null ? _ref3 : poly.scale.color();
         } else {
-          this.factory.color = (_ref4 = specScale('color')) != null ? _ref4 : poly.scale.gradient({
+          factory.color = (_ref4 = specScale('color')) != null ? _ref4 : poly.scale.gradient({
             upper: 'steelblue',
             lower: 'red'
           });
         }
       }
       if (domains.size != null) {
-        this.factory.size = specScale('size') || poly.scale.area();
+        factory.size = specScale('size') || poly.scale.area();
       }
-      this.ranges = ranges;
-      this.setDomains(domains);
-    }
-
-    ScaleSet.prototype.setDomains = function(domains) {
-      this.domains = domains;
-      this.domainx = this.domains.x;
-      return this.domainy = this.domains.y;
+      return factory;
     };
-
-    ScaleSet.prototype.setRanges = function(ranges) {
-      return this.ranges = ranges;
-    };
-
-    ScaleSet.prototype.setXDomain = function(d) {
-      return this.domainx = d;
-    };
-
-    ScaleSet.prototype.setYDomain = function(d) {
-      return this.domainy = d;
-    };
-
-    ScaleSet.prototype.resetDomains = function() {
-      this.domainx = this.domains.x;
-      return this.domainy = this.domains.y;
-    };
-
-    ScaleSet.prototype.getScaleFns = function() {
-      this.scales = {};
-      if (this.domainx) {
-        this.scales.x = this.factory.x.construct(this.domainx, this.ranges.x);
-      }
-      if (this.domainy) {
-        this.scales.y = this.factory.y.construct(this.domainy, this.ranges.y);
-      }
-      if (this.domains.color) {
-        this.scales.color = this.factory.color.construct(this.domains.color);
-      }
-      if (this.domains.size) {
-        this.scales.size = this.factory.size.construct(this.domains.size);
-      }
-      return this.scales;
-    };
-
-    ScaleSet.prototype.getAxes = function() {
-      var _this = this;
-      this.getScaleFns();
-      if (this.axes != null) {
-        _.each(this.axes, function(axis, a) {
-          return axis.make(_this._getparams(a));
-        });
-      } else {
-        this.axes = this._makeAxes();
-      }
-      return this.axes;
-    };
-
-    ScaleSet.prototype._getparams = function(a) {
-      return {
-        domain: this.domains[a],
-        factory: this.factory[a],
-        scale: this.scales[a],
-        guideSpec: this.guideSpec && this.guideSpec[a] ? this.guideSpec[a] : {}
-      };
-    };
-
-    ScaleSet.prototype._makeAxes = function() {
-      var axes, params;
-      axes = {};
-      if (this.factory.x && this.domainx) {
-        params = this._getparams('x');
-        params.domain = this.domainx;
-        params.type = 'x';
-        axes.x = poly.guide.axis(params);
-      }
-      if (this.factory.y && this.domainy) {
-        params = this._getparams('y');
-        params.domain = this.domainy;
-        params.type = 'y';
-        axes.y = poly.guide.axis(params);
-      }
-      return axes;
-    };
-
-    ScaleSet.prototype.getLegends = function() {};
 
     return ScaleSet;
 

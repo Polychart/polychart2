@@ -14,72 +14,82 @@ poly.scale.make = (guideSpec, domains, ranges) ->
   return new ScaleSet(guideSpec, domains, ranges)
 
 class ScaleSet
-  constructor: (guideSpec, domains, ranges) ->
+  constructor: (tmpRanges) ->
+    @axes = {
+      x: poly.guide.axis 'x'
+      y: poly.guide.axis 'y'
+    }
+    @ranges = tmpRanges
+    @legends = []
+
+  make: (guideSpec, domains, layers) ->
+    @guideSpec = guideSpec
+    @layers = layers
+    @domains = domains
+    @domainx = @domains.x
+    @domainy = @domains.y
+    @factory = @_makeFactory(guideSpec, domains, @ranges)
+    @scales = @getScaleFns()
+  setRanges: (ranges) ->
+    @ranges = ranges
+    @scales = @getScaleFns()
+  setXDomain: (d) ->
+    @domainx = d
+    @scales.x = @_makeXScale()
+  setYDomain: (d) ->
+    @domainy = d
+    @scales.y = @_makeYScale()
+  resetDomains: () ->
+    @domainx = @domains.x
+    @domainy = @domains.y
+    @scales.x = @_makeXScale()
+    @scales.y = @_makeYScale()
+
+  getScaleFns: () ->
+    scales = {}
+    if @domainx then scales.x = @_makeXScale()
+    if @domainy then scales.y = @_makeYScale()
+    _.each ['color', 'size'], (aes) =>
+      if @domains[aes] then scales[aes] = @_makeScale aes
+    scales
+  _makeXScale: () -> @factory.x.construct(@domainx, @ranges.x)
+  _makeYScale: () -> @factory.y.construct(@domainy, @ranges.y)
+  _makeScale: (aes) -> @factory[aes].construct(@domains[aes])
+
+  makeAxes: () ->
+    spec = (a) -> if @guideSpec and @guideSpec[a] then @guideSpec[a] else {}
+    @axes.x.make {
+      domain: @domainx
+      factory: @factory.x
+      guideSpec: spec('x')
+    }
+    @axes.y.make {
+      domain: @domainy
+      factory: @factory.y
+      guideSpec: spec('y')
+    }
+    @axes
+  makeLegends: (mapping) ->
+    # we'll have to be able to change this...
+    @legends ?= @_makeLegends()
+
+  _makeFactory : (guideSpec, domains, ranges) ->
     specScale = (a) ->
       if guideSpec and guideSpec[a]? and guideSpec[a].scale?
         return guideSpec.x.scale
       return null
-    @guideSpec = guideSpec
-    @factory =
+    factory =
       x : specScale('x') ? poly.scale.linear()
       y : specScale('y') ? poly.scale.linear()
     if domains.color?
       if domains.color.type == 'cat'
-        @factory.color = specScale('color') ? poly.scale.color()
+        factory.color = specScale('color') ? poly.scale.color()
       else
-        @factory.color = specScale('color') ?
+        factory.color = specScale('color') ?
           poly.scale.gradient upper:'steelblue', lower:'red'
     if domains.size?
-      @factory.size = specScale('size') || poly.scale.area()
-    @ranges = ranges
-    @setDomains domains
-  setDomains: (domains) ->
-    @domains = domains
-    @domainx = @domains.x
-    @domainy = @domains.y
-  setRanges: (ranges) -> @ranges = ranges
-  setXDomain: (d) -> @domainx = d
-  setYDomain: (d) -> @domainy = d
-  resetDomains: () ->
-    @domainx = @domains.x
-    @domainy = @domains.y
-  getScaleFns: () ->
-    @scales = {}
-    if @domainx
-      @scales.x = @factory.x.construct(@domainx, @ranges.x)
-    if @domainy
-      @scales.y = @factory.y.construct(@domainy, @ranges.y)
-    if @domains.color
-      @scales.color = @factory.color.construct(@domains.color)
-    if @domains.size
-      @scales.size = @factory.size.construct(@domains.size)
-    @scales
-  getAxes: () ->
-    @getScaleFns()
-    if @axes?
-      _.each @axes, (axis, a) => axis.make @_getparams(a)
-    else
-      @axes = @_makeAxes()
-    @axes
-  _getparams : (a) =>
-      domain: @domains[a]
-      factory: @factory[a]
-      scale: @scales[a]
-      guideSpec: if @guideSpec and @guideSpec[a] then @guideSpec[a] else {}
-  _makeAxes : () =>
-    axes = {}
-    if @factory.x and @domainx
-      params = @_getparams 'x'
-      params.domain = @domainx
-      params.type = 'x'
-      axes.x = poly.guide.axis params
-    if @factory.y and @domainy
-      params = @_getparams 'y'
-      params.domain = @domainy
-      params.type = 'y'
-      axes.y = poly.guide.axis params
-    axes
-  getLegends: () ->
+      factory.size = specScale('size') || poly.scale.area()
+    factory
 
 ###
 # CLASSES
@@ -182,7 +192,8 @@ class Brewer extends Scale
   _constructCat: (domain) ->
 
 class Gradient extends Scale
-  constructor: (params) -> {@lower, @upper} = params
+  constructor: (params) ->
+    {@lower, @upper} = params
   _constructNum: (domain) =>
     lower = Raphael.color(@lower)
     upper = Raphael.color(@upper)
@@ -213,3 +224,4 @@ poly.scale = _.extend poly.scale,
 # EXPORT
 ###
 @poly = poly
+
