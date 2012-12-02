@@ -11,8 +11,8 @@
 
   poly.dim.make = function(spec, ticks) {
     return {
-      width: 370,
-      height: 370,
+      width: 400,
+      height: 400,
       chartWidth: 300,
       chartHeight: 300,
       paddingLeft: 10,
@@ -20,7 +20,7 @@
       paddingTop: 10,
       paddingBottom: 10,
       guideLeft: 30,
-      guideRight: 10,
+      guideRight: 40,
       guideTop: 10,
       guideBottom: 30
     };
@@ -28,8 +28,8 @@
 
   poly.dim.guess = function(spec) {
     return {
-      width: 370,
-      height: 370,
+      width: 400,
+      height: 400,
       chartWidth: 300,
       chartHeight: 300,
       paddingLeft: 10,
@@ -37,7 +37,7 @@
       paddingTop: 10,
       paddingBottom: 10,
       guideLeft: 30,
-      guideRight: 10,
+      guideRight: 40,
       guideTop: 10,
       guideBottom: 30
     };

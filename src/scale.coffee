@@ -69,7 +69,6 @@ class ScaleSet
       type: @factory.y.tickType @domainy
       guideSpec: @getSpec 'y'
       titletext: poly.getLabel @layers, 'y'
-      #titletext: poly.getLabel(@layers, 'y')
     @axes
   renderAxes: (dims, renderer) ->
     @axes.x.render dims, renderer
@@ -114,7 +113,6 @@ class ScaleSet
     #      in which case move that legend from @legends into @deletedLEgends
     #   2) if any new legends need to be created
     #      in which case KEEP it in aesGroups (otherwise remove)
-
     idx = 0
     while idx < @legends.length
       legend = @legends[idx]
@@ -143,6 +141,7 @@ class ScaleSet
         guideSpec: @getSpec aes
         type: @factory[aes].tickType @domains[aes]
         mapping: layerMapping
+        titletext: poly.getLabel(@layers, aes)
     @legends
   renderLegends: (dims, renderer) ->
     legend.remove(renderer) for legend in @deletedLegends

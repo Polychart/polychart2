@@ -109,12 +109,11 @@ class Legend extends Guide
   SPACING: 10
   constructor: (@aes) ->
     @rendered = false
-    @titletext = @aes.join(' | ')
     @title = null
     @ticks = {}
     @pts = {}
   make: (params) =>
-    {domain, type, guideSpec, @mapping} = params
+    {domain, type, guideSpec, @mapping, @titletext} = params
     @ticks = poly.tick.make domain, guideSpec, type
   render: (dim, renderer, offset) -> # assume position = RIGHT
     legendDim =

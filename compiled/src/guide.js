@@ -235,7 +235,6 @@
       this._makeTick = __bind(this._makeTick, this);
       this.make = __bind(this.make, this);
       this.rendered = false;
-      this.titletext = this.aes.join(' | ');
       this.title = null;
       this.ticks = {};
       this.pts = {};
@@ -243,7 +242,7 @@
 
     Legend.prototype.make = function(params) {
       var domain, guideSpec, type;
-      domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.mapping = params.mapping;
+      domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.mapping = params.mapping, this.titletext = params.titletext;
       return this.ticks = poly.tick.make(domain, guideSpec, type);
     };
 

@@ -209,7 +209,8 @@
           domain: this.domains[aes],
           guideSpec: this.getSpec(aes),
           type: this.factory[aes].tickType(this.domains[aes]),
-          mapping: layerMapping
+          mapping: layerMapping,
+          titletext: poly.getLabel(this.layers, aes)
         });
       }
       return this.legends;

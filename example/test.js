@@ -24,7 +24,6 @@ examples = {
       if (Math.random() < 0.4) {
         sampleLayer.size = 'c'
       }
-      console.log(sampleLayer)
       return {
         data : jsondata,
         spec : {
