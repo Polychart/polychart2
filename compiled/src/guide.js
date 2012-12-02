@@ -13,9 +13,9 @@
 
     function Guide() {}
 
-    Guide.prototype.getWidth = function() {};
-
-    Guide.prototype.getHeight = function() {};
+    Guide.prototype.getDimension = function() {
+      throw new poly.NotImplemented();
+    };
 
     return Guide;
 
@@ -38,7 +38,10 @@
     Axis.prototype.make = function(params) {
       var domain, guideSpec, type;
       domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.titletext = params.titletext;
-      return this.ticks = poly.tick.make(domain, guideSpec, type);
+      this.ticks = poly.tick.make(domain, guideSpec, type);
+      return this.maxwidth = _.max(_.map(this.ticks, function(t) {
+        return poly.strSize(t.value);
+      }));
     };
 
     Axis.prototype.render = function(dim, renderer) {
@@ -163,6 +166,14 @@
       };
     };
 
+    XAxis.prototype.getDimension = function() {
+      return {
+        position: 'bottom',
+        height: 30,
+        width: 'all'
+      };
+    };
+
     return XAxis;
 
   })(Axis);
@@ -190,7 +201,7 @@
     YAxis.prototype._makeTitle = function(axisDim, text) {
       return {
         type: 'text',
-        x: sf.identity(axisDim.left - 22),
+        x: sf.identity(axisDim.left - this.maxwidth - 15),
         y: sf.identity(axisDim.top + axisDim.height / 2),
         text: text,
         transform: 'r270',
@@ -213,6 +224,14 @@
         y: tick.location,
         text: tick.value,
         'text-anchor': 'end'
+      };
+    };
+
+    YAxis.prototype.getDimension = function() {
+      return {
+        position: 'left',
+        height: 'all',
+        width: 10 + this.maxwidth
       };
     };
 
@@ -243,17 +262,24 @@
     Legend.prototype.make = function(params) {
       var domain, guideSpec, type;
       domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.mapping = params.mapping, this.titletext = params.titletext;
-      return this.ticks = poly.tick.make(domain, guideSpec, type);
+      this.ticks = poly.tick.make(domain, guideSpec, type);
+      this.height = this.TITLEHEIGHT + this.SPACING + this.TICKHEIGHT * _.size(this.ticks);
+      return this.maxwidth = _.max(_.map(this.ticks, function(t) {
+        return poly.strSize(t.value);
+      }));
     };
 
     Legend.prototype.render = function(dim, renderer, offset) {
       var added, deleted, kept, legendDim, newpts, t, _i, _j, _k, _len, _len2, _len3, _ref;
+      console.log(offset);
       legendDim = {
-        top: dim.paddingTop + dim.guideTop + offset,
-        right: dim.paddingLeft + dim.guideLeft + dim.chartWidth,
+        top: dim.paddingTop + dim.guideTop + offset.y,
+        right: dim.paddingLeft + dim.guideLeft + dim.chartWidth + offset.x,
         width: dim.guideRight,
         height: dim.chartHeight
       };
+      debugger;
+      console.log(legendDim);
       if (this.title != null) {
         this.title = renderer.animate(this.title, this._makeTitle(legendDim, this.titletext));
       } else {
@@ -273,8 +299,7 @@
         t = added[_k];
         newpts[t] = this._add(renderer, this.ticks[t], legendDim);
       }
-      this.pts = newpts;
-      return this.TITLEHEIGHT + this.TICKHEIGHT * (added.length + kept.length) + this.SPACING;
+      return this.pts = newpts;
     };
 
     Legend.prototype.remove = function(renderer) {
@@ -337,9 +362,9 @@
         } else if ((value.type != null) && value.type === 'const') {
           obj[aes] = sf.identity(value.value);
         } else if (!_.isObject(value)) {
-          obj[aes] = value;
+          obj[aes] = sf.identity(value);
         } else {
-          obj[aes] = poly["const"].defaults[aes];
+          obj[aes] = sf.identity(poly["const"].defaults[aes]);
         }
       }
       return obj;
@@ -352,6 +377,14 @@
         y: sf.identity(legendDim.top),
         text: text,
         'text-anchor': 'start'
+      };
+    };
+
+    Legend.prototype.getDimension = function() {
+      return {
+        position: 'right',
+        height: this.height,
+        width: 15 + this.maxwidth
       };
     };
 

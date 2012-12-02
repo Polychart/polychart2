@@ -122,12 +122,21 @@
 
   /*
   GET LABEL
+  TODO: move somewhere else and allow overwrite by user
   */
 
   poly.getLabel = function(layers, aes) {
     return _.chain(layers).map(function(l) {
       return l.mapping[aes];
     }).without(null, void 0).uniq().value().join(' | ');
+  };
+
+  /*
+  Estimate the number of pixels rendering this string would take...?
+  */
+
+  poly.strSize = function(str) {
+    return (str + "").length * 7;
   };
 
 }).call(this);

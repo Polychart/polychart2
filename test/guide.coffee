@@ -52,3 +52,4 @@ test "scale: x and v:", ->
   equal scales.y(1), 300+20
 ###
   #deepEqual layers[0].geoms, 0
+

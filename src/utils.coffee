@@ -85,9 +85,15 @@ poly.flatten = (values) ->
 
 ###
 GET LABEL
+TODO: move somewhere else and allow overwrite by user
 ###
 poly.getLabel = (layers, aes) ->
   _.chain(layers)
    .map((l) -> l.mapping[aes])
    .without(null, undefined)
    .uniq().value().join(' | ')
+
+###
+Estimate the number of pixels rendering this string would take...?
+###
+poly.strSize = (str) -> (str+"").length * 7

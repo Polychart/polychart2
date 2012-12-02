@@ -4,8 +4,7 @@ sf = poly.const.scaleFns
 
 class Guide
   constructor: () ->
-  getWidth: () ->  # approximate
-  getHeight: () -> # approximate
+  getDimension: () -> throw new poly.NotImplemented()
 
 class Axis extends Guide
   constructor: () ->
@@ -16,6 +15,7 @@ class Axis extends Guide
   make: (params) =>
     {domain, type, guideSpec, @titletext} = params
     @ticks = poly.tick.make domain, guideSpec, type
+    @maxwidth =_.max _.map @ticks, (t) -> poly.strSize t.value
   render: (dim, renderer) =>
     axisDim =
       top: dim.paddingTop + dim.guideTop
@@ -79,6 +79,11 @@ class XAxis extends Axis # assumes position = bottom
     y : sf.identity(axisDim.bottom+15)
     text: tick.value
     'text-anchor' : 'middle'
+  getDimension: () ->
+    position: 'bottom'
+    height: 30
+    width: 'all'
+
 class YAxis extends Axis # assumes position = left
   _renderline : (renderer, axisDim) ->
     x = sf.identity axisDim.left
@@ -87,7 +92,7 @@ class YAxis extends Axis # assumes position = left
     renderer.add { type: 'line', x: [x, x], y: [y1, y2] }
   _makeTitle: (axisDim, text) ->
     type: 'text'
-    x : sf.identity axisDim.left - 22
+    x : sf.identity axisDim.left - @maxwidth - 15
     y : sf.identity axisDim.top+axisDim.height/2
     text: text
     transform : 'r270'
@@ -102,6 +107,10 @@ class YAxis extends Axis # assumes position = left
     y : tick.location
     text: tick.value
     'text-anchor' : 'end'
+  getDimension: () ->
+    position: 'left'
+    height: 'all'
+    width: 10+@maxwidth
 
 class Legend extends Guide
   TITLEHEIGHT: 15
@@ -115,10 +124,12 @@ class Legend extends Guide
   make: (params) =>
     {domain, type, guideSpec, @mapping, @titletext} = params
     @ticks = poly.tick.make domain, guideSpec, type
+    @height = @TITLEHEIGHT + @SPACING + @TICKHEIGHT*_.size @ticks
+    @maxwidth = _.max _.map @ticks, (t) -> poly.strSize t.value
   render: (dim, renderer, offset) -> # assume position = RIGHT
     legendDim =
-      top: dim.paddingTop + dim.guideTop + offset
-      right : dim.paddingLeft + dim.guideLeft + dim.chartWidth
+      top: dim.paddingTop + dim.guideTop + offset.y
+      right : dim.paddingLeft + dim.guideLeft + dim.chartWidth + offset.x
       width: dim.guideRight
       height: dim.chartHeight
     if @title?
@@ -133,9 +144,7 @@ class Legend extends Guide
       newpts[t] = @_modify renderer, @pts[t], @ticks[t], legendDim
     for t in added
       newpts[t] = @_add renderer, @ticks[t], legendDim
-    #return offset
     @pts = newpts
-    @TITLEHEIGHT + @TICKHEIGHT*(added.length + kept.length) + @SPACING
   remove: (renderer) ->
     for i, pt of @pts
       @_delete renderer, pt
@@ -176,10 +185,10 @@ class Legend extends Guide
         obj[aes] = sf.identity value.value
       else if not _.isObject value
         # take the layer default value
-        obj[aes] = value
+        obj[aes] = sf.identity value
       else
         # take teh global default value
-        obj[aes] = poly.const.defaults[aes]
+        obj[aes] = sf.identity poly.const.defaults[aes]
     obj
   _makeTitle: (legendDim, text) ->
     type: 'text'
@@ -187,6 +196,10 @@ class Legend extends Guide
     y : sf.identity legendDim.top
     text: text
     'text-anchor' : 'start'
+  getDimension: () ->
+    position: 'right'
+    height: @height
+    width: 15+@maxwidth
 
 
 poly.guide = {}

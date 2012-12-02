@@ -146,9 +146,17 @@ class ScaleSet
   renderLegends: (dims, renderer) ->
     legend.remove(renderer) for legend in @deletedLegends
     @deletedLegends = []
-    offset = 0
-    for legend in @legends
-      offset += legend.render dims, renderer, offset
+    offset = { x: 0, y : 0 }
+    maxwidth = 0
+    for legend in @legends # assume position = right
+      newdim = legend.getDimension()
+      if newdim.height + offset.y > dims.chartHeight # newline
+        offset.x += maxwidth + 5
+        offset.y = 0
+      else if newdim.width > maxwidth
+        maxwidth = newdim.width
+      legend.render dims, renderer, offset
+      offset.y += newdim.height
 
   _makeFactory : (guideSpec, domains, ranges) ->
     # this function contains information about default scales!

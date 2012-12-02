@@ -217,19 +217,31 @@
     };
 
     ScaleSet.prototype.renderLegends = function(dims, renderer) {
-      var legend, offset, _i, _j, _len, _len2, _ref, _ref2, _results;
+      var legend, maxwidth, newdim, offset, _i, _j, _len, _len2, _ref, _ref2, _results;
       _ref = this.deletedLegends;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         legend = _ref[_i];
         legend.remove(renderer);
       }
       this.deletedLegends = [];
-      offset = 0;
+      offset = {
+        x: 0,
+        y: 0
+      };
+      maxwidth = 0;
       _ref2 = this.legends;
       _results = [];
       for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
         legend = _ref2[_j];
-        _results.push(offset += legend.render(dims, renderer, offset));
+        newdim = legend.getDimension();
+        if (newdim.height + offset.y > dims.chartHeight) {
+          offset.x += maxwidth + 5;
+          offset.y = 0;
+        } else if (newdim.width > maxwidth) {
+          maxwidth = newdim.width;
+        }
+        legend.render(dims, renderer, offset);
+        _results.push(offset.y += newdim.height);
       }
       return _results;
     };
