@@ -2707,7 +2707,7 @@
       path = _.map(xs, function(x, i) {
         return (i === 0 ? 'M' : type) + x + ' ' + ys[i];
       });
-      return path.join(' ') + 'Z';
+      return path.join(' ');
     };
 
     Renderer.prototype._maybeApply = function(scale, val) {

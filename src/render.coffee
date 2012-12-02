@@ -40,7 +40,7 @@ class Renderer
   attr: (scales, mark) -> throw new poly.NotImplemented()
   _makePath : (xs, ys, type='L') ->
     path = _.map xs, (x, i) -> (if i == 0 then 'M' else type) + x+' '+ys[i]
-    path.join(' ') + 'Z'
+    path.join(' ')
   _maybeApply : (scale, val) ->
     if scale? then scale(val) else if _.isObject(val) then val.v else val
 
