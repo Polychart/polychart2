@@ -30,7 +30,8 @@
         y: poly.guide.axis('y')
       };
       this.ranges = tmpRanges;
-      this.legends = null;
+      this.legends = [];
+      this.deletedLegends = [];
     }
 
     ScaleSet.prototype.make = function(guideSpec, domains, layers) {
@@ -113,25 +114,123 @@
       return this.axes;
     };
 
-    ScaleSet.prototype.makeLegends = function(mapping) {
-      var _this = this;
-      if (!(this.legends != null)) {
-        this.legends = {};
-        _.each(_.without(_.keys(this.domains), 'x', 'y'), function(aes) {
-          var legend;
-          legend = poly.guide.legend(aes);
-          return _this.legends[aes] = legend;
+    ScaleSet.prototype.renderAxes = function(dims, renderer) {
+      this.axes.x.render(dims, renderer);
+      return this.axes.y.render(dims, renderer);
+    };
+
+    ScaleSet.prototype._mapLayers = function(layers) {
+      var aes, obj;
+      obj = {};
+      for (aes in this.domains) {
+        if (aes === 'x' || aes === 'y') continue;
+        obj[aes] = _.map(layers, function(layer) {
+          if (layer.mapping[aes] != null) {
+            return {
+              type: 'map',
+              value: layer.mapping[aes]
+            };
+          } else if (layer.consts[aes] != null) {
+            return {
+              type: 'const',
+              value: layer["const"][aes]
+            };
+          } else {
+            return layer.defaults[aes];
+          }
         });
       }
-      _.each(this.legends, function(legend, aes) {
-        return legend.make({
-          domain: _this.domains[aes],
-          guideSpec: _this.getSpec(aes),
-          titletext: poly.getLabel(_this.layers, aes),
-          type: _this.factory[aes].tickType(_this.domains[aes])
+      return obj;
+    };
+
+    ScaleSet.prototype._mergeAes = function(layers) {
+      var aes, m, mapped, merged, merging, _i, _len;
+      merging = [];
+      for (aes in this.domains) {
+        if (aes === 'x' || aes === 'y') continue;
+        mapped = _.map(layers, function(layer) {
+          return layer.mapping[aes];
         });
-      });
+        if (!_.all(mapped, _.isUndefined)) {
+          merged = false;
+          for (_i = 0, _len = merging.length; _i < _len; _i++) {
+            m = merging[_i];
+            if (_.isEqual(m.mapped, mapped)) {
+              m.aes.push(aes);
+              merged = true;
+              break;
+            }
+          }
+          if (!merged) {
+            merging.push({
+              aes: [aes],
+              mapped: mapped
+            });
+          }
+        }
+      }
+      return _.pluck(merging, 'aes');
+    };
+
+    ScaleSet.prototype.makeLegends = function(mapping) {
+      var aes, aesGroups, i, idx, layerMapping, legend, legenddeleted, _i, _j, _len, _len2, _ref;
+      layerMapping = this._mapLayers(this.layers);
+      aesGroups = this._mergeAes(this.layers);
+      idx = 0;
+      while (idx < this.legends.length) {
+        legend = this.legends[idx];
+        legenddeleted = true;
+        i = 0;
+        while (i < aesGroups.length) {
+          aes = aesGroups[i];
+          if (_.isEqual(aes, legend.aes)) {
+            aesGroups.splice(i, 1);
+            legenddeleted = false;
+            break;
+          }
+          i++;
+        }
+        if (legenddeleted) {
+          this.deletedLegends.push(legend);
+          this.legends.splice(idx, 1);
+        } else {
+          idx++;
+        }
+      }
+      for (_i = 0, _len = aesGroups.length; _i < _len; _i++) {
+        aes = aesGroups[_i];
+        this.legends.push(poly.guide.legend(aes));
+      }
+      _ref = this.legends;
+      for (_j = 0, _len2 = _ref.length; _j < _len2; _j++) {
+        legend = _ref[_j];
+        aes = legend.aes[0];
+        legend.make({
+          domain: this.domains[aes],
+          guideSpec: this.getSpec(aes),
+          type: this.factory[aes].tickType(this.domains[aes]),
+          mapping: layerMapping
+        });
+      }
       return this.legends;
+    };
+
+    ScaleSet.prototype.renderLegends = function(dims, renderer) {
+      var legend, offset, _i, _j, _len, _len2, _ref, _ref2, _results;
+      _ref = this.deletedLegends;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        legend = _ref[_i];
+        legend.remove(renderer);
+      }
+      this.deletedLegends = [];
+      offset = 0;
+      _ref2 = this.legends;
+      _results = [];
+      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+        legend = _ref2[_j];
+        _results.push(offset += legend.render(dims, renderer, offset));
+      }
+      return _results;
     };
 
     ScaleSet.prototype._makeFactory = function(guideSpec, domains, ranges) {

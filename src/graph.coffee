@@ -46,14 +46,11 @@ class Graph
     # render axes
     renderer = poly.render @graphId, @paper, scales
 
-    axes = @scaleSet.makeAxes()
-    axes.y.render @dims, renderer
-    axes.x.render @dims, renderer
+    @scaleSet.makeAxes()
+    @scaleSet.renderAxes @dims, renderer
 
-    legends = @scaleSet.makeLegends()
-    offset = 0
-    _.each legends, (legend) =>
-      offset += legend.render @dims, renderer, offset
+    @scaleSet.makeLegends()
+    @scaleSet.renderLegends @dims, renderer
 
   _makeLayers: (spec) ->
     _.map spec.layers, (layerSpec) -> poly.layer.make(layerSpec, spec.strict)

@@ -13,8 +13,18 @@ examples = {
       var jsondata = construct()
       var data = new poly.Data({ json: jsondata });
       var sampleLayer = {
-        data: data, type: 'point', x: 'x', y: 'y', color:'c', size:'c'
+        data: data, type: 'point', x: 'x', y: 'y'
       };
+      if (Math.random() < 0.5) {
+        sampleLayer.color = 'c'
+      }
+      if (Math.random() < 0.5) {
+        sampleLayer.size = 'x'
+      }
+      if (Math.random() < 0.4) {
+        sampleLayer.size = 'c'
+      }
+      console.log(sampleLayer)
       return {
         data : jsondata,
         spec : {

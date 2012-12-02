@@ -20,7 +20,8 @@ class ScaleSet
       y: poly.guide.axis 'y' # polar?
     }
     @ranges = tmpRanges
-    @legends = null
+    @legends = []
+    @deletedLegends = []
 
   make: (guideSpec, domains, layers) ->
     @guideSpec = guideSpec
@@ -70,20 +71,85 @@ class ScaleSet
       titletext: poly.getLabel @layers, 'y'
       #titletext: poly.getLabel(@layers, 'y')
     @axes
-  makeLegends: (mapping) ->
-    # we'll have to be able to change this...
-    if not @legends?
-      @legends = {}
-      _.each _.without(_.keys(@domains), 'x', 'y'), (aes) =>
-        legend = poly.guide.legend aes
-        @legends[aes] = legend
-    _.each @legends, (legend, aes) =>
+  renderAxes: (dims, renderer) ->
+    @axes.x.render dims, renderer
+    @axes.y.render dims, renderer
+
+  _mapLayers: (layers) ->
+    obj = {}
+    for aes of @domains
+      if aes in ['x', 'y'] then continue
+      obj[aes] =
+        _.map layers, (layer) ->
+          if layer.mapping[aes]?
+            { type: 'map', value: layer.mapping[aes]}
+          else if layer.consts[aes]?
+            { type: 'const', value: layer.const[aes]}
+          else
+            layer.defaults[aes]
+    obj
+  _mergeAes: (layers) ->
+    merging = [] # array of {aes: __, mapped: ___}
+    for aes of @domains
+      if aes in ['x', 'y'] then continue
+      mapped = _.map layers, (layer) -> layer.mapping[aes]
+      if not _.all mapped, _.isUndefined
+        merged = false
+        for m in merging # slow but ok, <7 aes anyways...
+          if _.isEqual(m.mapped, mapped)
+            m.aes.push(aes)
+            merged = true
+            break
+        if not merged
+          merging.push {aes: [aes], mapped: mapped}
+    _.pluck merging, 'aes'
+
+  makeLegends: (mapping) -> # ok, this will be a complex f'n. deep breath:
+    # figure out which groups of aesthetics need to be represented
+    layerMapping = @_mapLayers @layers
+    aesGroups = @_mergeAes @layers
+
+    # now iterate through existing legends AND the aesGroups to see
+    #   1) if any existing legends need to be deleted,
+    #      in which case move that legend from @legends into @deletedLEgends
+    #   2) if any new legends need to be created
+    #      in which case KEEP it in aesGroups (otherwise remove)
+
+    idx = 0
+    while idx < @legends.length
+      legend = @legends[idx]
+      legenddeleted = true
+      i = 0
+      while i < aesGroups.length
+        aes = aesGroups[i]
+        if _.isEqual aes, legend.aes
+          aesGroups.splice i, 1
+          legenddeleted = false
+          break
+        i++
+      if legenddeleted
+        @deletedLegends.push legend
+        @legends.splice(idx, 1)
+      else
+        idx++
+    # create new legends
+    for aes in aesGroups
+      @legends.push poly.guide.legend aes
+    # make each legend
+    for legend in @legends
+      aes = legend.aes[0]
       legend.make
         domain: @domains[aes]
         guideSpec: @getSpec aes
-        titletext: poly.getLabel @layers, aes
         type: @factory[aes].tickType @domains[aes]
+        mapping: layerMapping
     @legends
+  renderLegends: (dims, renderer) ->
+    legend.remove(renderer) for legend in @deletedLegends
+    @deletedLegends = []
+    offset = 0
+    for legend in @legends
+      offset += legend.render dims, renderer, offset
 
   _makeFactory : (guideSpec, domains, ranges) ->
     # this function contains information about default scales!

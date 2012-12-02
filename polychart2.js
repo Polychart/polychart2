@@ -699,7 +699,8 @@
   var Axis, Guide, Legend, XAxis, YAxis, poly, sf,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
+    __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   poly = this.poly || {};
 
@@ -722,6 +723,8 @@
     __extends(Axis, _super);
 
     function Axis() {
+      this._modify = __bind(this._modify, this);
+      this._add = __bind(this._add, this);
       this.render = __bind(this.render, this);
       this.make = __bind(this.make, this);      this.line = null;
       this.title = null;
@@ -736,8 +739,7 @@
     };
 
     Axis.prototype.render = function(dim, renderer) {
-      var added, axisDim, deleted, kept, newpts, _ref,
-        _this = this;
+      var added, axisDim, deleted, kept, newpts, t, _i, _j, _k, _len, _len2, _len3, _ref;
       axisDim = {
         top: dim.paddingTop + dim.guideTop,
         left: dim.paddingLeft + dim.guideLeft,
@@ -753,15 +755,18 @@
       }
       _ref = poly.compare(_.keys(this.pts), _.keys(this.ticks)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
       newpts = {};
-      _.each(kept, function(t) {
-        return newpts[t] = _this._modify(renderer, _this.pts[t], _this.ticks[t], axisDim);
-      });
-      _.each(added, function(t) {
-        return newpts[t] = _this._add(renderer, _this.ticks[t], axisDim);
-      });
-      _.each(deleted, function(t) {
-        return _this._delete(renderer, _this.pts[t]);
-      });
+      for (_i = 0, _len = kept.length; _i < _len; _i++) {
+        t = kept[_i];
+        newpts[t] = this._modify(renderer, this.pts[t], this.ticks[t], axisDim);
+      }
+      for (_j = 0, _len2 = added.length; _j < _len2; _j++) {
+        t = added[_j];
+        newpts[t] = this._add(renderer, this.ticks[t], axisDim);
+      }
+      for (_k = 0, _len3 = deleted.length; _k < _len3; _k++) {
+        t = deleted[_k];
+        this._delete(renderer, this.pts[t]);
+      }
       this.pts = newpts;
       return this.rendered = true;
     };
@@ -923,8 +928,11 @@
     Legend.prototype.SPACING = 10;
 
     function Legend(aes) {
-      this.make = __bind(this.make, this);      this.rendered = false;
       this.aes = aes;
+      this._makeTick = __bind(this._makeTick, this);
+      this.make = __bind(this.make, this);
+      this.rendered = false;
+      this.titletext = this.aes.join(' | ');
       this.title = null;
       this.ticks = {};
       this.pts = {};
@@ -932,13 +940,12 @@
 
     Legend.prototype.make = function(params) {
       var domain, guideSpec, type;
-      domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.titletext = params.titletext;
+      domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.mapping = params.mapping;
       return this.ticks = poly.tick.make(domain, guideSpec, type);
     };
 
     Legend.prototype.render = function(dim, renderer, offset) {
-      var added, deleted, kept, legendDim, newpts, _ref,
-        _this = this;
+      var added, deleted, kept, legendDim, newpts, t, _i, _j, _k, _len, _len2, _len3, _ref;
       legendDim = {
         top: dim.paddingTop + dim.guideTop + offset,
         right: dim.paddingLeft + dim.guideLeft + dim.chartWidth,
@@ -952,17 +959,32 @@
       }
       _ref = poly.compare(_.keys(this.pts), _.keys(this.ticks)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
       newpts = {};
-      _.each(deleted, function(t) {
-        return _this._delete(renderer, _this.pts[t]);
-      });
-      _.each(kept, function(t) {
-        return newpts[t] = _this._modify(renderer, _this.pts[t], _this.ticks[t], legendDim);
-      });
-      _.each(added, function(t) {
-        return newpts[t] = _this._add(renderer, _this.ticks[t], legendDim);
-      });
+      for (_i = 0, _len = deleted.length; _i < _len; _i++) {
+        t = deleted[_i];
+        this._delete(renderer, this.pts[t]);
+      }
+      for (_j = 0, _len2 = kept.length; _j < _len2; _j++) {
+        t = kept[_j];
+        newpts[t] = this._modify(renderer, this.pts[t], this.ticks[t], legendDim);
+      }
+      for (_k = 0, _len3 = added.length; _k < _len3; _k++) {
+        t = added[_k];
+        newpts[t] = this._add(renderer, this.ticks[t], legendDim);
+      }
       this.pts = newpts;
       return this.TITLEHEIGHT + this.TICKHEIGHT * (added.length + kept.length) + this.SPACING;
+    };
+
+    Legend.prototype.remove = function(renderer) {
+      var i, pt, _ref;
+      _ref = this.pts;
+      for (i in _ref) {
+        pt = _ref[i];
+        this._delete(renderer, pt);
+      }
+      renderer.remove(this.title);
+      this.title = null;
+      return this.pts = {};
     };
 
     Legend.prototype._add = function(renderer, tick, legendDim) {
@@ -997,14 +1019,27 @@
     };
 
     Legend.prototype._makeTick = function(legendDim, tick) {
-      var obj;
+      var aes, obj, value, _ref;
       obj = {
         type: 'circle',
         x: sf.identity(legendDim.right + 7),
         y: sf.identity(legendDim.top + (15 + tick.index * 12)),
-        size: sf.identity(5)
+        size: sf.identity(5),
+        color: sf.identity('steelblue')
       };
-      obj[this.aes] = tick.location;
+      _ref = this.mapping;
+      for (aes in _ref) {
+        value = _ref[aes];
+        if (__indexOf.call(this.aes, aes) >= 0) {
+          obj[aes] = tick.location;
+        } else if ((value.type != null) && value.type === 'const') {
+          obj[aes] = sf.identity(value.value);
+        } else if (!_.isObject(value)) {
+          obj[aes] = value;
+        } else {
+          obj[aes] = poly["const"].defaults[aes];
+        }
+      }
       return obj;
     };
 
@@ -1068,7 +1103,8 @@
         y: poly.guide.axis('y')
       };
       this.ranges = tmpRanges;
-      this.legends = null;
+      this.legends = [];
+      this.deletedLegends = [];
     }
 
     ScaleSet.prototype.make = function(guideSpec, domains, layers) {
@@ -1151,25 +1187,123 @@
       return this.axes;
     };
 
-    ScaleSet.prototype.makeLegends = function(mapping) {
-      var _this = this;
-      if (!(this.legends != null)) {
-        this.legends = {};
-        _.each(_.without(_.keys(this.domains), 'x', 'y'), function(aes) {
-          var legend;
-          legend = poly.guide.legend(aes);
-          return _this.legends[aes] = legend;
+    ScaleSet.prototype.renderAxes = function(dims, renderer) {
+      this.axes.x.render(dims, renderer);
+      return this.axes.y.render(dims, renderer);
+    };
+
+    ScaleSet.prototype._mapLayers = function(layers) {
+      var aes, obj;
+      obj = {};
+      for (aes in this.domains) {
+        if (aes === 'x' || aes === 'y') continue;
+        obj[aes] = _.map(layers, function(layer) {
+          if (layer.mapping[aes] != null) {
+            return {
+              type: 'map',
+              value: layer.mapping[aes]
+            };
+          } else if (layer.consts[aes] != null) {
+            return {
+              type: 'const',
+              value: layer["const"][aes]
+            };
+          } else {
+            return layer.defaults[aes];
+          }
         });
       }
-      _.each(this.legends, function(legend, aes) {
-        return legend.make({
-          domain: _this.domains[aes],
-          guideSpec: _this.getSpec(aes),
-          titletext: poly.getLabel(_this.layers, aes),
-          type: _this.factory[aes].tickType(_this.domains[aes])
+      return obj;
+    };
+
+    ScaleSet.prototype._mergeAes = function(layers) {
+      var aes, m, mapped, merged, merging, _i, _len;
+      merging = [];
+      for (aes in this.domains) {
+        if (aes === 'x' || aes === 'y') continue;
+        mapped = _.map(layers, function(layer) {
+          return layer.mapping[aes];
         });
-      });
+        if (!_.all(mapped, _.isUndefined)) {
+          merged = false;
+          for (_i = 0, _len = merging.length; _i < _len; _i++) {
+            m = merging[_i];
+            if (_.isEqual(m.mapped, mapped)) {
+              m.aes.push(aes);
+              merged = true;
+              break;
+            }
+          }
+          if (!merged) {
+            merging.push({
+              aes: [aes],
+              mapped: mapped
+            });
+          }
+        }
+      }
+      return _.pluck(merging, 'aes');
+    };
+
+    ScaleSet.prototype.makeLegends = function(mapping) {
+      var aes, aesGroups, i, idx, layerMapping, legend, legenddeleted, _i, _j, _len, _len2, _ref;
+      layerMapping = this._mapLayers(this.layers);
+      aesGroups = this._mergeAes(this.layers);
+      idx = 0;
+      while (idx < this.legends.length) {
+        legend = this.legends[idx];
+        legenddeleted = true;
+        i = 0;
+        while (i < aesGroups.length) {
+          aes = aesGroups[i];
+          if (_.isEqual(aes, legend.aes)) {
+            aesGroups.splice(i, 1);
+            legenddeleted = false;
+            break;
+          }
+          i++;
+        }
+        if (legenddeleted) {
+          this.deletedLegends.push(legend);
+          this.legends.splice(idx, 1);
+        } else {
+          idx++;
+        }
+      }
+      for (_i = 0, _len = aesGroups.length; _i < _len; _i++) {
+        aes = aesGroups[_i];
+        this.legends.push(poly.guide.legend(aes));
+      }
+      _ref = this.legends;
+      for (_j = 0, _len2 = _ref.length; _j < _len2; _j++) {
+        legend = _ref[_j];
+        aes = legend.aes[0];
+        legend.make({
+          domain: this.domains[aes],
+          guideSpec: this.getSpec(aes),
+          type: this.factory[aes].tickType(this.domains[aes]),
+          mapping: layerMapping
+        });
+      }
       return this.legends;
+    };
+
+    ScaleSet.prototype.renderLegends = function(dims, renderer) {
+      var legend, offset, _i, _j, _len, _len2, _ref, _ref2, _results;
+      _ref = this.deletedLegends;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        legend = _ref[_i];
+        legend.remove(renderer);
+      }
+      this.deletedLegends = [];
+      offset = 0;
+      _ref2 = this.legends;
+      _results = [];
+      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+        legend = _ref2[_j];
+        _results.push(offset += legend.render(dims, renderer, offset));
+      }
+      return _results;
     };
 
     ScaleSet.prototype._makeFactory = function(guideSpec, domains, ranges) {
@@ -2724,7 +2858,7 @@
     };
 
     Graph.prototype.render = function(dom) {
-      var axes, clipping, legends, offset, renderer, scales,
+      var clipping, renderer, scales,
         _this = this;
       if (this.paper == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height);
@@ -2736,14 +2870,10 @@
         return layer.render(renderer);
       });
       renderer = poly.render(this.graphId, this.paper, scales);
-      axes = this.scaleSet.makeAxes();
-      axes.y.render(this.dims, renderer);
-      axes.x.render(this.dims, renderer);
-      legends = this.scaleSet.makeLegends();
-      offset = 0;
-      return _.each(legends, function(legend) {
-        return offset += legend.render(_this.dims, renderer, offset);
-      });
+      this.scaleSet.makeAxes();
+      this.scaleSet.renderAxes(this.dims, renderer);
+      this.scaleSet.makeLegends();
+      return this.scaleSet.renderLegends(this.dims, renderer);
     };
 
     Graph.prototype._makeLayers = function(spec) {

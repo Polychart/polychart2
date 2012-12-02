@@ -31,13 +31,15 @@ class Axis extends Guide
 
     {deleted, kept, added} = poly.compare _.keys(@pts), _.keys(@ticks)
     newpts = {}
-    _.each kept, (t) =>
+    for t in kept
       newpts[t] = @_modify renderer, @pts[t], @ticks[t], axisDim
-    _.each added, (t) => newpts[t] = @_add renderer, @ticks[t], axisDim
-    _.each deleted, (t) => @_delete renderer, @pts[t]
+    for t in added
+      newpts[t] = @_add renderer, @ticks[t], axisDim
+    for t in deleted
+      @_delete renderer, @pts[t]
     @pts = newpts
     @rendered = true
-  _add: (renderer, tick, axisDim) ->
+  _add: (renderer, tick, axisDim) =>
     obj = {}
     obj.tick = renderer.add @_makeTick(axisDim, tick)
     obj.text = renderer.add @_makeLabel(axisDim, tick)
@@ -45,7 +47,7 @@ class Axis extends Guide
   _delete: (renderer, pt) ->
     renderer.remove pt.tick
     renderer.remove pt.text
-  _modify: (renderer, pt, tick, axisDim) ->
+  _modify: (renderer, pt, tick, axisDim) =>
     obj = []
     obj.tick = renderer.animate pt.tick, @_makeTick(axisDim, tick)
     obj.text = renderer.animate pt.text, @_makeLabel(axisDim, tick)
@@ -105,14 +107,14 @@ class Legend extends Guide
   TITLEHEIGHT: 15
   TICKHEIGHT: 12
   SPACING: 10
-  constructor: (aes) ->
+  constructor: (@aes) ->
     @rendered = false
-    @aes = aes
+    @titletext = @aes.join(' | ')
     @title = null
     @ticks = {}
     @pts = {}
   make: (params) =>
-    {domain, type, guideSpec, @titletext} = params
+    {domain, type, guideSpec, @mapping} = params
     @ticks = poly.tick.make domain, guideSpec, type
   render: (dim, renderer, offset) -> # assume position = RIGHT
     legendDim =
@@ -126,13 +128,21 @@ class Legend extends Guide
       @title = renderer.add @_makeTitle(legendDim, @titletext)
     {deleted, kept, added} = poly.compare _.keys(@pts), _.keys(@ticks)
     newpts = {}
-    _.each deleted, (t) => @_delete renderer, @pts[t]
-    _.each kept, (t) =>
+    for t in deleted
+      @_delete renderer, @pts[t]
+    for t in kept
       newpts[t] = @_modify renderer, @pts[t], @ticks[t], legendDim
-    _.each added, (t) => newpts[t] = @_add renderer, @ticks[t], legendDim
+    for t in added
+      newpts[t] = @_add renderer, @ticks[t], legendDim
     #return offset
     @pts = newpts
     @TITLEHEIGHT + @TICKHEIGHT*(added.length + kept.length) + @SPACING
+  remove: (renderer) ->
+    for i, pt of @pts
+      @_delete renderer, pt
+    renderer.remove @title
+    @title = null
+    @pts = {}
   _add: (renderer, tick, legendDim) ->
     obj = {}
     obj.tick = renderer.add @_makeTick(legendDim, tick)
@@ -153,13 +163,25 @@ class Legend extends Guide
     y : sf.identity legendDim.top + (15+tick.index*12) + 1
     text: tick.value
     'text-anchor' : 'start'
-  _makeTick: (legendDim, tick) ->
+  _makeTick: (legendDim, tick) =>
     obj =
       type: 'circle'
       x : sf.identity legendDim.right + 7
       y : sf.identity legendDim.top + (15+tick.index*12)
-      size: sf.identity 5
-    obj[@aes] = tick.location
+      size: sf.identity 5 # can be overwritten
+      color: sf.identity 'steelblue' # can be overwritten
+    for aes, value of @mapping
+      if aes in @aes
+        obj[aes] = tick.location
+      else if value.type? and value.type == 'const'
+        # take assigned const value of first layer
+        obj[aes] = sf.identity value.value
+      else if not _.isObject value
+        # take the layer default value
+        obj[aes] = value
+      else
+        # take teh global default value
+        obj[aes] = poly.const.defaults[aes]
     obj
   _makeTitle: (legendDim, text) ->
     type: 'text'
