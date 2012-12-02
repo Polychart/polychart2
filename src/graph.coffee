@@ -27,7 +27,7 @@ class Graph
   merge: () =>
     # make the scales...?
     domains = @_makeDomains @spec, @layers
-    @scaleSet ?= @_makeScaleSet()
+    @scaleSet ?= @_makeScaleSet @spec, domains
     @scaleSet.make @spec.guides, domains, @layers
     # dimension calculation
     @dims ?= @_makeDimensions @spec, @scaleSet

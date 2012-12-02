@@ -110,7 +110,7 @@ class YAxis extends Axis # assumes position = left
   getDimension: () ->
     position: 'left'
     height: 'all'
-    width: 10+@maxwidth
+    width: 20+@maxwidth
 
 class Legend extends Guide
   TITLEHEIGHT: 15
@@ -175,9 +175,9 @@ class Legend extends Guide
       type: 'circle'
       x : sf.identity legendDim.right + 7
       y : sf.identity legendDim.top + (15+tick.index*12)
-      size: sf.identity 5 # can be overwritten
       color: sf.identity 'steelblue' # can be overwritten
     for aes, value of @mapping
+      value = value[0] # just use the first for now?
       if aes in @aes
         obj[aes] = tick.location
       else if value.type? and value.type == 'const'
@@ -189,6 +189,8 @@ class Legend extends Guide
       else
         # take teh global default value
         obj[aes] = sf.identity poly.const.defaults[aes]
+    if not ('size' in @aes) # override size so we can see!
+      obj.size = sf.identity 5
     obj
   _makeTitle: (legendDim, text) ->
     type: 'text'

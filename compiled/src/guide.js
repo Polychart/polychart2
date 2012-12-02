@@ -231,7 +231,7 @@
       return {
         position: 'left',
         height: 'all',
-        width: 10 + this.maxwidth
+        width: 20 + this.maxwidth
       };
     };
 
@@ -271,15 +271,12 @@
 
     Legend.prototype.render = function(dim, renderer, offset) {
       var added, deleted, kept, legendDim, newpts, t, _i, _j, _k, _len, _len2, _len3, _ref;
-      console.log(offset);
       legendDim = {
         top: dim.paddingTop + dim.guideTop + offset.y,
         right: dim.paddingLeft + dim.guideLeft + dim.chartWidth + offset.x,
         width: dim.guideRight,
         height: dim.chartHeight
       };
-      debugger;
-      console.log(legendDim);
       if (this.title != null) {
         this.title = renderer.animate(this.title, this._makeTitle(legendDim, this.titletext));
       } else {
@@ -351,12 +348,12 @@
         type: 'circle',
         x: sf.identity(legendDim.right + 7),
         y: sf.identity(legendDim.top + (15 + tick.index * 12)),
-        size: sf.identity(5),
         color: sf.identity('steelblue')
       };
       _ref = this.mapping;
       for (aes in _ref) {
         value = _ref[aes];
+        value = value[0];
         if (__indexOf.call(this.aes, aes) >= 0) {
           obj[aes] = tick.location;
         } else if ((value.type != null) && value.type === 'const') {
@@ -367,6 +364,7 @@
           obj[aes] = sf.identity(poly["const"].defaults[aes]);
         }
       }
+      if (!(__indexOf.call(this.aes, 'size') >= 0)) obj.size = sf.identity(5);
       return obj;
     };
 

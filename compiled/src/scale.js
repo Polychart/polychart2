@@ -217,7 +217,7 @@
     };
 
     ScaleSet.prototype.renderLegends = function(dims, renderer) {
-      var legend, maxwidth, newdim, offset, _i, _j, _len, _len2, _ref, _ref2, _results;
+      var legend, maxheight, maxwidth, newdim, offset, _i, _j, _len, _len2, _ref, _ref2, _results;
       _ref = this.deletedLegends;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         legend = _ref[_i];
@@ -229,17 +229,18 @@
         y: 0
       };
       maxwidth = 0;
+      maxheight = dims.height - dims.guideTop - dims.paddingTop;
       _ref2 = this.legends;
       _results = [];
       for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
         legend = _ref2[_j];
         newdim = legend.getDimension();
-        if (newdim.height + offset.y > dims.chartHeight) {
+        if (newdim.height + offset.y > maxheight) {
           offset.x += maxwidth + 5;
           offset.y = 0;
-        } else if (newdim.width > maxwidth) {
-          maxwidth = newdim.width;
+          maxwidth = 0;
         }
+        if (newdim.width > maxwidth) maxwidth = newdim.width;
         legend.render(dims, renderer, offset);
         _results.push(offset.y += newdim.height);
       }

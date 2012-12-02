@@ -39,7 +39,9 @@
     Graph.prototype.merge = function() {
       var domains;
       domains = this._makeDomains(this.spec, this.layers);
-      if (this.scaleSet == null) this.scaleSet = this._makeScaleSet();
+      if (this.scaleSet == null) {
+        this.scaleSet = this._makeScaleSet(this.spec, domains);
+      }
       this.scaleSet.make(this.spec.guides, domains, this.layers);
       if (this.dims == null) {
         this.dims = this._makeDimensions(this.spec, this.scaleSet);

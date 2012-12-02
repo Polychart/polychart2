@@ -144,16 +144,19 @@ class ScaleSet
         titletext: poly.getLabel(@layers, aes)
     @legends
   renderLegends: (dims, renderer) ->
+    # NOTE: if this is changed, change dim.coffee dimension calculation
     legend.remove(renderer) for legend in @deletedLegends
     @deletedLegends = []
     offset = { x: 0, y : 0 }
     maxwidth = 0
+    maxheight = dims.height - dims.guideTop - dims.paddingTop
     for legend in @legends # assume position = right
       newdim = legend.getDimension()
-      if newdim.height + offset.y > dims.chartHeight # newline
+      if newdim.height + offset.y > maxheight
         offset.x += maxwidth + 5
         offset.y = 0
-      else if newdim.width > maxwidth
+        maxwidth = 0
+      if newdim.width > maxwidth
         maxwidth = newdim.width
       legend.render dims, renderer, offset
       offset.y += newdim.height

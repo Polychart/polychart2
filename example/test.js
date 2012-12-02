@@ -15,19 +15,34 @@ examples = {
       var sampleLayer = {
         data: data, type: 'point', x: 'x', y: 'y'
       };
-      if (Math.random() < 0.5) {
-        sampleLayer.color = 'c'
-      }
-      if (Math.random() < 0.5) {
+      sampleLayer.color = 'c'
+      if (Math.random() < 0.3) {
         sampleLayer.size = 'x'
-      }
-      if (Math.random() < 0.4) {
+      } else if (Math.random() < 0.5) {
         sampleLayer.size = 'c'
       }
       return {
         data : jsondata,
         spec : {
           layers: [sampleLayer],
+          guides: {
+            y: {
+              type:'num', min:0, max:10, ticks:[2,4,6,8],
+              labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
+            },
+            x: {
+              type:'num', min:0, max:10, ticks:[2,4,6,8],
+              labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
+            },
+            color: {
+              type:'num', min:0, max:10, ticks:[2,4,6,8],
+              labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
+            },
+            size : {
+              type:'num', min:0, max:10, ticks:[2,4,6,8],
+              labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
+            }
+          }
         }
       };
     }
