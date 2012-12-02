@@ -362,7 +362,7 @@
       return PositionScale.__super__.construct.call(this, domain);
     };
 
-    PositionScale.prototype._wrapper = function(y) {
+    PositionScale.prototype._wrapper = function(domain, y) {
       return function(value) {
         var space;
         space = 2;
@@ -392,7 +392,7 @@
     }
 
     Linear.prototype._constructNum = function(domain) {
-      return this._wrapper(poly.linear(domain.min, this.range.min, domain.max, this.range.max));
+      return this._wrapper(domain, poly.linear(domain.min, this.range.min, domain.max, this.range.max));
     };
 
     Linear.prototype._wrapper2 = function(step, y) {

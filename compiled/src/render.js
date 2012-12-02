@@ -1,5 +1,5 @@
 (function() {
-  var Circle, HLine, Line, Renderer, Text, VLine, poly, renderer,
+  var Circle, HLine, Line, Rect, Renderer, Text, VLine, poly, renderer,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -155,6 +155,37 @@
 
   })(Renderer);
 
+  Rect = (function(_super) {
+
+    __extends(Rect, _super);
+
+    function Rect() {
+      Rect.__super__.constructor.apply(this, arguments);
+    }
+
+    Rect.prototype._make = function(paper) {
+      return paper.rect();
+    };
+
+    Rect.prototype.attr = function(scales, mark) {
+      var x1, x2, y1, y2, _ref, _ref2;
+      _ref = _.map(mark.x, scales.x), x1 = _ref[0], x2 = _ref[1];
+      _ref2 = _.map(mark.y, scales.y), y1 = _ref2[0], y2 = _ref2[1];
+      return {
+        x: x1,
+        y: y2,
+        width: x2 - x1,
+        height: y1 - y2,
+        fill: this._maybeApply(scales.color, mark.color),
+        stroke: this._maybeApply(scales.color, mark.color),
+        'stroke-width': '0px'
+      };
+    };
+
+    return Rect;
+
+  })(Renderer);
+
   HLine = (function(_super) {
 
     __extends(HLine, _super);
@@ -243,7 +274,8 @@
       line: new Line(),
       hline: new HLine(),
       vline: new VLine(),
-      text: new Text()
+      text: new Text(),
+      rect: new Rect()
     },
     polar: {
       circle: new Circle(),

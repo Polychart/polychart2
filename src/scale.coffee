@@ -220,7 +220,7 @@ class PositionScale extends Scale
   construct: (domain, range) ->
     @range = range
     super(domain)
-  _wrapper : (y) -> (value) ->
+  _wrapper : (domain, y) -> (value) ->
     space = 2
     if _.isObject(value)
       if value.t is 'scalefn'
@@ -233,7 +233,7 @@ class PositionScale extends Scale
 
 class Linear extends PositionScale
   _constructNum: (domain) ->
-    @_wrapper poly.linear(domain.min, @range.min, domain.max, @range.max)
+    @_wrapper domain, poly.linear(domain.min, @range.min, domain.max, @range.max)
   _wrapper2 : (step, y) -> (value) ->
     space = 2
     if _.isObject(value)

@@ -63,6 +63,20 @@ class Line extends Renderer # for both cartesian & polar?
     path: @_makePath xs, ys
     stroke: 'black'
 
+class Rect extends Renderer # for CARTESIAN only
+  _make: (paper) -> paper.rect()
+  attr: (scales, mark) ->
+    [x1,x2] = _.map mark.x, scales.x
+    [y1,y2] = _.map mark.y, scales.y
+    x: x1
+    y: y2
+    width: x2-x1
+    height: y1-y2
+    fill: @_maybeApply scales.color, mark.color
+    stroke: @_maybeApply scales.color, mark.color
+    'stroke-width': '0px'
+
+
 class HLine extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
   attr: (scales, mark) ->
@@ -99,6 +113,7 @@ renderer =
     hline: new HLine()
     vline: new VLine()
     text: new Text()
+    rect: new Rect()
   polar:
     circle: new Circle()
     line: new Line()

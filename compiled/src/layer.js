@@ -328,11 +328,9 @@
           marks: {
             0: {
               type: 'rect',
-              x1: sf.lower(_this._getValue(item, 'x')),
-              x2: sf.upper(_this._getValue(item, 'x')),
-              y1: item.$lower,
-              y2: item.$upper,
-              fill: _this._getValue(item, 'color')
+              x: [sf.lower(_this._getValue(item, 'x')), sf.upper(_this._getValue(item, 'x'))],
+              y: [item.$lower, item.$upper],
+              color: _this._getValue(item, 'color')
             }
           }
         };

@@ -1474,7 +1474,7 @@
       return PositionScale.__super__.construct.call(this, domain);
     };
 
-    PositionScale.prototype._wrapper = function(y) {
+    PositionScale.prototype._wrapper = function(domain, y) {
       return function(value) {
         var space;
         space = 2;
@@ -1504,7 +1504,7 @@
     }
 
     Linear.prototype._constructNum = function(domain) {
-      return this._wrapper(poly.linear(domain.min, this.range.min, domain.max, this.range.max));
+      return this._wrapper(domain, poly.linear(domain.min, this.range.min, domain.max, this.range.max));
     };
 
     Linear.prototype._wrapper2 = function(step, y) {
@@ -2497,11 +2497,9 @@
           marks: {
             0: {
               type: 'rect',
-              x1: sf.lower(_this._getValue(item, 'x')),
-              x2: sf.upper(_this._getValue(item, 'x')),
-              y1: item.$lower,
-              y2: item.$upper,
-              fill: _this._getValue(item, 'color')
+              x: [sf.lower(_this._getValue(item, 'x')), sf.upper(_this._getValue(item, 'x'))],
+              y: [item.$lower, item.$upper],
+              color: _this._getValue(item, 'color')
             }
           }
         };
@@ -2622,7 +2620,7 @@
 
 }).call(this);
 (function() {
-  var Circle, HLine, Line, Renderer, Text, VLine, poly, renderer,
+  var Circle, HLine, Line, Rect, Renderer, Text, VLine, poly, renderer,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -2778,6 +2776,37 @@
 
   })(Renderer);
 
+  Rect = (function(_super) {
+
+    __extends(Rect, _super);
+
+    function Rect() {
+      Rect.__super__.constructor.apply(this, arguments);
+    }
+
+    Rect.prototype._make = function(paper) {
+      return paper.rect();
+    };
+
+    Rect.prototype.attr = function(scales, mark) {
+      var x1, x2, y1, y2, _ref, _ref2;
+      _ref = _.map(mark.x, scales.x), x1 = _ref[0], x2 = _ref[1];
+      _ref2 = _.map(mark.y, scales.y), y1 = _ref2[0], y2 = _ref2[1];
+      return {
+        x: x1,
+        y: y2,
+        width: x2 - x1,
+        height: y1 - y2,
+        fill: this._maybeApply(scales.color, mark.color),
+        stroke: this._maybeApply(scales.color, mark.color),
+        'stroke-width': '0px'
+      };
+    };
+
+    return Rect;
+
+  })(Renderer);
+
   HLine = (function(_super) {
 
     __extends(HLine, _super);
@@ -2866,7 +2895,8 @@
       line: new Line(),
       hline: new HLine(),
       vline: new VLine(),
-      text: new Text()
+      text: new Text(),
+      rect: new Rect()
     },
     polar: {
       circle: new Circle(),

@@ -174,11 +174,9 @@ class Bar extends Layer
         marks:
           0:
             type: 'rect'
-            x1: sf.lower @_getValue(item, 'x')
-            x2: sf.upper @_getValue(item, 'x')
-            y1: item.$lower
-            y2: item.$upper
-            fill: @_getValue item, 'color'
+            x: [sf.lower(@_getValue(item, 'x')), sf.upper(@_getValue(item, 'x'))]
+            y: [item.$lower, item.$upper]
+            color: @_getValue item, 'color'
 ###
 # EXPORT
 ###
