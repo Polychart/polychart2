@@ -1219,7 +1219,7 @@
       var aes, m, mapped, merged, merging, _i, _len;
       merging = [];
       for (aes in this.domains) {
-        if (aes === 'x' || aes === 'y') continue;
+        if (aes === 'x' || aes === 'y' || aes === 'id') continue;
         mapped = _.map(layers, function(layer) {
           return layer.mapping[aes];
         });

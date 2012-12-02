@@ -43,11 +43,12 @@ test "scale: x and v:", ->
   equal domains.y.min , 1
   equal domains.y.max, 3
 
+###
   equal scales.x(2), 0+30
   equal scales.x(3), 150+30
   equal scales.x(4), 300+30
   equal scales.y(3), 0+20
   equal scales.y(2), 150+20
   equal scales.y(1), 300+20
-
+###
   #deepEqual layers[0].geoms, 0

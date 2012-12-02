@@ -155,7 +155,6 @@ class Legend extends Guide
     obj.tick = renderer.animate pt.tick, @_makeTick(legendDim, tick)
     obj.text = renderer.animate pt.text, @_makeLabel(legendDim, tick)
     obj
-
   _makeLabel: (legendDim, tick) ->
     type: 'text'
     x : sf.identity legendDim.right + 15

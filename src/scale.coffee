@@ -90,7 +90,7 @@ class ScaleSet
   _mergeAes: (layers) ->
     merging = [] # array of {aes: __, mapped: ___}
     for aes of @domains
-      if aes in ['x', 'y'] then continue
+      if aes in ['x', 'y', 'id'] then continue
       mapped = _.map layers, (layer) -> layer.mapping[aes]
       if not _.all mapped, _.isUndefined
         merged = false
