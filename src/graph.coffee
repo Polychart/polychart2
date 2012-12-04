@@ -31,9 +31,10 @@ class Graph
     @scaleSet ?= @_makeScaleSet @spec, domains
     @scaleSet.make @spec.guides, domains, @layers
     # dimension calculation
-    @dims ?= @_makeDimensions @spec, @scaleSet
-    @ranges ?= @coord.ranges @dims
-    # rendering stuff...
+    if not @dims
+      @dims = @_makeDimensions @spec, @scaleSet
+      @coord.make(@dims)
+      @ranges = @coord.ranges()
     @scaleSet.setRanges @ranges
     @_legacy(domains)
 
@@ -59,7 +60,8 @@ class Graph
     spec.guides ?= {}
     poly.domain.make layers, spec.guides, spec.strict
   _makeScaleSet: (spec, domains) ->
-    tmpRanges = @coord.ranges poly.dim.guess spec
+    @coord.make poly.dim.guess(spec)
+    tmpRanges = @coord.ranges()
     poly.scale.make tmpRanges, @coord
   _makeDimensions: (spec, scaleSet) ->
     poly.dim.make spec, scaleSet.makeAxes(), scaleSet.makeLegends()

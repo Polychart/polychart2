@@ -317,7 +317,11 @@
       _ref2 = this.flip ? ['y', 'x'] : ['x', 'y'], this.x = _ref2[0], this.y = _ref2[1];
     }
 
-    Coordinate.prototype.ranges = function(dim) {};
+    Coordinate.prototype.make = function(dims) {
+      return this.dims = dims;
+    };
+
+    Coordinate.prototype.ranges = function() {};
 
     return Coordinate;
 
@@ -331,16 +335,16 @@
       Cartesian.__super__.constructor.apply(this, arguments);
     }
 
-    Cartesian.prototype.ranges = function(dim) {
+    Cartesian.prototype.ranges = function() {
       var ranges;
       ranges = {};
       ranges[this.x] = {
-        min: dim.paddingLeft + dim.guideLeft,
-        max: dim.paddingLeft + dim.guideLeft + dim.chartWidth
+        min: this.dims.paddingLeft + this.dims.guideLeft,
+        max: this.dims.paddingLeft + this.dims.guideLeft + this.dims.chartWidth
       };
       ranges[this.y] = {
-        min: dim.paddingTop + dim.guideTop + dim.chartHeight,
-        max: dim.paddingTop + dim.guideTop
+        min: this.dims.paddingTop + this.dims.guideTop + this.dims.chartHeight,
+        max: this.dims.paddingTop + this.dims.guideTop
       };
       return ranges;
     };
@@ -382,17 +386,17 @@
       Polar.__super__.constructor.apply(this, arguments);
     }
 
-    Polar.prototype.ranges = function(dim) {
+    Polar.prototype.ranges = function() {
       var r, ranges, t, _ref;
       _ref = [this.x, this.y], r = _ref[0], t = _ref[1];
       ranges = {};
       ranges[t] = {
         min: 0,
-        max: 2 * Math.PI * 200
+        max: 2 * Math.PI
       };
       ranges[r] = {
         min: 0,
-        max: Math.min(dim.chartWidth, dim.chartHeight) / 2
+        max: Math.min(this.dims.chartWidth, this.dims.chartHeight) / 2
       };
       return ranges;
     };
@@ -3096,10 +3100,11 @@
         this.scaleSet = this._makeScaleSet(this.spec, domains);
       }
       this.scaleSet.make(this.spec.guides, domains, this.layers);
-      if (this.dims == null) {
+      if (!this.dims) {
         this.dims = this._makeDimensions(this.spec, this.scaleSet);
+        this.coord.make(this.dims);
+        this.ranges = this.coord.ranges();
       }
-      if (this.ranges == null) this.ranges = this.coord.ranges(this.dims);
       this.scaleSet.setRanges(this.ranges);
       return this._legacy(domains);
     };
@@ -3136,7 +3141,8 @@
 
     Graph.prototype._makeScaleSet = function(spec, domains) {
       var tmpRanges;
-      tmpRanges = this.coord.ranges(poly.dim.guess(spec));
+      this.coord.make(poly.dim.guess(spec));
+      tmpRanges = this.coord.ranges();
       return poly.scale.make(tmpRanges, this.coord);
     };
 

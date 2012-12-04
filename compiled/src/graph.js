@@ -46,10 +46,11 @@
         this.scaleSet = this._makeScaleSet(this.spec, domains);
       }
       this.scaleSet.make(this.spec.guides, domains, this.layers);
-      if (this.dims == null) {
+      if (!this.dims) {
         this.dims = this._makeDimensions(this.spec, this.scaleSet);
+        this.coord.make(this.dims);
+        this.ranges = this.coord.ranges();
       }
-      if (this.ranges == null) this.ranges = this.coord.ranges(this.dims);
       this.scaleSet.setRanges(this.ranges);
       return this._legacy(domains);
     };
@@ -86,7 +87,8 @@
 
     Graph.prototype._makeScaleSet = function(spec, domains) {
       var tmpRanges;
-      tmpRanges = this.coord.ranges(poly.dim.guess(spec));
+      this.coord.make(poly.dim.guess(spec));
+      tmpRanges = this.coord.ranges();
       return poly.scale.make(tmpRanges, this.coord);
     };
 

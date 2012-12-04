@@ -5,17 +5,18 @@ class Coordinate
     params ?= {}
     @flip = params.flip ? false
     [@x, @y] = if @flip then ['y', 'x'] else ['x', 'y']
-  ranges: (dim) ->
+  make: (dims) -> @dims = dims
+  ranges: () ->
 
 class Cartesian extends Coordinate
-  ranges: (dim) ->
+  ranges: () ->
     ranges = {}
     ranges[@x] =
-      min: dim.paddingLeft + dim.guideLeft
-      max: dim.paddingLeft + dim.guideLeft + dim.chartWidth
+      min: @dims.paddingLeft + @dims.guideLeft
+      max: @dims.paddingLeft + @dims.guideLeft + @dims.chartWidth
     ranges[@y] =
-      min: dim.paddingTop + dim.guideTop + dim.chartHeight
-      max: dim.paddingTop + dim.guideTop
+      min: @dims.paddingTop + @dims.guideTop + @dims.chartHeight
+      max: @dims.paddingTop + @dims.guideTop
     ranges
   axisType: (aes) -> @[aes]
   getXY: (mayflip, scales, mark) ->
@@ -36,13 +37,13 @@ class Cartesian extends Coordinate
       }
 
 class Polar extends Coordinate
-  ranges: (dim) ->
+  ranges: () ->
     [r, t] = [@x, @y]
     ranges = {}
     ranges[t] = min: 0, max: 2*Math.PI
     ranges[r] =
       min: 0
-      max: Math.min(dim.chartWidth,dim.chartHeight)/2
+      max: Math.min(@dims.chartWidth,@dims.chartHeight)/2
     ranges
   axisType: (aes) ->
     if @[aes] == 'x' then 'r' else 't'
