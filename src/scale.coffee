@@ -14,11 +14,13 @@ poly.scale.make = (guideSpec, domains, ranges) ->
   return new ScaleSet(guideSpec, domains, ranges)
 
 class ScaleSet
-  constructor: (tmpRanges) ->
-    @axes = {
-      x: poly.guide.axis 'x' # polar?
-      y: poly.guide.axis 'y' # polar?
-    }
+  constructor: (tmpRanges, coord) ->
+    # note that axes.x is the axis for the x-aesthetic. it may or ma NOT be
+    # the x-axis displayed on the screen.
+    @axes =
+      x: poly.guide.axis coord.x # polar?
+      y: poly.guide.axis coord.y # polar?
+    @coord = coord
     @ranges = tmpRanges
     @legends = []
     @deletedLegends = []
@@ -220,8 +222,8 @@ class PositionScale extends Scale
   construct: (domain, range) ->
     @range = range
     super(domain)
-  _wrapper : (domain, y) -> (value) ->
-    space = 2
+  _wrapper : (domain, y) => (value) =>
+    space = if @range.max > @range.min then 2 else -2
     if _.isObject(value)
       if value.t is 'scalefn'
         if value.f is 'identity' then return value.v
@@ -234,8 +236,8 @@ class PositionScale extends Scale
 class Linear extends PositionScale
   _constructNum: (domain) ->
     @_wrapper domain, poly.linear(domain.min, @range.min, domain.max, @range.max)
-  _wrapper2 : (step, y) -> (value) ->
-    space = 2
+  _wrapper2 : (step, y) => (value) =>
+    space = if @range.max > @range.min then 2 else -2
     if _.isObject(value)
       if value.t is 'scalefn'
         if value.f is 'identity' then return value.v

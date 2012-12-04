@@ -17,6 +17,22 @@ class Cartesian extends Coordinate
       min: dim.paddingTop + dim.guideTop + dim.chartHeight
       max: dim.paddingTop + dim.guideTop
     ranges
+  getXY: (mayflip, scales, mark) ->
+    if mayflip
+      point =
+        x: if _.isArray(mark.x) then _.map mark.x, scales.x else scales.x mark.x
+        y: if _.isArray(mark.y) then _.map mark.y, scales.y else scales.y mark.y
+      return {
+        x: point[@x]
+        y: point[@y]
+      }
+    else
+      scalex = scales[@x]
+      scaley = scales[@y]
+      return {
+        x: if _.isArray(mark.x) then _.map mark.x, scalex else scalex mark.x
+        y: if _.isArray(mark.y) then _.map mark.y, scaley else scaley mark.y
+      }
 
 class Polar extends Coordinate
   ranges: (dim) ->

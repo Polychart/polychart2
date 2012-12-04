@@ -10,7 +10,7 @@ class Graph
     @legends = null
     @dims = null
     @paper = null
-    @coord = poly.coord.cartesian()
+    @coord = poly.coord.cartesian flip : spec.flip
     @initial_spec = spec
     @make spec
 
@@ -42,10 +42,10 @@ class Graph
     scales = @scaleSet.getScaleFns()
     clipping = poly.dim.clipping @dims
     # render each layer
-    renderer = poly.render @graphId, @paper, scales, clipping.main
+    renderer = poly.render @graphId, @paper, scales, @coord, true, clipping.main
     _.each @layers, (layer) => layer.render(renderer)
     # render axes
-    renderer = poly.render @graphId, @paper, scales
+    renderer = poly.render @graphId, @paper, scales, @coord, false
 
     @scaleSet.makeAxes()
     @scaleSet.renderAxes @dims, renderer
@@ -60,7 +60,7 @@ class Graph
     poly.domain.make layers, spec.guides, spec.strict
   _makeScaleSet: (spec, domains) ->
     tmpRanges = @coord.ranges poly.dim.guess spec
-    poly.scale.make tmpRanges
+    poly.scale.make tmpRanges, @coord
   _makeDimensions: (spec, scaleSet) ->
     poly.dim.make spec, scaleSet.makeAxes(), scaleSet.makeLegends()
   _makePaper: (dom, width, height) ->

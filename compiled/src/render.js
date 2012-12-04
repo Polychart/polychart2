@@ -1,5 +1,5 @@
 (function() {
-  var Circle, HLine, Line, Rect, Renderer, Text, VLine, poly, renderer,
+  var Circle, Line, Rect, Renderer, Text, poly, renderer,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -21,11 +21,11 @@
   - make everything animateWith some standard object
   */
 
-  poly.render = function(id, paper, scales, clipping) {
+  poly.render = function(id, paper, scales, coord, mayflip, clipping) {
     return {
       add: function(mark, evtData) {
         var pt;
-        pt = renderer.cartesian[mark.type].render(paper, scales, mark);
+        pt = renderer.cartesian[mark.type].render(paper, scales, coord, mark, mayflip);
         if (clipping != null) pt.attr('clip-rect', clipping);
         pt.click(function() {
           return eve(id + ".click", this, evtData);
@@ -39,7 +39,7 @@
         return pt.remove();
       },
       animate: function(pt, mark, evtData) {
-        renderer.cartesian[mark.type].animate(pt, scales, mark);
+        renderer.cartesian[mark.type].animate(pt, scales, coord, mark, mayflip);
         pt.unclick();
         pt.click(function() {
           return eve(id + ".click", this, evtData);
@@ -57,10 +57,10 @@
 
     function Renderer() {}
 
-    Renderer.prototype.render = function(paper, scales, mark) {
+    Renderer.prototype.render = function(paper, scales, coord, mark, mayflip) {
       var pt;
       pt = this._make(paper);
-      _.each(this.attr(scales, mark), function(v, k) {
+      _.each(this.attr(scales, coord, mark, mayflip), function(v, k) {
         return pt.attr(k, v);
       });
       return pt;
@@ -70,11 +70,11 @@
       throw new poly.NotImplemented();
     };
 
-    Renderer.prototype.animate = function(pt, scales, mark) {
-      return pt.animate(this.attr(scales, mark), 300);
+    Renderer.prototype.animate = function(pt, scales, coord, mark, mayflip) {
+      return pt.animate(this.attr(scales, coord, mark, mayflip), 300);
     };
 
-    Renderer.prototype.attr = function(scales, mark) {
+    Renderer.prototype.attr = function(scales, coord, mark, mayflip) {
       throw new poly.NotImplemented();
     };
 
@@ -113,10 +113,12 @@
       return paper.circle();
     };
 
-    Circle.prototype.attr = function(scales, mark) {
+    Circle.prototype.attr = function(scales, coord, mark, mayflip) {
+      var x, y, _ref;
+      _ref = coord.getXY(mayflip, scales, mark), x = _ref.x, y = _ref.y;
       return {
-        cx: scales.x(mark.x),
-        cy: scales.y(mark.y),
+        cx: x,
+        cy: y,
         r: this._maybeApply(scales.size, mark.size),
         fill: this._maybeApply(scales.color, mark.color),
         stroke: this._maybeApply(scales.color, mark.color),
@@ -141,12 +143,11 @@
       return paper.path();
     };
 
-    Line.prototype.attr = function(scales, mark) {
-      var xs, ys;
-      xs = _.map(mark.x, scales.x);
-      ys = _.map(mark.y, scales.y);
+    Line.prototype.attr = function(scales, coord, mark, mayflip) {
+      var x, y, _ref;
+      _ref = coord.getXY(mayflip, scales, mark), x = _ref.x, y = _ref.y;
       return {
-        path: this._makePath(xs, ys),
+        path: this._makePath(x, y),
         stroke: 'black'
       };
     };
@@ -167,15 +168,14 @@
       return paper.rect();
     };
 
-    Rect.prototype.attr = function(scales, mark) {
-      var x1, x2, y1, y2, _ref, _ref2;
-      _ref = _.map(mark.x, scales.x), x1 = _ref[0], x2 = _ref[1];
-      _ref2 = _.map(mark.y, scales.y), y1 = _ref2[0], y2 = _ref2[1];
+    Rect.prototype.attr = function(scales, coord, mark, mayflip) {
+      var x, y, _ref;
+      _ref = coord.getXY(mayflip, scales, mark), x = _ref.x, y = _ref.y;
       return {
-        x: x1,
-        y: y2,
-        width: x2 - x1,
-        height: y1 - y2,
+        x: _.min(x),
+        y: _.min(y),
+        width: Math.abs(x[1] - x[0]),
+        height: Math.abs(y[1] - y[0]),
         fill: this._maybeApply(scales.color, mark.color),
         stroke: this._maybeApply(scales.color, mark.color),
         'stroke-width': '0px'
@@ -186,57 +186,7 @@
 
   })(Renderer);
 
-  HLine = (function(_super) {
-
-    __extends(HLine, _super);
-
-    function HLine() {
-      HLine.__super__.constructor.apply(this, arguments);
-    }
-
-    HLine.prototype._make = function(paper) {
-      return paper.path();
-    };
-
-    HLine.prototype.attr = function(scales, mark) {
-      var y;
-      y = scales.y(mark.y);
-      return {
-        path: this._makePath([0, 100000], [y, y]),
-        stroke: 'black',
-        'stroke-width': '1px'
-      };
-    };
-
-    return HLine;
-
-  })(Renderer);
-
-  VLine = (function(_super) {
-
-    __extends(VLine, _super);
-
-    function VLine() {
-      VLine.__super__.constructor.apply(this, arguments);
-    }
-
-    VLine.prototype._make = function(paper) {
-      return paper.path();
-    };
-
-    VLine.prototype.attr = function(scales, mark) {
-      var x;
-      x = scales.x(mark.x);
-      return {
-        path: this._makePath([x, x], [0, 100000]),
-        stroke: 'black',
-        'stroke-width': '1px'
-      };
-    };
-
-    return VLine;
-
-  })(Renderer);
+  "class HLine extends Renderer # for both cartesian & polar?\n  _make: (paper) -> paper.path()\n  attr: (scales, coord, mark) ->\n    y = scales.y mark.y\n    path: @_makePath([0, 100000], [y, y])\n    stroke: 'black'\n    'stroke-width': '1px'\n\nclass VLine extends Renderer # for both cartesian & polar?\n  _make: (paper) -> paper.path()\n  attr: (scales, coord, mark) ->\n    x = scales.x mark.x\n    path: @_makePath([x, x], [0, 100000])\n    stroke: 'black'\n    'stroke-width': '1px'";
 
   Text = (function(_super) {
 
@@ -250,13 +200,14 @@
       return paper.text();
     };
 
-    Text.prototype.attr = function(scales, mark) {
-      var m, _ref;
+    Text.prototype.attr = function(scales, coord, mark, mayflip) {
+      var m, x, y, _ref, _ref2;
+      _ref = coord.getXY(mayflip, scales, mark), x = _ref.x, y = _ref.y;
       m = {
-        x: scales.x(mark.x),
-        y: scales.y(mark.y),
+        x: x,
+        y: y,
         text: this._maybeApply(scales.text, mark.text),
-        'text-anchor': (_ref = mark['text-anchor']) != null ? _ref : 'left',
+        'text-anchor': (_ref2 = mark['text-anchor']) != null ? _ref2 : 'left',
         r: 10,
         fill: 'black'
       };
@@ -272,16 +223,12 @@
     cartesian: {
       circle: new Circle(),
       line: new Line(),
-      hline: new HLine(),
-      vline: new VLine(),
       text: new Text(),
       rect: new Rect()
     },
     polar: {
       circle: new Circle(),
       line: new Line(),
-      hline: new HLine(),
-      vline: new VLine(),
       text: new Text()
     }
   };

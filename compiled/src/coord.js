@@ -42,6 +42,27 @@
       return ranges;
     };
 
+    Cartesian.prototype.getXY = function(mayflip, scales, mark) {
+      var point, scalex, scaley;
+      if (mayflip) {
+        point = {
+          x: _.isArray(mark.x) ? _.map(mark.x, scales.x) : scales.x(mark.x),
+          y: _.isArray(mark.y) ? _.map(mark.y, scales.y) : scales.y(mark.y)
+        };
+        return {
+          x: point[this.x],
+          y: point[this.y]
+        };
+      } else {
+        scalex = scales[this.x];
+        scaley = scales[this.y];
+        return {
+          x: _.isArray(mark.x) ? _.map(mark.x, scalex) : scalex(mark.x),
+          y: _.isArray(mark.y) ? _.map(mark.y, scaley) : scaley(mark.y)
+        };
+      }
+    };
+
     return Cartesian;
 
   })(Coordinate);

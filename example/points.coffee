@@ -66,3 +66,11 @@
   spec =  { layers: [sampleLayer] }
   c = poly.chart(spec)
   c.render(dom)
+
+@examples.point3_flip = (dom) ->
+  jsondata = [{x:'A',y:'X'},{x:'B',y:'Y'},{x:'C',y:'Z'}]
+  data = new poly.Data({ json: jsondata })
+  sampleLayer = { data: data, type: 'point', x: 'x', y: 'y', color: {const:'#E01B6A'} }
+  spec =  { layers: [sampleLayer], flip:true }
+  c = poly.chart(spec)
+  c.render(dom)

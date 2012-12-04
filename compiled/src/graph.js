@@ -17,7 +17,9 @@
       this.legends = null;
       this.dims = null;
       this.paper = null;
-      this.coord = poly.coord.cartesian();
+      this.coord = poly.coord.cartesian({
+        flip: spec.flip
+      });
       this.initial_spec = spec;
       this.make(spec);
     }
@@ -60,11 +62,11 @@
       }
       scales = this.scaleSet.getScaleFns();
       clipping = poly.dim.clipping(this.dims);
-      renderer = poly.render(this.graphId, this.paper, scales, clipping.main);
+      renderer = poly.render(this.graphId, this.paper, scales, this.coord, true, clipping.main);
       _.each(this.layers, function(layer) {
         return layer.render(renderer);
       });
-      renderer = poly.render(this.graphId, this.paper, scales);
+      renderer = poly.render(this.graphId, this.paper, scales, this.coord, false);
       this.scaleSet.makeAxes();
       this.scaleSet.renderAxes(this.dims, renderer);
       this.scaleSet.makeLegends();
@@ -85,7 +87,7 @@
     Graph.prototype._makeScaleSet = function(spec, domains) {
       var tmpRanges;
       tmpRanges = this.coord.ranges(poly.dim.guess(spec));
-      return poly.scale.make(tmpRanges);
+      return poly.scale.make(tmpRanges, this.coord);
     };
 
     Graph.prototype._makeDimensions = function(spec, scaleSet) {

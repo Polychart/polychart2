@@ -1,8 +1,8 @@
 (function() {
   var Area, Brewer, Color, Gradient, Gradient2, Identity, Linear, Log, PositionScale, Scale, ScaleSet, Shape, aesthetics, poly,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
   poly = this.poly || {};
 
@@ -24,11 +24,12 @@
 
   ScaleSet = (function() {
 
-    function ScaleSet(tmpRanges) {
+    function ScaleSet(tmpRanges, coord) {
       this.axes = {
-        x: poly.guide.axis('x'),
-        y: poly.guide.axis('y')
+        x: poly.guide.axis(coord.x),
+        y: poly.guide.axis(coord.y)
       };
+      this.coord = coord;
       this.ranges = tmpRanges;
       this.legends = [];
       this.deletedLegends = [];
@@ -354,6 +355,7 @@
     __extends(PositionScale, _super);
 
     function PositionScale() {
+      this._wrapper = __bind(this._wrapper, this);
       PositionScale.__super__.constructor.apply(this, arguments);
     }
 
@@ -363,9 +365,10 @@
     };
 
     PositionScale.prototype._wrapper = function(domain, y) {
+      var _this = this;
       return function(value) {
         var space;
-        space = 2;
+        space = _this.range.max > _this.range.min ? 2 : -2;
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
             if (value.f === 'identity') return value.v;
@@ -388,6 +391,7 @@
     __extends(Linear, _super);
 
     function Linear() {
+      this._wrapper2 = __bind(this._wrapper2, this);
       Linear.__super__.constructor.apply(this, arguments);
     }
 
@@ -396,9 +400,10 @@
     };
 
     Linear.prototype._wrapper2 = function(step, y) {
+      var _this = this;
       return function(value) {
         var space;
-        space = 2;
+        space = _this.range.max > _this.range.min ? 2 : -2;
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
             if (value.f === 'identity') return value.v;

@@ -174,4 +174,38 @@
     return c.render(dom);
   };
 
+  this.examples.point3_flip = function(dom) {
+    var c, data, jsondata, sampleLayer, spec;
+    jsondata = [
+      {
+        x: 'A',
+        y: 'X'
+      }, {
+        x: 'B',
+        y: 'Y'
+      }, {
+        x: 'C',
+        y: 'Z'
+      }
+    ];
+    data = new poly.Data({
+      json: jsondata
+    });
+    sampleLayer = {
+      data: data,
+      type: 'point',
+      x: 'x',
+      y: 'y',
+      color: {
+        "const": '#E01B6A'
+      }
+    };
+    spec = {
+      layers: [sampleLayer],
+      flip: true
+    };
+    c = poly.chart(spec);
+    return c.render(dom);
+  };
+
 }).call(this);
