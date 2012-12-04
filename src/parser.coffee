@@ -1,6 +1,41 @@
+###############################################################################
+# utilities
+###############################################################################
+zipWith = (op) -> (xs, ys) ->
+  if xs.length isnt ys.length
+    throw Error("zipWith: lists have different length: [#{xs}], [#{ys}]")
+  op(xval, ys[ix]) for xval, ix in xs
+zip = zipWith (xval, yval) -> [xval, yval]
+assocsToObj = (assocs) ->
+  obj = {}
+  for [key, val] in assocs
+    obj[key] = val
+  obj
+dictGet = (dict, key, defval = null) -> (key of dict and dict[key]) or defval
+dictGets = (dict, keyVals) ->
+  final = {}
+  for key, defval of keyVals
+    val = dictGet(dict, key, defval)
+    if val isnt null
+      final[key] = val
+  final
+mergeObjLists = (dicts) ->
+  final = {}
+  for dict in dicts
+    for key of dict
+      final[key] = dict[key].concat(dictGet(final, key, []))
+  final
+dedup = (vals, trans = (x) -> x) ->
+  unique = {}
+  unique[trans val] = val for val in vals
+  val for _, val of unique
+dedupOnKey = (key) -> (vals) -> dedup(vals, (val) -> val[key])
 showCall = (fname, args) -> "#{fname}(#{args})"
 showList = (xs) -> "[#{xs}]"
 
+###############################################################################
+# parsing
+###############################################################################
 class Stream
   constructor: (src) -> @buffer = (val for val in src).reverse()
   empty: -> @buffer.length is 0
@@ -61,7 +96,8 @@ class Call extends Expr
   constructor: (@fname, @args) ->
   contents: -> [@fname, showList(@args)]
   pretty: -> showCall(@fname, arg.pretty() for arg in @args)
-  visit: (visitor) -> visitor.call(@, @fname, arg.visit(visitor) for arg in @args)
+  visit: (visitor) ->
+    visitor.call(@, @fname, arg.visit(visitor) for arg in @args)
 
 expect = (stream, fail, alts) ->
   token = stream.peek()
@@ -119,68 +155,8 @@ test 'so should this'
 console.log '\n\n'
 
 ###############################################################################
-
-###
-var layerSpec = {
-  data: DATA_SET,
-  type: “point”,
-  x: {var: “b”, sort: “a”, asc: false, guide: “y2”},
-  y: {var: “a”},
-  color: {const: “blue”},
-  opacity: {var: “sum(c)”},
-  filter: { x: { gt: 0, lt: 100 } },
-}
-
-
-var dataSpec = {
-  trans: [{key: “a”, trans: “bin”, binwidth: 10, name: “bin(a,10)”},
-          {key: “b”, trans: “lag”, lag: 1, name: “lag(b, 1)”},
-          ...],
-  filter: {a: { gt: 0, le: 100},
-           c: { in: [“group1”, “group2”, “group3”]},
-           ... },
-  stats: {stats:
-            [{key: “b”, stat: “mean”, name: “mean(b)”},
-             {key: “e”, stat: “count”, name: “count(e)”},
-             ...],
-          groups: [“bin(a,10)”, “c”]},
-  select: [“bin(a,10)”, “bin(b,5)”, “mean(b)”, “count(e)”, “c”],
-  meta: {
-    c: { sort: “count(e)”
-         stat: {key: “e”, stat: “count”, name: “count(e)”},
-         limit: 3,
-         asc: true},
-    b: { sort: "a",
-         asc: false },
-  }
-}
-###
-
-zipWith = (op) -> (xs, ys) ->
-  if xs.length isnt ys.length
-    throw Error("zipWith: lists have different length: [#{xs}], [#{ys}]")
-  op(xval, ys[ix]) for xval, ix in xs
-zip = zipWith (xval, yval) -> [xval, yval]
-assocsToObj = (assocs) ->
-  obj = {}
-  for [key, val] in assocs
-    obj[key] = val
-  obj
-dictGet = (dict, key, defval = null) -> (key of dict and dict[key]) or defval
-dictGets = (dict, keyVals) ->
-  final = {}
-  for [key, defval] in keyVals
-    val = dictGet(dict, key, defval)
-    if val isnt null
-      final[key] = val
-  final
-mergeObjLists = (dicts) ->
-  final = {}
-  for dict in dicts
-    for key of dict
-      final[key] = dict[key].concat(dictGet(final, key, []))
-  final
-
+# layerSpec -> dataSpec
+###############################################################################
 extractOps = (context) ->
   opdict = {}
   for [name, args...] in context.transforms
@@ -205,87 +181,54 @@ extractOps = (context) ->
     expr.visit(extractor)
     results
 
-dedup = (vals, trans = (x) -> x) ->
-  unique = {}
-  unique[trans val] = val for val in vals
-  val for _, val of unique
-dedupOnKey = (key) -> (vals) -> dedup(vals, (val) -> val[key])
-
-console.log '\ndedup:'
-console.log(dedup [1, 2, 3, 2, 3, 3, 1])
-console.log ''
-
 layerToDataSpec = (cxt) ->
   extract = extractOps(cxt)
   (lspec) ->
-    transstat = []
-    select = []
-    groups = []
-    metas = {}
     filters = {}
-    aesthetics = dictGets(lspec, ([name, null] for name in cxt.aesthetics))
+    for key, val of dictGet(lspec, 'filter', {})
+      filters[(parse key).pretty()] = val # normalize name
+    aesthetics = dictGets(lspec,
+                          assocsToObj([name, null] for name in cxt.aesthetics))
     for key of aesthetics
       if 'var' not of aesthetics[key]
         delete aesthetics[key]
-    for key of aesthetics
-      desc = aesthetics[key]
-      varstr = desc.var
-      expr = parse varstr
-      desc.var = expr.pretty()
+    transstat = []; select = []; groups = []; metas = {}
+    for key, desc of aesthetics
+      expr = parse desc.var
+      desc.var = expr.pretty() # normalize name
       ts = extract expr
-      transstat.push(ts)
+      transstat.push ts
       select.push desc.var
       if ts.stat.length is 0
         groups.push desc.var
       if 'sort' of desc
-        desc = dictGets(desc, cxt.metaDefaults)
-        result = extract(parse desc.sort)
+        sdesc = dictGets(desc, cxt.metas)
+        sexpr = parse sdesc.sort
+        sdesc.sort = sexpr.pretty() # normalize name
+        result = extract sexpr
         if result.stat.length isnt 0
-          desc.stat = result.stat
-        metas[varstr] = desc
-    for key of lspec.filter # TODO: assume layerspec is smarter
-      if not key of aesthetics
-        throw Error("filter refers to non-var aesthetic: #{key}")
-      filters[aesthetics[key].var] = lspec.filter[key]
-
-    transstat = mergeObjLists transstat
+          sdesc.stat = result.stat
+        metas[desc.var] = sdesc
+    transstats = mergeObjLists transstat
     dedupByName = dedupOnKey 'name'
-    stats = {stats: dedupByName(transstat.stat), groups: dedup groups}
+    stats = {stats: dedupByName(transstats.stat), groups: (dedup groups)}
     {
-      trans: dedupByName(transstat.trans),
-      filter: filters, stats: stats,
-      select: (dedup select), meta: metas
+      trans: dedupByName(transstats.trans), stats: stats, meta: metas,
+      select: (dedup select), filter: filters
     }
-
-  #trans: [{key: “a”, trans: “bin”, binwidth: 10, name: “bin(a,10)”},
-          #{key: “b”, trans: “lag”, lag: 1, name: “lag(b, 1)”},
-          #...],
-  #filter: {a: { gt: 0, le: 100},
-           #c: { in: [“group1”, “group2”, “group3”]},
-           #... },
-  #stats: {stats:
-            #[{key: “b”, stat: “mean”, name: “mean(b)”},
-             #{key: “e”, stat: “count”, name: “count(e)”},
-             #...],
-          #groups: [“bin(a,10)”, “c”]},
-  #select: [“bin(a,10)”, “bin(b,5)”, “mean(b)”, “count(e)”, “c”],
 
 # testing
 context = {
   aesthetics: ['x', 'y', 'color', 'opacity'],
-  metaDefaults: [['sort', null], ['stat', null], ['limit', null], ['asc', true]],
   transforms: [['bin', 'key', 'binwidth'], ['lag', 'key', 'lag']],
   statistics: [['count', 'key'], ['sum', 'key'], ['mean', 'key']],
+  metas: {sort: null, stat: null, limit: null, asc: true},
 }
-
-console.log(zip([1..5], [6..10]))
-console.log mergeObjLists([{'a': [1, 2]}, {'b': [3]}, {'a': [7]}])
 
 extract = extractOps(context)
 r1 = extract(parse 'sum(c)')
 r2 = extract(parse 'bin(lag(a, 1), 10)')
 console.log mergeObjLists([r1, r2])
-
 
 exampleLS = {
   #data: DATA_SET,
@@ -294,7 +237,7 @@ exampleLS = {
   x: {var: "a"},
   color: {const: "blue"},
   opacity: {var: "sum(c)"},
-  filter: {x: {gt: 0, lt: 100}},
+  filter: {a: {gt: 0, lt: 100}},
 }
 
 exampleLS2 = {
@@ -304,7 +247,7 @@ exampleLS2 = {
   x: {var: "lag(a, 1)"},
   color: {const: "blue"},
   opacity: {var: "sum(c)"},
-  filter: {x: {gt: 0, lt: 100}},
+  filter: {a: {gt: 0, lt: 100}},
 }
 
 exampleLS3 =
