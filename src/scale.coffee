@@ -18,8 +18,8 @@ class ScaleSet
     # note that axes.x is the axis for the x-aesthetic. it may or ma NOT be
     # the x-axis displayed on the screen.
     @axes =
-      x: poly.guide.axis coord.x # polar?
-      y: poly.guide.axis coord.y # polar?
+      x: poly.guide.axis coord.axisType('x') # polar?
+      y: poly.guide.axis coord.axisType('y') # polar?
     @coord = coord
     @ranges = tmpRanges
     @legends = []

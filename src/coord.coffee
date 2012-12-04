@@ -17,6 +17,7 @@ class Cartesian extends Coordinate
       min: dim.paddingTop + dim.guideTop + dim.chartHeight
       max: dim.paddingTop + dim.guideTop
     ranges
+  axisType: (aes) -> @[aes]
   getXY: (mayflip, scales, mark) ->
     if mayflip
       point =
@@ -43,6 +44,8 @@ class Polar extends Coordinate
       min: 0
       max: Math.min(dim.chartWidth,dim.chartHeight)/2
     ranges
+  axisType: (aes) ->
+    if @[aes] == 'x' then 'r' else 't'
 
 poly.coord =
   cartesian : (params) -> new Cartesian(params)

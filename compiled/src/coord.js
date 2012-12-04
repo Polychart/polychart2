@@ -42,6 +42,10 @@
       return ranges;
     };
 
+    Cartesian.prototype.axisType = function(aes) {
+      return this[aes];
+    };
+
     Cartesian.prototype.getXY = function(mayflip, scales, mark) {
       var point, scalex, scaley;
       if (mayflip) {
@@ -81,13 +85,21 @@
       ranges = {};
       ranges[t] = {
         min: 0,
-        max: 2 * Math.PI
+        max: 2 * Math.PI * 200
       };
       ranges[r] = {
         min: 0,
         max: Math.min(dim.chartWidth, dim.chartHeight) / 2
       };
       return ranges;
+    };
+
+    Polar.prototype.axisType = function(aes) {
+      if (this[aes] === 'x') {
+        return 'r';
+      } else {
+        return 't';
+      }
     };
 
     return Polar;

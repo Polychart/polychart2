@@ -112,6 +112,20 @@ class YAxis extends Axis # assumes position = left
     height: 'all'
     width: 20+@maxwidth
 
+class RAxis extends Axis # assumes position = left
+  _renderline : (renderer, axisDim) ->
+  _makeTitle: (axisDim, text) -> {}
+  _makeTick: (axisDim, tick) -> {}
+  _makeLabel: (axisDim, tick) -> {}
+  getDimension: () -> {}
+
+class TAxis extends Axis # assumes position = ... um, what is it supposed to be?
+  _renderline : (renderer, axisDim) ->
+  _makeTitle: (axisDim, text) -> {}
+  _makeTick: (axisDim, tick) -> {}
+  _makeLabel: (axisDim, tick) -> {}
+  getDimension: () -> {}
+
 class Legend extends Guide
   TITLEHEIGHT: 15
   TICKHEIGHT: 12
@@ -208,8 +222,13 @@ poly.guide = {}
 poly.guide.axis = (type) ->
   #TODO: handle polar coordinates here
   if type == 'x'
-    return new XAxis()
-  return new YAxis()
+    new XAxis()
+  else if type == 'y'
+    new YAxis()
+  else if type == 'r'
+    new XAxis()
+  else if type == 't'
+    new YAxis()
 poly.guide.legend = (aes) -> return new Legend(aes)
 
 @poly = poly

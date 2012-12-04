@@ -345,6 +345,10 @@
       return ranges;
     };
 
+    Cartesian.prototype.axisType = function(aes) {
+      return this[aes];
+    };
+
     Cartesian.prototype.getXY = function(mayflip, scales, mark) {
       var point, scalex, scaley;
       if (mayflip) {
@@ -384,13 +388,21 @@
       ranges = {};
       ranges[t] = {
         min: 0,
-        max: 2 * Math.PI
+        max: 2 * Math.PI * 200
       };
       ranges[r] = {
         min: 0,
         max: Math.min(dim.chartWidth, dim.chartHeight) / 2
       };
       return ranges;
+    };
+
+    Polar.prototype.axisType = function(aes) {
+      if (this[aes] === 'x') {
+        return 'r';
+      } else {
+        return 't';
+      }
     };
 
     return Polar;
@@ -811,7 +823,7 @@
 
 }).call(this);
 (function() {
-  var Axis, Guide, Legend, XAxis, YAxis, poly, sf,
+  var Axis, Guide, Legend, RAxis, TAxis, XAxis, YAxis, poly, sf,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
@@ -1051,6 +1063,66 @@
 
   })(Axis);
 
+  RAxis = (function(_super) {
+
+    __extends(RAxis, _super);
+
+    function RAxis() {
+      RAxis.__super__.constructor.apply(this, arguments);
+    }
+
+    RAxis.prototype._renderline = function(renderer, axisDim) {};
+
+    RAxis.prototype._makeTitle = function(axisDim, text) {
+      return {};
+    };
+
+    RAxis.prototype._makeTick = function(axisDim, tick) {
+      return {};
+    };
+
+    RAxis.prototype._makeLabel = function(axisDim, tick) {
+      return {};
+    };
+
+    RAxis.prototype.getDimension = function() {
+      return {};
+    };
+
+    return RAxis;
+
+  })(Axis);
+
+  TAxis = (function(_super) {
+
+    __extends(TAxis, _super);
+
+    function TAxis() {
+      TAxis.__super__.constructor.apply(this, arguments);
+    }
+
+    TAxis.prototype._renderline = function(renderer, axisDim) {};
+
+    TAxis.prototype._makeTitle = function(axisDim, text) {
+      return {};
+    };
+
+    TAxis.prototype._makeTick = function(axisDim, tick) {
+      return {};
+    };
+
+    TAxis.prototype._makeLabel = function(axisDim, tick) {
+      return {};
+    };
+
+    TAxis.prototype.getDimension = function() {
+      return {};
+    };
+
+    return TAxis;
+
+  })(Axis);
+
   Legend = (function(_super) {
 
     __extends(Legend, _super);
@@ -1205,8 +1277,15 @@
   poly.guide = {};
 
   poly.guide.axis = function(type) {
-    if (type === 'x') return new XAxis();
-    return new YAxis();
+    if (type === 'x') {
+      return new XAxis();
+    } else if (type === 'y') {
+      return new YAxis();
+    } else if (type === 'r') {
+      return new XAxis();
+    } else if (type === 't') {
+      return new YAxis();
+    }
   };
 
   poly.guide.legend = function(aes) {
@@ -1244,8 +1323,8 @@
 
     function ScaleSet(tmpRanges, coord) {
       this.axes = {
-        x: poly.guide.axis(coord.x),
-        y: poly.guide.axis(coord.y)
+        x: poly.guide.axis(coord.axisType('x')),
+        y: poly.guide.axis(coord.axisType('y'))
       };
       this.coord = coord;
       this.ranges = tmpRanges;

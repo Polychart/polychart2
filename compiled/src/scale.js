@@ -26,8 +26,8 @@
 
     function ScaleSet(tmpRanges, coord) {
       this.axes = {
-        x: poly.guide.axis(coord.x),
-        y: poly.guide.axis(coord.y)
+        x: poly.guide.axis(coord.axisType('x')),
+        y: poly.guide.axis(coord.axisType('y'))
       };
       this.coord = coord;
       this.ranges = tmpRanges;
