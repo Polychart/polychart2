@@ -76,19 +76,6 @@
     };
   };
 
-  poly.dim.ranges = function(dim) {
-    return {
-      x: {
-        min: dim.paddingLeft + dim.guideLeft,
-        max: dim.paddingLeft + dim.guideLeft + dim.chartWidth
-      },
-      y: {
-        min: dim.paddingTop + dim.guideTop + dim.chartHeight,
-        max: dim.paddingTop + dim.guideTop
-      }
-    };
-  };
-
   /*
   # CLASSES
   */

@@ -66,14 +66,6 @@ poly.dim.clipping = (dim) ->
   #left: [pl, pt, gl+1, gt+h+gb+1]
   #bottom: [pl, pt+gt+h-1, gl+w+1, gb+1]
 
-poly.dim.ranges = (dim) ->
-  x:
-    min: dim.paddingLeft + dim.guideLeft
-    max: dim.paddingLeft + dim.guideLeft + dim.chartWidth
-  y:
-    min: dim.paddingTop + dim.guideTop + dim.chartHeight
-    max: dim.paddingTop + dim.guideTop
-
 ###
 # CLASSES
 ###

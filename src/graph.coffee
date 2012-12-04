@@ -10,6 +10,7 @@ class Graph
     @legends = null
     @dims = null
     @paper = null
+    @coord = poly.coord.cartesian()
     @initial_spec = spec
     @make spec
 
@@ -31,7 +32,7 @@ class Graph
     @scaleSet.make @spec.guides, domains, @layers
     # dimension calculation
     @dims ?= @_makeDimensions @spec, @scaleSet
-    @ranges ?= poly.dim.ranges @dims
+    @ranges ?= @coord.ranges @dims
     # rendering stuff...
     @scaleSet.setRanges @ranges
     @_legacy(domains)
@@ -58,7 +59,7 @@ class Graph
     spec.guides ?= {}
     poly.domain.make layers, spec.guides, spec.strict
   _makeScaleSet: (spec, domains) ->
-    tmpRanges = poly.dim.ranges poly.dim.guess spec
+    tmpRanges = @coord.ranges poly.dim.guess spec
     poly.scale.make tmpRanges
   _makeDimensions: (spec, scaleSet) ->
     poly.dim.make spec, scaleSet.makeAxes(), scaleSet.makeLegends()

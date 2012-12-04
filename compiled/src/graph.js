@@ -17,6 +17,7 @@
       this.legends = null;
       this.dims = null;
       this.paper = null;
+      this.coord = poly.coord.cartesian();
       this.initial_spec = spec;
       this.make(spec);
     }
@@ -46,7 +47,7 @@
       if (this.dims == null) {
         this.dims = this._makeDimensions(this.spec, this.scaleSet);
       }
-      if (this.ranges == null) this.ranges = poly.dim.ranges(this.dims);
+      if (this.ranges == null) this.ranges = this.coord.ranges(this.dims);
       this.scaleSet.setRanges(this.ranges);
       return this._legacy(domains);
     };
@@ -83,7 +84,7 @@
 
     Graph.prototype._makeScaleSet = function(spec, domains) {
       var tmpRanges;
-      tmpRanges = poly.dim.ranges(poly.dim.guess(spec));
+      tmpRanges = this.coord.ranges(poly.dim.guess(spec));
       return poly.scale.make(tmpRanges);
     };
 
