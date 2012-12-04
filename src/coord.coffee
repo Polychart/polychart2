@@ -16,7 +16,6 @@ class Cartesian extends Coordinate
     ranges[@y] =
       min: dim.paddingTop + dim.guideTop + dim.chartHeight
       max: dim.paddingTop + dim.guideTop
-    console.log ranges
     ranges
 
 class Polar extends Coordinate

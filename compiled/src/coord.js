@@ -28,10 +28,6 @@
       Cartesian.__super__.constructor.apply(this, arguments);
     }
 
-    Cartesian.prototype.make = function(dim) {
-      return this.dim = dim;
-    };
-
     Cartesian.prototype.ranges = function(dim) {
       var ranges;
       ranges = {};
@@ -43,7 +39,6 @@
         min: dim.paddingTop + dim.guideTop + dim.chartHeight,
         max: dim.paddingTop + dim.guideTop
       };
-      console.log(ranges);
       return ranges;
     };
 
@@ -58,10 +53,6 @@
     function Polar() {
       Polar.__super__.constructor.apply(this, arguments);
     }
-
-    Polar.prototype.make = function(dim) {
-      return this.dim = dim;
-    };
 
     Polar.prototype.ranges = function(dim) {
       var r, ranges, t, _ref;

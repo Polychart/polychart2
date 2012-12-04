@@ -331,10 +331,6 @@
       Cartesian.__super__.constructor.apply(this, arguments);
     }
 
-    Cartesian.prototype.make = function(dim) {
-      return this.dim = dim;
-    };
-
     Cartesian.prototype.ranges = function(dim) {
       var ranges;
       ranges = {};
@@ -346,7 +342,6 @@
         min: dim.paddingTop + dim.guideTop + dim.chartHeight,
         max: dim.paddingTop + dim.guideTop
       };
-      console.log(ranges);
       return ranges;
     };
 
@@ -361,10 +356,6 @@
     function Polar() {
       Polar.__super__.constructor.apply(this, arguments);
     }
-
-    Polar.prototype.make = function(dim) {
-      return this.dim = dim;
-    };
 
     Polar.prototype.ranges = function(dim) {
       var r, ranges, t, _ref;
@@ -2623,19 +2614,32 @@
   poly.dim = {};
 
   poly.dim.make = function(spec, axes, legends) {
-    var d, dim, legend, maxheight, maxwidth, offset, _i, _len, _ref, _ref2, _ref3, _ref4, _ref5, _ref6;
+    var d, dim, key, legend, maxheight, maxwidth, obj, offset, _i, _len, _ref, _ref2, _ref3, _ref4, _ref5, _ref6;
     dim = {
       width: (_ref = spec.width) != null ? _ref : 400,
       height: (_ref2 = spec.height) != null ? _ref2 : 400,
       paddingLeft: (_ref3 = spec.paddingLeft) != null ? _ref3 : 10,
       paddingRight: (_ref4 = spec.paddingRight) != null ? _ref4 : 10,
       paddingTop: (_ref5 = spec.paddingTop) != null ? _ref5 : 10,
-      paddingBottom: (_ref6 = spec.paddingBottom) != null ? _ref6 : 10,
-      guideLeft: axes.y.getDimension().width + 5,
-      guideBottom: axes.x.getDimension().height + 5,
-      guideTop: 10,
-      guideRight: 0
+      paddingBottom: (_ref6 = spec.paddingBottom) != null ? _ref6 : 10
     };
+    dim.guideTop = 10;
+    dim.guideRight = 0;
+    dim.guideLeft = 5;
+    dim.guideBottom = 5;
+    for (key in axes) {
+      obj = axes[key];
+      d = obj.getDimension();
+      if (d.position === 'left') {
+        dim.guideLeft += d.width;
+      } else if (d.position === 'right') {
+        dim.guideRight += d.width;
+      } else if (d.position === 'bottom') {
+        dim.guideBottom += d.height;
+      } else if (d.position === 'top') {
+        dim.guideTop += d.height;
+      }
+    }
     maxheight = dim.height - dim.guideTop - dim.paddingTop;
     maxwidth = 0;
     offset = {
@@ -2660,8 +2664,8 @@
   };
 
   poly.dim.guess = function(spec) {
-    var _ref, _ref2, _ref3, _ref4, _ref5, _ref6;
-    return {
+    var dim, _ref, _ref2, _ref3, _ref4, _ref5, _ref6;
+    dim = {
       width: (_ref = spec.width) != null ? _ref : 400,
       height: (_ref2 = spec.height) != null ? _ref2 : 400,
       paddingLeft: (_ref3 = spec.paddingLeft) != null ? _ref3 : 10,
@@ -2673,6 +2677,9 @@
       guideTop: 10,
       guideBottom: 30
     };
+    dim.chartHeight = dim.height - dim.paddingTop - dim.paddingBottom - dim.guideTop - dim.guideBottom;
+    dim.chartWidth = dim.width - dim.paddingLeft - dim.paddingRight - dim.guideLeft - dim.guideRight;
+    return dim;
   };
 
   poly.dim.clipping = function(dim) {
