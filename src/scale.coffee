@@ -214,6 +214,11 @@ class Scale
   _tickNum: () -> 'num'
   _tickDate: () -> 'date'
   _tickCat: () -> 'cat'
+  _identityWrapper: (y) -> (x) ->
+      if _.isObject(x) and x.t is 'scalefn'
+        if x.f is 'identity' then return x.v
+      y x
+
 
 ###
 Position Scales for the x- and y-axes
@@ -272,10 +277,7 @@ class Area extends Scale
     min = if domain.min == 0 then 0 else 1
     sq = Math.sqrt
     ylin = poly.linear sq(domain.min), min, sq(domain.max), 10
-    (x) ->
-      if _.isObject(x) and x.t is 'scalefn'
-        if x.f is 'identity' then return x.v
-      ylin sq(x)
+    @_identityWrapper (x) -> ylin sq(x)
 
 class Color extends Scale
   _constructCat: (domain) -> #TEMPORARY
@@ -298,7 +300,7 @@ class Gradient extends Scale
     r = poly.linear domain.min, lower.r, domain.max, upper.r
     g = poly.linear domain.min, lower.g, domain.max, upper.g
     b = poly.linear domain.min, lower.b, domain.max, upper.b
-    (value) => Raphael.rgb r(value), g(value), b(value)
+    @_identityWrapper (value) => Raphael.rgb r(value), g(value), b(value)
 
 class Gradient2 extends Scale
   constructor: (params) -> {lower, zero, upper} = params

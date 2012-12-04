@@ -348,7 +348,7 @@
       return {
         type: 'text',
         x: tick.location,
-        y: sf.max(10),
+        y: sf.max(12),
         text: tick.value,
         'text-anchor': 'middle'
       };

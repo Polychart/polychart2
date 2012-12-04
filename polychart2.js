@@ -1278,7 +1278,7 @@
       return {
         type: 'text',
         x: tick.location,
-        y: sf.max(10),
+        y: sf.max(12),
         text: tick.value,
         'text-anchor': 'middle'
       };
@@ -1808,6 +1808,13 @@
       return 'cat';
     };
 
+    Scale.prototype._identityWrapper = function(y) {
+      return function(x) {
+        if (_.isObject(x) && x.t === 'scalefn') if (x.f === 'identity') return x.v;
+        return y(x);
+      };
+    };
+
     return Scale;
 
   })();
@@ -1949,10 +1956,9 @@
       min = domain.min === 0 ? 0 : 1;
       sq = Math.sqrt;
       ylin = poly.linear(sq(domain.min), min, sq(domain.max), 10);
-      return function(x) {
-        if (_.isObject(x) && x.t === 'scalefn') if (x.f === 'identity') return x.v;
+      return this._identityWrapper(function(x) {
         return ylin(sq(x));
-      };
+      });
     };
 
     return Area;
@@ -2020,9 +2026,9 @@
       r = poly.linear(domain.min, lower.r, domain.max, upper.r);
       g = poly.linear(domain.min, lower.g, domain.max, upper.g);
       b = poly.linear(domain.min, lower.b, domain.max, upper.b);
-      return function(value) {
+      return this._identityWrapper(function(value) {
         return Raphael.rgb(r(value), g(value), b(value));
-      };
+      });
     };
 
     return Gradient;
