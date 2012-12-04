@@ -202,7 +202,9 @@
     };
     spec = {
       layers: [sampleLayer],
-      flip: true
+      coord: poly.coord.polar({
+        flip: true
+      })
     };
     c = poly.chart(spec);
     return c.render(dom);

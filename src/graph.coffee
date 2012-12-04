@@ -10,7 +10,7 @@ class Graph
     @legends = null
     @dims = null
     @paper = null
-    @coord = poly.coord.polar flip : spec.flip
+    @coord = spec.coord ? poly.coord.cartesian()
     @initial_spec = spec
     @make spec
 

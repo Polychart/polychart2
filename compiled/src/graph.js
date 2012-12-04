@@ -10,16 +10,16 @@
       this._legacy = __bind(this._legacy, this);
       this.render = __bind(this.render, this);
       this.merge = __bind(this.merge, this);
-      this.reset = __bind(this.reset, this);      this.graphId = _.uniqueId('graph_');
+      this.reset = __bind(this.reset, this);
+      var _ref;
+      this.graphId = _.uniqueId('graph_');
       this.layers = null;
       this.scaleSet = null;
       this.axes = null;
       this.legends = null;
       this.dims = null;
       this.paper = null;
-      this.coord = poly.coord.polar({
-        flip: spec.flip
-      });
+      this.coord = (_ref = spec.coord) != null ? _ref : poly.coord.cartesian();
       this.initial_spec = spec;
       this.make(spec);
     }
