@@ -247,22 +247,53 @@
       RAxis.__super__.constructor.apply(this, arguments);
     }
 
-    RAxis.prototype._renderline = function(renderer, axisDim) {};
+    RAxis.prototype._renderline = function(renderer, axisDim) {
+      var x, y1, y2;
+      x = sf.identity(axisDim.left);
+      y1 = sf.identity(axisDim.top);
+      y2 = sf.identity(axisDim.top + axisDim.height / 2);
+      return renderer.add({
+        type: 'line',
+        x: [x, x],
+        y: [y1, y2]
+      });
+    };
 
     RAxis.prototype._makeTitle = function(axisDim, text) {
-      return {};
+      return {
+        type: 'text',
+        x: sf.identity(axisDim.left - this.maxwidth - 15),
+        y: sf.identity(axisDim.top + axisDim.height / 4),
+        text: text,
+        transform: 'r270',
+        'text-anchor': 'middle'
+      };
     };
 
     RAxis.prototype._makeTick = function(axisDim, tick) {
-      return {};
+      return {
+        type: 'line',
+        x: [sf.identity(axisDim.left), sf.identity(axisDim.left - 5)],
+        y: [tick.location, tick.location]
+      };
     };
 
     RAxis.prototype._makeLabel = function(axisDim, tick) {
-      return {};
+      return {
+        type: 'text',
+        x: sf.identity(axisDim.left - 7),
+        y: tick.location,
+        text: tick.value,
+        'text-anchor': 'end'
+      };
     };
 
     RAxis.prototype.getDimension = function() {
-      return {};
+      return {
+        position: 'left',
+        height: 'all',
+        width: 20 + this.maxwidth
+      };
     };
 
     return RAxis;
@@ -277,18 +308,50 @@
       TAxis.__super__.constructor.apply(this, arguments);
     }
 
-    TAxis.prototype._renderline = function(renderer, axisDim) {};
+    TAxis.prototype._renderline = function(renderer, axisDim) {
+      var radius;
+      radius = Math.min(axisDim.width, axisDim.height) / 2 - 10;
+      return renderer.add({
+        type: 'circle',
+        x: sf.identity(axisDim.left + axisDim.width / 2),
+        y: sf.identity(axisDim.top + axisDim.height / 2),
+        size: sf.identity(radius),
+        color: sf.identity('none'),
+        stroke: sf.identity('black'),
+        'stroke-width': 1
+      });
+    };
 
     TAxis.prototype._makeTitle = function(axisDim, text) {
-      return {};
+      return {
+        type: 'text',
+        x: sf.identity(axisDim.left + axisDim.width / 2),
+        y: sf.identity(axisDim.bottom + 27),
+        text: text,
+        'text-anchor': 'middle'
+      };
     };
 
     TAxis.prototype._makeTick = function(axisDim, tick) {
-      return {};
+      var radius;
+      radius = Math.min(axisDim.width, axisDim.height) / 2 - 10;
+      return {
+        type: 'line',
+        x: [tick.location, tick.location],
+        y: [sf.max(0), sf.max(3)]
+      };
     };
 
     TAxis.prototype._makeLabel = function(axisDim, tick) {
-      return {};
+      var radius;
+      radius = Math.min(axisDim.width, axisDim.height) / 2 - 10;
+      return {
+        type: 'text',
+        x: tick.location,
+        y: sf.max(10),
+        text: tick.value,
+        'text-anchor': 'middle'
+      };
     };
 
     TAxis.prototype.getDimension = function() {
@@ -458,9 +521,9 @@
     } else if (type === 'y') {
       return new YAxis();
     } else if (type === 'r') {
-      return new XAxis();
+      return new RAxis();
     } else if (type === 't') {
-      return new YAxis();
+      return new TAxis();
     }
   };
 

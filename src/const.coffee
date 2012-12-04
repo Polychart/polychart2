@@ -9,6 +9,8 @@ poly.const =
   aes : ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id']
   scaleFns :
     novalue : () -> {v: null, f: 'novalue', t: 'scalefn'}
+    max: (v) -> {v: v, f: 'max', t: 'scalefn'}
+    min: (v) -> {v: v, f: 'min', t: 'scalefn'}
     upper: (v) -> {v: v, f: 'upper', t: 'scalefn'}
     lower: (v) -> {v: v, f: 'lower', t: 'scalefn'}
     middle: (v) -> {v: v, f: 'middle', t: 'scalefn'}

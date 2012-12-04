@@ -49,13 +49,18 @@ class Circle extends Renderer # for both cartesian & polar
   _make: (paper) -> paper.circle()
   attr: (scales, coord, mark, mayflip) ->
     {x, y} = coord.getXY mayflip, scales, mark
+    stroke =
+      if mark.stroke
+        @_maybeApply(scales.stroke, mark.stroke)
+      else
+        @_maybeApply scales.color, mark.color
     cx: x
     cy: y
     r: @_maybeApply scales.size, mark.size
     fill: @_maybeApply scales.color, mark.color
-    stroke: @_maybeApply scales.color, mark.color
+    stroke: stroke
     title: 'omgthisiscool!'
-    'stroke-width': '0px'
+    'stroke-width': mark['stroke-width'] ? '0px'
 
 class Line extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()

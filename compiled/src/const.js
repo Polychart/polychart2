@@ -19,6 +19,20 @@
           t: 'scalefn'
         };
       },
+      max: function(v) {
+        return {
+          v: v,
+          f: 'max',
+          t: 'scalefn'
+        };
+      },
+      min: function(v) {
+        return {
+          v: v,
+          f: 'min',
+          t: 'scalefn'
+        };
+      },
       upper: function(v) {
         return {
           v: v,

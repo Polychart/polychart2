@@ -375,6 +375,8 @@
             if (value.f === 'upper') return y(value.v + domain.bw) - space;
             if (value.f === 'lower') return y(value.v) + space;
             if (value.f === 'middle') return y(value.v + domain.bw / 2);
+            if (value.f === 'max') return _this.range.max + value.v;
+            if (value.f === 'min') return _this.range.min + value.v;
           }
           throw new poly.UnexpectedObject("Expected a value instead of an object");
         }
@@ -410,6 +412,8 @@
             if (value.f === 'upper') return y(value.v) + step - space;
             if (value.f === 'lower') return y(value.v) + space;
             if (value.f === 'middle') return y(value.v) + step / 2;
+            if (value.f === 'max') return _this.range.max + value.v;
+            if (value.f === 'min') return _this.range.min + value.v;
           }
           throw new poly.UnexpectedObject("wtf is this object?");
         }

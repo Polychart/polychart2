@@ -114,16 +114,62 @@ class YAxis extends Axis # assumes position = left
 
 class RAxis extends Axis # assumes position = left
   _renderline : (renderer, axisDim) ->
-  _makeTitle: (axisDim, text) -> {}
-  _makeTick: (axisDim, tick) -> {}
-  _makeLabel: (axisDim, tick) -> {}
-  getDimension: () -> {}
+    x = sf.identity axisDim.left
+    y1 = sf.identity axisDim.top
+    y2 = sf.identity axisDim.top+axisDim.height/2
+    renderer.add { type: 'line', x: [x, x], y: [y1, y2] }
+  _makeTitle: (axisDim, text) ->
+    type: 'text'
+    x : sf.identity axisDim.left-@maxwidth-15
+    y : sf.identity axisDim.top+axisDim.height/4
+    text: text
+    transform : 'r270'
+    'text-anchor' : 'middle'
+  _makeTick: (axisDim, tick) ->
+    type: 'line'
+    x : [sf.identity(axisDim.left), sf.identity(axisDim.left-5)]
+    y : [tick.location, tick.location]
+  _makeLabel: (axisDim, tick) ->
+    type: 'text'
+    x : sf.identity(axisDim.left-7)
+    y : tick.location
+    text: tick.value
+    'text-anchor' : 'end'
+  getDimension: () ->
+    position: 'left'
+    height: 'all'
+    width: 20+@maxwidth
 
 class TAxis extends Axis # assumes position = ... um, what is it supposed to be?
   _renderline : (renderer, axisDim) ->
-  _makeTitle: (axisDim, text) -> {}
-  _makeTick: (axisDim, tick) -> {}
-  _makeLabel: (axisDim, tick) -> {}
+    radius = Math.min(axisDim.width, axisDim.height)/2 -10
+    renderer.add {
+      type: 'circle',
+      x: sf.identity axisDim.left + axisDim.width/2
+      y: sf.identity axisDim.top + axisDim.height/2
+      size: sf.identity radius
+      color: sf.identity('none')
+      stroke: sf.identity('black')
+      'stroke-width': 1
+    }
+  _makeTitle: (axisDim, text) ->
+    type: 'text'
+    x : sf.identity axisDim.left+axisDim.width/2
+    y : sf.identity axisDim.bottom + 27
+    text: text
+    'text-anchor' : 'middle'
+  _makeTick: (axisDim, tick) ->
+    radius = Math.min(axisDim.width, axisDim.height)/2 -10
+    type: 'line'
+    x : [tick.location, tick.location]
+    y : [sf.max(0), sf.max(3)]
+  _makeLabel: (axisDim, tick) ->
+    radius = Math.min(axisDim.width, axisDim.height)/2 -10
+    type: 'text'
+    x : tick.location
+    y : sf.max(12)
+    text: tick.value
+    'text-anchor' : 'middle'
   getDimension: () -> {}
 
 class Legend extends Guide
@@ -226,9 +272,9 @@ poly.guide.axis = (type) ->
   else if type == 'y'
     new YAxis()
   else if type == 'r'
-    new XAxis()
+    new RAxis()
   else if type == 't'
-    new YAxis()
+    new TAxis()
 poly.guide.legend = (aes) -> return new Legend(aes)
 
 @poly = poly

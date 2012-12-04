@@ -230,6 +230,8 @@ class PositionScale extends Scale
         if value.f is 'upper' then return y(value.v+domain.bw) - space
         if value.f is 'lower' then return y(value.v) + space
         if value.f is 'middle' then return y(value.v+domain.bw/2)
+        if value.f is 'max' then return @range.max + value.v
+        if value.f is 'min' then return @range.min + value.v
       throw new poly.UnexpectedObject("Expected a value instead of an object")
     y(value)
 
@@ -244,6 +246,8 @@ class Linear extends PositionScale
         if value.f is 'upper' then return y(value.v) + step - space
         if value.f is 'lower' then return y(value.v) + space
         if value.f is 'middle' then return y(value.v) + step/2
+        if value.f is 'max' then return @range.max + value.v
+        if value.f is 'min' then return @range.min + value.v
       throw new poly.UnexpectedObject("wtf is this object?")
     y(value) + step/2
   _constructCat: (domain) ->

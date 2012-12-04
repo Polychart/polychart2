@@ -114,16 +114,17 @@
     };
 
     Circle.prototype.attr = function(scales, coord, mark, mayflip) {
-      var x, y, _ref;
+      var stroke, x, y, _ref, _ref2;
       _ref = coord.getXY(mayflip, scales, mark), x = _ref.x, y = _ref.y;
+      stroke = mark.stroke ? this._maybeApply(scales.stroke, mark.stroke) : this._maybeApply(scales.color, mark.color);
       return {
         cx: x,
         cy: y,
         r: this._maybeApply(scales.size, mark.size),
         fill: this._maybeApply(scales.color, mark.color),
-        stroke: this._maybeApply(scales.color, mark.color),
+        stroke: stroke,
         title: 'omgthisiscool!',
-        'stroke-width': '0px'
+        'stroke-width': (_ref2 = mark['stroke-width']) != null ? _ref2 : '0px'
       };
     };
 
