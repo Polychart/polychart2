@@ -386,6 +386,12 @@
       Polar.__super__.constructor.apply(this, arguments);
     }
 
+    Polar.prototype.make = function(dims) {
+      this.dims = dims;
+      this.cx = this.dims.paddingLeft + this.dims.guideLeft + this.dims.chartWidth / 2;
+      return this.cy = this.dims.paddingTop + this.dims.guideTop + this.dims.chartHeight / 2;
+    };
+
     Polar.prototype.ranges = function() {
       var r, ranges, t, _ref;
       _ref = [this.x, this.y], r = _ref[0], t = _ref[1];
@@ -407,6 +413,36 @@
       } else {
         return 't';
       }
+    };
+
+    Polar.prototype.getXY = function(mayflip, scales, mark) {
+      var i, point, points, r, radius, t, theta, _getxy, _len, _ref, _ref2,
+        _this = this;
+      _ref = [this.x, this.y], r = _ref[0], t = _ref[1];
+      _getxy = function(radius, theta) {
+        return {
+          x: _this.cx + radius * Math.cos(theta - Math.PI / 2),
+          y: _this.cy + radius * Math.sin(theta - Math.PI / 2)
+        };
+      };
+      points = {
+        x: [],
+        y: []
+      };
+      if (_.isArray(mark[r])) {
+        _ref2 = mark[r];
+        for (i = 0, _len = _ref2.length; i < _len; i++) {
+          radius = _ref2[i];
+          radius = scales[r](radius);
+          theta = scales[t](mark[t][i]);
+          point = _getxy(radius, theta);
+          points.x.push(point.x);
+          points.y.push(point.y);
+        }
+      } else {
+        points = _getxy(scales[r](mark[r]), scales[t](mark[t]));
+      }
+      return points;
     };
 
     return Polar;
@@ -3071,7 +3107,7 @@
       this.legends = null;
       this.dims = null;
       this.paper = null;
-      this.coord = poly.coord.cartesian({
+      this.coord = poly.coord.polar({
         flip: spec.flip
       });
       this.initial_spec = spec;

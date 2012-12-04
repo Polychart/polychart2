@@ -17,7 +17,7 @@
       this.legends = null;
       this.dims = null;
       this.paper = null;
-      this.coord = poly.coord.cartesian({
+      this.coord = poly.coord.polar({
         flip: spec.flip
       });
       this.initial_spec = spec;

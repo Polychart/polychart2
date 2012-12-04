@@ -10,7 +10,7 @@ class Graph
     @legends = null
     @dims = null
     @paper = null
-    @coord = poly.coord.cartesian flip : spec.flip
+    @coord = poly.coord.polar flip : spec.flip
     @initial_spec = spec
     @make spec
 
@@ -33,7 +33,7 @@ class Graph
     # dimension calculation
     if not @dims
       @dims = @_makeDimensions @spec, @scaleSet
-      @coord.make(@dims)
+      @coord.make @dims
       @ranges = @coord.ranges()
     @scaleSet.setRanges @ranges
     @_legacy(domains)

@@ -37,6 +37,10 @@ class Cartesian extends Coordinate
       }
 
 class Polar extends Coordinate
+  make: (dims) ->
+    @dims = dims
+    @cx = @dims.paddingLeft + @dims.guideLeft + @dims.chartWidth/2
+    @cy = @dims.paddingTop + @dims.guideTop + @dims.chartHeight/2
   ranges: () ->
     [r, t] = [@x, @y]
     ranges = {}
@@ -45,8 +49,25 @@ class Polar extends Coordinate
       min: 0
       max: Math.min(@dims.chartWidth,@dims.chartHeight)/2
     ranges
-  axisType: (aes) ->
-    if @[aes] == 'x' then 'r' else 't'
+  axisType: (aes) -> if @[aes] == 'x' then 'r' else 't'
+  getXY: (mayflip, scales, mark) ->
+    [r, t] = [@x, @y]
+    _getxy = (radius, theta) =>
+      x: @cx + radius * Math.cos(theta - Math.PI/2)
+      y: @cy + radius * Math.sin(theta - Math.PI/2)
+
+    points = x: [], y: []
+    if _.isArray mark[r] #and _.isArray mark[t]
+      for radius, i in mark[r]
+        radius = scales[r] radius
+        theta = scales[t] mark[t][i]
+        point = _getxy radius, theta
+        points.x.push point.x
+        points.y.push point.y
+    else
+      points = _getxy scales[r](mark[r]), scales[t](mark[t])
+    return points
+
 
 poly.coord =
   cartesian : (params) -> new Cartesian(params)
