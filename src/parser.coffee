@@ -1,70 +1,67 @@
-showCall = (fname, args) -> fname + '(' + args + ')'
-showList = (xs) -> '[' + xs + ']'
+showCall = (fname, args) -> "#{fname}(#{args})"
+showList = (xs) -> "[#{xs}]"
 
 class Stream
   constructor: (src) -> @buffer = (val for val in src).reverse()
-  empty: () -> @buffer.length is 0
-  peek: () -> if @empty() then null else @buffer[@buffer.length - 1]
-  get: () -> if @empty() then null else @buffer.pop()
-  put: (val) -> @buffer.push val
-  toString: () -> showCall('Stream', showList([@buffer...].reverse()))
+  empty: -> @buffer.length is 0
+  peek: -> if @empty() then null else @buffer[@buffer.length - 1]
+  get: -> if @empty() then null else @buffer.pop()
+  toString: -> showCall('Stream', showList([@buffer...].reverse()))
 
 class Token
-  @Tag = { symbol: 'symbol', literal: 'literal', lparen: '(', rparen: ')', comma: ',' }
+  @Tag = {
+    symbol: 'symbol', literal: 'literal',
+    lparen: '(', rparen: ')', comma: ','}
   constructor: (@tag) ->
-  toString: () -> '<' + @contents().toString() + '>'
-  contents: () -> [@tag]
+  toString: -> "<#{@contents().toString()}>"
+  contents: -> [@tag]
 class Symbol extends Token
   constructor: (@name) -> super Token.Tag.symbol
-  contents: () -> super().concat([@name])
+  contents: -> super().concat([@name])
 class Literal extends Token
   constructor: (@val) -> super Token.Tag.literal
-  contents: () -> super().concat([@val])
+  contents: -> super().concat([@val])
 [LParen, RParen, Comma] = (new Token(tag) for tag in [
   Token.Tag.lparen, Token.Tag.rparen, Token.Tag.comma])
 
 tokenizers = [
   [/^\(/, (_) -> LParen],
   [/^\)/, (_) -> RParen],
-  [/^,/, (_) -> Comma]
-  [/^\d+(\.\d+)?/, (val) -> new Literal(val)],
-  [/^\w+/, (name) -> new Symbol(name)],
+  [/^,/, (_) -> Comma],
+  [/^\d+(\.\d+)?/, (val) -> new Literal(val)], # TODO: other numeric formats
+  [/^\w+/, (name) -> new Symbol(name)], # TODO: escaping
 ]
-
-leadingSpaces = /^[ \t\n\r\v\f]*/
-dropLeadingSpaces = (str) ->
-  match = leadingSpaces.exec(str)[0]
-  str[match.length..]
-
 matchToken = (str) ->
-  str = dropLeadingSpaces str
   for [pat, op] in tokenizers
     match = pat.exec(str)
     if match
       substr = match[0]
       return [str[substr.length..], op substr]
-  throw new Error('cannot tokenize: ' + str)
-
+  throw new Error("cannot tokenize: #{str}")
 tokenize = (str) ->
-  tokens = []
-  while str
+  loop
+    str = str.replace(/^\s+/, '')
+    if not str then break
     [str, tok] = matchToken str
-    tokens.push tok
-  tokens
+    tok
 
 class Expr
+  toString: -> showCall(@constructor.name, @contents())
 class Ident extends Expr
   constructor: (@name) ->
-  toString: () -> showCall('Ident', [@name])
-  pretty: () -> @name
+  contents: -> [@name]
+  pretty: -> @name
+  visit: (visitor) -> visitor.ident(@, @name)
 class Const extends Expr
   constructor: (@val) ->
-  toString: () -> showCall('Const', [@val])
-  pretty: () -> @val
+  contents: -> [@val]
+  pretty: -> @val
+  visit: (visitor) -> visitor.const(@, @val)
 class Call extends Expr
   constructor: (@fname, @args) ->
-  toString: () -> showCall('Call', [@fname, showList(@args)])
-  pretty: () -> showCall(@fname, arg.pretty() for arg in @args)
+  contents: -> [@fname, showList(@args)]
+  pretty: -> showCall(@fname, arg.pretty() for arg in @args)
+  visit: (visitor) -> visitor.call(@, @fname, arg.visit(visitor) for arg in @args)
 
 expect = (stream, fail, alts) ->
   token = stream.peek()
@@ -73,14 +70,12 @@ expect = (stream, fail, alts) ->
       if token.tag is tag
         return express(stream)
   fail stream
-
-parseFail = (stream) -> throw Error('unable to parse: ' + stream.toString())
+parseFail = (stream) -> throw Error("unable to parse: #{stream.toString()}")
 parse = (str) ->
-  tokens = tokenize str
-  stream = new Stream tokens
+  stream = new Stream (tokenize str)
   expr = parseExpr(stream)
   if stream.peek() isnt null
-    throw Error('expected end of stream, but found: ' + stream.toString())
+    throw Error("expected end of stream, but found: #{stream.toString()}")
   expr
 parseExpr = (stream) ->
   expect(stream, parseFail,
@@ -103,25 +98,230 @@ parseCallArgs = (acc) -> (stream) ->
     [[Token.Tag.rparen, (ts) -> ts.get(); args],
      [Token.Tag.comma, (ts) -> ts.get(); (parseCallArgs args) ts]])
 
-# exports
-@parse = parse
-@Expr = Expr
-@Ident = Ident
-@Const = Const
-@Call = Call
-
 # testing
 test = (str) ->
-  console.log('\n\ntesting: ' + str + '\n')
-  toks = tokenize str
-  console.log(toks.toString() + '\n')
-  expr = parse str
-  console.log(expr.toString() + '\n')
-  console.log expr.pretty()
+  try
+    console.log('\n\ntesting: ' + str + '\n')
+    toks = tokenize str
+    console.log(toks.toString() + '\n')
+    expr = parse str
+    console.log(expr.toString() + '\n')
+    console.log expr.pretty()
+  catch error
+    console.log error
 
-test 'A'
-test '3.3445'
-test 'mean(A)'
-test 'log(mean(sum(A_0), 10), 2.718, CCC)'
-#test 'this(should, break'
+test '  A'
+test '3.3445 '
+test ' mean(A)'
+test 'log(mean(sum(A_0), 10), 2.718, CCC)  '
+test 'this(should, break'
 test 'so should this'
+console.log '\n\n'
+
+###############################################################################
+
+###
+var layerSpec = {
+  data: DATA_SET,
+  type: “point”,
+  x: {var: “b”, sort: “a”, asc: false, guide: “y2”},
+  y: {var: “a”},
+  color: {const: “blue”},
+  opacity: {var: “sum(c)”},
+  filter: { x: { gt: 0, lt: 100 } },
+}
+
+
+var dataSpec = {
+  trans: [{key: “a”, trans: “bin”, binwidth: 10, name: “bin(a,10)”},
+          {key: “b”, trans: “lag”, lag: 1, name: “lag(b, 1)”},
+          ...],
+  filter: {a: { gt: 0, le: 100},
+           c: { in: [“group1”, “group2”, “group3”]},
+           ... },
+  stats: {stats:
+            [{key: “b”, stat: “mean”, name: “mean(b)”},
+             {key: “e”, stat: “count”, name: “count(e)”},
+             ...],
+          groups: [“bin(a,10)”, “c”]},
+  select: [“bin(a,10)”, “bin(b,5)”, “mean(b)”, “count(e)”, “c”],
+  meta: {
+    c: { sort: “count(e)”
+         stat: {key: “e”, stat: “count”, name: “count(e)”},
+         limit: 3,
+         asc: true},
+    b: { sort: "a",
+         asc: false },
+  }
+}
+###
+
+zipWith = (op) -> (xs, ys) ->
+  if xs.length isnt ys.length
+    throw Error("zipWith: lists have different length: [#{xs}], [#{ys}]")
+  op(xval, ys[ix]) for xval, ix in xs
+zip = zipWith (xval, yval) -> [xval, yval]
+assocsToObj = (assocs) ->
+  obj = {}
+  for [key, val] in assocs
+    obj[key] = val
+  obj
+dictGet = (dict, key, defval = null) -> (key of dict and dict[key]) or defval
+dictGets = (dict, keyVals) ->
+  final = {}
+  for [key, defval] in keyVals
+    val = dictGet(dict, key, defval)
+    if val isnt null
+      final[key] = val
+  final
+mergeObjLists = (dicts) ->
+  final = {}
+  for dict in dicts
+    for key of dict
+      final[key] = dict[key].concat(dictGet(final, key, []))
+  final
+
+extractOps = (context) ->
+  opdict = {}
+  for [name, args...] in context.transforms
+    opdict[name] = ['trans', args]
+  for [name, args...] in context.statistics
+    opdict[name] = ['stat', args]
+  (expr) ->
+    results = { trans: [], stat: [] }
+    extractor = {
+      ident: (expr, name) -> name,
+      const: (expr, val) -> val,
+      call: (expr, fname, args) ->
+        if not fname of opdict
+          throw Error("unknown operation: #{fname}")
+        [optype, opargs] = opdict[fname]
+        result = assocsToObj zip(opargs, args)
+        result.name = expr.pretty()
+        result[optype] = fname
+        results[optype].push result
+        result.name
+    }
+    expr.visit(extractor)
+    results
+
+dedup = (vals, trans = (x) -> x) ->
+  unique = {}
+  unique[trans val] = val for val in vals
+  val for _, val of unique
+dedupOnKey = (key) -> (vals) -> dedup(vals, (val) -> val[key])
+
+console.log '\ndedup:'
+console.log(dedup [1, 2, 3, 2, 3, 3, 1])
+console.log ''
+
+layerToDataSpec = (cxt) ->
+  extract = extractOps(cxt)
+  (lspec) ->
+    transstat = []
+    select = []
+    groups = []
+    metas = {}
+    filters = {}
+    aesthetics = dictGets(lspec, ([name, null] for name in cxt.aesthetics))
+    for key of aesthetics
+      if 'var' not of aesthetics[key]
+        delete aesthetics[key]
+    for key of aesthetics
+      desc = aesthetics[key]
+      varstr = desc.var
+      expr = parse varstr
+      desc.var = expr.pretty()
+      ts = extract expr
+      transstat.push(ts)
+      select.push desc.var
+      if ts.stat.length is 0
+        groups.push desc.var
+      if 'sort' of desc
+        desc = dictGets(desc, cxt.metaDefaults)
+        result = extract(parse desc.sort)
+        if result.stat.length isnt 0
+          desc.stat = result.stat
+        metas[varstr] = desc
+    for key of lspec.filter # TODO: assume layerspec is smarter
+      if not key of aesthetics
+        throw Error("filter refers to non-var aesthetic: #{key}")
+      filters[aesthetics[key].var] = lspec.filter[key]
+
+    transstat = mergeObjLists transstat
+    dedupByName = dedupOnKey 'name'
+    stats = {stats: dedupByName(transstat.stat), groups: dedup groups}
+    {
+      trans: dedupByName(transstat.trans),
+      filter: filters, stats: stats,
+      select: (dedup select), meta: metas
+    }
+
+  #trans: [{key: “a”, trans: “bin”, binwidth: 10, name: “bin(a,10)”},
+          #{key: “b”, trans: “lag”, lag: 1, name: “lag(b, 1)”},
+          #...],
+  #filter: {a: { gt: 0, le: 100},
+           #c: { in: [“group1”, “group2”, “group3”]},
+           #... },
+  #stats: {stats:
+            #[{key: “b”, stat: “mean”, name: “mean(b)”},
+             #{key: “e”, stat: “count”, name: “count(e)”},
+             #...],
+          #groups: [“bin(a,10)”, “c”]},
+  #select: [“bin(a,10)”, “bin(b,5)”, “mean(b)”, “count(e)”, “c”],
+
+# testing
+context = {
+  aesthetics: ['x', 'y', 'color', 'opacity'],
+  metaDefaults: [['sort', null], ['stat', null], ['limit', null], ['asc', true]],
+  transforms: [['bin', 'key', 'binwidth'], ['lag', 'key', 'lag']],
+  statistics: [['count', 'key'], ['sum', 'key'], ['mean', 'key']],
+}
+
+console.log(zip([1..5], [6..10]))
+console.log mergeObjLists([{'a': [1, 2]}, {'b': [3]}, {'a': [7]}])
+
+extract = extractOps(context)
+r1 = extract(parse 'sum(c)')
+r2 = extract(parse 'bin(lag(a, 1), 10)')
+console.log mergeObjLists([r1, r2])
+
+
+exampleLS = {
+  #data: DATA_SET,
+  type: "point",
+  y: {var: "b", sort: "a", guide: "y2"},
+  x: {var: "a"},
+  color: {const: "blue"},
+  opacity: {var: "sum(c)"},
+  filter: {x: {gt: 0, lt: 100}},
+}
+
+exampleLS2 = {
+  #data: DATA_SET,
+  type: "point",
+  y: {var: "b", sort: "a", guide: "y2"},
+  x: {var: "lag(a, 1)"},
+  color: {const: "blue"},
+  opacity: {var: "sum(c)"},
+  filter: {x: {gt: 0, lt: 100}},
+}
+
+exampleLS3 =
+  type: "point"
+  y: {var: "lag(c , 1) "}
+  x: {var: "bin(a, 10)"}
+  color: {var: "mean(lag(c,1))"}
+  opacity: {var: "bin(a, 10)"}
+
+l2d = layerToDataSpec(context)
+testl2d = (ex) ->
+  ds = l2d(ex)
+  console.log '\n\n'
+  console.log ds
+  console.log ''
+  console.log ds.stats
+
+testl2d exampleLS
+testl2d exampleLS2
+testl2d exampleLS3
