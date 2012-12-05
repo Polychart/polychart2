@@ -228,7 +228,9 @@ class PositionScale extends Scale
     @range = range
     super(domain)
   _wrapper : (domain, y) => (value) =>
-    space = if @range.max > @range.min then 2 else -2
+    # NOTE: the below spacing makes sure that animation in polar coordinates
+    # behave as expected. Test with polar bar charts to see...
+    space = 0.001 * (if @range.max > @range.min then 1 else -1)
     if _.isObject(value)
       if value.t is 'scalefn'
         if value.f is 'identity' then return value.v
@@ -245,7 +247,7 @@ class Linear extends PositionScale
     max = domain.max + (domain.bw ? 0)
     @_wrapper domain, poly.linear(domain.min, @range.min, max, @range.max)
   _wrapper2 : (step, y) => (value) =>
-    space = if @range.max > @range.min then 2 else -2
+    space = 0.001 * (if @range.max > @range.min then 1 else -1)
     if _.isObject(value)
       if value.t is 'scalefn'
         if value.f is 'identity' then return value.v

@@ -375,7 +375,7 @@
       var _this = this;
       return function(value) {
         var space;
-        space = _this.range.max > _this.range.min ? 2 : -2;
+        space = 0.001 * (_this.range.max > _this.range.min ? 1 : -1);
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
             if (value.f === 'identity') return value.v;
@@ -414,7 +414,7 @@
       var _this = this;
       return function(value) {
         var space;
-        space = _this.range.max > _this.range.min ? 2 : -2;
+        space = 0.001 * (_this.range.max > _this.range.min ? 1 : -1);
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
             if (value.f === 'identity') return value.v;

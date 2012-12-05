@@ -1863,7 +1863,7 @@
       var _this = this;
       return function(value) {
         var space;
-        space = _this.range.max > _this.range.min ? 2 : -2;
+        space = 0.001 * (_this.range.max > _this.range.min ? 1 : -1);
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
             if (value.f === 'identity') return value.v;
@@ -1902,7 +1902,7 @@
       var _this = this;
       return function(value) {
         var space;
-        space = _this.range.max > _this.range.min ? 2 : -2;
+        space = 0.001 * (_this.range.max > _this.range.min ? 1 : -1);
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
             if (value.f === 'identity') return value.v;
@@ -3203,13 +3203,18 @@
     };
 
     CircleRect.prototype.attr = function(scales, coord, mark, mayflip) {
-      debugger;
       var large, path, r, t, x, x0, x1, y, y0, y1, _ref, _ref2, _ref3;
       _ref = mark.x, x0 = _ref[0], x1 = _ref[1];
       _ref2 = mark.y, y0 = _ref2[0], y1 = _ref2[1];
       mark.x = [x0, x0, x1, x1];
       mark.y = [y0, y1, y1, y0];
       _ref3 = coord.getXY(mayflip, scales, mark), x = _ref3.x, y = _ref3.y, r = _ref3.r, t = _ref3.t;
+      if (coord.flip) {
+        x.push(x.splice(0, 1)[0]);
+        y.push(y.splice(0, 1)[0]);
+        r.push(r.splice(0, 1)[0]);
+        t.push(t.splice(0, 1)[0]);
+      }
       large = Math.abs(t[1] - t[0]) > Math.PI ? 1 : 0;
       path = "M " + x[0] + " " + y[0] + " A " + r[0] + " " + r[0] + " 0 " + large + " 1 " + x[1] + " " + y[1];
       large = Math.abs(t[3] - t[2]) > Math.PI ? 1 : 0;

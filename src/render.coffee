@@ -84,13 +84,16 @@ class Rect extends Renderer # for CARTESIAN only
 class CircleRect extends Renderer # FOR POLAR ONLY
   _make: (paper) -> paper.path()
   attr: (scales, coord, mark, mayflip) ->
-    debugger
     [x0, x1] = mark.x
     [y0, y1] = mark.y
     mark.x = [x0, x0, x1, x1]
     mark.y = [y0, y1, y1, y0]
     {x, y, r, t} = coord.getXY mayflip, scales, mark
-
+    if coord.flip
+      x.push x.splice(0,1)[0]
+      y.push y.splice(0,1)[0]
+      r.push r.splice(0,1)[0]
+      t.push t.splice(0,1)[0]
     large = if Math.abs(t[1]-t[0]) > Math.PI then 1 else 0
     path = "M #{x[0]} #{y[0]} A #{r[0]} #{r[0]} 0 #{large} 1 #{x[1]} #{y[1]}"
     large = if Math.abs(t[3]-t[2]) > Math.PI then 1 else 0

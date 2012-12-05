@@ -63,12 +63,11 @@
       y :
         type:'num', min:0, max:10, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
-    coord: poly.coord.polar()
+    coord: poly.coord.polar( flip: true)
   }
   c = poly.chart spec
   c.render dom
 
-###
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
@@ -77,7 +76,6 @@
     c.render dom
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
-###
 
 @examples.bar_static = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
