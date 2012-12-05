@@ -23,7 +23,8 @@ class Graph
     @layers ?= @_makeLayers @spec
     # calculation of statistics & layers
     merge = _.after(@layers.length, @merge)
-    _.each @layers, (layerObj, id) -> layerObj.make spec.layers[id], merge
+    for layerObj, id in @layers
+      layerObj.make spec.layers[id], merge
 
   merge: () =>
     # make the scales...?
@@ -44,7 +45,8 @@ class Graph
     clipping = @coord.clipping @dims
     # render each layer
     renderer = poly.render @graphId, @paper, scales, @coord, true, clipping
-    _.each @layers, (layer) => layer.render(renderer)
+    for layer in @layers
+      layer.render renderer
     # render axes
     renderer = poly.render @graphId, @paper, scales, @coord, false
 
@@ -73,7 +75,8 @@ class Graph
     @scales = @scaleSet.getScaleFns()
     axes = @scaleSet.makeAxes()
     @ticks = {}
-    _.each axes, (v, k) => @ticks[k] = v.ticks
+    for k, v of axes
+      @ticks[k] = v.ticks
 
 poly.chart = (spec) -> new Graph(spec)
 

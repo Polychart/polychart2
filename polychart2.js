@@ -98,21 +98,23 @@
   */
 
   poly.flatten = function(values) {
-    var flat;
+    var flat, k, v, _i, _len;
     flat = [];
     if (values != null) {
       if (_.isObject(values)) {
         if (values.t === 'scalefn') {
           flat.push(values.v);
         } else {
-          _.each(values, function(v) {
-            return flat = flat.concat(poly.flatten(v));
-          });
+          for (k in values) {
+            v = values[k];
+            flat = flat.concat(poly.flatten(v));
+          }
         }
       } else if (_.isArray(values)) {
-        _.each(values, function(v) {
-          return flat = flat.concat(poly.flatten(v));
-        });
+        for (_i = 0, _len = values.length; _i < _len; _i++) {
+          v = values[_i];
+          flat = flat.concat(poly.flatten(v));
+        }
       } else {
         flat.push(values);
       }
@@ -1207,11 +1209,12 @@
   */
 
   poly.domain.make = function(layers, guideSpec, strictmode) {
-    var domainSets;
+    var domainSets, layerObj, _i, _len;
     domainSets = [];
-    _.each(layers, function(layerObj) {
-      return domainSets.push(makeDomainSet(layerObj, guideSpec, strictmode));
-    });
+    for (_i = 0, _len = layers.length; _i < _len; _i++) {
+      layerObj = layers[_i];
+      domainSets.push(makeDomainSet(layerObj, guideSpec, strictmode));
+    }
     return mergeDomainSets(domainSets);
   };
 
@@ -1274,12 +1277,11 @@
   */
 
   makeDomainSet = function(layerObj, guideSpec, strictmode) {
-    var domain;
+    var aes, domain, fromspec, values, _ref, _ref2, _ref3;
     domain = {};
-    _.each(_.keys(layerObj.mapping), function(aes) {
-      var fromspec, values, _ref, _ref2, _ref3;
+    for (aes in layerObj.mapping) {
       if (strictmode) {
-        return domain[aes] = makeDomain(guideSpec[aes]);
+        domain[aes] = makeDomain(guideSpec[aes]);
       } else {
         values = flattenGeoms(layerObj.geoms, aes);
         fromspec = function(item) {
@@ -1290,21 +1292,21 @@
           }
         };
         if (typeOf(values) === 'num') {
-          return domain[aes] = makeDomain({
+          domain[aes] = makeDomain({
             type: 'num',
             min: (_ref = fromspec('min')) != null ? _ref : _.min(values),
             max: (_ref2 = fromspec('max')) != null ? _ref2 : _.max(values),
             bw: fromspec('bw')
           });
         } else {
-          return domain[aes] = makeDomain({
+          domain[aes] = makeDomain({
             type: 'cat',
             levels: (_ref3 = fromspec('levels')) != null ? _ref3 : _.uniq(values),
             sorted: fromspec('levels') != null
           });
         }
       }
-    });
+    }
     return domain;
   };
 
@@ -1313,13 +1315,16 @@
   */
 
   flattenGeoms = function(geoms, aes) {
-    var values;
+    var geom, k, l, mark, values, _ref;
     values = [];
-    _.each(geoms, function(geom) {
-      return _.each(geom.marks, function(mark) {
-        return values = values.concat(poly.flatten(mark[aes]));
-      });
-    });
+    for (k in geoms) {
+      geom = geoms[k];
+      _ref = geom.marks;
+      for (l in _ref) {
+        mark = _ref[l];
+        values = values.concat(poly.flatten(mark[aes]));
+      }
+    }
     return values;
   };
 
@@ -1338,13 +1343,13 @@
   */
 
   mergeDomainSets = function(domainSets) {
-    var merged;
+    var aes, domains, merged, _i, _len;
     merged = {};
-    _.each(aesthetics, function(aes) {
-      var domains;
+    for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
+      aes = aesthetics[_i];
       domains = _.without(_.pluck(domainSets, aes), void 0);
-      if (domains.length > 0) return merged[aes] = mergeDomains(domains);
-    });
+      if (domains.length > 0) merged[aes] = mergeDomains(domains);
+    }
     return merged;
   };
 
@@ -1443,7 +1448,7 @@
   */
 
   poly.tick.make = function(domain, guideSpec, type) {
-    var formatter, numticks, tickfn, tickobjs, ticks, _ref;
+    var formatter, numticks, t, tickfn, tickobjs, ticks, _i, _len, _ref;
     if (guideSpec.ticks != null) {
       ticks = guideSpec.ticks;
     } else {
@@ -1463,9 +1468,10 @@
     }
     tickobjs = {};
     tickfn = tickFactory(formatter);
-    _.each(ticks, function(t) {
-      return tickobjs[t] = tickfn(t);
-    });
+    for (_i = 0, _len = ticks.length; _i < _len; _i++) {
+      t = ticks[_i];
+      tickobjs[t] = tickfn(t);
+    }
     return tickobjs;
   };
 
@@ -2193,14 +2199,15 @@
     };
 
     ScaleSet.prototype.getScaleFns = function() {
-      var scales,
-        _this = this;
+      var aes, scales, _i, _len, _ref;
       scales = {};
       if (this.domainx) scales.x = this._makeXScale();
       if (this.domainy) scales.y = this._makeYScale();
-      _.each(['color', 'size'], function(aes) {
-        if (_this.domains[aes]) return scales[aes] = _this._makeScale(aes);
-      });
+      _ref = ['color', 'size'];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        aes = _ref[_i];
+        if (this.domains[aes]) scales[aes] = this._makeScale(aes);
+      }
       return scales;
     };
 
@@ -3136,7 +3143,7 @@
   */
 
   frontendProcess = function(dataSpec, rawData, callback) {
-    var addMeta, additionalFilter, data, metaData;
+    var addMeta, additionalFilter, d, data, filter, key, meta, metaData, metaSpec, trans, transSpec, _i, _len, _ref, _ref2, _ref3, _ref4;
     data = _.clone(rawData);
     metaData = {};
     addMeta = function(key, meta) {
@@ -3144,24 +3151,27 @@
       return _.extend((_ref = metaData[key]) != null ? _ref : {}, meta);
     };
     if (dataSpec.trans) {
-      _.each(dataSpec.trans, function(transSpec, key) {
-        var meta, trans, _ref;
-        _ref = transformFactory(key, transSpec), trans = _ref.trans, meta = _ref.meta;
-        _.each(data, function(d) {
-          return trans(d);
-        });
-        return addMeta(transSpec.name, meta);
-      });
+      _ref = dataSpec.trans;
+      for (key in _ref) {
+        transSpec = _ref[key];
+        _ref2 = transformFactory(key, transSpec), trans = _ref2.trans, meta = _ref2.meta;
+        for (_i = 0, _len = data.length; _i < _len; _i++) {
+          d = data[_i];
+          trans(d);
+        }
+        addMeta(transSpec.name, meta);
+      }
     }
     if (dataSpec.filter) data = _.filter(data, filterFactory(dataSpec.filter));
     if (dataSpec.meta) {
       additionalFilter = {};
-      _.each(dataSpec.meta, function(metaSpec, key) {
-        var filter, meta, _ref;
-        _ref = calculateMeta(key, metaSpec, data), meta = _ref.meta, filter = _ref.filter;
+      _ref3 = dataSpec.meta;
+      for (key in _ref3) {
+        metaSpec = _ref3[key];
+        _ref4 = calculateMeta(key, metaSpec, data), meta = _ref4.meta, filter = _ref4.filter;
         additionalFilter[key] = filter;
-        return addMeta(key, meta);
-      });
+        addMeta(key, meta);
+      }
       data = _.filter(data, filterFactory(additionalFilter));
     }
     if (dataSpec.stats && dataSpec.stats.stats && dataSpec.stats.stats.length > 0) {
@@ -3222,13 +3232,15 @@
   */
 
   poly.layer.toStrictMode = function(spec) {
-    _.each(aesthetics, function(aes) {
+    var aes, _i, _len;
+    for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
+      aes = aesthetics[_i];
       if (spec[aes] && _.isString(spec[aes])) {
-        return spec[aes] = {
+        spec[aes] = {
           "var": spec[aes]
         };
       }
-    });
+    }
     return spec;
   };
 
@@ -3289,43 +3301,53 @@
     };
 
     Layer.prototype.render = function(render) {
-      var added, deleted, kept, newpts, _ref,
-        _this = this;
+      var added, deleted, id, kept, newpts, _i, _j, _k, _len, _len2, _len3, _ref;
       newpts = {};
       _ref = poly.compare(_.keys(this.pts), _.keys(this.geoms)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
-      _.each(deleted, function(id) {
-        return _this._delete(render, _this.pts[id]);
-      });
-      _.each(added, function(id) {
-        return newpts[id] = _this._add(render, _this.geoms[id]);
-      });
-      _.each(kept, function(id) {
-        return newpts[id] = _this._modify(render, _this.pts[id], _this.geoms[id]);
-      });
+      for (_i = 0, _len = deleted.length; _i < _len; _i++) {
+        id = deleted[_i];
+        this._delete(render, this.pts[id]);
+      }
+      for (_j = 0, _len2 = added.length; _j < _len2; _j++) {
+        id = added[_j];
+        newpts[id] = this._add(render, this.geoms[id]);
+      }
+      for (_k = 0, _len3 = kept.length; _k < _len3; _k++) {
+        id = kept[_k];
+        newpts[id] = this._modify(render, this.pts[id], this.geoms[id]);
+      }
       return this.pts = newpts;
     };
 
     Layer.prototype._delete = function(render, points) {
-      return _.each(points, function(pt, id2) {
-        return render.remove(pt);
-      });
+      var id2, pt, _results;
+      _results = [];
+      for (id2 in points) {
+        pt = points[id2];
+        _results.push(render.remove(pt));
+      }
+      return _results;
     };
 
     Layer.prototype._modify = function(render, points, geom) {
-      var objs;
+      var id2, mark, objs, _ref;
       objs = {};
-      _.each(geom.marks, function(mark, id2) {
-        return objs[id2] = render.animate(points[id2], mark, geom.evtData);
-      });
+      _ref = geom.marks;
+      for (id2 in _ref) {
+        mark = _ref[id2];
+        objs[id2] = render.animate(points[id2], mark, geom.evtData);
+      }
       return objs;
     };
 
     Layer.prototype._add = function(render, geom) {
-      var objs;
+      var id2, mark, objs, _ref;
       objs = {};
-      _.each(geom.marks, function(mark, id2) {
-        return objs[id2] = render.add(mark, geom.evtData);
-      });
+      _ref = geom.marks;
+      for (id2 in _ref) {
+        mark = _ref[id2];
+        objs[id2] = render.add(mark, geom.evtData);
+      }
       return objs;
     };
 
@@ -3380,31 +3402,34 @@
     }
 
     Point.prototype._calcGeoms = function() {
-      var idfn,
-        _this = this;
+      var evtData, idfn, item, k, v, _i, _len, _ref, _results;
       idfn = this._getIdFunc();
       this.geoms = {};
-      return _.each(this.statData, function(item) {
-        var evtData;
+      _ref = this.statData;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
         evtData = {};
-        _.each(item, function(v, k) {
-          return evtData[k] = {
+        for (k in item) {
+          v = item[k];
+          evtData[k] = {
             "in": [v]
           };
-        });
-        return _this.geoms[idfn(item)] = {
+        }
+        _results.push(this.geoms[idfn(item)] = {
           marks: {
             0: {
               type: 'circle',
-              x: _this._getValue(item, 'x'),
-              y: _this._getValue(item, 'y'),
-              color: _this._getValue(item, 'color'),
-              size: _this._getValue(item, 'size')
+              x: this._getValue(item, 'x'),
+              y: this._getValue(item, 'y'),
+              color: this._getValue(item, 'color'),
+              size: this._getValue(item, 'size')
             }
           },
           evtData: evtData
-        };
-      });
+        });
+      }
+      return _results;
     };
 
     return Point;
@@ -3420,8 +3445,7 @@
     }
 
     Line.prototype._calcGeoms = function() {
-      var datas, group, idfn, k,
-        _this = this;
+      var data, datas, evtData, group, idfn, item, k, key, sample, _i, _len, _results;
       group = (function() {
         var _i, _len, _ref, _results;
         _ref = _.without(_.keys(this.mapping), 'x', 'y');
@@ -3435,43 +3459,46 @@
       datas = poly.groupBy(this.statData, group);
       idfn = this._getIdFunc();
       this.geoms = {};
-      return _.each(datas, function(data) {
-        var evtData, item, sample;
+      _results = [];
+      for (k in datas) {
+        data = datas[k];
         sample = data[0];
         evtData = {};
-        _.each(group, function(key) {
-          return evtData[key] = {
+        for (_i = 0, _len = group.length; _i < _len; _i++) {
+          key = group[_i];
+          evtData[key] = {
             "in": [sample[key]]
           };
-        });
-        return _this.geoms[idfn(sample)] = {
+        }
+        _results.push(this.geoms[idfn(sample)] = {
           marks: {
             0: {
               type: 'line',
               x: (function() {
-                var _i, _len, _results;
-                _results = [];
-                for (_i = 0, _len = data.length; _i < _len; _i++) {
-                  item = data[_i];
-                  _results.push(this._getValue(item, 'x'));
+                var _j, _len2, _results2;
+                _results2 = [];
+                for (_j = 0, _len2 = data.length; _j < _len2; _j++) {
+                  item = data[_j];
+                  _results2.push(this._getValue(item, 'x'));
                 }
-                return _results;
-              }).call(_this),
+                return _results2;
+              }).call(this),
               y: (function() {
-                var _i, _len, _results;
-                _results = [];
-                for (_i = 0, _len = data.length; _i < _len; _i++) {
-                  item = data[_i];
-                  _results.push(this._getValue(item, 'y'));
+                var _j, _len2, _results2;
+                _results2 = [];
+                for (_j = 0, _len2 = data.length; _j < _len2; _j++) {
+                  item = data[_j];
+                  _results2.push(this._getValue(item, 'y'));
                 }
-                return _results;
-              }).call(_this),
-              color: _this._getValue(sample, 'color')
+                return _results2;
+              }).call(this),
+              color: this._getValue(sample, 'color')
             }
           },
           evtData: evtData
-        };
-      });
+        });
+      }
+      return _results;
     };
 
     return Line;
@@ -3487,47 +3514,52 @@
     }
 
     Bar.prototype._calcGeoms = function() {
-      var datas, group, idfn,
+      var data, datas, evtData, group, idfn, item, k, key, tmp, v, yval, _i, _j, _len, _len2, _ref, _results,
         _this = this;
       group = this.mapping.x != null ? [this.mapping.x] : [];
       datas = poly.groupBy(this.statData, group);
-      _.each(datas, function(data) {
-        var tmp, yval;
+      for (key in datas) {
+        data = datas[key];
         tmp = 0;
-        yval = _this.mapping.y != null ? (function(item) {
+        yval = this.mapping.y != null ? (function(item) {
           return item[_this.mapping.y];
         }) : function(item) {
           return 0;
         };
-        return _.each(data, function(item) {
+        for (_i = 0, _len = data.length; _i < _len; _i++) {
+          item = data[_i];
           item.$lower = tmp;
           tmp += yval(item);
-          return item.$upper = tmp;
-        });
-      });
+          item.$upper = tmp;
+        }
+      }
       idfn = this._getIdFunc();
       this.geoms = {};
-      return _.each(this.statData, function(item) {
-        var evtData;
+      _ref = this.statData;
+      _results = [];
+      for (_j = 0, _len2 = _ref.length; _j < _len2; _j++) {
+        item = _ref[_j];
         evtData = {};
-        _.each(item, function(v, k) {
+        for (k in item) {
+          v = item[k];
           if (k !== 'y') {
-            return evtData[k] = {
+            evtData[k] = {
               "in": [v]
             };
           }
-        });
-        return _this.geoms[idfn(item)] = {
+        }
+        _results.push(this.geoms[idfn(item)] = {
           marks: {
             0: {
               type: 'rect',
-              x: [sf.lower(_this._getValue(item, 'x')), sf.upper(_this._getValue(item, 'x'))],
+              x: [sf.lower(this._getValue(item, 'x')), sf.upper(this._getValue(item, 'x'))],
               y: [item.$lower, item.$upper],
-              color: _this._getValue(item, 'color')
+              color: this._getValue(item, 'color')
             }
           }
-        };
-      });
+        });
+      }
+      return _results;
     };
 
     return Bar;
@@ -3692,11 +3724,13 @@
     function Renderer() {}
 
     Renderer.prototype.render = function(paper, scales, coord, mark, mayflip) {
-      var pt;
+      var k, pt, v, _ref;
       pt = this._make(paper);
-      _.each(this.attr(scales, coord, mark, mayflip), function(v, k) {
-        return pt.attr(k, v);
-      });
+      _ref = this.attr(scales, coord, mark, mayflip);
+      for (k in _ref) {
+        v = _ref[k];
+        pt.attr(k, v);
+      }
       return pt;
     };
 
@@ -3942,14 +3976,18 @@
     };
 
     Graph.prototype.make = function(spec) {
-      var merge;
+      var id, layerObj, merge, _len, _ref, _results;
       this.spec = spec;
       if (spec.layers == null) spec.layers = [];
       if (this.layers == null) this.layers = this._makeLayers(this.spec);
       merge = _.after(this.layers.length, this.merge);
-      return _.each(this.layers, function(layerObj, id) {
-        return layerObj.make(spec.layers[id], merge);
-      });
+      _ref = this.layers;
+      _results = [];
+      for (id = 0, _len = _ref.length; id < _len; id++) {
+        layerObj = _ref[id];
+        _results.push(layerObj.make(spec.layers[id], merge));
+      }
+      return _results;
     };
 
     Graph.prototype.merge = function() {
@@ -3969,17 +4007,18 @@
     };
 
     Graph.prototype.render = function(dom) {
-      var clipping, renderer, scales,
-        _this = this;
+      var clipping, layer, renderer, scales, _i, _len, _ref;
       if (this.paper == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height);
       }
       scales = this.scaleSet.getScaleFns();
       clipping = this.coord.clipping(this.dims);
       renderer = poly.render(this.graphId, this.paper, scales, this.coord, true, clipping);
-      _.each(this.layers, function(layer) {
-        return layer.render(renderer);
-      });
+      _ref = this.layers;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        layer = _ref[_i];
+        layer.render(renderer);
+      }
       renderer = poly.render(this.graphId, this.paper, scales, this.coord, false);
       this.scaleSet.makeAxes();
       this.scaleSet.renderAxes(this.dims, renderer);
@@ -4014,15 +4053,17 @@
     };
 
     Graph.prototype._legacy = function(domains) {
-      var axes,
-        _this = this;
+      var axes, k, v, _results;
       this.domains = domains;
       this.scales = this.scaleSet.getScaleFns();
       axes = this.scaleSet.makeAxes();
       this.ticks = {};
-      return _.each(axes, function(v, k) {
-        return _this.ticks[k] = v.ticks;
-      });
+      _results = [];
+      for (k in axes) {
+        v = axes[k];
+        _results.push(this.ticks[k] = v.ticks);
+      }
+      return _results;
     };
 
     return Graph;

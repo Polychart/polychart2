@@ -98,21 +98,23 @@
   */
 
   poly.flatten = function(values) {
-    var flat;
+    var flat, k, v, _i, _len;
     flat = [];
     if (values != null) {
       if (_.isObject(values)) {
         if (values.t === 'scalefn') {
           flat.push(values.v);
         } else {
-          _.each(values, function(v) {
-            return flat = flat.concat(poly.flatten(v));
-          });
+          for (k in values) {
+            v = values[k];
+            flat = flat.concat(poly.flatten(v));
+          }
         }
       } else if (_.isArray(values)) {
-        _.each(values, function(v) {
-          return flat = flat.concat(poly.flatten(v));
-        });
+        for (_i = 0, _len = values.length; _i < _len; _i++) {
+          v = values[_i];
+          flat = flat.concat(poly.flatten(v));
+        }
       } else {
         flat.push(values);
       }

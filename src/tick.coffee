@@ -22,7 +22,8 @@ poly.tick.make = (domain, guideSpec, type) ->
     formatter = guideSpec.formatter
   tickobjs = {}
   tickfn = tickFactory(formatter)
-  _.each ticks, (t) -> tickobjs[t] = tickfn t
+  for t in ticks
+    tickobjs[t] = tickfn t
   tickobjs
 
 ###

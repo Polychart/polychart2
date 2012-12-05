@@ -68,14 +68,15 @@
     };
 
     ScaleSet.prototype.getScaleFns = function() {
-      var scales,
-        _this = this;
+      var aes, scales, _i, _len, _ref;
       scales = {};
       if (this.domainx) scales.x = this._makeXScale();
       if (this.domainy) scales.y = this._makeYScale();
-      _.each(['color', 'size'], function(aes) {
-        if (_this.domains[aes]) return scales[aes] = _this._makeScale(aes);
-      });
+      _ref = ['color', 'size'];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        aes = _ref[_i];
+        if (this.domains[aes]) scales[aes] = this._makeScale(aes);
+      }
       return scales;
     };
 

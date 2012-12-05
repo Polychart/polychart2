@@ -228,9 +228,10 @@ frontendProcess = (dataSpec, rawData, callback) ->
   addMeta = (key, meta) -> _.extend (metaData[key] ? {}), meta
   # transforms
   if dataSpec.trans
-    _.each dataSpec.trans, (transSpec, key) ->
+    for key, transSpec of dataSpec.trans
       {trans, meta} = transformFactory(key, transSpec)
-      _.each data, (d) -> trans(d)
+      for d in data
+        trans(d)
       addMeta transSpec.name, meta
   # filter
   if dataSpec.filter
@@ -238,7 +239,7 @@ frontendProcess = (dataSpec, rawData, callback) ->
   # meta + more filtering
   if dataSpec.meta
     additionalFilter = {}
-    _.each dataSpec.meta, (metaSpec, key) ->
+    for key, metaSpec of dataSpec.meta
       {meta, filter} = calculateMeta(key, metaSpec, data)
       additionalFilter[key] = filter
       addMeta key, meta

@@ -33,7 +33,8 @@ class Renderer
   constructor : ->
   render: (paper, scales, coord, mark, mayflip) ->
     pt = @_make(paper)
-    _.each @attr(scales, coord, mark, mayflip), (v, k) -> pt.attr(k, v)
+    for k, v of @attr(scales, coord, mark, mayflip)
+      pt.attr(k, v)
     pt
   _make : () -> throw new poly.NotImplemented()
   animate: (pt, scales, coord, mark, mayflip) ->

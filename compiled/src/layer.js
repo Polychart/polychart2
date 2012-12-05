@@ -29,13 +29,15 @@
   */
 
   poly.layer.toStrictMode = function(spec) {
-    _.each(aesthetics, function(aes) {
+    var aes, _i, _len;
+    for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
+      aes = aesthetics[_i];
       if (spec[aes] && _.isString(spec[aes])) {
-        return spec[aes] = {
+        spec[aes] = {
           "var": spec[aes]
         };
       }
-    });
+    }
     return spec;
   };
 
@@ -96,43 +98,53 @@
     };
 
     Layer.prototype.render = function(render) {
-      var added, deleted, kept, newpts, _ref,
-        _this = this;
+      var added, deleted, id, kept, newpts, _i, _j, _k, _len, _len2, _len3, _ref;
       newpts = {};
       _ref = poly.compare(_.keys(this.pts), _.keys(this.geoms)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
-      _.each(deleted, function(id) {
-        return _this._delete(render, _this.pts[id]);
-      });
-      _.each(added, function(id) {
-        return newpts[id] = _this._add(render, _this.geoms[id]);
-      });
-      _.each(kept, function(id) {
-        return newpts[id] = _this._modify(render, _this.pts[id], _this.geoms[id]);
-      });
+      for (_i = 0, _len = deleted.length; _i < _len; _i++) {
+        id = deleted[_i];
+        this._delete(render, this.pts[id]);
+      }
+      for (_j = 0, _len2 = added.length; _j < _len2; _j++) {
+        id = added[_j];
+        newpts[id] = this._add(render, this.geoms[id]);
+      }
+      for (_k = 0, _len3 = kept.length; _k < _len3; _k++) {
+        id = kept[_k];
+        newpts[id] = this._modify(render, this.pts[id], this.geoms[id]);
+      }
       return this.pts = newpts;
     };
 
     Layer.prototype._delete = function(render, points) {
-      return _.each(points, function(pt, id2) {
-        return render.remove(pt);
-      });
+      var id2, pt, _results;
+      _results = [];
+      for (id2 in points) {
+        pt = points[id2];
+        _results.push(render.remove(pt));
+      }
+      return _results;
     };
 
     Layer.prototype._modify = function(render, points, geom) {
-      var objs;
+      var id2, mark, objs, _ref;
       objs = {};
-      _.each(geom.marks, function(mark, id2) {
-        return objs[id2] = render.animate(points[id2], mark, geom.evtData);
-      });
+      _ref = geom.marks;
+      for (id2 in _ref) {
+        mark = _ref[id2];
+        objs[id2] = render.animate(points[id2], mark, geom.evtData);
+      }
       return objs;
     };
 
     Layer.prototype._add = function(render, geom) {
-      var objs;
+      var id2, mark, objs, _ref;
       objs = {};
-      _.each(geom.marks, function(mark, id2) {
-        return objs[id2] = render.add(mark, geom.evtData);
-      });
+      _ref = geom.marks;
+      for (id2 in _ref) {
+        mark = _ref[id2];
+        objs[id2] = render.add(mark, geom.evtData);
+      }
       return objs;
     };
 
@@ -187,31 +199,34 @@
     }
 
     Point.prototype._calcGeoms = function() {
-      var idfn,
-        _this = this;
+      var evtData, idfn, item, k, v, _i, _len, _ref, _results;
       idfn = this._getIdFunc();
       this.geoms = {};
-      return _.each(this.statData, function(item) {
-        var evtData;
+      _ref = this.statData;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
         evtData = {};
-        _.each(item, function(v, k) {
-          return evtData[k] = {
+        for (k in item) {
+          v = item[k];
+          evtData[k] = {
             "in": [v]
           };
-        });
-        return _this.geoms[idfn(item)] = {
+        }
+        _results.push(this.geoms[idfn(item)] = {
           marks: {
             0: {
               type: 'circle',
-              x: _this._getValue(item, 'x'),
-              y: _this._getValue(item, 'y'),
-              color: _this._getValue(item, 'color'),
-              size: _this._getValue(item, 'size')
+              x: this._getValue(item, 'x'),
+              y: this._getValue(item, 'y'),
+              color: this._getValue(item, 'color'),
+              size: this._getValue(item, 'size')
             }
           },
           evtData: evtData
-        };
-      });
+        });
+      }
+      return _results;
     };
 
     return Point;
@@ -227,8 +242,7 @@
     }
 
     Line.prototype._calcGeoms = function() {
-      var datas, group, idfn, k,
-        _this = this;
+      var data, datas, evtData, group, idfn, item, k, key, sample, _i, _len, _results;
       group = (function() {
         var _i, _len, _ref, _results;
         _ref = _.without(_.keys(this.mapping), 'x', 'y');
@@ -242,43 +256,46 @@
       datas = poly.groupBy(this.statData, group);
       idfn = this._getIdFunc();
       this.geoms = {};
-      return _.each(datas, function(data) {
-        var evtData, item, sample;
+      _results = [];
+      for (k in datas) {
+        data = datas[k];
         sample = data[0];
         evtData = {};
-        _.each(group, function(key) {
-          return evtData[key] = {
+        for (_i = 0, _len = group.length; _i < _len; _i++) {
+          key = group[_i];
+          evtData[key] = {
             "in": [sample[key]]
           };
-        });
-        return _this.geoms[idfn(sample)] = {
+        }
+        _results.push(this.geoms[idfn(sample)] = {
           marks: {
             0: {
               type: 'line',
               x: (function() {
-                var _i, _len, _results;
-                _results = [];
-                for (_i = 0, _len = data.length; _i < _len; _i++) {
-                  item = data[_i];
-                  _results.push(this._getValue(item, 'x'));
+                var _j, _len2, _results2;
+                _results2 = [];
+                for (_j = 0, _len2 = data.length; _j < _len2; _j++) {
+                  item = data[_j];
+                  _results2.push(this._getValue(item, 'x'));
                 }
-                return _results;
-              }).call(_this),
+                return _results2;
+              }).call(this),
               y: (function() {
-                var _i, _len, _results;
-                _results = [];
-                for (_i = 0, _len = data.length; _i < _len; _i++) {
-                  item = data[_i];
-                  _results.push(this._getValue(item, 'y'));
+                var _j, _len2, _results2;
+                _results2 = [];
+                for (_j = 0, _len2 = data.length; _j < _len2; _j++) {
+                  item = data[_j];
+                  _results2.push(this._getValue(item, 'y'));
                 }
-                return _results;
-              }).call(_this),
-              color: _this._getValue(sample, 'color')
+                return _results2;
+              }).call(this),
+              color: this._getValue(sample, 'color')
             }
           },
           evtData: evtData
-        };
-      });
+        });
+      }
+      return _results;
     };
 
     return Line;
@@ -294,47 +311,52 @@
     }
 
     Bar.prototype._calcGeoms = function() {
-      var datas, group, idfn,
+      var data, datas, evtData, group, idfn, item, k, key, tmp, v, yval, _i, _j, _len, _len2, _ref, _results,
         _this = this;
       group = this.mapping.x != null ? [this.mapping.x] : [];
       datas = poly.groupBy(this.statData, group);
-      _.each(datas, function(data) {
-        var tmp, yval;
+      for (key in datas) {
+        data = datas[key];
         tmp = 0;
-        yval = _this.mapping.y != null ? (function(item) {
+        yval = this.mapping.y != null ? (function(item) {
           return item[_this.mapping.y];
         }) : function(item) {
           return 0;
         };
-        return _.each(data, function(item) {
+        for (_i = 0, _len = data.length; _i < _len; _i++) {
+          item = data[_i];
           item.$lower = tmp;
           tmp += yval(item);
-          return item.$upper = tmp;
-        });
-      });
+          item.$upper = tmp;
+        }
+      }
       idfn = this._getIdFunc();
       this.geoms = {};
-      return _.each(this.statData, function(item) {
-        var evtData;
+      _ref = this.statData;
+      _results = [];
+      for (_j = 0, _len2 = _ref.length; _j < _len2; _j++) {
+        item = _ref[_j];
         evtData = {};
-        _.each(item, function(v, k) {
+        for (k in item) {
+          v = item[k];
           if (k !== 'y') {
-            return evtData[k] = {
+            evtData[k] = {
               "in": [v]
             };
           }
-        });
-        return _this.geoms[idfn(item)] = {
+        }
+        _results.push(this.geoms[idfn(item)] = {
           marks: {
             0: {
               type: 'rect',
-              x: [sf.lower(_this._getValue(item, 'x')), sf.upper(_this._getValue(item, 'x'))],
+              x: [sf.lower(this._getValue(item, 'x')), sf.upper(this._getValue(item, 'x'))],
               y: [item.$lower, item.$upper],
-              color: _this._getValue(item, 'color')
+              color: this._getValue(item, 'color')
             }
           }
-        };
-      });
+        });
+      }
+      return _results;
     };
 
     return Bar;

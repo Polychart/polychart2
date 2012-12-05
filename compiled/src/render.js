@@ -58,11 +58,13 @@
     function Renderer() {}
 
     Renderer.prototype.render = function(paper, scales, coord, mark, mayflip) {
-      var pt;
+      var k, pt, v, _ref;
       pt = this._make(paper);
-      _.each(this.attr(scales, coord, mark, mayflip), function(v, k) {
-        return pt.attr(k, v);
-      });
+      _ref = this.attr(scales, coord, mark, mayflip);
+      for (k in _ref) {
+        v = _ref[k];
+        pt.attr(k, v);
+      }
       return pt;
     };
 

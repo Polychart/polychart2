@@ -28,7 +28,7 @@ See the layer spec definition for more information.
 ###
 poly.layer.toStrictMode = (spec) ->
   # wrap all aesthetic in object
-  _.each aesthetics, (aes) ->
+  for aes in aesthetics
     if spec[aes] and _.isString spec[aes] then spec[aes] = { var: spec[aes] }
   spec
 
@@ -76,21 +76,24 @@ class Layer
   render: (render) =>
     newpts = {}
     {deleted, kept, added} = poly.compare _.keys(@pts), _.keys(@geoms)
-    _.each deleted, (id) => @_delete render, @pts[id]
-    _.each added, (id) => newpts[id] = @_add render, @geoms[id]
-    _.each kept, (id) =>
+    for id in deleted
+      @_delete render, @pts[id]
+    for id in added
+      newpts[id] = @_add render, @geoms[id]
+    for id in kept
       newpts[id] = @_modify render, @pts[id], @geoms[id]
     @pts = newpts
   _delete : (render, points) ->
-    _.each points, (pt, id2) -> render.remove pt
+    for id2, pt of points
+      render.remove pt
   _modify: (render, points, geom) ->
     objs = {}
-    _.each geom.marks, (mark, id2) ->
+    for id2, mark of geom.marks
       objs[id2] = render.animate points[id2], mark, geom.evtData
     objs
   _add: (render, geom) ->
     objs = {}
-    _.each geom.marks, (mark, id2) ->
+    for id2, mark of geom.marks
       objs[id2] = render.add mark, geom.evtData
     objs
 
@@ -115,9 +118,9 @@ class Point extends Layer
   _calcGeoms: () ->
     idfn = @_getIdFunc()
     @geoms = {}
-    _.each @statData, (item) =>
+    for item in @statData
       evtData = {}
-      _.each item, (v, k) ->
+      for k, v of item
         evtData[k] = { in : [v] }
       @geoms[idfn item] =
         marks:
@@ -137,12 +140,13 @@ class Line extends Layer
     datas = poly.groupBy @statData, group
     idfn = @_getIdFunc()
     @geoms = {}
-    _.each datas, (data) => # produce one line per group
+    for k, data of datas
       # use the first data point as a sample
       sample = data[0] # use this as a sample data
       # create the eventData
       evtData = {}
-      _.each group, (key) -> evtData[key] = { in : [sample[key]] }
+      for key in group
+        evtData[key] = { in : [sample[key]] }
       # identity
       @geoms[idfn sample] =
         marks:
@@ -158,18 +162,19 @@ class Bar extends Layer
     # first do stacking calculation (assuming position=stack)
     group = if @mapping.x? then [@mapping.x] else []
     datas = poly.groupBy @statData , group
-    _.each datas, (data) => # TODO: add sorting?
+    for key, data of datas
       tmp = 0
       yval = if @mapping.y? then ((item) => item[@mapping.y]) else (item) -> 0
-      _.each data, (item) ->
+      for item in data
         item.$lower = tmp
         tmp += yval(item)
         item.$upper = tmp
     idfn = @_getIdFunc()
     @geoms = {}
-    _.each @statData, (item) =>
+    for item in @statData
       evtData = {}
-      _.each item, (v, k) -> if k isnt 'y' then evtData[k] = { in: [v] }
+      for k, v of item
+        if k isnt 'y' then evtData[k] = { in: [v] }
       @geoms[idfn item] =
         marks:
           0:

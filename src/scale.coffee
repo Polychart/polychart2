@@ -52,7 +52,7 @@ class ScaleSet
     scales = {}
     if @domainx then scales.x = @_makeXScale()
     if @domainy then scales.y = @_makeYScale()
-    _.each ['color', 'size'], (aes) =>
+    for aes in ['color', 'size']
       if @domains[aes] then scales[aes] = @_makeScale aes
     scales
   _makeXScale: () -> @factory.x.construct(@domainx, @ranges.x)

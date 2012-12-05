@@ -18,7 +18,7 @@ set.
 ###
 poly.domain.make = (layers, guideSpec, strictmode) ->
   domainSets = []
-  _.each layers, (layerObj) ->
+  for layerObj in layers
     domainSets.push makeDomainSet layerObj, guideSpec, strictmode
   mergeDomainSets domainSets
 
@@ -51,7 +51,7 @@ keys being aesthetics
 ###
 makeDomainSet = (layerObj, guideSpec, strictmode) ->
   domain = {}
-  _.each _.keys(layerObj.mapping), (aes) ->
+  for aes of layerObj.mapping
     if strictmode
       domain[aes] = makeDomain guideSpec[aes]
     else
@@ -78,8 +78,8 @@ VERY preliminary flatten function. Need to optimize
 ###
 flattenGeoms = (geoms, aes) ->
   values = []
-  _.each geoms, (geom) ->
-    _.each geom.marks, (mark) ->
+  for k, geom of geoms
+    for l, mark of geom.marks
       values = values.concat poly.flatten mark[aes]
   values
 
@@ -98,7 +98,7 @@ same aesthetics.
 ###
 mergeDomainSets = (domainSets) ->
   merged = {}
-  _.each aesthetics, (aes) ->
+  for aes in aesthetics
     domains = _.without _.pluck(domainSets, aes), undefined
     if domains.length > 0
       merged[aes] = mergeDomains(domains)

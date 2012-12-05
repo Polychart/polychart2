@@ -29,14 +29,18 @@
     };
 
     Graph.prototype.make = function(spec) {
-      var merge;
+      var id, layerObj, merge, _len, _ref, _results;
       this.spec = spec;
       if (spec.layers == null) spec.layers = [];
       if (this.layers == null) this.layers = this._makeLayers(this.spec);
       merge = _.after(this.layers.length, this.merge);
-      return _.each(this.layers, function(layerObj, id) {
-        return layerObj.make(spec.layers[id], merge);
-      });
+      _ref = this.layers;
+      _results = [];
+      for (id = 0, _len = _ref.length; id < _len; id++) {
+        layerObj = _ref[id];
+        _results.push(layerObj.make(spec.layers[id], merge));
+      }
+      return _results;
     };
 
     Graph.prototype.merge = function() {
@@ -56,17 +60,18 @@
     };
 
     Graph.prototype.render = function(dom) {
-      var clipping, renderer, scales,
-        _this = this;
+      var clipping, layer, renderer, scales, _i, _len, _ref;
       if (this.paper == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height);
       }
       scales = this.scaleSet.getScaleFns();
       clipping = this.coord.clipping(this.dims);
       renderer = poly.render(this.graphId, this.paper, scales, this.coord, true, clipping);
-      _.each(this.layers, function(layer) {
-        return layer.render(renderer);
-      });
+      _ref = this.layers;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        layer = _ref[_i];
+        layer.render(renderer);
+      }
       renderer = poly.render(this.graphId, this.paper, scales, this.coord, false);
       this.scaleSet.makeAxes();
       this.scaleSet.renderAxes(this.dims, renderer);
@@ -101,15 +106,17 @@
     };
 
     Graph.prototype._legacy = function(domains) {
-      var axes,
-        _this = this;
+      var axes, k, v, _results;
       this.domains = domains;
       this.scales = this.scaleSet.getScaleFns();
       axes = this.scaleSet.makeAxes();
       this.ticks = {};
-      return _.each(axes, function(v, k) {
-        return _this.ticks[k] = v.ticks;
-      });
+      _results = [];
+      for (k in axes) {
+        v = axes[k];
+        _results.push(this.ticks[k] = v.ticks);
+      }
+      return _results;
     };
 
     return Graph;

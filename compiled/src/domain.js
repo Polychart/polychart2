@@ -22,11 +22,12 @@
   */
 
   poly.domain.make = function(layers, guideSpec, strictmode) {
-    var domainSets;
+    var domainSets, layerObj, _i, _len;
     domainSets = [];
-    _.each(layers, function(layerObj) {
-      return domainSets.push(makeDomainSet(layerObj, guideSpec, strictmode));
-    });
+    for (_i = 0, _len = layers.length; _i < _len; _i++) {
+      layerObj = layers[_i];
+      domainSets.push(makeDomainSet(layerObj, guideSpec, strictmode));
+    }
     return mergeDomainSets(domainSets);
   };
 
@@ -89,12 +90,11 @@
   */
 
   makeDomainSet = function(layerObj, guideSpec, strictmode) {
-    var domain;
+    var aes, domain, fromspec, values, _ref, _ref2, _ref3;
     domain = {};
-    _.each(_.keys(layerObj.mapping), function(aes) {
-      var fromspec, values, _ref, _ref2, _ref3;
+    for (aes in layerObj.mapping) {
       if (strictmode) {
-        return domain[aes] = makeDomain(guideSpec[aes]);
+        domain[aes] = makeDomain(guideSpec[aes]);
       } else {
         values = flattenGeoms(layerObj.geoms, aes);
         fromspec = function(item) {
@@ -105,21 +105,21 @@
           }
         };
         if (typeOf(values) === 'num') {
-          return domain[aes] = makeDomain({
+          domain[aes] = makeDomain({
             type: 'num',
             min: (_ref = fromspec('min')) != null ? _ref : _.min(values),
             max: (_ref2 = fromspec('max')) != null ? _ref2 : _.max(values),
             bw: fromspec('bw')
           });
         } else {
-          return domain[aes] = makeDomain({
+          domain[aes] = makeDomain({
             type: 'cat',
             levels: (_ref3 = fromspec('levels')) != null ? _ref3 : _.uniq(values),
             sorted: fromspec('levels') != null
           });
         }
       }
-    });
+    }
     return domain;
   };
 
@@ -128,13 +128,16 @@
   */
 
   flattenGeoms = function(geoms, aes) {
-    var values;
+    var geom, k, l, mark, values, _ref;
     values = [];
-    _.each(geoms, function(geom) {
-      return _.each(geom.marks, function(mark) {
-        return values = values.concat(poly.flatten(mark[aes]));
-      });
-    });
+    for (k in geoms) {
+      geom = geoms[k];
+      _ref = geom.marks;
+      for (l in _ref) {
+        mark = _ref[l];
+        values = values.concat(poly.flatten(mark[aes]));
+      }
+    }
     return values;
   };
 
@@ -153,13 +156,13 @@
   */
 
   mergeDomainSets = function(domainSets) {
-    var merged;
+    var aes, domains, merged, _i, _len;
     merged = {};
-    _.each(aesthetics, function(aes) {
-      var domains;
+    for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
+      aes = aesthetics[_i];
       domains = _.without(_.pluck(domainSets, aes), void 0);
-      if (domains.length > 0) return merged[aes] = mergeDomains(domains);
-    });
+      if (domains.length > 0) merged[aes] = mergeDomains(domains);
+    }
     return merged;
   };
 

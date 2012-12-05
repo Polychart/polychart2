@@ -14,7 +14,7 @@
   */
 
   poly.tick.make = function(domain, guideSpec, type) {
-    var formatter, numticks, tickfn, tickobjs, ticks, _ref;
+    var formatter, numticks, t, tickfn, tickobjs, ticks, _i, _len, _ref;
     if (guideSpec.ticks != null) {
       ticks = guideSpec.ticks;
     } else {
@@ -34,9 +34,10 @@
     }
     tickobjs = {};
     tickfn = tickFactory(formatter);
-    _.each(ticks, function(t) {
-      return tickobjs[t] = tickfn(t);
-    });
+    for (_i = 0, _len = ticks.length; _i < _len; _i++) {
+      t = ticks[_i];
+      tickobjs[t] = tickfn(t);
+    }
     return tickobjs;
   };
 

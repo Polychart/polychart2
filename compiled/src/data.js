@@ -366,7 +366,7 @@
   */
 
   frontendProcess = function(dataSpec, rawData, callback) {
-    var addMeta, additionalFilter, data, metaData;
+    var addMeta, additionalFilter, d, data, filter, key, meta, metaData, metaSpec, trans, transSpec, _i, _len, _ref, _ref2, _ref3, _ref4;
     data = _.clone(rawData);
     metaData = {};
     addMeta = function(key, meta) {
@@ -374,24 +374,27 @@
       return _.extend((_ref = metaData[key]) != null ? _ref : {}, meta);
     };
     if (dataSpec.trans) {
-      _.each(dataSpec.trans, function(transSpec, key) {
-        var meta, trans, _ref;
-        _ref = transformFactory(key, transSpec), trans = _ref.trans, meta = _ref.meta;
-        _.each(data, function(d) {
-          return trans(d);
-        });
-        return addMeta(transSpec.name, meta);
-      });
+      _ref = dataSpec.trans;
+      for (key in _ref) {
+        transSpec = _ref[key];
+        _ref2 = transformFactory(key, transSpec), trans = _ref2.trans, meta = _ref2.meta;
+        for (_i = 0, _len = data.length; _i < _len; _i++) {
+          d = data[_i];
+          trans(d);
+        }
+        addMeta(transSpec.name, meta);
+      }
     }
     if (dataSpec.filter) data = _.filter(data, filterFactory(dataSpec.filter));
     if (dataSpec.meta) {
       additionalFilter = {};
-      _.each(dataSpec.meta, function(metaSpec, key) {
-        var filter, meta, _ref;
-        _ref = calculateMeta(key, metaSpec, data), meta = _ref.meta, filter = _ref.filter;
+      _ref3 = dataSpec.meta;
+      for (key in _ref3) {
+        metaSpec = _ref3[key];
+        _ref4 = calculateMeta(key, metaSpec, data), meta = _ref4.meta, filter = _ref4.filter;
         additionalFilter[key] = filter;
-        return addMeta(key, meta);
-      });
+        addMeta(key, meta);
+      }
       data = _.filter(data, filterFactory(additionalFilter));
     }
     if (dataSpec.stats && dataSpec.stats.stats && dataSpec.stats.stats.length > 0) {

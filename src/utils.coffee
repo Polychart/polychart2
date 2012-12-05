@@ -76,9 +76,11 @@ poly.flatten = (values) ->
       if values.t is 'scalefn'
         flat.push values.v
       else
-        _.each values, (v) -> flat = flat.concat poly.flatten(v)
+        for k, v of values
+          flat = flat.concat poly.flatten(v)
     else if _.isArray values
-      _.each values, (v) -> flat = flat.concat poly.flatten(v)
+      for v in values
+        flat = flat.concat poly.flatten(v)
     else
       flat.push values
   return flat
