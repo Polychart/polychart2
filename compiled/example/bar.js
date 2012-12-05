@@ -273,7 +273,8 @@
           labels: {
             'a': 'Even Numbers',
             'b': 'Odd Numbers'
-          }
+          },
+          title: 'Test'
         },
         x: {
           labels: {
@@ -291,6 +292,65 @@
     c.render(dom);
     redraw = function() {
       jsondata.shift();
+      jsondata.push({
+        index: i++,
+        two: (i % 2 === 0 ? 'a' : 'b'),
+        value: Math.random() * 10
+      });
+      spec.layers[0].data.update(jsondata);
+      c.make(spec);
+      c.render(dom);
+      return setTimeout(redraw, 1000);
+    };
+    return setTimeout(redraw, 1000);
+  };
+
+  this.examples.bar_stack = function(dom) {
+    var c, data, i, jsondata, redraw, spec;
+    jsondata = (function() {
+      var _results;
+      _results = [];
+      for (i = 0; i <= 10; i++) {
+        _results.push({
+          index: i,
+          two: (i % 2 === 0 ? 'a' : 'b'),
+          value: Math.random() * 10
+        });
+      }
+      return _results;
+    })();
+    data = new poly.Data({
+      json: jsondata
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: 'two',
+          y: 'value',
+          color: 'index'
+        }
+      ],
+      guides: {
+        color: {
+          labels: {
+            'a': 'Even Numbers',
+            'b': 'Odd Numbers'
+          },
+          title: 'Test'
+        },
+        x: {
+          labels: {
+            'a': 'Even Numbers',
+            'b': 'Odd Numbers'
+          }
+        }
+      }
+    };
+    c = poly.chart(spec);
+    c.render(dom);
+    redraw = function() {
       jsondata.push({
         index: i++,
         two: (i % 2 === 0 ? 'a' : 'b'),

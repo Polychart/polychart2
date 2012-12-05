@@ -123,3 +123,31 @@
     c.render dom
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
+
+@examples.bar_stack = (dom) ->
+  jsondata = (
+    {index:i, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10} for i in [0..10]
+  )
+  data = new poly.Data json:jsondata
+  spec = {
+    layers: [
+      data: data
+      type: 'bar'
+      x : 'two'
+      y : 'value'
+      color: 'index'
+    ]
+    guides:
+      color: labels:{'a':'Even Numbers', 'b':'Odd Numbers'}, title:'Test'
+      x: labels:{'a':'Even Numbers', 'b':'Odd Numbers'}
+  }
+  c = poly.chart spec
+  c.render dom
+
+  redraw = () ->
+    jsondata.push({index:i++, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10})
+    spec.layers[0].data.update jsondata
+    c.make spec
+    c.render dom
+    setTimeout(redraw, 1000)
+  setTimeout(redraw, 1000)
