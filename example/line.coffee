@@ -26,6 +26,34 @@
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
+@examples.line_sum = (dom) ->
+  i = 0; s = 0
+  next = () ->
+    v = Math.random()*10
+    s += v
+    {index:i++, value:v, total:s}
+  jsondata = (next() for i in [0..10])
+  data = new poly.Data json:jsondata
+  spec = {
+    layers: [
+      { data: data, type: 'line', x : 'index', y : 'total'}
+      { data: data, type: 'point', x : 'index', y : 'total', id: 'index'}
+    ]
+    guides:
+      y: min:0
+  }
+  c = poly.chart spec
+  c.render dom
+
+  redraw = () ->
+    jsondata.shift()
+    jsondata.push(next())
+    spec.layers[0].data.update jsondata
+    c.make spec
+    c.render dom
+    setTimeout(redraw, 1000)
+  setTimeout(redraw, 1000)
+
 @examples.line_flip = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
   data = new poly.Data json:jsondata

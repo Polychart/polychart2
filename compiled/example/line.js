@@ -64,6 +64,65 @@
     return setTimeout(redraw, 1000);
   };
 
+  this.examples.line_sum = function(dom) {
+    var c, data, i, jsondata, next, redraw, s, spec;
+    i = 0;
+    s = 0;
+    next = function() {
+      var v;
+      v = Math.random() * 10;
+      s += v;
+      return {
+        index: i++,
+        value: v,
+        total: s
+      };
+    };
+    jsondata = (function() {
+      var _results;
+      _results = [];
+      for (i = 0; i <= 10; i++) {
+        _results.push(next());
+      }
+      return _results;
+    })();
+    data = new poly.Data({
+      json: jsondata
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'line',
+          x: 'index',
+          y: 'total'
+        }, {
+          data: data,
+          type: 'point',
+          x: 'index',
+          y: 'total',
+          id: 'index'
+        }
+      ],
+      guides: {
+        y: {
+          min: 0
+        }
+      }
+    };
+    c = poly.chart(spec);
+    c.render(dom);
+    redraw = function() {
+      jsondata.shift();
+      jsondata.push(next());
+      spec.layers[0].data.update(jsondata);
+      c.make(spec);
+      c.render(dom);
+      return setTimeout(redraw, 1000);
+    };
+    return setTimeout(redraw, 1000);
+  };
+
   this.examples.line_flip = function(dom) {
     var c, data, i, jsondata, redraw, spec;
     jsondata = (function() {
