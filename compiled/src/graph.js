@@ -63,7 +63,7 @@
     Graph.prototype.render = function(dom) {
       var clipping, layer, renderer, scales, _i, _len, _ref;
       if (this.paper == null) {
-        this.paper = this._makePaper(dom, this.dims.width, this.dims.height);
+        this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent('reset'));
       }
       scales = this.scaleSet.getScaleFns();
       clipping = this.coord.clipping(this.dims);
@@ -131,8 +131,9 @@
       return poly.dim.make(spec, scaleSet.makeAxes(), scaleSet.makeLegends());
     };
 
-    Graph.prototype._makePaper = function(dom, width, height) {
-      return poly.paper(document.getElementById(dom), width, height);
+    Graph.prototype._makePaper = function(dom, width, height, reset) {
+      var paper;
+      return paper = poly.paper(document.getElementById(dom), width, height, reset);
     };
 
     Graph.prototype._legacy = function(domains) {

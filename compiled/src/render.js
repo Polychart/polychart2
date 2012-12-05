@@ -9,8 +9,12 @@
   # GLOBALS
   */
 
-  poly.paper = function(dom, w, h) {
-    return Raphael(dom, w, h);
+  poly.paper = function(dom, w, h, reset) {
+    var bg, paper;
+    paper = Raphael(dom, w, h);
+    bg = paper.rect(0, 0, w, h).attr('stroke-width', 0);
+    bg.click(reset);
+    return paper;
   };
 
   /*
@@ -27,9 +31,11 @@
         var pt;
         pt = renderer[coord.type][mark.type].render(paper, scales, coord, mark, mayflip);
         if (clipping != null) pt.attr('clip-rect', clipping);
-        pt.data('e', evtData);
-        pt.click(handleEvent('click'));
-        pt.hover(handleEvent('mover'), handleEvent('mout'));
+        if (evtData && _.keys(evtData).length > 0) {
+          pt.data('e', evtData);
+          pt.click(handleEvent('click'));
+          pt.hover(handleEvent('mover'), handleEvent('mout'));
+        }
         return pt;
       },
       remove: function(pt) {
@@ -37,7 +43,7 @@
       },
       animate: function(pt, mark, evtData) {
         renderer[coord.type][mark.type].animate(pt, scales, coord, mark, mayflip);
-        pt.data('e', evtData);
+        if (evtData && _.keys(evtData).length > 0) pt.data('e', evtData);
         return pt;
       }
     };

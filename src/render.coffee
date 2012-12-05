@@ -3,7 +3,11 @@ poly = @poly || {}
 ###
 # GLOBALS
 ###
-poly.paper = (dom, w, h) -> Raphael(dom, w, h)
+poly.paper = (dom, w, h, reset) ->
+  paper = Raphael(dom, w, h)
+  bg = paper.rect(0,0,w,h).attr('stroke-width', 0)
+  bg.click reset
+  paper
 
 ###
 Helper function for rendering all the geoms of an object
@@ -16,15 +20,17 @@ poly.render = (handleEvent, paper, scales, coord, mayflip, clipping) ->
   add: (mark, evtData) ->
     pt = renderer[coord.type][mark.type].render paper, scales, coord, mark, mayflip
     if clipping? then pt.attr('clip-rect', clipping)
-    pt.data 'e', evtData
-    pt.click handleEvent('click')
-    pt.hover handleEvent('mover'), handleEvent('mout')
+    if evtData and _.keys(evtData).length > 0
+      pt.data 'e', evtData
+      pt.click handleEvent('click')
+      pt.hover handleEvent('mover'), handleEvent('mout')
     pt
   remove: (pt) ->
     pt.remove()
   animate: (pt, mark, evtData) ->
     renderer[coord.type][mark.type].animate pt, scales, coord, mark, mayflip
-    pt.data 'e', evtData
+    if evtData and _.keys(evtData).length > 0
+      pt.data 'e', evtData
     pt
 
 class Renderer

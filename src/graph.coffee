@@ -40,7 +40,7 @@ class Graph
     @_legacy(domains)
 
   render : (dom) =>
-    @paper ?= @_makePaper dom, @dims.width, @dims.height
+    @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent('reset')
     scales = @scaleSet.getScaleFns()
     clipping = @coord.clipping @dims
     # render each layer
@@ -83,8 +83,9 @@ class Graph
     poly.scale.make tmpRanges, @coord
   _makeDimensions: (spec, scaleSet) ->
     poly.dim.make spec, scaleSet.makeAxes(), scaleSet.makeLegends()
-  _makePaper: (dom, width, height) ->
-    poly.paper document.getElementById(dom), width, height
+  _makePaper: (dom, width, height, reset) ->
+    paper = poly.paper document.getElementById(dom), width, height, reset
+
   _legacy: (domains) =>
     # LEGACY: tick calculation
     @domains = domains

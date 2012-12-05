@@ -209,7 +209,7 @@
     c = poly.chart(spec);
     c.render(dom);
     return c.addHandler(function(type, data) {
-      if (type === 'click') {
+      if (type === 'click' || type === 'reset') {
         console.log(data);
         return alert(type);
       }

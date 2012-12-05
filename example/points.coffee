@@ -76,6 +76,6 @@
   c.render(dom)
 
   c.addHandler (type, data) ->
-    if type == 'click'
+    if type in ['click', 'reset']
       console.log data; alert(type)
 
