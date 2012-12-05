@@ -3073,11 +3073,11 @@
         return statFn(_.pluck(data, key));
       };
     });
-    groupedData = poly.groupBy(data, statSpecs.group);
+    groupedData = poly.groupBy(data, statSpecs.groups);
     return _.map(groupedData, function(data) {
       var rep;
       rep = {};
-      _.each(statSpecs.group, function(g) {
+      _.each(statSpecs.groups, function(g) {
         return rep[g] = data[0][g];
       });
       _.each(statFuncs, function(stats, name) {

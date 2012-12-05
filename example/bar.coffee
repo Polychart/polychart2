@@ -93,4 +93,28 @@
   c = poly.chart spec
   c.render dom
 
+@examples.bar_sum= (dom) ->
+  jsondata = (
+    {index:i, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10} for i in [0..5]
+  )
+  console.log jsondata
+  data = new poly.Data json:jsondata
+  spec = {
+    layers: [
+      data: data
+      type: 'bar'
+      x : 'two'
+      y : 'sum(value)'
+    ]
+  }
+  c = poly.chart spec
+  c.render dom
 
+  redraw = () ->
+    jsondata.shift()
+    jsondata.push({index:i++, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10})
+    spec.layers[0].data.update jsondata
+    c.make spec
+    c.render dom
+    setTimeout(redraw, 1000)
+  setTimeout(redraw, 1000)

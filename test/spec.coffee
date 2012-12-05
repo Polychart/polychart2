@@ -55,6 +55,20 @@ test "extraction: nothing (smoke test)", ->
   deepEqual spec.stats.stats, []
   deepEqual spec.trans, []
 
+test "extraction: simple, one stat (smoke test)", ->
+  layerSpec = {
+    type: "point",
+    x: {var: "a"},
+    y: {var: "sum(b)"},
+  }
+  spec = poly.spec.layerToData layerSpec
+  deepEqual spec.filter, {}
+  deepEqual spec.meta, {}
+  deepEqual spec.select, ['a', 'sum(b)']
+  deepEqual spec.stats.stats, [key:'b', stat:'sum',name:'sum(b)']
+  deepEqual spec.stats.groups, ['a']
+  deepEqual spec.trans, []
+
 test "extraction: stats", ->
   layerSpec = {
     type: "point",

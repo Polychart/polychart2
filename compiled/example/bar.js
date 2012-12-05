@@ -240,4 +240,49 @@
     return c.render(dom);
   };
 
+  this.examples.bar_sum = function(dom) {
+    var c, data, i, jsondata, redraw, spec;
+    jsondata = (function() {
+      var _results;
+      _results = [];
+      for (i = 0; i <= 5; i++) {
+        _results.push({
+          index: i,
+          two: (i % 2 === 0 ? 'a' : 'b'),
+          value: Math.random() * 10
+        });
+      }
+      return _results;
+    })();
+    console.log(jsondata);
+    data = new poly.Data({
+      json: jsondata
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: 'two',
+          y: 'sum(value)'
+        }
+      ]
+    };
+    c = poly.chart(spec);
+    c.render(dom);
+    redraw = function() {
+      jsondata.shift();
+      jsondata.push({
+        index: i++,
+        two: (i % 2 === 0 ? 'a' : 'b'),
+        value: Math.random() * 10
+      });
+      spec.layers[0].data.update(jsondata);
+      c.make(spec);
+      c.render(dom);
+      return setTimeout(redraw, 1000);
+    };
+    return setTimeout(redraw, 1000);
+  };
+
 }).call(this);

@@ -180,10 +180,10 @@ calculateStats = (data, statSpecs) ->
     statFn = statsFactory statSpec
     statFuncs[name] = (data) -> statFn _.pluck(data, key)
   # calculate the statistics for each group
-  groupedData = poly.groupBy data, statSpecs.group
+  groupedData = poly.groupBy data, statSpecs.groups
   _.map groupedData, (data) ->
     rep = {}
-    _.each statSpecs.group, (g) -> rep[g] = data[0][g] # define a representative
+    _.each statSpecs.groups, (g) -> rep[g] = data[0][g] # define a representative
     _.each statFuncs, (stats, name) -> rep[name] = stats(data) # calc stats
     return rep
 

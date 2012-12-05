@@ -63,6 +63,32 @@
     return deepEqual(spec.trans, []);
   });
 
+  test("extraction: simple, one stat (smoke test)", function() {
+    var layerSpec, spec;
+    layerSpec = {
+      type: "point",
+      x: {
+        "var": "a"
+      },
+      y: {
+        "var": "sum(b)"
+      }
+    };
+    spec = poly.spec.layerToData(layerSpec);
+    deepEqual(spec.filter, {});
+    deepEqual(spec.meta, {});
+    deepEqual(spec.select, ['a', 'sum(b)']);
+    deepEqual(spec.stats.stats, [
+      {
+        key: 'b',
+        stat: 'sum',
+        name: 'sum(b)'
+      }
+    ]);
+    deepEqual(spec.stats.groups, ['a']);
+    return deepEqual(spec.trans, []);
+  });
+
   test("extraction: stats", function() {
     var layerSpec, spec;
     layerSpec = {
