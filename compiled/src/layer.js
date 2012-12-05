@@ -353,7 +353,8 @@
               y: [item.$lower, item.$upper],
               color: this._getValue(item, 'color')
             }
-          }
+          },
+          evtData: evtData
         });
       }
       return _results;

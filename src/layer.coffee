@@ -182,6 +182,7 @@ class Bar extends Layer
             x: [sf.lower(@_getValue(item, 'x')), sf.upper(@_getValue(item, 'x'))]
             y: [item.$lower, item.$upper]
             color: @_getValue item, 'color'
+        evtData: evtData
 ###
 # EXPORT
 ###

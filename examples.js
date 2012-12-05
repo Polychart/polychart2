@@ -3,7 +3,7 @@
   if (this.examples == null) this.examples = {};
 
   this.examples.bar = function(dom) {
-    var c, data, i, jsondata, redraw, spec;
+    var c, data, i, jsondata, spec;
     jsondata = (function() {
       var _results;
       _results = [];
@@ -49,18 +49,21 @@
     };
     c = poly.chart(spec);
     c.render(dom);
-    redraw = function() {
-      jsondata.shift();
-      jsondata.push({
-        index: i++,
-        value: Math.random() * 10
-      });
-      spec.layers[0].data.update(jsondata);
-      c.make(spec);
-      c.render(dom);
-      return setTimeout(redraw, 1000);
-    };
-    return setTimeout(redraw, 1000);
+    return c.addHandler(function(type, data) {
+      if (type === 'reset') {
+        jsondata.shift();
+        jsondata.push({
+          index: i++,
+          value: Math.random() * 10
+        });
+        spec.layers[0].data.update(jsondata);
+        c.make(spec);
+        c.render(dom);
+      }
+      if (type === 'click') {
+        return alert("You clicked on index: " + data.index["in"][0]);
+      }
+    });
   };
 
   this.examples.bar_flip = function(dom) {
