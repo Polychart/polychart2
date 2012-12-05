@@ -3,6 +3,7 @@ coffee --compile --output compiled/src/ src/
 cat compiled/src/utils.js \
     compiled/src/const.js \
     compiled/src/exceptions.js \
+    compiled/src/spec.js \
     compiled/src/coord.js \
     compiled/src/domain.js \
     compiled/src/tick.js \

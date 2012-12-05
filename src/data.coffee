@@ -25,7 +25,7 @@ class DataProcess
   ## save the specs
   constructor: (layerSpec, strictmode) ->
     @dataObj = layerSpec.data
-    @initialSpec = extractDataSpec layerSpec
+    @initialSpec = poly.spec.layerToData layerSpec
     @prevSpec = null
     @strictmode = strictmode
     @statData = null
@@ -35,7 +35,7 @@ class DataProcess
 
   ## calculate things...
   make : (spec, callback) ->
-    dataSpec = extractDataSpec spec
+    dataSpec = poly.spec.layerToData spec
     #if prevSpec? and prevSpec == dataSpec
     #  return callback @statData, @metaData
     wrappedCallback = @_wrap callback
@@ -219,11 +219,6 @@ Coordinating the actual work being done
 ###
 
 ###
-Given a layer spec, extract the data calculations that needs to be done.
-###
-extractDataSpec = (layerSpec) -> {}
-
-###
 Perform the necessary computation in the front end
 ###
 frontendProcess = (dataSpec, rawData, callback) ->
@@ -249,7 +244,7 @@ frontendProcess = (dataSpec, rawData, callback) ->
       addMeta key, meta
     data = _.filter data, filterFactory(additionalFilter)
   # stats
-  if dataSpec.stats
+  if dataSpec.stats and dataSpec.stats.stats and dataSpec.stats.stats.length > 0
     data = calculateStats(data, dataSpec.stats)
   # done
   callback(data, metaData)

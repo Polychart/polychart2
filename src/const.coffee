@@ -7,6 +7,9 @@ These are constants that are referred to throughout the coebase
 ###
 poly.const =
   aes : ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id']
+  trans: {'bin': ['key', 'binwidth'], 'lag': ['key', 'lag']},
+  stat: {'count': ['key'], 'sum': ['key'], 'mean': ['key']},
+  metas: {sort: null, stat: null, limit: null, asc: true},
   scaleFns :
     novalue : () -> {v: null, f: 'novalue', t: 'scalefn'}
     max: (v) -> {v: v, f: 'max', t: 'scalefn'}

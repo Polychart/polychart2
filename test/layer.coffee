@@ -84,13 +84,13 @@ test "bars", ->
   {layers} = poly.chart spec
   layer = layers[0]
   equal layer.geoms['foo'].marks[0].type, 'rect'
-  deepEqual layer.geoms['foo'].marks[0].x1 , poly.const.scaleFns.lower 'A'
-  deepEqual layer.geoms['foo'].marks[0].x2 , poly.const.scaleFns.upper 'A'
-  equal layer.geoms['foo'].marks[0].y1 , 0
-  equal layer.geoms['foo'].marks[0].y2 , 4
+  deepEqual layer.geoms['foo'].marks[0].x[0] , poly.const.scaleFns.lower 'A'
+  deepEqual layer.geoms['foo'].marks[0].x[1] , poly.const.scaleFns.upper 'A'
+  equal layer.geoms['foo'].marks[0].y[0] , 0
+  equal layer.geoms['foo'].marks[0].y[1] , 4
   equal layer.geoms['bar'].marks[0].type, 'rect'
-  deepEqual layer.geoms['bar'].marks[0].x1 , poly.const.scaleFns.lower 'A'
-  deepEqual layer.geoms['bar'].marks[0].x2 , poly.const.scaleFns.upper 'A'
-  equal layer.geoms['bar'].marks[0].y1 , 4
-  equal layer.geoms['bar'].marks[0].y2 , 7
+  deepEqual layer.geoms['bar'].marks[0].x[0] , poly.const.scaleFns.lower 'A'
+  deepEqual layer.geoms['bar'].marks[0].x[1] , poly.const.scaleFns.upper 'A'
+  equal layer.geoms['bar'].marks[0].y[0] , 4
+  equal layer.geoms['bar'].marks[0].y[1] , 7
 

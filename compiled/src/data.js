@@ -1,5 +1,5 @@
 (function() {
-  var Data, DataProcess, backendProcess, calculateMeta, calculateStats, extractDataSpec, filterFactory, filters, frontendProcess, poly, statistics, statsFactory, transformFactory, transforms,
+  var Data, DataProcess, backendProcess, calculateMeta, calculateStats, filterFactory, filters, frontendProcess, poly, statistics, statsFactory, transformFactory, transforms,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -40,7 +40,7 @@
 
     function DataProcess(layerSpec, strictmode) {
       this._wrap = __bind(this._wrap, this);      this.dataObj = layerSpec.data;
-      this.initialSpec = extractDataSpec(layerSpec);
+      this.initialSpec = poly.spec.layerToData(layerSpec);
       this.prevSpec = null;
       this.strictmode = strictmode;
       this.statData = null;
@@ -53,7 +53,7 @@
 
     DataProcess.prototype.make = function(spec, callback) {
       var dataSpec, wrappedCallback;
-      dataSpec = extractDataSpec(spec);
+      dataSpec = poly.spec.layerToData(spec);
       wrappedCallback = this._wrap(callback);
       if (this.dataObj.frontEnd) {
         if (this.strictmode) {
@@ -362,14 +362,6 @@
   */
 
   /*
-  Given a layer spec, extract the data calculations that needs to be done.
-  */
-
-  extractDataSpec = function(layerSpec) {
-    return {};
-  };
-
-  /*
   Perform the necessary computation in the front end
   */
 
@@ -402,7 +394,9 @@
       });
       data = _.filter(data, filterFactory(additionalFilter));
     }
-    if (dataSpec.stats) data = calculateStats(data, dataSpec.stats);
+    if (dataSpec.stats && dataSpec.stats.stats && dataSpec.stats.stats.length > 0) {
+      data = calculateStats(data, dataSpec.stats);
+    }
     return callback(data, metaData);
   };
 
