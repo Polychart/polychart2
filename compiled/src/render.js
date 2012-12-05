@@ -9,11 +9,34 @@
   # GLOBALS
   */
 
-  poly.paper = function(dom, w, h, reset) {
-    var bg, paper;
+  poly.paper = function(dom, w, h, handleEvent) {
+    var bg, end, handler, onend, onmove, onstart, paper, start;
     paper = Raphael(dom, w, h);
     bg = paper.rect(0, 0, w, h).attr('stroke-width', 0);
-    bg.click(reset);
+    bg.click(handleEvent('reset'));
+    start = end = null;
+    handler = handleEvent('select');
+    onstart = function() {
+      start = null;
+      return end = null;
+    };
+    onmove = function(dx, dy, y, x) {
+      if (start != null) {
+        return end = {
+          x: x,
+          y: y
+        };
+      } else {
+        return start = {
+          x: x,
+          y: y
+        };
+      }
+    };
+    onend = function() {
+      return handler(start, end);
+    };
+    bg.drag(onmove, onstart, onend);
     return paper;
   };
 

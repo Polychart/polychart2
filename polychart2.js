@@ -3677,11 +3677,34 @@
   # GLOBALS
   */
 
-  poly.paper = function(dom, w, h, reset) {
-    var bg, paper;
+  poly.paper = function(dom, w, h, handleEvent) {
+    var bg, end, handler, onend, onmove, onstart, paper, start;
     paper = Raphael(dom, w, h);
     bg = paper.rect(0, 0, w, h).attr('stroke-width', 0);
-    bg.click(reset);
+    bg.click(handleEvent('reset'));
+    start = end = null;
+    handler = handleEvent('select');
+    onstart = function() {
+      start = null;
+      return end = null;
+    };
+    onmove = function(dx, dy, y, x) {
+      if (start != null) {
+        return end = {
+          x: x,
+          y: y
+        };
+      } else {
+        return start = {
+          x: x,
+          y: y
+        };
+      }
+    };
+    onend = function() {
+      return handler(start, end);
+    };
+    bg.drag(onmove, onstart, onend);
     return paper;
   };
 
@@ -4008,7 +4031,7 @@
     Graph.prototype.render = function(dom) {
       var clipping, layer, renderer, scales, _i, _len, _ref;
       if (this.paper == null) {
-        this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent('reset'));
+        this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
       }
       scales = this.scaleSet.getScaleFns();
       clipping = this.coord.clipping(this.dims);
@@ -4036,21 +4059,27 @@
     Graph.prototype.handleEvent = function(type) {
       var graph;
       graph = this;
-      return function() {
-        var evtData, h, obj, _i, _len, _ref, _results;
-        obj = this;
-        evtData = obj.data('e');
-        _ref = graph.handlers;
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          h = _ref[_i];
-          if (_.isFunction(h)) {
-            _results.push(h(type, evtData));
-          } else {
-            _results.push(h.handle(type, evtData));
+      if (type !== 'select') {
+        return function() {
+          var h, obj, _i, _len, _ref, _results;
+          obj = this;
+          obj.evtData = obj.data('e');
+          _ref = graph.handlers;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            h = _ref[_i];
+            if (_.isFunction(h)) {
+              _results.push(h(type, obj));
+            } else {
+              _results.push(h.handle(type, obj));
+            }
           }
-        }
-        return _results;
+          return _results;
+        };
+      }
+      return function(start, end) {
+        alert('bahhahahaha');
+        return console.log(start, end);
       };
     };
 
@@ -4076,9 +4105,9 @@
       return poly.dim.make(spec, scaleSet.makeAxes(), scaleSet.makeLegends());
     };
 
-    Graph.prototype._makePaper = function(dom, width, height, reset) {
+    Graph.prototype._makePaper = function(dom, width, height, handleEvent) {
       var paper;
-      return paper = poly.paper(document.getElementById(dom), width, height, reset);
+      return paper = poly.paper(document.getElementById(dom), width, height, handleEvent);
     };
 
     Graph.prototype._legacy = function(domains) {

@@ -40,7 +40,7 @@ class Graph
     @_legacy(domains)
 
   render : (dom) =>
-    @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent('reset')
+    @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent
     scales = @scaleSet.getScaleFns()
     clipping = @coord.clipping @dims
     # render each layer
@@ -62,15 +62,17 @@ class Graph
 
   handleEvent : (type) =>
     graph = @
-    () ->
-      obj= @
-      evtData = obj.data('e')
-      for h in graph.handlers
-        if _.isFunction(h)
-          h(type, evtData)
-        else
-          h.handle(type, evtData)
-
+    if type != 'select'
+      return () ->
+        obj = @
+        obj.evtData = obj.data('e')
+        for h in graph.handlers
+          if _.isFunction(h)
+            h(type, obj)
+          else
+            h.handle(type, obj)
+    (start,end) ->
+      console.log start, end
 
   _makeLayers: (spec) ->
     _.map spec.layers, (layerSpec) -> poly.layer.make(layerSpec, spec.strict)
@@ -83,8 +85,8 @@ class Graph
     poly.scale.make tmpRanges, @coord
   _makeDimensions: (spec, scaleSet) ->
     poly.dim.make spec, scaleSet.makeAxes(), scaleSet.makeLegends()
-  _makePaper: (dom, width, height, reset) ->
-    paper = poly.paper document.getElementById(dom), width, height, reset
+  _makePaper: (dom, width, height, handleEvent) ->
+    paper = poly.paper document.getElementById(dom), width, height, handleEvent
 
   _legacy: (domains) =>
     # LEGACY: tick calculation

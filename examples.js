@@ -49,7 +49,8 @@
     };
     c = poly.chart(spec);
     c.render(dom);
-    return c.addHandler(function(type, data) {
+    return c.addHandler(function(type, e) {
+      data = e.evtData;
       if (type === 'reset') {
         jsondata.shift();
         jsondata.push({

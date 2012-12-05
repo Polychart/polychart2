@@ -16,7 +16,8 @@
   c = poly.chart spec
   c.render dom
 
-  c.addHandler (type, data) ->
+  c.addHandler (type, e) ->
+    data = e.evtData
     if type == 'reset'
       jsondata.shift()
       jsondata.push({index:i++, value:Math.random()*10})
