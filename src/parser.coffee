@@ -63,8 +63,10 @@ tokenizers = [
   [/^\(/, (_) -> LParen],
   [/^\)/, (_) -> RParen],
   [/^,/, (_) -> Comma],
-  [/^\d+(\.\d+)?/, (val) -> new Literal(val)], # TODO: other numeric formats
-  [/^\w+/, (name) -> new Symbol(name)], # TODO: escaping
+  [/^[+-]?(0x[0-9a-fA-F]+|0?\.\d+|[1-9]\d*(\.\d+)?|0)([eE][+-]?\d+)?/,
+   (val) -> new Literal(val)],
+  [/^(\w|[^\u0000-\u0080])+|'((\\.)|[^\\'])+'|"((\\.)|[^\\"])+"/,
+   (name) -> new Symbol(name)],
 ]
 matchToken = (str) ->
   for [pat, op] in tokenizers
@@ -252,10 +254,17 @@ exampleLS2 = {
 
 exampleLS3 =
   type: "point"
-  y: {var: "lag(c , 1) "}
-  x: {var: "bin(a, 10)"}
-  color: {var: "mean(lag(c,1))"}
+  y: {var: "lag(c , -0xaF1) "}
+  x: {var: "bin(a, 0.10)"}
+  color: {var: "mean(lag(c,0))"}
   opacity: {var: "bin(a, 10)"}
+
+exampleLS4 =
+  type: "point"
+  y: {var: "lag(',f+/\\\'c' , -1) "}
+  x: {var: "bin(汉字漢字, 10.4e20)"}
+  color: {var: "mean(lag(c, -1))"}
+  opacity: {var: "bin(\"a-+->\\\"b\", '漢\\\'字')"}
 
 l2d = layerToDataSpec(context)
 testl2d = (ex) ->
@@ -268,3 +277,4 @@ testl2d = (ex) ->
 testl2d exampleLS
 testl2d exampleLS2
 testl2d exampleLS3
+testl2d exampleLS4
