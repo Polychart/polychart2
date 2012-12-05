@@ -23,7 +23,8 @@ class Axis extends Guide
       bottom : dim.paddingTop + dim.guideTop + dim.chartHeight
       width: dim.chartWidth
       height: dim.chartHeight
-    @line ?= @_renderline renderer, axisDim
+    if @line? then renderer.remove @line
+    @line = @_renderline renderer, axisDim
     if @title?
       @title = renderer.animate @title, @_makeTitle(axisDim, @titletext)
     else

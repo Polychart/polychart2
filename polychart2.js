@@ -1648,7 +1648,8 @@
         width: dim.chartWidth,
         height: dim.chartHeight
       };
-      if (this.line == null) this.line = this._renderline(renderer, axisDim);
+      if (this.line != null) renderer.remove(this.line);
+      this.line = this._renderline(renderer, axisDim);
       if (this.title != null) {
         this.title = renderer.animate(this.title, this._makeTitle(axisDim, this.titletext));
       } else {
