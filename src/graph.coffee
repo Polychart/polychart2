@@ -62,17 +62,14 @@ class Graph
 
   handleEvent : (type) =>
     graph = @
-    if type != 'select'
-      return () ->
-        obj = @
-        obj.evtData = obj.data('e')
-        for h in graph.handlers
-          if _.isFunction(h)
-            h(type, obj)
-          else
-            h.handle(type, obj)
-    (start,end) ->
-      console.log start, end
+    () ->
+      obj = @
+      obj.evtData = obj.data('e')
+      for h in graph.handlers
+        if _.isFunction(h)
+          h(type, obj)
+        else
+          h.handle(type, obj)
 
   _makeLayers: (spec) ->
     _.map spec.layers, (layerSpec) -> poly.layer.make(layerSpec, spec.strict)

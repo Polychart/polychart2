@@ -91,27 +91,21 @@
     Graph.prototype.handleEvent = function(type) {
       var graph;
       graph = this;
-      if (type !== 'select') {
-        return function() {
-          var h, obj, _i, _len, _ref, _results;
-          obj = this;
-          obj.evtData = obj.data('e');
-          _ref = graph.handlers;
-          _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            h = _ref[_i];
-            if (_.isFunction(h)) {
-              _results.push(h(type, obj));
-            } else {
-              _results.push(h.handle(type, obj));
-            }
+      return function() {
+        var h, obj, _i, _len, _ref, _results;
+        obj = this;
+        obj.evtData = obj.data('e');
+        _ref = graph.handlers;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          h = _ref[_i];
+          if (_.isFunction(h)) {
+            _results.push(h(type, obj));
+          } else {
+            _results.push(h.handle(type, obj));
           }
-          return _results;
-        };
-      }
-      return function(start, end) {
-        alert('bahhahahaha');
-        return console.log(start, end);
+        }
+        return _results;
       };
     };
 

@@ -3678,34 +3678,20 @@
   */
 
   poly.paper = function(dom, w, h, handleEvent) {
-    var bg, end, handler, onend, onmove, onstart, paper, start;
+    var bg, paper;
     paper = Raphael(dom, w, h);
     bg = paper.rect(0, 0, w, h).attr('stroke-width', 0);
     bg.click(handleEvent('reset'));
-    start = end = null;
-    handler = handleEvent('select');
-    onstart = function() {
-      start = null;
-      return end = null;
-    };
-    onmove = function(dx, dy, y, x) {
-      if (start != null) {
-        return end = {
-          x: x,
-          y: y
-        };
-      } else {
-        return start = {
-          x: x,
-          y: y
-        };
-      }
-    };
-    onend = function() {
-      return handler(start, end);
-    };
-    bg.drag(onmove, onstart, onend);
     return paper;
+    /* add dragging handle for selecting
+    handler = handleEvent('select')
+    start = end = null
+    onstart = () -> start = null; end = null
+    onmove = (dx, dy, y, x) ->
+      if start? then end = x:x, y:y else start = x:x, y:y
+    onend = () -> if start? and end? then handler start, end
+    bg.drag onmove, onstart, onend
+    */
   };
 
   /*
@@ -4059,27 +4045,21 @@
     Graph.prototype.handleEvent = function(type) {
       var graph;
       graph = this;
-      if (type !== 'select') {
-        return function() {
-          var h, obj, _i, _len, _ref, _results;
-          obj = this;
-          obj.evtData = obj.data('e');
-          _ref = graph.handlers;
-          _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            h = _ref[_i];
-            if (_.isFunction(h)) {
-              _results.push(h(type, obj));
-            } else {
-              _results.push(h.handle(type, obj));
-            }
+      return function() {
+        var h, obj, _i, _len, _ref, _results;
+        obj = this;
+        obj.evtData = obj.data('e');
+        _ref = graph.handlers;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          h = _ref[_i];
+          if (_.isFunction(h)) {
+            _results.push(h(type, obj));
+          } else {
+            _results.push(h.handle(type, obj));
           }
-          return _results;
-        };
-      }
-      return function(start, end) {
-        alert('bahhahahaha');
-        return console.log(start, end);
+        }
+        return _results;
       };
     };
 
