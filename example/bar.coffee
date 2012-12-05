@@ -68,6 +68,7 @@
   c = poly.chart spec
   c.render dom
 
+###
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
@@ -76,6 +77,7 @@
     c.render dom
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
+###
 
 @examples.bar_static = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])

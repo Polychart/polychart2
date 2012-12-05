@@ -14,7 +14,7 @@ TODO:
 ###
 poly.render = (id, paper, scales, coord, mayflip, clipping) ->
   add: (mark, evtData) ->
-    pt = renderer.cartesian[mark.type].render paper, scales, coord, mark, mayflip
+    pt = renderer[coord.type][mark.type].render paper, scales, coord, mark, mayflip
     if clipping? then pt.attr('clip-rect', clipping)
     pt.click () -> eve(id+".click", @, evtData)
     pt.hover () -> eve(id+".hover", @, evtData)
@@ -22,7 +22,7 @@ poly.render = (id, paper, scales, coord, mayflip, clipping) ->
   remove: (pt) ->
     pt.remove()
   animate: (pt, mark, evtData) ->
-    renderer.cartesian[mark.type].animate pt, scales, coord, mark, mayflip
+    renderer[coord.type][mark.type].animate pt, scales, coord, mark, mayflip
     pt.unclick() # <-- ?!?!?!
     pt.click () -> eve(id+".click", @, evtData)
     pt.unhover() # <-- ?!?!?!
@@ -81,6 +81,26 @@ class Rect extends Renderer # for CARTESIAN only
     stroke: @_maybeApply scales.color, mark.color
     'stroke-width': '0px'
 
+class CircleRect extends Renderer # FOR POLAR ONLY
+  _make: (paper) -> paper.path()
+  attr: (scales, coord, mark, mayflip) ->
+    debugger
+    [x0, x1] = mark.x
+    [y0, y1] = mark.y
+    mark.x = [x0, x0, x1, x1]
+    mark.y = [y0, y1, y1, y0]
+    {x, y, r, t} = coord.getXY mayflip, scales, mark
+
+    large = if Math.abs(t[1]-t[0]) > Math.PI then 1 else 0
+    path = "M #{x[0]} #{y[0]} A #{r[0]} #{r[0]} 0 #{large} 1 #{x[1]} #{y[1]}"
+    large = if Math.abs(t[3]-t[2]) > Math.PI then 1 else 0
+    path += "L #{x[2]} #{y[2]} A #{r[2]} #{r[2]} 0 #{large} 0 #{x[3]} #{y[3]} Z"
+
+    path: path
+    fill: @_maybeApply scales.color, mark.color
+    stroke: @_maybeApply scales.color, mark.color
+    'stroke-width': '0px'
+
 """
 class HLine extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
@@ -118,11 +138,12 @@ renderer =
   cartesian:
     circle: new Circle()
     line: new Line()
-    #hline: new HLine()
-    #vline: new VLine()
     text: new Text()
     rect: new Rect()
+    #hline: new HLine()
+    #vline: new VLine()
   polar:
     circle: new Circle()
     line: new Line()
     text: new Text()
+    rect: new CircleRect()

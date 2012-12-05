@@ -1,5 +1,5 @@
 (function() {
-  var Circle, Line, Rect, Renderer, Text, poly, renderer,
+  var Circle, CircleRect, Line, Rect, Renderer, Text, poly, renderer,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -25,7 +25,7 @@
     return {
       add: function(mark, evtData) {
         var pt;
-        pt = renderer.cartesian[mark.type].render(paper, scales, coord, mark, mayflip);
+        pt = renderer[coord.type][mark.type].render(paper, scales, coord, mark, mayflip);
         if (clipping != null) pt.attr('clip-rect', clipping);
         pt.click(function() {
           return eve(id + ".click", this, evtData);
@@ -39,7 +39,7 @@
         return pt.remove();
       },
       animate: function(pt, mark, evtData) {
-        renderer.cartesian[mark.type].animate(pt, scales, coord, mark, mayflip);
+        renderer[coord.type][mark.type].animate(pt, scales, coord, mark, mayflip);
         pt.unclick();
         pt.click(function() {
           return eve(id + ".click", this, evtData);
@@ -187,6 +187,42 @@
 
   })(Renderer);
 
+  CircleRect = (function(_super) {
+
+    __extends(CircleRect, _super);
+
+    function CircleRect() {
+      CircleRect.__super__.constructor.apply(this, arguments);
+    }
+
+    CircleRect.prototype._make = function(paper) {
+      return paper.path();
+    };
+
+    CircleRect.prototype.attr = function(scales, coord, mark, mayflip) {
+      debugger;
+      var large, path, r, t, x, x0, x1, y, y0, y1, _ref, _ref2, _ref3;
+      _ref = mark.x, x0 = _ref[0], x1 = _ref[1];
+      _ref2 = mark.y, y0 = _ref2[0], y1 = _ref2[1];
+      mark.x = [x0, x0, x1, x1];
+      mark.y = [y0, y1, y1, y0];
+      _ref3 = coord.getXY(mayflip, scales, mark), x = _ref3.x, y = _ref3.y, r = _ref3.r, t = _ref3.t;
+      large = Math.abs(t[1] - t[0]) > Math.PI ? 1 : 0;
+      path = "M " + x[0] + " " + y[0] + " A " + r[0] + " " + r[0] + " 0 " + large + " 1 " + x[1] + " " + y[1];
+      large = Math.abs(t[3] - t[2]) > Math.PI ? 1 : 0;
+      path += "L " + x[2] + " " + y[2] + " A " + r[2] + " " + r[2] + " 0 " + large + " 0 " + x[3] + " " + y[3] + " Z";
+      return {
+        path: path,
+        fill: this._maybeApply(scales.color, mark.color),
+        stroke: this._maybeApply(scales.color, mark.color),
+        'stroke-width': '0px'
+      };
+    };
+
+    return CircleRect;
+
+  })(Renderer);
+
   "class HLine extends Renderer # for both cartesian & polar?\n  _make: (paper) -> paper.path()\n  attr: (scales, coord, mark) ->\n    y = scales.y mark.y\n    path: @_makePath([0, 100000], [y, y])\n    stroke: 'black'\n    'stroke-width': '1px'\n\nclass VLine extends Renderer # for both cartesian & polar?\n  _make: (paper) -> paper.path()\n  attr: (scales, coord, mark) ->\n    x = scales.x mark.x\n    path: @_makePath([x, x], [0, 100000])\n    stroke: 'black'\n    'stroke-width': '1px'";
 
   Text = (function(_super) {
@@ -230,7 +266,8 @@
     polar: {
       circle: new Circle(),
       line: new Line(),
-      text: new Text()
+      text: new Text(),
+      rect: new CircleRect()
     }
   };
 

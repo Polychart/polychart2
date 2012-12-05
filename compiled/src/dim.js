@@ -78,20 +78,6 @@
     return dim;
   };
 
-  poly.dim.clipping = function(dim) {
-    var gb, gl, gt, h, pl, pt, w;
-    pl = dim.paddingLeft;
-    gl = dim.guideLeft;
-    pt = dim.paddingTop;
-    gt = dim.guideTop;
-    gb = dim.guideBottom;
-    w = dim.chartWidth;
-    h = dim.chartHeight;
-    return {
-      main: [pl + gl, pt + gt, w, h]
-    };
-  };
-
   /*
   # CLASSES
   */

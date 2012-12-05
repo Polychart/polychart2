@@ -41,9 +41,9 @@ class Graph
   render : (dom) =>
     @paper ?= @_makePaper dom, @dims.width, @dims.height
     scales = @scaleSet.getScaleFns()
-    clipping = poly.dim.clipping @dims
+    clipping = @coord.clipping @dims
     # render each layer
-    renderer = poly.render @graphId, @paper, scales, @coord, true, clipping.main
+    renderer = poly.render @graphId, @paper, scales, @coord, true, clipping
     _.each @layers, (layer) => layer.render(renderer)
     # render axes
     renderer = poly.render @graphId, @paper, scales, @coord, false

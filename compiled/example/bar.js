@@ -128,7 +128,7 @@
   };
 
   this.examples.bar_polar = function(dom) {
-    var c, data, i, jsondata, redraw, spec;
+    var c, data, i, jsondata, spec;
     jsondata = (function() {
       var _results;
       _results = [];
@@ -174,20 +174,19 @@
       coord: poly.coord.polar()
     };
     c = poly.chart(spec);
-    c.render(dom);
-    redraw = function() {
-      jsondata.shift();
-      jsondata.push({
-        index: i++,
-        value: Math.random() * 10
-      });
-      spec.layers[0].data.update(jsondata);
-      c.make(spec);
-      c.render(dom);
-      return setTimeout(redraw, 1000);
-    };
-    return setTimeout(redraw, 1000);
+    return c.render(dom);
   };
+
+  /*
+    redraw = () ->
+      jsondata.shift()
+      jsondata.push({index:i++, value:Math.random()*10})
+      spec.layers[0].data.update jsondata
+      c.make spec
+      c.render dom
+      setTimeout(redraw, 1000)
+    setTimeout(redraw, 1000)
+  */
 
   this.examples.bar_static = function(dom) {
     var c, data, i, jsondata, spec;

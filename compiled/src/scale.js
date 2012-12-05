@@ -405,7 +405,9 @@
     }
 
     Linear.prototype._constructNum = function(domain) {
-      return this._wrapper(domain, poly.linear(domain.min, this.range.min, domain.max, this.range.max));
+      var max, _ref;
+      max = domain.max + ((_ref = domain.bw) != null ? _ref : 0);
+      return this._wrapper(domain, poly.linear(domain.min, this.range.min, max, this.range.max));
     };
 
     Linear.prototype._wrapper2 = function(step, y) {

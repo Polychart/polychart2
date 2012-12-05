@@ -242,7 +242,8 @@ class PositionScale extends Scale
 
 class Linear extends PositionScale
   _constructNum: (domain) ->
-    @_wrapper domain, poly.linear(domain.min, @range.min, domain.max, @range.max)
+    max = domain.max + (domain.bw ? 0)
+    @_wrapper domain, poly.linear(domain.min, @range.min, max, @range.max)
   _wrapper2 : (step, y) => (value) =>
     space = if @range.max > @range.min then 2 else -2
     if _.isObject(value)

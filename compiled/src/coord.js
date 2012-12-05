@@ -18,6 +18,18 @@
       return this.dims = dims;
     };
 
+    Coordinate.prototype.clipping = function() {
+      var gb, gl, gt, h, pl, pt, w;
+      pl = this.dims.paddingLeft;
+      gl = this.dims.guideLeft;
+      pt = this.dims.paddingTop;
+      gt = this.dims.guideTop;
+      gb = this.dims.guideBottom;
+      w = this.dims.chartWidth;
+      h = this.dims.chartHeight;
+      return [pl + gl, pt + gt, w, h];
+    };
+
     Coordinate.prototype.ranges = function() {};
 
     return Coordinate;
@@ -31,6 +43,8 @@
     function Cartesian() {
       Cartesian.__super__.constructor.apply(this, arguments);
     }
+
+    Cartesian.prototype.type = 'cartesian';
 
     Cartesian.prototype.ranges = function() {
       var ranges;
@@ -83,6 +97,8 @@
       Polar.__super__.constructor.apply(this, arguments);
     }
 
+    Polar.prototype.type = 'polar';
+
     Polar.prototype.make = function(dims) {
       this.dims = dims;
       this.cx = this.dims.paddingLeft + this.dims.guideLeft + this.dims.chartWidth / 2;
@@ -126,7 +142,9 @@
         if (_.isArray(mark[r])) {
           points = {
             x: [],
-            y: []
+            y: [],
+            r: [],
+            t: []
           };
           _ref2 = mark[r];
           for (i = 0, _len = _ref2.length; i < _len; i++) {
@@ -135,6 +153,8 @@
             theta = scales[t](mark[t][i]);
             points.x.push(_getx(radius, theta));
             points.y.push(_gety(radius, theta));
+            points.r.push(radius);
+            points.t.push(theta);
           }
           return points;
         }
@@ -142,7 +162,9 @@
         theta = scales[t](mark[t]);
         return {
           x: _getx(radius, theta),
-          y: _gety(radius, theta)
+          y: _gety(radius, theta),
+          r: radius,
+          t: theta
         };
       }
       ident = function(obj) {

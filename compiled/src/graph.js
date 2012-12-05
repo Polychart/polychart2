@@ -62,8 +62,8 @@
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height);
       }
       scales = this.scaleSet.getScaleFns();
-      clipping = poly.dim.clipping(this.dims);
-      renderer = poly.render(this.graphId, this.paper, scales, this.coord, true, clipping.main);
+      clipping = this.coord.clipping(this.dims);
+      renderer = poly.render(this.graphId, this.paper, scales, this.coord, true, clipping);
       _.each(this.layers, function(layer) {
         return layer.render(renderer);
       });

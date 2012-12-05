@@ -68,19 +68,6 @@ poly.dim.guess = (spec) ->
     dim.width-dim.paddingLeft-dim.paddingRight-dim.guideLeft-dim.guideRight
   dim
 
-poly.dim.clipping = (dim) ->
-  pl = dim.paddingLeft
-  gl = dim.guideLeft
-  pt = dim.paddingTop
-  gt = dim.guideTop
-  gb = dim.guideBottom
-  w = dim.chartWidth
-  h = dim.chartHeight
-
-  main: [pl+gl, pt+gt, w, h]
-  #left: [pl, pt, gl+1, gt+h+gb+1]
-  #bottom: [pl, pt+gt+h-1, gl+w+1, gb+1]
-
 ###
 # CLASSES
 ###
