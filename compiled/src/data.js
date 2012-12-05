@@ -331,7 +331,7 @@
     if (stat) {
       statSpec = {
         stats: [stat],
-        group: [key]
+        groups: [key]
       };
       data = calculateStats(data, statSpec);
     }

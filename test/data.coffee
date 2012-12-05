@@ -160,7 +160,7 @@ test "statistics - count", ->
       stats: [
         key: 'y', stat: 'count', name: 'count(y)'
       ]
-      group: ['x']
+      groups: ['x']
   trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual trans, [
       {x: 'A', 'count(y)': 6}
@@ -172,7 +172,7 @@ test "statistics - count", ->
       stats: [
         key: 'y', stat: 'count', name: 'count(y)'
       ]
-      group: ['x', 'z']
+      groups: ['x', 'z']
   trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual trans, [
       {x: 'A', z:1, 'count(y)': 3}
@@ -186,7 +186,7 @@ test "statistics - count", ->
       stats: [
         key: 'y', stat: 'uniq', name: 'uniq(y)'
       ],
-      group: ['x', 'z']
+      groups: ['x', 'z']
   trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual trans, [
       {x: 'A', z:1, 'uniq(y)': 1}
@@ -201,7 +201,7 @@ test "statistics - count", ->
         {key: 'y', stat: 'count', name: 'count(y)'}
         {key: 'y', stat: 'uniq', name: 'uniq(y)'}
       ]
-      group: ['x', 'z']
+      groups: ['x', 'z']
   trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual trans, [
       {x: 'A', z:1, 'uniq(y)': 1, 'count(y)':3}
@@ -228,7 +228,7 @@ test "statistics - count", ->
         {key: 'y', stat: 'max', name: 'max(y)'}
         {key: 'y', stat: 'median', name: 'median(y)'}
       ]
-      group: ['x']
+      groups: ['x']
   trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual trans, [
       {x: 'A', 'min(y)': 1, 'max(y)': 5, 'median(y)': 3}
@@ -253,7 +253,7 @@ test "statistics - count", ->
       stats: [
         key: 'y', stat: 'box', name: 'box(y)'
       ]
-      group: ['x']
+      groups: ['x']
   trans = poly.data.frontendProcess spec, data, (x) -> x
   deepEqual trans, [
       {x: 'A', 'box(y)': {q1:1, q2:2.5, q3:4, q4:5.5, q5:6, outliers:[15]}}

@@ -197,7 +197,7 @@ calculateMeta = (key, metaSpec, data) ->
   {sort, stat, limit, asc} = metaSpec
   # group the data by the key
   if stat
-    statSpec = stats: [stat], group: [key]
+    statSpec = stats: [stat], groups: [key]
     data = calculateStats(data, statSpec)
   # sorting
   multiplier = if asc then 1 else -1

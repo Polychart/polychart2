@@ -403,7 +403,7 @@
             name: 'count(y)'
           }
         ],
-        group: ['x']
+        groups: ['x']
       }
     };
     trans = poly.data.frontendProcess(spec, data, function(x) {
@@ -427,7 +427,7 @@
             name: 'count(y)'
           }
         ],
-        group: ['x', 'z']
+        groups: ['x', 'z']
       }
     };
     trans = poly.data.frontendProcess(spec, data, function(x) {
@@ -461,7 +461,7 @@
             name: 'uniq(y)'
           }
         ],
-        group: ['x', 'z']
+        groups: ['x', 'z']
       }
     };
     trans = poly.data.frontendProcess(spec, data, function(x) {
@@ -499,7 +499,7 @@
             name: 'uniq(y)'
           }
         ],
-        group: ['x', 'z']
+        groups: ['x', 'z']
       }
     };
     trans = poly.data.frontendProcess(spec, data, function(x) {
@@ -584,7 +584,7 @@
             name: 'median(y)'
           }
         ],
-        group: ['x']
+        groups: ['x']
       }
     };
     trans = poly.data.frontendProcess(spec, data, function(x) {
@@ -659,7 +659,7 @@
             name: 'box(y)'
           }
         ],
-        group: ['x']
+        groups: ['x']
       }
     };
     trans = poly.data.frontendProcess(spec, data, function(x) {
