@@ -12,21 +12,22 @@
     <script type="text/javascript" src="examples.js"></script>
   </head>
   <body>
-    <div id="hello"></div>
+    <div id="chart" style="display:inline-block"></div>
+    <div id="nav" style="float:right; display:inline-block"></div>
     <script type="text/javascript">
-      var selection = location.hash.substr(1)
+      var selection = location.search.substr(1)
       if (examples[selection] !== undefined) {
-        examples[selection]('hello')
-      } else {
-        $("#hello").append(
-        "<p>Click on one of the following, and then refresh the page</p>"
-        )
-        _.each(examples, function(v, k)  {
-          $('#hello').append(
-            $("<a href='#"+k+"'>"+k+"</a><br/>")
-          );
-        });
+        examples[selection]('chart')
       }
+
+      $("#nav").append(
+      "<p>Click on one of the following, and then refresh the page</p>"
+      )
+      _.each(examples, function(v, k)  {
+        $('#nav').append(
+          $("<a href='?"+k+"'>"+k+"</a><br/>")
+        );
+      });
     </script>
 
   </body>
