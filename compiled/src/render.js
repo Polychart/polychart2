@@ -21,18 +21,15 @@
   - make everything animateWith some standard object
   */
 
-  poly.render = function(id, paper, scales, coord, mayflip, clipping) {
+  poly.render = function(handleEvent, paper, scales, coord, mayflip, clipping) {
     return {
       add: function(mark, evtData) {
         var pt;
         pt = renderer[coord.type][mark.type].render(paper, scales, coord, mark, mayflip);
         if (clipping != null) pt.attr('clip-rect', clipping);
-        pt.click(function() {
-          return eve(id + ".click", this, evtData);
-        });
-        pt.hover(function() {
-          return eve(id + ".hover", this, evtData);
-        });
+        pt.data('e', evtData);
+        pt.click(handleEvent('click'));
+        pt.hover(handleEvent('mover'), handleEvent('mout'));
         return pt;
       },
       remove: function(pt) {
@@ -40,14 +37,7 @@
       },
       animate: function(pt, mark, evtData) {
         renderer[coord.type][mark.type].animate(pt, scales, coord, mark, mayflip);
-        pt.unclick();
-        pt.click(function() {
-          return eve(id + ".click", this, evtData);
-        });
-        pt.unhover();
-        pt.hover(function() {
-          return eve(id + ".hover", this, evtData);
-        });
+        pt.data('e', evtData);
         return pt;
       }
     };

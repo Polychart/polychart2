@@ -3,7 +3,7 @@ poly = @poly || {}
 # Graph Object
 class Graph
   constructor: (spec) ->
-    @graphId = _.uniqueId('graph_')
+    @handlers = []
     @layers = null
     @scaleSet = null
     @axes = null
@@ -44,17 +44,33 @@ class Graph
     scales = @scaleSet.getScaleFns()
     clipping = @coord.clipping @dims
     # render each layer
-    renderer = poly.render @graphId, @paper, scales, @coord, true, clipping
+    renderer = poly.render @handleEvent, @paper, scales, @coord, true, clipping
     for layer in @layers
       layer.render renderer
     # render axes
-    renderer = poly.render @graphId, @paper, scales, @coord, false
+    renderer = poly.render @handleEvent, @paper, scales, @coord, false
 
     @scaleSet.makeAxes()
     @scaleSet.renderAxes @dims, renderer
 
     @scaleSet.makeLegends()
     @scaleSet.renderLegends @dims, renderer
+
+  addHandler : (h) -> @handlers.push h
+  removeHandler: (h) ->
+    @handlers.splice _.indexOf(@handlers, h), 1
+
+  handleEvent : (type) =>
+    graph = @
+    () ->
+      obj= @
+      evtData = obj.data('e')
+      for h in graph.handlers
+        if _.isFunction(h)
+          h(type, evtData)
+        else
+          h.handle(type, evtData)
+
 
   _makeLayers: (spec) ->
     _.map spec.layers, (layerSpec) -> poly.layer.make(layerSpec, spec.strict)

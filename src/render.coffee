@@ -12,21 +12,19 @@ TODO:
 - make add & remove animations
 - make everything animateWith some standard object
 ###
-poly.render = (id, paper, scales, coord, mayflip, clipping) ->
+poly.render = (handleEvent, paper, scales, coord, mayflip, clipping) ->
   add: (mark, evtData) ->
     pt = renderer[coord.type][mark.type].render paper, scales, coord, mark, mayflip
     if clipping? then pt.attr('clip-rect', clipping)
-    pt.click () -> eve(id+".click", @, evtData)
-    pt.hover () -> eve(id+".hover", @, evtData)
+    pt.data 'e', evtData
+    pt.click handleEvent('click')
+    pt.hover handleEvent('mover'), handleEvent('mout')
     pt
   remove: (pt) ->
     pt.remove()
   animate: (pt, mark, evtData) ->
     renderer[coord.type][mark.type].animate pt, scales, coord, mark, mayflip
-    pt.unclick() # <-- ?!?!?!
-    pt.click () -> eve(id+".click", @, evtData)
-    pt.unhover() # <-- ?!?!?!
-    pt.hover () -> eve(id+".hover", @, evtData)
+    pt.data 'e', evtData
     pt
 
 class Renderer

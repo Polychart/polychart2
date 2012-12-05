@@ -207,7 +207,13 @@
       })
     };
     c = poly.chart(spec);
-    return c.render(dom);
+    c.render(dom);
+    return c.addHandler(function(type, data) {
+      if (type === 'click') {
+        console.log(data);
+        return alert(type);
+      }
+    });
   };
 
 }).call(this);

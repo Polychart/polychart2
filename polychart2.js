@@ -3688,18 +3688,15 @@
   - make everything animateWith some standard object
   */
 
-  poly.render = function(id, paper, scales, coord, mayflip, clipping) {
+  poly.render = function(handleEvent, paper, scales, coord, mayflip, clipping) {
     return {
       add: function(mark, evtData) {
         var pt;
         pt = renderer[coord.type][mark.type].render(paper, scales, coord, mark, mayflip);
         if (clipping != null) pt.attr('clip-rect', clipping);
-        pt.click(function() {
-          return eve(id + ".click", this, evtData);
-        });
-        pt.hover(function() {
-          return eve(id + ".hover", this, evtData);
-        });
+        pt.data('e', evtData);
+        pt.click(handleEvent('click'));
+        pt.hover(handleEvent('mover'), handleEvent('mout'));
         return pt;
       },
       remove: function(pt) {
@@ -3707,14 +3704,7 @@
       },
       animate: function(pt, mark, evtData) {
         renderer[coord.type][mark.type].animate(pt, scales, coord, mark, mayflip);
-        pt.unclick();
-        pt.click(function() {
-          return eve(id + ".click", this, evtData);
-        });
-        pt.unhover();
-        pt.hover(function() {
-          return eve(id + ".hover", this, evtData);
-        });
+        pt.data('e', evtData);
         return pt;
       }
     };
@@ -3956,11 +3946,12 @@
 
     function Graph(spec) {
       this._legacy = __bind(this._legacy, this);
+      this.handleEvent = __bind(this.handleEvent, this);
       this.render = __bind(this.render, this);
       this.merge = __bind(this.merge, this);
       this.reset = __bind(this.reset, this);
       var _ref;
-      this.graphId = _.uniqueId('graph_');
+      this.handlers = [];
       this.layers = null;
       this.scaleSet = null;
       this.axes = null;
@@ -4014,17 +4005,46 @@
       }
       scales = this.scaleSet.getScaleFns();
       clipping = this.coord.clipping(this.dims);
-      renderer = poly.render(this.graphId, this.paper, scales, this.coord, true, clipping);
+      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true, clipping);
       _ref = this.layers;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         layer = _ref[_i];
         layer.render(renderer);
       }
-      renderer = poly.render(this.graphId, this.paper, scales, this.coord, false);
+      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, false);
       this.scaleSet.makeAxes();
       this.scaleSet.renderAxes(this.dims, renderer);
       this.scaleSet.makeLegends();
       return this.scaleSet.renderLegends(this.dims, renderer);
+    };
+
+    Graph.prototype.addHandler = function(h) {
+      return this.handlers.push(h);
+    };
+
+    Graph.prototype.removeHandler = function(h) {
+      return this.handlers.splice(_.indexOf(this.handlers, h), 1);
+    };
+
+    Graph.prototype.handleEvent = function(type) {
+      var graph;
+      graph = this;
+      return function() {
+        var evtData, h, obj, _i, _len, _ref, _results;
+        obj = this;
+        evtData = obj.data('e');
+        _ref = graph.handlers;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          h = _ref[_i];
+          if (_.isFunction(h)) {
+            _results.push(h(type, evtData));
+          } else {
+            _results.push(h.handle(type, evtData));
+          }
+        }
+        return _results;
+      };
     };
 
     Graph.prototype._makeLayers = function(spec) {

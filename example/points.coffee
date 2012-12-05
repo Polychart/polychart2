@@ -74,3 +74,8 @@
   spec =  { layers: [sampleLayer], coord: poly.coord.polar(flip:true) }
   c = poly.chart(spec)
   c.render(dom)
+
+  c.addHandler (type, data) ->
+    if type == 'click'
+      console.log data; alert(type)
+
