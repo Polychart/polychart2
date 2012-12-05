@@ -97,7 +97,6 @@
   jsondata = (
     {index:i, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10} for i in [0..5]
   )
-  console.log jsondata
   data = new poly.Data json:jsondata
   spec = {
     layers: [
@@ -105,7 +104,13 @@
       type: 'bar'
       x : 'two'
       y : 'sum(value)'
+      color: 'two'
+      id: 'two'
     ]
+    guides:
+      color: labels:{'a':'Even Numbers', 'b':'Odd Numbers'}, title:'Test'
+      x: labels:{'a':'Even Numbers', 'b':'Odd Numbers'}
+      y: min:0, max: 30
   }
   c = poly.chart spec
   c.render dom

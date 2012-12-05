@@ -128,6 +128,8 @@ domainMerge =
       throw new poly.UnknownError()
     sortedLevels = [_.flatten(sortedLevels, true)]
     levels = _.union.apply @, sortedLevels.concat(unsortedLevels)
+    if sortedLevels[0].length is 0
+      levels = levels.sort()
     return makeDomain type: 'cat', levels: levels, sorted: true
 
 ###

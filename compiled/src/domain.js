@@ -210,6 +210,7 @@
       }
       sortedLevels = [_.flatten(sortedLevels, true)];
       levels = _.union.apply(this, sortedLevels.concat(unsortedLevels));
+      if (sortedLevels[0].length === 0) levels = levels.sort();
       return makeDomain({
         type: 'cat',
         levels: levels,

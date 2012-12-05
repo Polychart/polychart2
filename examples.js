@@ -254,7 +254,6 @@
       }
       return _results;
     })();
-    console.log(jsondata);
     data = new poly.Data({
       json: jsondata
     });
@@ -264,9 +263,29 @@
           data: data,
           type: 'bar',
           x: 'two',
-          y: 'sum(value)'
+          y: 'sum(value)',
+          color: 'two',
+          id: 'two'
         }
-      ]
+      ],
+      guides: {
+        color: {
+          labels: {
+            'a': 'Even Numbers',
+            'b': 'Odd Numbers'
+          }
+        },
+        x: {
+          labels: {
+            'a': 'Even Numbers',
+            'b': 'Odd Numbers'
+          }
+        },
+        y: {
+          min: 0,
+          max: 30
+        }
+      }
     };
     c = poly.chart(spec);
     c.render(dom);
