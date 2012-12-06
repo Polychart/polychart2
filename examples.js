@@ -61,9 +61,8 @@
         c.make(spec);
         c.render(dom);
       }
-      if (type === 'click') {
-        return alert("You clicked on index: " + data.index["in"][0]);
-      }
+      if (type === 'click') alert("You clicked on index: " + data.index["in"][0]);
+      if (type === 'select') return console.log(data);
     });
   };
 
@@ -241,7 +240,11 @@
       }
     };
     c = poly.chart(spec);
-    return c.render(dom);
+    c.render(dom);
+    return c.addHandler(function(type, e) {
+      data = e.evtData;
+      if (type === 'select') return console.log(data);
+    });
   };
 
   this.examples.bar_sum = function(dom) {

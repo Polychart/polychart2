@@ -49,10 +49,11 @@
         fac = _ref[aes];
         this.scales[aes] = this.factory[aes].scale;
       }
-      return this.reverse = {
+      this.reverse = {
         x: this.factory.x.reverse,
         y: this.factory.y.reverse
       };
+      return this.layerMapping = this._mapLayers(layers);
     };
 
     ScaleSet.prototype.setRanges = function(ranges) {
@@ -119,6 +120,23 @@
       return factory;
     };
 
+    ScaleSet.prototype.fromPixels = function(start, end) {
+      var map, obj, x, y, _i, _j, _len, _len2, _ref, _ref2, _ref3;
+      _ref = this.coord.getAes(start, end, this.reverse), x = _ref.x, y = _ref.y;
+      obj = {};
+      _ref2 = this.layerMapping.x;
+      for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+        map = _ref2[_i];
+        if ((map.type != null) && map.type === 'map') obj[map.value] = x;
+      }
+      _ref3 = this.layerMapping.y;
+      for (_j = 0, _len2 = _ref3.length; _j < _len2; _j++) {
+        map = _ref3[_j];
+        if ((map.type != null) && map.type === 'map') obj[map.value] = y;
+      }
+      return obj;
+    };
+
     ScaleSet.prototype.getSpec = function(a) {
       if ((this.guideSpec != null) && (this.guideSpec[a] != null)) {
         return this.guideSpec[a];
@@ -152,7 +170,6 @@
       var aes, obj;
       obj = {};
       for (aes in this.domains) {
-        if (aes === 'x' || aes === 'y') continue;
         obj[aes] = _.map(layers, function(layer) {
           if (layer.mapping[aes] != null) {
             return {
@@ -202,8 +219,7 @@
     };
 
     ScaleSet.prototype.makeLegends = function(mapping) {
-      var aes, aesGroups, i, idx, layerMapping, legend, legenddeleted, _i, _j, _len, _len2, _ref;
-      layerMapping = this._mapLayers(this.layers);
+      var aes, aesGroups, i, idx, legend, legenddeleted, _i, _j, _len, _len2, _ref;
       aesGroups = this._mergeAes(this.layers);
       idx = 0;
       while (idx < this.legends.length) {
@@ -238,7 +254,7 @@
           domain: this.domains[aes],
           guideSpec: this.getSpec(aes),
           type: this.factory[aes].tickType(),
-          mapping: layerMapping,
+          mapping: this.layerMapping,
           titletext: poly.getLabel(this.layers, aes)
         });
       }

@@ -38,6 +38,7 @@ class ScaleSet
     @reverse =
       x: @factory.x.reverse
       y: @factory.y.reverse
+    @layerMapping = @_mapLayers layers
 
   setRanges: (ranges) ->
     @ranges = ranges
@@ -87,6 +88,17 @@ class ScaleSet
       factory.size.make(domains.size)
     factory
 
+  fromPixels: (start, end) ->
+    {x,y} = @coord.getAes start, end, @reverse
+    obj = {}
+    for map in @layerMapping.x
+      if map.type? and map.type == 'map'
+        obj[map.value] = x
+    for map in @layerMapping.y
+      if map.type? and map.type == 'map'
+        obj[map.value] = y
+    obj
+
   getSpec : (a) -> if @guideSpec? and @guideSpec[a]? then @guideSpec[a] else {}
   makeAxes: () ->
     @axes.x.make
@@ -107,7 +119,6 @@ class ScaleSet
   _mapLayers: (layers) ->
     obj = {}
     for aes of @domains
-      if aes in ['x', 'y'] then continue
       obj[aes] =
         _.map layers, (layer) ->
           if layer.mapping[aes]?
@@ -135,7 +146,6 @@ class ScaleSet
 
   makeLegends: (mapping) -> # ok, this will be a complex f'n. deep breath:
     # figure out which groups of aesthetics need to be represented
-    layerMapping = @_mapLayers @layers
     aesGroups = @_mergeAes @layers
 
     # now iterate through existing legends AND the aesGroups to see
@@ -170,7 +180,7 @@ class ScaleSet
         domain: @domains[aes]
         guideSpec: @getSpec aes
         type: @factory[aes].tickType()
-        mapping: layerMapping
+        mapping: @layerMapping
         titletext: poly.getLabel(@layers, aes)
     @legends
   renderLegends: (dims, renderer) ->

@@ -54,7 +54,6 @@ class Graph
 
     @scaleSet.makeAxes()
     @scaleSet.renderAxes @dims, renderer
-
     @scaleSet.makeLegends()
     @scaleSet.renderLegends @dims, renderer
 
@@ -64,14 +63,20 @@ class Graph
 
   handleEvent : (type) =>
     graph = @
-    () ->
+    handler = (params) ->
       obj = @
-      obj.evtData = obj.data('e')
+      if type == 'select'
+        {start, end} = params
+        obj.evtData = graph.scaleSet.fromPixels start, end
+      else
+        obj.evtData = obj.data('e')
+
       for h in graph.handlers
         if _.isFunction(h)
           h(type, obj)
         else
           h.handle(type, obj)
+    _.throttle handler, 1000
 
   _makeLayers: (spec) ->
     _.map spec.layers, (layerSpec) -> poly.layer.make(layerSpec, spec.strict)

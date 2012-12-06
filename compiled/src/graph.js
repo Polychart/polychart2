@@ -90,12 +90,17 @@
     };
 
     Graph.prototype.handleEvent = function(type) {
-      var graph;
+      var graph, handler;
       graph = this;
-      return function() {
-        var h, obj, _i, _len, _ref, _results;
+      handler = function(params) {
+        var end, h, obj, start, _i, _len, _ref, _results;
         obj = this;
-        obj.evtData = obj.data('e');
+        if (type === 'select') {
+          start = params.start, end = params.end;
+          obj.evtData = graph.scaleSet.fromPixels(start, end);
+        } else {
+          obj.evtData = obj.data('e');
+        }
         _ref = graph.handlers;
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -108,6 +113,7 @@
         }
         return _results;
       };
+      return _.throttle(handler, 1000);
     };
 
     Graph.prototype._makeLayers = function(spec) {

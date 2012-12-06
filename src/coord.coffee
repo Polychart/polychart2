@@ -46,6 +46,10 @@ class Cartesian extends Coordinate
         x: if _.isArray(mark.x) then _.map mark.x, scalex else scalex mark.x
         y: if _.isArray(mark.y) then _.map mark.y, scaley else scaley mark.y
       }
+  getAes: (pixel1, pixel2, reverse) ->
+    # assume flipped; this is still aes and NOT mapped...
+    x: reverse.x pixel1[@x], pixel2[@x]
+    y: reverse.y pixel1[@y], pixel2[@y]
 
 class Polar extends Coordinate
   type: 'polar'

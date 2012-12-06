@@ -9,16 +9,15 @@ poly.paper = (dom, w, h, handleEvent) ->
   bg = paper.rect(0,0,w,h).attr('stroke-width', 0)
   bg.click handleEvent('reset')
   paper
-  ### add dragging handle for selecting
+  # add dragging handle for selecting
   handler = handleEvent('select')
   start = end = null
   onstart = () -> start = null; end = null
   onmove = (dx, dy, y, x) ->
     if start? then end = x:x, y:y else start = x:x, y:y
-  onend = () -> if start? and end? then handler start, end
+  onend = () -> if start? and end? then handler start:start, end:end
   bg.drag onmove, onstart, onend
-  ###
-
+  paper
 ###
 Helper function for rendering all the geoms of an object
 

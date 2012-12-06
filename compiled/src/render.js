@@ -10,20 +10,40 @@
   */
 
   poly.paper = function(dom, w, h, handleEvent) {
-    var bg, paper;
+    var bg, end, handler, onend, onmove, onstart, paper, start;
     paper = Raphael(dom, w, h);
     bg = paper.rect(0, 0, w, h).attr('stroke-width', 0);
     bg.click(handleEvent('reset'));
+    paper;
+    handler = handleEvent('select');
+    start = end = null;
+    onstart = function() {
+      start = null;
+      return end = null;
+    };
+    onmove = function(dx, dy, y, x) {
+      if (start != null) {
+        return end = {
+          x: x,
+          y: y
+        };
+      } else {
+        return start = {
+          x: x,
+          y: y
+        };
+      }
+    };
+    onend = function() {
+      if ((start != null) && (end != null)) {
+        return handler({
+          start: start,
+          end: end
+        });
+      }
+    };
+    bg.drag(onmove, onstart, onend);
     return paper;
-    /* add dragging handle for selecting
-    handler = handleEvent('select')
-    start = end = null
-    onstart = () -> start = null; end = null
-    onmove = (dx, dy, y, x) ->
-      if start? then end = x:x, y:y else start = x:x, y:y
-    onend = () -> if start? and end? then handler start, end
-    bg.drag onmove, onstart, onend
-    */
   };
 
   /*

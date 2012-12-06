@@ -477,6 +477,9 @@
       _ref = this.mapping;
       for (aes in _ref) {
         value = _ref[aes];
+        if (aes === 'x' || aes === 'y' || aes === 'id' || aes === 'tooltip') {
+          continue;
+        }
         value = value[0];
         if (__indexOf.call(this.aes, aes) >= 0) {
           obj[aes] = tick.location;

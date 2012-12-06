@@ -1040,6 +1040,13 @@
       }
     };
 
+    Cartesian.prototype.getAes = function(pixel1, pixel2, reverse) {
+      return {
+        x: reverse.x(pixel1[this.x], pixel2[this.x]),
+        y: reverse.y(pixel1[this.y], pixel2[this.y])
+      };
+    };
+
     return Cartesian;
 
   })(Coordinate);
@@ -2072,6 +2079,9 @@
       _ref = this.mapping;
       for (aes in _ref) {
         value = _ref[aes];
+        if (aes === 'x' || aes === 'y' || aes === 'id' || aes === 'tooltip') {
+          continue;
+        }
         value = value[0];
         if (__indexOf.call(this.aes, aes) >= 0) {
           obj[aes] = tick.location;
@@ -2181,10 +2191,11 @@
         fac = _ref[aes];
         this.scales[aes] = this.factory[aes].scale;
       }
-      return this.reverse = {
+      this.reverse = {
         x: this.factory.x.reverse,
         y: this.factory.y.reverse
       };
+      return this.layerMapping = this._mapLayers(layers);
     };
 
     ScaleSet.prototype.setRanges = function(ranges) {
@@ -2251,6 +2262,23 @@
       return factory;
     };
 
+    ScaleSet.prototype.fromPixels = function(start, end) {
+      var map, obj, x, y, _i, _j, _len, _len2, _ref, _ref2, _ref3;
+      _ref = this.coord.getAes(start, end, this.reverse), x = _ref.x, y = _ref.y;
+      obj = {};
+      _ref2 = this.layerMapping.x;
+      for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+        map = _ref2[_i];
+        if ((map.type != null) && map.type === 'map') obj[map.value] = x;
+      }
+      _ref3 = this.layerMapping.y;
+      for (_j = 0, _len2 = _ref3.length; _j < _len2; _j++) {
+        map = _ref3[_j];
+        if ((map.type != null) && map.type === 'map') obj[map.value] = y;
+      }
+      return obj;
+    };
+
     ScaleSet.prototype.getSpec = function(a) {
       if ((this.guideSpec != null) && (this.guideSpec[a] != null)) {
         return this.guideSpec[a];
@@ -2284,7 +2312,6 @@
       var aes, obj;
       obj = {};
       for (aes in this.domains) {
-        if (aes === 'x' || aes === 'y') continue;
         obj[aes] = _.map(layers, function(layer) {
           if (layer.mapping[aes] != null) {
             return {
@@ -2334,8 +2361,7 @@
     };
 
     ScaleSet.prototype.makeLegends = function(mapping) {
-      var aes, aesGroups, i, idx, layerMapping, legend, legenddeleted, _i, _j, _len, _len2, _ref;
-      layerMapping = this._mapLayers(this.layers);
+      var aes, aesGroups, i, idx, legend, legenddeleted, _i, _j, _len, _len2, _ref;
       aesGroups = this._mergeAes(this.layers);
       idx = 0;
       while (idx < this.legends.length) {
@@ -2370,7 +2396,7 @@
           domain: this.domains[aes],
           guideSpec: this.getSpec(aes),
           type: this.factory[aes].tickType(),
-          mapping: layerMapping,
+          mapping: this.layerMapping,
           titletext: poly.getLabel(this.layers, aes)
         });
       }
@@ -3720,20 +3746,40 @@
   */
 
   poly.paper = function(dom, w, h, handleEvent) {
-    var bg, paper;
+    var bg, end, handler, onend, onmove, onstart, paper, start;
     paper = Raphael(dom, w, h);
     bg = paper.rect(0, 0, w, h).attr('stroke-width', 0);
     bg.click(handleEvent('reset'));
+    paper;
+    handler = handleEvent('select');
+    start = end = null;
+    onstart = function() {
+      start = null;
+      return end = null;
+    };
+    onmove = function(dx, dy, y, x) {
+      if (start != null) {
+        return end = {
+          x: x,
+          y: y
+        };
+      } else {
+        return start = {
+          x: x,
+          y: y
+        };
+      }
+    };
+    onend = function() {
+      if ((start != null) && (end != null)) {
+        return handler({
+          start: start,
+          end: end
+        });
+      }
+    };
+    bg.drag(onmove, onstart, onend);
     return paper;
-    /* add dragging handle for selecting
-    handler = handleEvent('select')
-    start = end = null
-    onstart = () -> start = null; end = null
-    onmove = (dx, dy, y, x) ->
-      if start? then end = x:x, y:y else start = x:x, y:y
-    onend = () -> if start? and end? then handler start, end
-    bg.drag onmove, onstart, onend
-    */
   };
 
   /*
@@ -4086,12 +4132,17 @@
     };
 
     Graph.prototype.handleEvent = function(type) {
-      var graph;
+      var graph, handler;
       graph = this;
-      return function() {
-        var h, obj, _i, _len, _ref, _results;
+      handler = function(params) {
+        var end, h, obj, start, _i, _len, _ref, _results;
         obj = this;
-        obj.evtData = obj.data('e');
+        if (type === 'select') {
+          start = params.start, end = params.end;
+          obj.evtData = graph.scaleSet.fromPixels(start, end);
+        } else {
+          obj.evtData = obj.data('e');
+        }
         _ref = graph.handlers;
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -4104,6 +4155,7 @@
         }
         return _results;
       };
+      return _.throttle(handler, 1000);
     };
 
     Graph.prototype._makeLayers = function(spec) {

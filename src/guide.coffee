@@ -238,6 +238,7 @@ class Legend extends Guide
       y : sf.identity legendDim.top + (15+tick.index*12)
       color: sf.identity 'steelblue' # can be overwritten
     for aes, value of @mapping
+      if aes in ['x', 'y', 'id', 'tooltip'] then continue
       value = value[0] # just use the first for now?
       if aes in @aes
         obj[aes] = tick.location

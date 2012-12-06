@@ -85,6 +85,13 @@
       }
     };
 
+    Cartesian.prototype.getAes = function(pixel1, pixel2, reverse) {
+      return {
+        x: reverse.x(pixel1[this.x], pixel2[this.x]),
+        y: reverse.y(pixel1[this.y], pixel2[this.y])
+      };
+    };
+
     return Cartesian;
 
   })(Coordinate);
