@@ -32,43 +32,71 @@ class ScaleSet
     @domainx = @domains.x
     @domainy = @domains.y
     @factory = @_makeFactory(guideSpec, domains, @ranges)
-    @scales = @getScaleFns()
+    @scales = {}
+    for aes, fac of @factory
+      @scales[aes] = @factory[aes].scale
+    @reverse =
+      x: @factory.x.reverse
+      y: @factory.y.reverse
+
   setRanges: (ranges) ->
     @ranges = ranges
-    @scales = @getScaleFns()
+    @_makeXScale()
+    @_makeYScale()
   setXDomain: (d) ->
     @domainx = d
-    @scales.x = @_makeXScale()
+    @_makeXScale()
   setYDomain: (d) ->
     @domainy = d
-    @scales.y = @_makeYScale()
+    @_makeYScale()
   resetDomains: () ->
     @domainx = @domains.x
     @domainy = @domains.y
-    @scales.x = @_makeXScale()
-    @scales.y = @_makeYScale()
-
-  getScaleFns: () ->
-    scales = {}
-    if @domainx then scales.x = @_makeXScale()
-    if @domainy then scales.y = @_makeYScale()
-    for aes in ['color', 'size']
-      if @domains[aes] then scales[aes] = @_makeScale aes
-    scales
-  _makeXScale: () -> @factory.x.construct(@domainx, @ranges.x)
-  _makeYScale: () -> @factory.y.construct(@domainy, @ranges.y)
-  _makeScale: (aes) -> @factory[aes].construct(@domains[aes])
+    @_makeXScale()
+    @_makeYScale()
+  _makeXScale: () ->
+    @factory.x.make(@domainx, @ranges.x)
+    @scales.x = @factory.x.scale
+  _makeYScale: () ->
+    @factory.y.make(@domainy, @ranges.y)
+    @scales.y = @factory.y.scale
+  _makeFactory : (guideSpec, domains, ranges) ->
+    # this function contains information about default scales!
+    specScale = (a) ->
+      if guideSpec and guideSpec[a]? and guideSpec[a].scale?
+        return guideSpec.x.scale
+      return null
+    factory = {}
+    # x 
+    factory.x = specScale('x') ? poly.scale.linear()
+    factory.x.make(domains.x, ranges.x)
+    # y
+    factory.y = specScale('y') ? poly.scale.linear()
+    factory.y.make(domains.y, ranges.y)
+    # color
+    if domains.color?
+      if domains.color.type == 'cat'
+        factory.color = specScale('color') ? poly.scale.color()
+      else
+        factory.color = specScale('color') ?
+          poly.scale.gradient upper:'steelblue', lower:'red'
+      factory.color.make(domains.color)
+    # size
+    if domains.size?
+      factory.size = specScale('size') || poly.scale.area()
+      factory.size.make(domains.size)
+    factory
 
   getSpec : (a) -> if @guideSpec? and @guideSpec[a]? then @guideSpec[a] else {}
   makeAxes: () ->
     @axes.x.make
       domain: @domainx
-      type: @factory.x.tickType @domainx
+      type: @factory.x.tickType()
       guideSpec: @getSpec 'x'
       titletext: poly.getLabel @layers, 'x'
     @axes.y.make
       domain: @domainy
-      type: @factory.y.tickType @domainy
+      type: @factory.y.tickType()
       guideSpec: @getSpec 'y'
       titletext: poly.getLabel @layers, 'y'
     @axes
@@ -141,7 +169,7 @@ class ScaleSet
       legend.make
         domain: @domains[aes]
         guideSpec: @getSpec aes
-        type: @factory[aes].tickType @domains[aes]
+        type: @factory[aes].tickType()
         mapping: layerMapping
         titletext: poly.getLabel(@layers, aes)
     @legends
@@ -163,24 +191,6 @@ class ScaleSet
       legend.render dims, renderer, offset
       offset.y += newdim.height
 
-  _makeFactory : (guideSpec, domains, ranges) ->
-    # this function contains information about default scales!
-    specScale = (a) ->
-      if guideSpec and guideSpec[a]? and guideSpec[a].scale?
-        return guideSpec.x.scale
-      return null
-    factory =
-      x : specScale('x') ? poly.scale.linear()
-      y : specScale('y') ? poly.scale.linear()
-    if domains.color?
-      if domains.color.type == 'cat'
-        factory.color = specScale('color') ? poly.scale.color()
-      else
-        factory.color = specScale('color') ?
-          poly.scale.gradient upper:'steelblue', lower:'red'
-    if domains.size?
-      factory.size = specScale('size') || poly.scale.area()
-    factory
 
 ###
 # CLASSES
@@ -194,23 +204,24 @@ attribute of that value.
 ###
 class Scale
   constructor: (params) ->
-  guide: () -> # get a guide out of this
-  construct: (domain) ->
+    @scale = null
+  make: (domain) ->
+    @domain = domain
     switch domain.type
-      when 'num' then return @_constructNum domain
-      when 'date' then return @_constructDate domain
-      when 'cat' then return @_constructCat domain
-  _constructNum: (domain) ->
-    throw new poly.NotImplemented("_constructNum is not implemented")
-  _constructDate: (domain) ->
-    throw new poly.NotImplemented("_constructDate is not implemented")
-  _constructCat: (domain) ->
-    throw new poly.NotImplemented("_constructCat is not implemented")
-  tickType: (domain) ->
-    switch domain.type
-      when 'num' then return @_tickNum domain
-      when 'date' then return @_tickDate domain
-      when 'cat' then return @_tickCat domain
+      when 'num' then return @_makeNum()
+      when 'date' then return @_makeDate()
+      when 'cat' then return @_makeCat()
+  _makeNum: () ->
+    throw new poly.NotImplemented("_makeNum is not implemented")
+  _makeDate: () ->
+    throw new poly.NotImplemented("_makeDate is not implemented")
+  _makeCat: () ->
+    throw new poly.NotImplemented("_makeCat is not implemented")
+  tickType: () ->
+    switch @domain.type
+      when 'num' then return @_tickNum @domain
+      when 'date' then return @_tickDate @domain
+      when 'cat' then return @_tickCat @domain
   _tickNum: () -> 'num'
   _tickDate: () -> 'date'
   _tickCat: () -> 'cat'
@@ -224,10 +235,13 @@ class Scale
 Position Scales for the x- and y-axes
 ###
 class PositionScale extends Scale
-  construct: (domain, range) ->
+  constructor: (params) ->
+    @scale = null
+    @reverse = null
+  make: (domain, range) ->
     @range = range
     super(domain)
-  _wrapper : (domain, y) => (value) =>
+  _numWrapper: (domain, y) => (value) =>
     # NOTE: the below spacing makes sure that animation in polar coordinates
     # behave as expected. Test with polar bar charts to see...
     space = 0.001 * (if @range.max > @range.min then 1 else -1)
@@ -241,12 +255,7 @@ class PositionScale extends Scale
         if value.f is 'min' then return @range.min + value.v
       throw new poly.UnexpectedObject("Expected a value instead of an object")
     y(value)
-
-class Linear extends PositionScale
-  _constructNum: (domain) ->
-    max = domain.max + (domain.bw ? 0)
-    @_wrapper domain, poly.linear(domain.min, @range.min, max, @range.max)
-  _wrapper2 : (step, y) => (value) =>
+  _catWrapper: (step, y) => (value) =>
     space = 0.001 * (if @range.max > @range.min then 1 else -1)
     if _.isObject(value)
       if value.t is 'scalefn'
@@ -258,62 +267,85 @@ class Linear extends PositionScale
         if value.f is 'min' then return @range.min + value.v
       throw new poly.UnexpectedObject("wtf is this object?")
     y(value) + step/2
-  _constructCat: (domain) ->
-    step = (@range.max - @range.min) / domain.levels.length
+
+class Linear extends PositionScale
+  _makeNum: () ->
+    max = @domain.max + (@domain.bw ? 0)
+    y = poly.linear(@domain.min, @range.min, max, @range.max)
+    x = poly.linear(@range.min, @domain.min, @range.max, max)
+    @scale = @_numWrapper @domain, y
+    @reverse = (y1, y2) ->
+      xs = [x(y1),x(y2)]
+      {ge: _.min(xs), le: _.max(xs)}
+  _makeCat: () ->
+    step = (@range.max - @range.min) / @domain.levels.length
     y = (x) =>
-      i = _.indexOf(domain.levels, x)
+      i = _.indexOf(@domain.levels, x)
       if i == -1 then null else @range.min + i*step
-    @_wrapper2 step, y
+    x = (y1, y2) =>
+      if y2 < y1 then tmp=y2; y2=y1; y1=tmp
+      i1 = Math.floor(y1/step)
+      i2 = Math.ceil(y2/step)
+      {in: @domain.levels[i1..i2]}
+    @scale = @_catWrapper step, y
+    @reverse = x
 
 class Log extends PositionScale
-  _constructNum: (domain) ->
+  _makeNum: () ->
     lg = Math.log
-    ylin = poly.linear lg(domain.min), @range.min, lg(domain.max), @range.max
-    @_wrapper (x) -> ylin lg(x)
+    ylin = poly.linear lg(@domain.min), @range.min, lg(@domain.max), @range.max
+    @scale = @_numWrapper (x) -> ylin lg(x)
+
+    ylininv = poly.linear @range.min, lg(@domain.min), @range.max, lg(@domain.max)
+    x = (y) -> Math.exp(ylininv(y))
+    @reverse = (y1, y2) ->
+      xs = [x(y1),x(y2)]
+      {ge: _.min(xs), le: _.max(xs)}
   _tickNum: () -> 'num-log'
 
 ###
 Other, legend-type scales for the x- and y-axes
 ###
 class Area extends Scale
-  _constructNum: (domain) -> #range = [0, 1]
-    min = if domain.min == 0 then 0 else 1
+  _makeNum: () => #range = [0, 1]
+    min = if @domain.min == 0 then 0 else 1
     sq = Math.sqrt
-    ylin = poly.linear sq(domain.min), min, sq(domain.max), 10
-    @_identityWrapper (x) -> ylin sq(x)
+    ylin = poly.linear sq(@domain.min), min, sq(@domain.max), 10
+    @scale = @_identityWrapper (x) -> ylin sq(x)
 
 class Color extends Scale
-  _constructCat: (domain) -> #TEMPORARY
-    n = domain.levels.length
-    h = (v) -> _.indexOf(domain.levels, v) / n + 1/(2*n)
-    (value) -> Raphael.hsl(h(value),0.5,0.5)
-  _constructNum: (domain) ->
-    h = poly.linear domain.min, 0, domain.max, 1
-    (value) -> Raphael.hsl(0.5,h(value),0.5)
+  _makeCat: () => #TEMPORARY
+    n = @domain.levels.length
+    h = (v) => _.indexOf(@domain.levels, v) / n + 1/(2*n)
+    @scale = (value) => Raphael.hsl(h(value),0.5,0.5)
+  _makeNum: () =>
+    h = poly.linear @domain.min, 0, @domain.max, 1
+    @scale = (value) -> Raphael.hsl(0.5,h(value),0.5)
 
 class Brewer extends Scale
-  _constructCat: (domain) ->
+  _makeCat: () ->
 
 class Gradient extends Scale
   constructor: (params) ->
     {@lower, @upper} = params
-  _constructNum: (domain) =>
+  _makeNum: () =>
     lower = Raphael.color(@lower)
     upper = Raphael.color(@upper)
-    r = poly.linear domain.min, lower.r, domain.max, upper.r
-    g = poly.linear domain.min, lower.g, domain.max, upper.g
-    b = poly.linear domain.min, lower.b, domain.max, upper.b
-    @_identityWrapper (value) => Raphael.rgb r(value), g(value), b(value)
+    r = poly.linear @domain.min, lower.r, @domain.max, upper.r
+    g = poly.linear @domain.min, lower.g, @domain.max, upper.g
+    b = poly.linear @domain.min, lower.b, @domain.max, upper.b
+    @scale =
+      @_identityWrapper (value) => Raphael.rgb r(value), g(value), b(value)
 
 class Gradient2 extends Scale
   constructor: (params) -> {lower, zero, upper} = params
-  _constructCat: (domain) ->
+  _makeCat: () =>
 
 class Shape extends Scale
-  _constructCat: (domain) ->
+  _makeCat: () ->
 
 class Identity extends Scale
-  construct: (domain) -> (x) -> x
+  make: () => @scale = (x) -> x
 
 poly.scale = _.extend poly.scale,
   linear : (params) -> new Linear(params)

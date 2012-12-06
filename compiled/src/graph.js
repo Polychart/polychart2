@@ -61,11 +61,12 @@
     };
 
     Graph.prototype.render = function(dom) {
-      var clipping, layer, renderer, scales, _i, _len, _ref;
+      var clipping, layer, renderer, reverse, scales, _i, _len, _ref;
+      scales = this.scaleSet.scales;
+      reverse = this.scaleSet.reverse;
       if (this.paper == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
       }
-      scales = this.scaleSet.getScaleFns();
       clipping = this.coord.clipping(this.dims);
       renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true, clipping);
       _ref = this.layers;
@@ -139,7 +140,7 @@
     Graph.prototype._legacy = function(domains) {
       var axes, k, v, _results;
       this.domains = domains;
-      this.scales = this.scaleSet.getScaleFns();
+      this.scales = this.scaleSet.scales;
       axes = this.scaleSet.makeAxes();
       this.ticks = {};
       _results = [];

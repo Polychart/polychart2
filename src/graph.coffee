@@ -40,8 +40,10 @@ class Graph
     @_legacy(domains)
 
   render : (dom) =>
+    scales = @scaleSet.scales
+    reverse = @scaleSet.reverse
+
     @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent
-    scales = @scaleSet.getScaleFns()
     clipping = @coord.clipping @dims
     # render each layer
     renderer = poly.render @handleEvent, @paper, scales, @coord, true, clipping
@@ -88,7 +90,7 @@ class Graph
   _legacy: (domains) =>
     # LEGACY: tick calculation
     @domains = domains
-    @scales = @scaleSet.getScaleFns()
+    @scales = @scaleSet.scales
     axes = @scaleSet.makeAxes()
     @ticks = {}
     for k, v of axes

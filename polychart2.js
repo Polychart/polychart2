@@ -2168,60 +2168,87 @@
     }
 
     ScaleSet.prototype.make = function(guideSpec, domains, layers) {
+      var aes, fac, _ref;
       this.guideSpec = guideSpec;
       this.layers = layers;
       this.domains = domains;
       this.domainx = this.domains.x;
       this.domainy = this.domains.y;
       this.factory = this._makeFactory(guideSpec, domains, this.ranges);
-      return this.scales = this.getScaleFns();
+      this.scales = {};
+      _ref = this.factory;
+      for (aes in _ref) {
+        fac = _ref[aes];
+        this.scales[aes] = this.factory[aes].scale;
+      }
+      return this.reverse = {
+        x: this.factory.x.reverse,
+        y: this.factory.y.reverse
+      };
     };
 
     ScaleSet.prototype.setRanges = function(ranges) {
       this.ranges = ranges;
-      return this.scales = this.getScaleFns();
+      this._makeXScale();
+      return this._makeYScale();
     };
 
     ScaleSet.prototype.setXDomain = function(d) {
       this.domainx = d;
-      return this.scales.x = this._makeXScale();
+      return this._makeXScale();
     };
 
     ScaleSet.prototype.setYDomain = function(d) {
       this.domainy = d;
-      return this.scales.y = this._makeYScale();
+      return this._makeYScale();
     };
 
     ScaleSet.prototype.resetDomains = function() {
       this.domainx = this.domains.x;
       this.domainy = this.domains.y;
-      this.scales.x = this._makeXScale();
-      return this.scales.y = this._makeYScale();
-    };
-
-    ScaleSet.prototype.getScaleFns = function() {
-      var aes, scales, _i, _len, _ref;
-      scales = {};
-      if (this.domainx) scales.x = this._makeXScale();
-      if (this.domainy) scales.y = this._makeYScale();
-      _ref = ['color', 'size'];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        aes = _ref[_i];
-        if (this.domains[aes]) scales[aes] = this._makeScale(aes);
-      }
-      return scales;
+      this._makeXScale();
+      return this._makeYScale();
     };
 
     ScaleSet.prototype._makeXScale = function() {
-      return this.factory.x.construct(this.domainx, this.ranges.x);
+      this.factory.x.make(this.domainx, this.ranges.x);
+      return this.scales.x = this.factory.x.scale;
     };
 
     ScaleSet.prototype._makeYScale = function() {
-      return this.factory.y.construct(this.domainy, this.ranges.y);
+      this.factory.y.make(this.domainy, this.ranges.y);
+      return this.scales.y = this.factory.y.scale;
     };
 
-    ScaleSet.prototype._makeScale = function(aes) {
-      return this.factory[aes].construct(this.domains[aes]);
+    ScaleSet.prototype._makeFactory = function(guideSpec, domains, ranges) {
+      var factory, specScale, _ref, _ref2, _ref3, _ref4;
+      specScale = function(a) {
+        if (guideSpec && (guideSpec[a] != null) && (guideSpec[a].scale != null)) {
+          return guideSpec.x.scale;
+        }
+        return null;
+      };
+      factory = {};
+      factory.x = (_ref = specScale('x')) != null ? _ref : poly.scale.linear();
+      factory.x.make(domains.x, ranges.x);
+      factory.y = (_ref2 = specScale('y')) != null ? _ref2 : poly.scale.linear();
+      factory.y.make(domains.y, ranges.y);
+      if (domains.color != null) {
+        if (domains.color.type === 'cat') {
+          factory.color = (_ref3 = specScale('color')) != null ? _ref3 : poly.scale.color();
+        } else {
+          factory.color = (_ref4 = specScale('color')) != null ? _ref4 : poly.scale.gradient({
+            upper: 'steelblue',
+            lower: 'red'
+          });
+        }
+        factory.color.make(domains.color);
+      }
+      if (domains.size != null) {
+        factory.size = specScale('size') || poly.scale.area();
+        factory.size.make(domains.size);
+      }
+      return factory;
     };
 
     ScaleSet.prototype.getSpec = function(a) {
@@ -2235,13 +2262,13 @@
     ScaleSet.prototype.makeAxes = function() {
       this.axes.x.make({
         domain: this.domainx,
-        type: this.factory.x.tickType(this.domainx),
+        type: this.factory.x.tickType(),
         guideSpec: this.getSpec('x'),
         titletext: poly.getLabel(this.layers, 'x')
       });
       this.axes.y.make({
         domain: this.domainy,
-        type: this.factory.y.tickType(this.domainy),
+        type: this.factory.y.tickType(),
         guideSpec: this.getSpec('y'),
         titletext: poly.getLabel(this.layers, 'y')
       });
@@ -2342,7 +2369,7 @@
         legend.make({
           domain: this.domains[aes],
           guideSpec: this.getSpec(aes),
-          type: this.factory[aes].tickType(this.domains[aes]),
+          type: this.factory[aes].tickType(),
           mapping: layerMapping,
           titletext: poly.getLabel(this.layers, aes)
         });
@@ -2381,34 +2408,6 @@
       return _results;
     };
 
-    ScaleSet.prototype._makeFactory = function(guideSpec, domains, ranges) {
-      var factory, specScale, _ref, _ref2, _ref3, _ref4;
-      specScale = function(a) {
-        if (guideSpec && (guideSpec[a] != null) && (guideSpec[a].scale != null)) {
-          return guideSpec.x.scale;
-        }
-        return null;
-      };
-      factory = {
-        x: (_ref = specScale('x')) != null ? _ref : poly.scale.linear(),
-        y: (_ref2 = specScale('y')) != null ? _ref2 : poly.scale.linear()
-      };
-      if (domains.color != null) {
-        if (domains.color.type === 'cat') {
-          factory.color = (_ref3 = specScale('color')) != null ? _ref3 : poly.scale.color();
-        } else {
-          factory.color = (_ref4 = specScale('color')) != null ? _ref4 : poly.scale.gradient({
-            upper: 'steelblue',
-            lower: 'red'
-          });
-        }
-      }
-      if (domains.size != null) {
-        factory.size = specScale('size') || poly.scale.area();
-      }
-      return factory;
-    };
-
     return ScaleSet;
 
   })();
@@ -2425,41 +2424,42 @@
 
   Scale = (function() {
 
-    function Scale(params) {}
+    function Scale(params) {
+      this.scale = null;
+    }
 
-    Scale.prototype.guide = function() {};
-
-    Scale.prototype.construct = function(domain) {
+    Scale.prototype.make = function(domain) {
+      this.domain = domain;
       switch (domain.type) {
         case 'num':
-          return this._constructNum(domain);
+          return this._makeNum();
         case 'date':
-          return this._constructDate(domain);
+          return this._makeDate();
         case 'cat':
-          return this._constructCat(domain);
+          return this._makeCat();
       }
     };
 
-    Scale.prototype._constructNum = function(domain) {
-      throw new poly.NotImplemented("_constructNum is not implemented");
+    Scale.prototype._makeNum = function() {
+      throw new poly.NotImplemented("_makeNum is not implemented");
     };
 
-    Scale.prototype._constructDate = function(domain) {
-      throw new poly.NotImplemented("_constructDate is not implemented");
+    Scale.prototype._makeDate = function() {
+      throw new poly.NotImplemented("_makeDate is not implemented");
     };
 
-    Scale.prototype._constructCat = function(domain) {
-      throw new poly.NotImplemented("_constructCat is not implemented");
+    Scale.prototype._makeCat = function() {
+      throw new poly.NotImplemented("_makeCat is not implemented");
     };
 
-    Scale.prototype.tickType = function(domain) {
-      switch (domain.type) {
+    Scale.prototype.tickType = function() {
+      switch (this.domain.type) {
         case 'num':
-          return this._tickNum(domain);
+          return this._tickNum(this.domain);
         case 'date':
-          return this._tickDate(domain);
+          return this._tickDate(this.domain);
         case 'cat':
-          return this._tickCat(domain);
+          return this._tickCat(this.domain);
       }
     };
 
@@ -2494,17 +2494,18 @@
 
     __extends(PositionScale, _super);
 
-    function PositionScale() {
-      this._wrapper = __bind(this._wrapper, this);
-      PositionScale.__super__.constructor.apply(this, arguments);
+    function PositionScale(params) {
+      this._catWrapper = __bind(this._catWrapper, this);
+      this._numWrapper = __bind(this._numWrapper, this);      this.scale = null;
+      this.reverse = null;
     }
 
-    PositionScale.prototype.construct = function(domain, range) {
+    PositionScale.prototype.make = function(domain, range) {
       this.range = range;
-      return PositionScale.__super__.construct.call(this, domain);
+      return PositionScale.__super__.make.call(this, domain);
     };
 
-    PositionScale.prototype._wrapper = function(domain, y) {
+    PositionScale.prototype._numWrapper = function(domain, y) {
       var _this = this;
       return function(value) {
         var space;
@@ -2524,26 +2525,7 @@
       };
     };
 
-    return PositionScale;
-
-  })(Scale);
-
-  Linear = (function(_super) {
-
-    __extends(Linear, _super);
-
-    function Linear() {
-      this._wrapper2 = __bind(this._wrapper2, this);
-      Linear.__super__.constructor.apply(this, arguments);
-    }
-
-    Linear.prototype._constructNum = function(domain) {
-      var max, _ref;
-      max = domain.max + ((_ref = domain.bw) != null ? _ref : 0);
-      return this._wrapper(domain, poly.linear(domain.min, this.range.min, max, this.range.max));
-    };
-
-    Linear.prototype._wrapper2 = function(step, y) {
+    PositionScale.prototype._catWrapper = function(step, y) {
       var _this = this;
       return function(value) {
         var space;
@@ -2563,20 +2545,62 @@
       };
     };
 
-    Linear.prototype._constructCat = function(domain) {
-      var step, y,
+    return PositionScale;
+
+  })(Scale);
+
+  Linear = (function(_super) {
+
+    __extends(Linear, _super);
+
+    function Linear() {
+      Linear.__super__.constructor.apply(this, arguments);
+    }
+
+    Linear.prototype._makeNum = function() {
+      var max, x, y, _ref;
+      max = this.domain.max + ((_ref = this.domain.bw) != null ? _ref : 0);
+      y = poly.linear(this.domain.min, this.range.min, max, this.range.max);
+      x = poly.linear(this.range.min, this.domain.min, this.range.max, max);
+      this.scale = this._numWrapper(this.domain, y);
+      return this.reverse = function(y1, y2) {
+        var xs;
+        xs = [x(y1), x(y2)];
+        return {
+          ge: _.min(xs),
+          le: _.max(xs)
+        };
+      };
+    };
+
+    Linear.prototype._makeCat = function() {
+      var step, x, y,
         _this = this;
-      step = (this.range.max - this.range.min) / domain.levels.length;
+      step = (this.range.max - this.range.min) / this.domain.levels.length;
       y = function(x) {
         var i;
-        i = _.indexOf(domain.levels, x);
+        i = _.indexOf(_this.domain.levels, x);
         if (i === -1) {
           return null;
         } else {
           return _this.range.min + i * step;
         }
       };
-      return this._wrapper2(step, y);
+      x = function(y1, y2) {
+        var i1, i2, tmp;
+        if (y2 < y1) {
+          tmp = y2;
+          y2 = y1;
+          y1 = tmp;
+        }
+        i1 = Math.floor(y1 / step);
+        i2 = Math.ceil(y2 / step);
+        return {
+          "in": _this.domain.levels.slice(i1, i2 + 1 || 9e9)
+        };
+      };
+      this.scale = this._catWrapper(step, y);
+      return this.reverse = x;
     };
 
     return Linear;
@@ -2591,13 +2615,25 @@
       Log.__super__.constructor.apply(this, arguments);
     }
 
-    Log.prototype._constructNum = function(domain) {
-      var lg, ylin;
+    Log.prototype._makeNum = function() {
+      var lg, x, ylin, ylininv;
       lg = Math.log;
-      ylin = poly.linear(lg(domain.min), this.range.min, lg(domain.max), this.range.max);
-      return this._wrapper(function(x) {
+      ylin = poly.linear(lg(this.domain.min), this.range.min, lg(this.domain.max), this.range.max);
+      this.scale = this._numWrapper(function(x) {
         return ylin(lg(x));
       });
+      ylininv = poly.linear(this.range.min, lg(this.domain.min), this.range.max, lg(this.domain.max));
+      x = function(y) {
+        return Math.exp(ylininv(y));
+      };
+      return this.reverse = function(y1, y2) {
+        var xs;
+        xs = [x(y1), x(y2)];
+        return {
+          ge: _.min(xs),
+          le: _.max(xs)
+        };
+      };
     };
 
     Log.prototype._tickNum = function() {
@@ -2617,15 +2653,16 @@
     __extends(Area, _super);
 
     function Area() {
+      this._makeNum = __bind(this._makeNum, this);
       Area.__super__.constructor.apply(this, arguments);
     }
 
-    Area.prototype._constructNum = function(domain) {
+    Area.prototype._makeNum = function() {
       var min, sq, ylin;
-      min = domain.min === 0 ? 0 : 1;
+      min = this.domain.min === 0 ? 0 : 1;
       sq = Math.sqrt;
-      ylin = poly.linear(sq(domain.min), min, sq(domain.max), 10);
-      return this._identityWrapper(function(x) {
+      ylin = poly.linear(sq(this.domain.min), min, sq(this.domain.max), 10);
+      return this.scale = this._identityWrapper(function(x) {
         return ylin(sq(x));
       });
     };
@@ -2639,24 +2676,27 @@
     __extends(Color, _super);
 
     function Color() {
+      this._makeNum = __bind(this._makeNum, this);
+      this._makeCat = __bind(this._makeCat, this);
       Color.__super__.constructor.apply(this, arguments);
     }
 
-    Color.prototype._constructCat = function(domain) {
-      var h, n;
-      n = domain.levels.length;
+    Color.prototype._makeCat = function() {
+      var h, n,
+        _this = this;
+      n = this.domain.levels.length;
       h = function(v) {
-        return _.indexOf(domain.levels, v) / n + 1 / (2 * n);
+        return _.indexOf(_this.domain.levels, v) / n + 1 / (2 * n);
       };
-      return function(value) {
+      return this.scale = function(value) {
         return Raphael.hsl(h(value), 0.5, 0.5);
       };
     };
 
-    Color.prototype._constructNum = function(domain) {
+    Color.prototype._makeNum = function() {
       var h;
-      h = poly.linear(domain.min, 0, domain.max, 1);
-      return function(value) {
+      h = poly.linear(this.domain.min, 0, this.domain.max, 1);
+      return this.scale = function(value) {
         return Raphael.hsl(0.5, h(value), 0.5);
       };
     };
@@ -2673,7 +2713,7 @@
       Brewer.__super__.constructor.apply(this, arguments);
     }
 
-    Brewer.prototype._constructCat = function(domain) {};
+    Brewer.prototype._makeCat = function() {};
 
     return Brewer;
 
@@ -2684,18 +2724,18 @@
     __extends(Gradient, _super);
 
     function Gradient(params) {
-      this._constructNum = __bind(this._constructNum, this);      this.lower = params.lower, this.upper = params.upper;
+      this._makeNum = __bind(this._makeNum, this);      this.lower = params.lower, this.upper = params.upper;
     }
 
-    Gradient.prototype._constructNum = function(domain) {
+    Gradient.prototype._makeNum = function() {
       var b, g, lower, r, upper,
         _this = this;
       lower = Raphael.color(this.lower);
       upper = Raphael.color(this.upper);
-      r = poly.linear(domain.min, lower.r, domain.max, upper.r);
-      g = poly.linear(domain.min, lower.g, domain.max, upper.g);
-      b = poly.linear(domain.min, lower.b, domain.max, upper.b);
-      return this._identityWrapper(function(value) {
+      r = poly.linear(this.domain.min, lower.r, this.domain.max, upper.r);
+      g = poly.linear(this.domain.min, lower.g, this.domain.max, upper.g);
+      b = poly.linear(this.domain.min, lower.b, this.domain.max, upper.b);
+      return this.scale = this._identityWrapper(function(value) {
         return Raphael.rgb(r(value), g(value), b(value));
       });
     };
@@ -2709,11 +2749,12 @@
     __extends(Gradient2, _super);
 
     function Gradient2(params) {
+      this._makeCat = __bind(this._makeCat, this);
       var lower, upper, zero;
       lower = params.lower, zero = params.zero, upper = params.upper;
     }
 
-    Gradient2.prototype._constructCat = function(domain) {};
+    Gradient2.prototype._makeCat = function() {};
 
     return Gradient2;
 
@@ -2727,7 +2768,7 @@
       Shape.__super__.constructor.apply(this, arguments);
     }
 
-    Shape.prototype._constructCat = function(domain) {};
+    Shape.prototype._makeCat = function() {};
 
     return Shape;
 
@@ -2738,11 +2779,12 @@
     __extends(Identity, _super);
 
     function Identity() {
+      this.make = __bind(this.make, this);
       Identity.__super__.constructor.apply(this, arguments);
     }
 
-    Identity.prototype.construct = function(domain) {
-      return function(x) {
+    Identity.prototype.make = function() {
+      return this.scale = function(x) {
         return x;
       };
     };
@@ -4015,11 +4057,12 @@
     };
 
     Graph.prototype.render = function(dom) {
-      var clipping, layer, renderer, scales, _i, _len, _ref;
+      var clipping, layer, renderer, reverse, scales, _i, _len, _ref;
+      scales = this.scaleSet.scales;
+      reverse = this.scaleSet.reverse;
       if (this.paper == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
       }
-      scales = this.scaleSet.getScaleFns();
       clipping = this.coord.clipping(this.dims);
       renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true, clipping);
       _ref = this.layers;
@@ -4093,7 +4136,7 @@
     Graph.prototype._legacy = function(domains) {
       var axes, k, v, _results;
       this.domains = domains;
-      this.scales = this.scaleSet.getScaleFns();
+      this.scales = this.scaleSet.scales;
       axes = this.scaleSet.makeAxes();
       this.ticks = {};
       _results = [];
