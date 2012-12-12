@@ -726,6 +726,37 @@
     return setTimeout(redraw, 1000);
   };
 
+  this.examples.line_static = function(dom) {
+    var c, data, jsondata, spec;
+    jsondata = [
+      {
+        a: 1,
+        b: 5
+      }, {
+        a: 3,
+        b: 4
+      }, {
+        a: 2,
+        b: 3
+      }
+    ];
+    data = new poly.Data({
+      json: jsondata
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'line',
+          x: 'a',
+          y: 'b'
+        }
+      ],
+      dom: dom
+    };
+    return c = poly.chart(spec);
+  };
+
 }).call(this);
 (function() {
 
