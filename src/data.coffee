@@ -14,8 +14,9 @@ class Data
     @dataBackend = params.url?
     @computeBackend = false
     @subscribed = []
-  getRaw: (params, callback) ->
+  getRaw: (callback) ->
     if @json then return callback(json)
+    if @url then poly.csv @url, callback
   update: (params) ->
     if !@dataBackend
       @json = params.json
@@ -53,16 +54,15 @@ class DataProcess
     #if prevSpec? and prevSpec == dataSpec
     #  return callback @statData, @metaData
     wrappedCallback = @_wrap callback
-    if not @dataObj.computeBackend
-      if @strictmode
-        wrappedCallback @dataObj.json, {}
-      else
-        frontendProcess(dataSpec, @dataObj.json, wrappedCallback)
+    if @strictmode
+      wrappedCallback @dataObj.json, {}
+    if @dataObj.computeBackend
+      backendProcess(dataSpec, @dataObj, wrappedCallback)
+    else if @dataObj.dataBackend
+      @dataObj.getRaw (json) ->
+        frontendProcess(dataSpec, json, wrappedCallback)
     else
-      if @strictmode
-        throw new poly.StrictModeError()
-      else
-        backendProcess(dataSpec, @dataObj, wrappedCallback)
+      frontendProcess(dataSpec, @dataObj.json, wrappedCallback)
 
   _wrap : (callback) => (data, metaData) =>
     # save a copy of the data/meta before going to callback

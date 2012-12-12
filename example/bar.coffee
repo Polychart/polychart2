@@ -12,9 +12,9 @@
       y :
         type:'num', min:0, max:10, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
+    dom: dom
   }
   c = poly.chart spec
-  c.render dom
 
   c.addHandler (type, e) ->
     data = e.evtData
@@ -24,7 +24,6 @@
       spec.layers[0].data.update json: jsondata
     if type == 'data'
       c.make spec
-      c.render dom
     if type == 'click'
       alert("You clicked on index: " + data.index.in[0])
     if type == 'select'
@@ -44,9 +43,9 @@
         type:'num', min:0, max:10, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
     coord: poly.coord.cartesian(flip: true)
+    dom: dom
   }
   c = poly.chart spec
-  c.render dom
 
   update = () ->
     jsondata.shift()
@@ -58,7 +57,6 @@
   c.addHandler (type, e) ->
     if type == 'data'
       c.make()
-      c.render dom
 
 @examples.bar_polar = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
@@ -73,16 +71,15 @@
         type:'num', min:0, max:10, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
     coord: poly.coord.polar( flip: true)
+    dom: dom
   }
   c = poly.chart spec
-  c.render dom
 
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
     spec.layers[0].data.update json:jsondata
     c.make spec
-    c.render dom
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
@@ -98,9 +95,9 @@
       y :
         type:'num', min:0, max:10, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
+    dom: dom
   }
   c = poly.chart spec
-  c.render dom
 
   c.addHandler (type, e) ->
     data = e.evtData
@@ -127,16 +124,15 @@
       color: labels:{'a':'Even Numbers', 'b':'Odd Numbers'}, title:'Test'
       x: labels:{'a':'Even Numbers', 'b':'Odd Numbers'}
       y: min:0, max: 30
+    dom: dom
   }
   c = poly.chart spec
-  c.render dom
 
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10})
     spec.layers[0].data.update json:jsondata
     c.make spec
-    c.render dom
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
@@ -156,14 +152,28 @@
     guides:
       color: labels:{'a':'Even Numbers', 'b':'Odd Numbers'}, title:'Test'
       x: labels:{'a':'Even Numbers', 'b':'Odd Numbers'}
+    dom: dom
   }
   c = poly.chart spec
-  c.render dom
 
   redraw = () ->
     jsondata.push({index:i++, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10})
     spec.layers[0].data.update json:jsondata
     c.make spec
-    c.render dom
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
+
+@examples.bar_ajax_csv = (dom) ->
+  data = new poly.Data url:"data/test.csv"
+  spec = {
+    layers: [
+      data: data
+      type: 'bar'
+      x: 'A'
+      y: 'B'
+    ]
+    dom: dom
+    guide:
+      y: {type: 'num'}
+  }
+  c = poly.chart spec

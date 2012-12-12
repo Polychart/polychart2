@@ -32,15 +32,15 @@
         size :
           type:'num', min:0, max:10, ticks:[2,4,6,8],
           labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
+      dom: dom
+
   initspec = spec().spec
   c = poly.chart(initspec)
-  c.render(dom)
 
   redraw = () ->
     newspec = spec()
     initspec.layers[0].data.update(json:newspec.data)
     c.make(newspec.spec)
-    c.render()
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
@@ -48,32 +48,30 @@
   jsondata = [{x:'A',y:2},{x:'B',y:3},{x:'C',y:1}]
   data = new poly.Data({ json: jsondata })
   sampleLayer = {
-      data: data,
-      type: 'point',
-      x: 'x',
-      y: 'y',
-      size: {'const': 10},
-      color: 'x'
-    }
-  spec =  { layers: [sampleLayer] }
+    dom: dom
+    data: data,
+    type: 'point',
+    x: 'x',
+    y: 'y',
+    size: {'const': 10},
+    color: 'x'
+  }
+  spec =  { layers: [sampleLayer], dom:dom }
   c = poly.chart(spec)
-  c.render(dom)
 
 @examples.point3 = (dom) ->
   jsondata = [{x:'A',y:'X'},{x:'B',y:'Y'},{x:'C',y:'Z'}]
   data = new poly.Data({ json: jsondata })
   sampleLayer = { data: data, type: 'point', x: 'x', y: 'y', color: {const:'#E01B6A'} }
-  spec =  { layers: [sampleLayer] }
+  spec =  { layers: [sampleLayer], dom:dom }
   c = poly.chart(spec)
-  c.render(dom)
 
 @examples.point3_flip = (dom) ->
   jsondata = [{x:'A',y:'X'},{x:'B',y:'Y'},{x:'C',y:'Z'}]
   data = new poly.Data({ json: jsondata })
   sampleLayer = { data: data, type: 'point', x: 'x', y: 'y', color: {const:'#E01B6A'} }
-  spec =  { layers: [sampleLayer], coord: poly.coord.polar(flip:true) }
+  spec =  { layers: [sampleLayer], coord: poly.coord.polar(flip:true) , dom:dom}
   c = poly.chart(spec)
-  c.render(dom)
 
   c.addHandler (type, data) ->
     if type in ['click', 'reset']

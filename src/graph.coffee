@@ -45,23 +45,25 @@ class Graph
     @scaleSet.setRanges @ranges
     @_legacy(domains)
 
-  render : (dom) =>
-    scales = @scaleSet.scales
-    reverse = @scaleSet.reverse
+    # render : (dom) =>
+    if @spec.dom
+      dom = @spec.dom
+      scales = @scaleSet.scales
+      reverse = @scaleSet.reverse
 
-    @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent
-    clipping = @coord.clipping @dims
-    # render each layer
-    renderer = poly.render @handleEvent, @paper, scales, @coord, true, clipping
-    for layer in @layers
-      layer.render renderer
-    # render axes
-    renderer = poly.render @handleEvent, @paper, scales, @coord, false
+      @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent
+      clipping = @coord.clipping @dims
+      # render each layer
+      renderer = poly.render @handleEvent, @paper, scales, @coord, true, clipping
+      for layer in @layers
+        layer.render renderer
+      # render axes
+      renderer = poly.render @handleEvent, @paper, scales, @coord, false
 
-    @scaleSet.makeAxes()
-    @scaleSet.renderAxes @dims, renderer
-    @scaleSet.makeLegends()
-    @scaleSet.renderLegends @dims, renderer
+      @scaleSet.makeAxes()
+      @scaleSet.renderAxes @dims, renderer
+      @scaleSet.makeLegends()
+      @scaleSet.renderLegends @dims, renderer
 
   addHandler : (h) -> @handlers.push h
   removeHandler: (h) ->

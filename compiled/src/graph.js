@@ -9,7 +9,6 @@
     function Graph(spec) {
       this._legacy = __bind(this._legacy, this);
       this.handleEvent = __bind(this.handleEvent, this);
-      this.render = __bind(this.render, this);
       this.merge = __bind(this.merge, this);
       this.reset = __bind(this.reset, this);
       var _ref;
@@ -55,7 +54,7 @@
     };
 
     Graph.prototype.merge = function() {
-      var domains;
+      var clipping, dom, domains, layer, renderer, reverse, scales, _i, _len, _ref;
       domains = this._makeDomains(this.spec, this.layers);
       if (this.scaleSet == null) {
         this.scaleSet = this._makeScaleSet(this.spec, domains);
@@ -67,28 +66,27 @@
         this.ranges = this.coord.ranges();
       }
       this.scaleSet.setRanges(this.ranges);
-      return this._legacy(domains);
-    };
-
-    Graph.prototype.render = function(dom) {
-      var clipping, layer, renderer, reverse, scales, _i, _len, _ref;
-      scales = this.scaleSet.scales;
-      reverse = this.scaleSet.reverse;
-      if (this.paper == null) {
-        this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
+      this._legacy(domains);
+      if (this.spec.dom) {
+        dom = this.spec.dom;
+        scales = this.scaleSet.scales;
+        reverse = this.scaleSet.reverse;
+        if (this.paper == null) {
+          this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
+        }
+        clipping = this.coord.clipping(this.dims);
+        renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true, clipping);
+        _ref = this.layers;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          layer = _ref[_i];
+          layer.render(renderer);
+        }
+        renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, false);
+        this.scaleSet.makeAxes();
+        this.scaleSet.renderAxes(this.dims, renderer);
+        this.scaleSet.makeLegends();
+        return this.scaleSet.renderLegends(this.dims, renderer);
       }
-      clipping = this.coord.clipping(this.dims);
-      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true, clipping);
-      _ref = this.layers;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        layer = _ref[_i];
-        layer.render(renderer);
-      }
-      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, false);
-      this.scaleSet.makeAxes();
-      this.scaleSet.renderAxes(this.dims, renderer);
-      this.scaleSet.makeLegends();
-      return this.scaleSet.renderLegends(this.dims, renderer);
     };
 
     Graph.prototype.addHandler = function(h) {

@@ -23,8 +23,9 @@
       this.subscribed = [];
     }
 
-    Data.prototype.getRaw = function(params, callback) {
+    Data.prototype.getRaw = function(callback) {
       if (this.json) return callback(json);
+      if (this.url) return poly.csv(this.url, callback);
     };
 
     Data.prototype.update = function(params) {
@@ -81,18 +82,15 @@
       var dataSpec, wrappedCallback;
       dataSpec = poly.spec.layerToData(spec);
       wrappedCallback = this._wrap(callback);
-      if (!this.dataObj.computeBackend) {
-        if (this.strictmode) {
-          return wrappedCallback(this.dataObj.json, {});
-        } else {
-          return frontendProcess(dataSpec, this.dataObj.json, wrappedCallback);
-        }
+      if (this.strictmode) wrappedCallback(this.dataObj.json, {});
+      if (this.dataObj.computeBackend) {
+        return backendProcess(dataSpec, this.dataObj, wrappedCallback);
+      } else if (this.dataObj.dataBackend) {
+        return this.dataObj.getRaw(function(json) {
+          return frontendProcess(dataSpec, json, wrappedCallback);
+        });
       } else {
-        if (this.strictmode) {
-          throw new poly.StrictModeError();
-        } else {
-          return backendProcess(dataSpec, this.dataObj, wrappedCallback);
-        }
+        return frontendProcess(dataSpec, this.dataObj.json, wrappedCallback);
       }
     };
 

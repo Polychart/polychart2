@@ -12,17 +12,15 @@
       y :
         type:'num', min:0, max:10, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
-
+    dom: dom
   }
   c = poly.chart spec
-  c.render dom
 
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
     spec.layers[0].data.update json:jsondata
     c.make spec
-    c.render dom
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
@@ -41,16 +39,15 @@
     ]
     guides:
       y: min:0
+    dom: dom
   }
   c = poly.chart spec
-  c.render dom
 
   redraw = () ->
     jsondata.shift()
     jsondata.push(next())
     spec.layers[0].data.update json:jsondata
     c.make spec
-    c.render dom
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
@@ -67,16 +64,15 @@
         type:'num', min:0, max:10, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
     coord: poly.coord.cartesian(flip:true)
+    dom: dom
   }
   c = poly.chart spec
-  c.render dom
 
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
     spec.layers[0].data.update json:jsondata
     c.make spec
-    c.render dom
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
@@ -93,16 +89,15 @@
         type:'num', min:0, max:10, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
     coord: poly.coord.polar()
+    dom: dom
   }
   c = poly.chart spec
-  c.render dom
 
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
     spec.layers[0].data.update json:jsondata
     c.make spec
-    c.render dom
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
@@ -119,16 +114,15 @@
         type:'num', min:0, max:10, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
     coord: poly.coord.polar(flip:true)
+    dom: dom
   }
   c = poly.chart spec
-  c.render dom
 
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
     spec.layers[0].data.update json:jsondata
     c.make spec
-    c.render dom
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 

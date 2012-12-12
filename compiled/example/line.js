@@ -46,10 +46,10 @@
             8: 'Eight'
           }
         }
-      }
+      },
+      dom: dom
     };
     c = poly.chart(spec);
-    c.render(dom);
     redraw = function() {
       jsondata.shift();
       jsondata.push({
@@ -60,7 +60,6 @@
         json: jsondata
       });
       c.make(spec);
-      c.render(dom);
       return setTimeout(redraw, 1000);
     };
     return setTimeout(redraw, 1000);
@@ -110,10 +109,10 @@
         y: {
           min: 0
         }
-      }
+      },
+      dom: dom
     };
     c = poly.chart(spec);
-    c.render(dom);
     redraw = function() {
       jsondata.shift();
       jsondata.push(next());
@@ -121,7 +120,6 @@
         json: jsondata
       });
       c.make(spec);
-      c.render(dom);
       return setTimeout(redraw, 1000);
     };
     return setTimeout(redraw, 1000);
@@ -174,10 +172,10 @@
       },
       coord: poly.coord.cartesian({
         flip: true
-      })
+      }),
+      dom: dom
     };
     c = poly.chart(spec);
-    c.render(dom);
     redraw = function() {
       jsondata.shift();
       jsondata.push({
@@ -188,7 +186,6 @@
         json: jsondata
       });
       c.make(spec);
-      c.render(dom);
       return setTimeout(redraw, 1000);
     };
     return setTimeout(redraw, 1000);
@@ -239,10 +236,10 @@
           }
         }
       },
-      coord: poly.coord.polar()
+      coord: poly.coord.polar(),
+      dom: dom
     };
     c = poly.chart(spec);
-    c.render(dom);
     redraw = function() {
       jsondata.shift();
       jsondata.push({
@@ -253,7 +250,6 @@
         json: jsondata
       });
       c.make(spec);
-      c.render(dom);
       return setTimeout(redraw, 1000);
     };
     return setTimeout(redraw, 1000);
@@ -306,10 +302,10 @@
       },
       coord: poly.coord.polar({
         flip: true
-      })
+      }),
+      dom: dom
     };
     c = poly.chart(spec);
-    c.render(dom);
     redraw = function() {
       jsondata.shift();
       jsondata.push({
@@ -320,7 +316,6 @@
         json: jsondata
       });
       c.make(spec);
-      c.render(dom);
       return setTimeout(redraw, 1000);
     };
     return setTimeout(redraw, 1000);

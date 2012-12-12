@@ -89,13 +89,13 @@
                 8: 'Eight'
               }
             }
-          }
+          },
+          dom: dom
         }
       };
     };
     initspec = spec().spec;
     c = poly.chart(initspec);
-    c.render(dom);
     redraw = function() {
       var newspec;
       newspec = spec();
@@ -103,7 +103,6 @@
         json: newspec.data
       });
       c.make(newspec.spec);
-      c.render();
       return setTimeout(redraw, 1000);
     };
     return setTimeout(redraw, 1000);
@@ -127,6 +126,7 @@
       json: jsondata
     });
     sampleLayer = {
+      dom: dom,
       data: data,
       type: 'point',
       x: 'x',
@@ -137,10 +137,10 @@
       color: 'x'
     };
     spec = {
-      layers: [sampleLayer]
+      layers: [sampleLayer],
+      dom: dom
     };
-    c = poly.chart(spec);
-    return c.render(dom);
+    return c = poly.chart(spec);
   };
 
   this.examples.point3 = function(dom) {
@@ -170,10 +170,10 @@
       }
     };
     spec = {
-      layers: [sampleLayer]
+      layers: [sampleLayer],
+      dom: dom
     };
-    c = poly.chart(spec);
-    return c.render(dom);
+    return c = poly.chart(spec);
   };
 
   this.examples.point3_flip = function(dom) {
@@ -206,10 +206,10 @@
       layers: [sampleLayer],
       coord: poly.coord.polar({
         flip: true
-      })
+      }),
+      dom: dom
     };
     c = poly.chart(spec);
-    c.render(dom);
     return c.addHandler(function(type, data) {
       if (type === 'click' || type === 'reset') {
         console.log(data);

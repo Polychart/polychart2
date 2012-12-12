@@ -250,6 +250,149 @@
 
 }).call(this);
 (function() {
+
+  poly.xhr = function(url, mime, callback) {
+    var req;
+    req = new XMLHttpRequest;
+    if (arguments.length < 3) {
+      callback = mime;
+      mime = null;
+    } else if (mime && req.overrideMimeType) {
+      req.overrideMimeType(mime);
+    }
+    req.open("GET", url, true);
+    if (mime) req.setRequestHeader("Accept", mime);
+    req.onreadystatechange = function() {
+      var arg, s;
+      if (req.readyState === 4) {
+        s = req.status;
+        arg = !s && req.response || s >= 200 && s < 300 || s === 304 ? req : null;
+        return callback(arg);
+      }
+    };
+    return req.send(null);
+  };
+
+  poly.text = function(url, mime, callback) {
+    var ready;
+    ready = function(req) {
+      return callback(req && req.responseText);
+    };
+    if (arguments.length < 3) {
+      callback = mime;
+      mime = null;
+    }
+    return poly.xhr(url, mime, ready);
+  };
+
+  poly.json = function(url, callback) {
+    return poly.text(url, "application/json", function(text) {
+      return callback(text ? JSON.parse(text) : null);
+    });
+  };
+
+  poly.dsv = function(delimiter, mimeType) {
+    var delimiterCode, dsv, formatRow, formatValue, header, reFormat, reParse;
+    reParse = new RegExp("\r\n|[" + delimiter + "\r\n]", "g");
+    reFormat = new RegExp("[\"" + delimiter + "\n]");
+    delimiterCode = delimiter.charCodeAt(0);
+    formatRow = function(row) {
+      return row.map(formatValue).join(delimiter);
+    };
+    formatValue = function(text) {
+      var _ref;
+      return (_ref = reFormat.test(text)) != null ? _ref : "\"" + text.replace(/\"/g, "\"\"") + {
+        "\"": text
+      };
+    };
+    header = null;
+    dsv = function(url, callback) {
+      return poly.text(url, mimeType, function(text) {
+        return callback(text && dsv.parse(text));
+      });
+    };
+    dsv.parse = function(text) {
+      return dsv.parseRows(text, function(row, i) {
+        var item, j, m, o;
+        if (i) {
+          o = {};
+          j = -1;
+          m = header.length;
+          while (++j < m) {
+            item = row[j];
+            o[header[j]] = row[j];
+          }
+          return o;
+        } else {
+          header = row;
+          return null;
+        }
+      });
+    };
+    dsv.parseRows = function(text, f) {
+      var EOF, EOL, a, eol, n, rows, t, token;
+      EOL = {};
+      EOF = {};
+      rows = [];
+      n = 0;
+      t = null;
+      eol = null;
+      reParse.lastIndex = 0;
+      token = function() {
+        var c, i, j, m;
+        if (reParse.lastIndex >= text.length) return EOF;
+        if (eol) {
+          eol = false;
+          return EOL;
+        }
+        j = reParse.lastIndex;
+        if (text.charCodeAt(j) === 34) {
+          i = j;
+          while (i++ < text.length) {
+            if (text.charCodeAt(i) === 34) {
+              if (text.charCodeAt(i + 1) !== 34) break;
+              i++;
+            }
+          }
+          reParse.lastIndex = i + 2;
+          c = text.charCodeAt(i + 1);
+          if (c === 13) {
+            eol = true;
+            if (text.charCodeAt(i + 2) === 10) reParse.lastIndex++;
+          } else if (c === 10) {
+            eol = true;
+          }
+          return text.substring(j + 1, i).replace(/""/g, "\"");
+        }
+        m = reParse.exec(text);
+        if (m) {
+          eol = m[0].charCodeAt(0) !== delimiterCode;
+          return text.substring(j, m.index);
+        }
+        reParse.lastIndex = text.length;
+        return text.substring(j);
+      };
+      while ((t = token()) !== EOF) {
+        a = [];
+        while (t !== EOL && t !== EOF) {
+          a.push(t);
+          t = token();
+        }
+        if (f && !(a = f(a, n++))) continue;
+        rows.push(a);
+      }
+      return rows;
+    };
+    dsv.format = function(rows) {
+      return rows.map(formatRow).join("\n");
+    };
+    return dsv;
+  };
+
+  poly.csv = poly.dsv(",", "text/csv");
+
+}).call(this);
+(function() {
   var LengthError, NotImplemented, StrictModeError, UnexpectedObject, UnknownError, poly,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -2794,8 +2937,9 @@
       this.subscribed = [];
     }
 
-    Data.prototype.getRaw = function(params, callback) {
+    Data.prototype.getRaw = function(callback) {
       if (this.json) return callback(json);
+      if (this.url) return poly.csv(this.url, callback);
     };
 
     Data.prototype.update = function(params) {
@@ -2852,18 +2996,15 @@
       var dataSpec, wrappedCallback;
       dataSpec = poly.spec.layerToData(spec);
       wrappedCallback = this._wrap(callback);
-      if (!this.dataObj.computeBackend) {
-        if (this.strictmode) {
-          return wrappedCallback(this.dataObj.json, {});
-        } else {
-          return frontendProcess(dataSpec, this.dataObj.json, wrappedCallback);
-        }
+      if (this.strictmode) wrappedCallback(this.dataObj.json, {});
+      if (this.dataObj.computeBackend) {
+        return backendProcess(dataSpec, this.dataObj, wrappedCallback);
+      } else if (this.dataObj.dataBackend) {
+        return this.dataObj.getRaw(function(json) {
+          return frontendProcess(dataSpec, json, wrappedCallback);
+        });
       } else {
-        if (this.strictmode) {
-          throw new poly.StrictModeError();
-        } else {
-          return backendProcess(dataSpec, this.dataObj, wrappedCallback);
-        }
+        return frontendProcess(dataSpec, this.dataObj.json, wrappedCallback);
       }
     };
 
@@ -4002,7 +4143,6 @@
     function Graph(spec) {
       this._legacy = __bind(this._legacy, this);
       this.handleEvent = __bind(this.handleEvent, this);
-      this.render = __bind(this.render, this);
       this.merge = __bind(this.merge, this);
       this.reset = __bind(this.reset, this);
       var _ref;
@@ -4048,7 +4188,7 @@
     };
 
     Graph.prototype.merge = function() {
-      var domains;
+      var clipping, dom, domains, layer, renderer, reverse, scales, _i, _len, _ref;
       domains = this._makeDomains(this.spec, this.layers);
       if (this.scaleSet == null) {
         this.scaleSet = this._makeScaleSet(this.spec, domains);
@@ -4060,28 +4200,27 @@
         this.ranges = this.coord.ranges();
       }
       this.scaleSet.setRanges(this.ranges);
-      return this._legacy(domains);
-    };
-
-    Graph.prototype.render = function(dom) {
-      var clipping, layer, renderer, reverse, scales, _i, _len, _ref;
-      scales = this.scaleSet.scales;
-      reverse = this.scaleSet.reverse;
-      if (this.paper == null) {
-        this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
+      this._legacy(domains);
+      if (this.spec.dom) {
+        dom = this.spec.dom;
+        scales = this.scaleSet.scales;
+        reverse = this.scaleSet.reverse;
+        if (this.paper == null) {
+          this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
+        }
+        clipping = this.coord.clipping(this.dims);
+        renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true, clipping);
+        _ref = this.layers;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          layer = _ref[_i];
+          layer.render(renderer);
+        }
+        renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, false);
+        this.scaleSet.makeAxes();
+        this.scaleSet.renderAxes(this.dims, renderer);
+        this.scaleSet.makeLegends();
+        return this.scaleSet.renderLegends(this.dims, renderer);
       }
-      clipping = this.coord.clipping(this.dims);
-      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true, clipping);
-      _ref = this.layers;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        layer = _ref[_i];
-        layer.render(renderer);
-      }
-      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, false);
-      this.scaleSet.makeAxes();
-      this.scaleSet.renderAxes(this.dims, renderer);
-      this.scaleSet.makeLegends();
-      return this.scaleSet.renderLegends(this.dims, renderer);
     };
 
     Graph.prototype.addHandler = function(h) {
