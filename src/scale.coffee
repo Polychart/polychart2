@@ -212,6 +212,7 @@ class Scale
     @f = null
   make: (domain) ->
     @domain = domain
+    @sortfn = poly.domain.sortfn(domain)
     switch domain.type
       when 'num' then return @_makeNum()
       when 'date' then return @_makeDate()

@@ -133,7 +133,7 @@
       x1 = sf.identity(axisDim.left);
       x2 = sf.identity(axisDim.left + axisDim.width);
       return renderer.add({
-        type: 'line',
+        type: 'path',
         y: [y, y],
         x: [x1, x2]
       });
@@ -151,7 +151,7 @@
 
     XAxis.prototype._makeTick = function(axisDim, tick) {
       return {
-        type: 'line',
+        type: 'path',
         x: [tick.location, tick.location],
         y: [sf.identity(axisDim.bottom), sf.identity(axisDim.bottom + 5)]
       };
@@ -193,7 +193,7 @@
       y1 = sf.identity(axisDim.top);
       y2 = sf.identity(axisDim.top + axisDim.height);
       return renderer.add({
-        type: 'line',
+        type: 'path',
         x: [x, x],
         y: [y1, y2]
       });
@@ -212,7 +212,7 @@
 
     YAxis.prototype._makeTick = function(axisDim, tick) {
       return {
-        type: 'line',
+        type: 'path',
         x: [sf.identity(axisDim.left), sf.identity(axisDim.left - 5)],
         y: [tick.location, tick.location]
       };
@@ -254,7 +254,7 @@
       y1 = sf.identity(axisDim.top);
       y2 = sf.identity(axisDim.top + axisDim.height / 2);
       return renderer.add({
-        type: 'line',
+        type: 'path',
         x: [x, x],
         y: [y1, y2]
       });
@@ -273,7 +273,7 @@
 
     RAxis.prototype._makeTick = function(axisDim, tick) {
       return {
-        type: 'line',
+        type: 'path',
         x: [sf.identity(axisDim.left), sf.identity(axisDim.left - 5)],
         y: [tick.location, tick.location]
       };
@@ -337,7 +337,7 @@
       var radius;
       radius = Math.min(axisDim.width, axisDim.height) / 2 - 10;
       return {
-        type: 'line',
+        type: 'path',
         x: [tick.location, tick.location],
         y: [sf.max(0), sf.max(3)]
       };

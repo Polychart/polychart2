@@ -141,4 +141,14 @@
     return (str + "").length * 7;
   };
 
+  /*
+  Sort Arrays
+  */
+
+  poly.sortArrays = function(fn, arrays) {
+    return _.zip.apply(_, _.sortBy(_.zip.apply(_, arrays), function(a) {
+      return fn(a[0]);
+    }));
+  };
+
 }).call(this);

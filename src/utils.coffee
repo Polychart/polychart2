@@ -99,3 +99,13 @@ poly.getLabel = (layers, aes) ->
 Estimate the number of pixels rendering this string would take...?
 ###
 poly.strSize = (str) -> (str+"").length * 7
+
+###
+Sort Arrays: given a sorting function and some number of arrays, sort all the
+arrays by the function applied to the first array. This is used for sorting 
+points for a line chart, i.e. poly.sortArrays(sortFn, [xs, ys])
+
+This way, all the points are sorted by (sortFn(x) for x in xs)
+###
+poly.sortArrays = (fn, arrays) ->
+  _.zip(_.sortBy(_.zip(arrays...), (a) -> fn(a[0]))...)

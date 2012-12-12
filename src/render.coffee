@@ -82,9 +82,17 @@ class Circle extends Renderer # for both cartesian & polar
     title: 'omgthisiscool!'
     'stroke-width': mark['stroke-width'] ? '0px'
 
+class Path extends Renderer # for both cartesian & polar?
+  _make: (paper) -> paper.path()
+  attr: (scales, coord, mark, mayflip) ->
+    {x, y} = coord.getXY mayflip, mark
+    path: @_makePath x, y
+    stroke: 'black'
+
 class Line extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
   attr: (scales, coord, mark, mayflip) ->
+    [mark.x,mark.y] = poly.sortArrays scales.x.sortfn, [mark.x,mark.y]
     {x, y} = coord.getXY mayflip, mark
     path: @_makePath x, y
     stroke: 'black'
@@ -161,12 +169,14 @@ renderer =
   cartesian:
     circle: new Circle()
     line: new Line()
+    path: new Path()
     text: new Text()
     rect: new Rect()
     #hline: new HLine()
     #vline: new VLine()
   polar:
     circle: new Circle()
+    path: new Path()
     line: new Line()
     text: new Text()
     rect: new CircleRect()

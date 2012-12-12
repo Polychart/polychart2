@@ -305,6 +305,7 @@
 
     Scale.prototype.make = function(domain) {
       this.domain = domain;
+      this.sortfn = poly.domain.sortfn(domain);
       switch (domain.type) {
         case 'num':
           return this._makeNum();

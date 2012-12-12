@@ -1,5 +1,5 @@
 (function() {
-  var Circle, CircleRect, Line, Rect, Renderer, Text, poly, renderer,
+  var Circle, CircleRect, Line, Path, Rect, Renderer, Text, poly, renderer,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -161,6 +161,31 @@
 
   })(Renderer);
 
+  Path = (function(_super) {
+
+    __extends(Path, _super);
+
+    function Path() {
+      Path.__super__.constructor.apply(this, arguments);
+    }
+
+    Path.prototype._make = function(paper) {
+      return paper.path();
+    };
+
+    Path.prototype.attr = function(scales, coord, mark, mayflip) {
+      var x, y, _ref;
+      _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
+      return {
+        path: this._makePath(x, y),
+        stroke: 'black'
+      };
+    };
+
+    return Path;
+
+  })(Renderer);
+
   Line = (function(_super) {
 
     __extends(Line, _super);
@@ -174,8 +199,9 @@
     };
 
     Line.prototype.attr = function(scales, coord, mark, mayflip) {
-      var x, y, _ref;
-      _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
+      var x, y, _ref, _ref2;
+      _ref = poly.sortArrays(scales.x.sortfn, [mark.x, mark.y]), mark.x = _ref[0], mark.y = _ref[1];
+      _ref2 = coord.getXY(mayflip, mark), x = _ref2.x, y = _ref2.y;
       return {
         path: this._makePath(x, y),
         stroke: 'black'
@@ -294,11 +320,13 @@
     cartesian: {
       circle: new Circle(),
       line: new Line(),
+      path: new Path(),
       text: new Text(),
       rect: new Rect()
     },
     polar: {
       circle: new Circle(),
+      path: new Path(),
       line: new Line(),
       text: new Text(),
       rect: new CircleRect()

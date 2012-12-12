@@ -31,6 +31,25 @@
     return mergeDomainSets(domainSets);
   };
 
+  poly.domain.sortfn = function(domain) {
+    switch (domain.type) {
+      case 'num':
+        return function(x) {
+          return x;
+        };
+      case 'date':
+        return function(x) {
+          return x;
+        };
+      case 'cat':
+        return function(x) {
+          var idx;
+          idx = _.indexOf(domain.levels, x);
+          if (idx === -1) return idx = Infinity;
+        };
+    }
+  };
+
   /*
   # CLASSES & HELPER
   */

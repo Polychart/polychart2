@@ -63,7 +63,7 @@ class XAxis extends Axis # assumes position = bottom
     y = sf.identity axisDim.bottom
     x1 = sf.identity axisDim.left
     x2 = sf.identity axisDim.left+axisDim.width
-    renderer.add { type: 'line', y: [y, y], x: [x1, x2]}
+    renderer.add { type: 'path', y: [y, y], x: [x1, x2]}
   _makeTitle: (axisDim, text) ->
     type: 'text'
     x : sf.identity axisDim.left+axisDim.width/2
@@ -71,7 +71,7 @@ class XAxis extends Axis # assumes position = bottom
     text: text
     'text-anchor' : 'middle'
   _makeTick: (axisDim, tick) ->
-    type: 'line'
+    type: 'path'
     x : [tick.location, tick.location]
     y : [sf.identity(axisDim.bottom), sf.identity(axisDim.bottom+5)]
   _makeLabel: (axisDim, tick) ->
@@ -90,7 +90,7 @@ class YAxis extends Axis # assumes position = left
     x = sf.identity axisDim.left
     y1 = sf.identity axisDim.top
     y2 = sf.identity axisDim.top+axisDim.height
-    renderer.add { type: 'line', x: [x, x], y: [y1, y2] }
+    renderer.add { type: 'path', x: [x, x], y: [y1, y2] }
   _makeTitle: (axisDim, text) ->
     type: 'text'
     x : sf.identity axisDim.left - @maxwidth - 15
@@ -99,7 +99,7 @@ class YAxis extends Axis # assumes position = left
     transform : 'r270'
     'text-anchor' : 'middle'
   _makeTick: (axisDim, tick) ->
-    type: 'line'
+    type: 'path'
     x : [sf.identity(axisDim.left), sf.identity(axisDim.left-5)]
     y : [tick.location, tick.location]
   _makeLabel: (axisDim, tick) ->
@@ -118,7 +118,7 @@ class RAxis extends Axis # assumes position = left
     x = sf.identity axisDim.left
     y1 = sf.identity axisDim.top
     y2 = sf.identity axisDim.top+axisDim.height/2
-    renderer.add { type: 'line', x: [x, x], y: [y1, y2] }
+    renderer.add { type: 'path', x: [x, x], y: [y1, y2] }
   _makeTitle: (axisDim, text) ->
     type: 'text'
     x : sf.identity axisDim.left-@maxwidth-15
@@ -127,7 +127,7 @@ class RAxis extends Axis # assumes position = left
     transform : 'r270'
     'text-anchor' : 'middle'
   _makeTick: (axisDim, tick) ->
-    type: 'line'
+    type: 'path'
     x : [sf.identity(axisDim.left), sf.identity(axisDim.left-5)]
     y : [tick.location, tick.location]
   _makeLabel: (axisDim, tick) ->
@@ -161,7 +161,7 @@ class TAxis extends Axis # assumes position = ... um, what is it supposed to be?
     'text-anchor' : 'middle'
   _makeTick: (axisDim, tick) ->
     radius = Math.min(axisDim.width, axisDim.height)/2 -10
-    type: 'line'
+    type: 'path'
     x : [tick.location, tick.location]
     y : [sf.max(0), sf.max(3)]
   _makeLabel: (axisDim, tick) ->
