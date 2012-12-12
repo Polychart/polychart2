@@ -107,6 +107,21 @@ class Line extends Renderer # for both cartesian & polar?
     path: @_makePath x, y
     stroke: stroke
 
+class Area extends Renderer # for both cartesian & polar?
+  _make: (paper) -> paper.path()
+  attr: (scales, coord, mark, mayflip) ->
+    [x, y] = poly.sortArrays scales.x.sortfn, [mark.x,mark.y.top]
+    top = coord.getXY mayflip, {x:x, y:y}
+    [x, y] = poly.sortArrays ((a) -> -scales.x.sortfn(a)), [mark.x,mark.y.bottom]
+    bottom = coord.getXY mayflip, {x:x, y:y}
+    x = top.x.concat bottom.x
+    y = top.y.concat bottom.y
+
+    path: @_makePath x, y
+    stroke: @_maybeApply scales, mark, 'color'
+    fill: @_maybeApply scales, mark, 'color'
+    'stroke-width': '0px'
+
 class Rect extends Renderer # for CARTESIAN only
   _make: (paper) -> paper.rect()
   attr: (scales, coord, mark, mayflip) ->
@@ -179,6 +194,7 @@ renderer =
   cartesian:
     circle: new Circle()
     line: new Line()
+    area: new Area()
     path: new Path()
     text: new Text()
     rect: new Rect()
@@ -188,5 +204,6 @@ renderer =
     circle: new Circle()
     path: new Path()
     line: new Line()
+    area: new Area()
     text: new Text()
     rect: new CircleRect()

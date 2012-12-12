@@ -39,6 +39,7 @@ poly.layer.make = (layerSpec, strictmode) ->
   switch layerSpec.type
     when 'point' then return new Point(layerSpec, strictmode)
     when 'line' then return new Line(layerSpec, strictmode)
+    when 'area' then return new Area(layerSpec, strictmode)
     when 'bar' then return new Bar(layerSpec, strictmode)
 
 ###########
@@ -113,6 +114,22 @@ class Layer
   # helper function to get an element's "id"
   _getIdFunc: () ->
     if @mapping['id']? then (item) => @_getValue item, 'id' else poly.counter()
+  # data helper functions
+  _fillZeros: (data, all_x) ->
+    data_x = (@_getValue item, 'x' for item in data)
+    missing = _.difference(all_x, data_x)
+    x : data_x.concat missing
+    y : (@_getValue item, 'y' for item in data).concat (0 for x in missing)
+  _stack: (group) ->
+    # handle +/- separately?
+    datas = poly.groupBy @statData , group
+    for key, data of datas
+      tmp = 0
+      yval = if @mapping.y? then ((item) => item[@mapping.y]) else (item) -> 0
+      for item in data
+        item.$lower = tmp
+        tmp += yval(item)
+        item.$upper = tmp
 
 class Point extends Layer
   _calcGeoms: () ->
@@ -135,7 +152,7 @@ class Point extends Layer
 class Line extends Layer
   _calcGeoms: () ->
     # @ys = if @mapping['y'] then _.uniq _.pluck @statData, @mapping['y'] else []
-    # TODO: fill in missing points
+    all_x = _.uniq (@_getValue item, 'x' for item in @statData)
     group = (@mapping[k] for k in _.without(_.keys(@mapping), 'x', 'y'))
     datas = poly.groupBy @statData, group
     idfn = @_getIdFunc()
@@ -147,13 +164,14 @@ class Line extends Layer
       evtData = {}
       for key in group
         evtData[key] = { in : [sample[key]] }
-      # identity
+      # fill zeros
+      {x, y} = @_fillZeros(data, all_x)
       @geoms[idfn sample] =
         marks:
           0:
             type: 'line'
-            x: (@_getValue item, 'x' for item in data)
-            y: (@_getValue item, 'y' for item in data)
+            x: x
+            y: y
             color: @_getValue sample, 'color'
         evtData: evtData
 
@@ -161,14 +179,8 @@ class Bar extends Layer
   _calcGeoms: () ->
     # first do stacking calculation (assuming position=stack)
     group = if @mapping.x? then [@mapping.x] else []
-    datas = poly.groupBy @statData , group
-    for key, data of datas
-      tmp = 0
-      yval = if @mapping.y? then ((item) => item[@mapping.y]) else (item) -> 0
-      for item in data
-        item.$lower = tmp
-        tmp += yval(item)
-        item.$upper = tmp
+    @_stack group
+    # now actually render
     idfn = @_getIdFunc()
     @geoms = {}
     for item in @statData
@@ -183,6 +195,40 @@ class Bar extends Layer
             y: [item.$lower, item.$upper]
             color: @_getValue item, 'color'
         evtData: evtData
+
+class Area extends Layer
+  _calcGeoms: () ->
+    all_x = _.uniq (@_getValue item, 'x' for item in @statData)
+    counters = {} # handle +/- separately?
+    for key in all_x
+      counters[key] = 0
+    group = (@mapping[k] for k in _.without(_.keys(@mapping), 'x', 'y'))
+    datas = poly.groupBy @statData, group
+
+    idfn = @_getIdFunc()
+    @geoms = {}
+    for k, data of datas
+      sample = data[0] # use this as a sample data
+      # create the eventData
+      evtData = {}
+      for key in group
+        evtData[key] = { in : [sample[key]] }
+      # stacking
+      y_previous = (counters[x] for x in all_x)
+      for item in data
+        x = @_getValue(item, 'x')
+        y = @_getValue(item, 'y')
+        counters[x] += y
+      y_next = (counters[x] for x in all_x)
+      @geoms[idfn sample] =
+        marks:
+          0:
+            type: 'area'
+            x: all_x
+            y: {bottom: y_previous, top: y_next}
+            color: @_getValue sample, 'color'
+        evtData: evtData
+
 ###
 # EXPORT
 ###

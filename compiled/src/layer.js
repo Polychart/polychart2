@@ -1,5 +1,5 @@
 (function() {
-  var Bar, Layer, Line, Point, aesthetics, defaults, poly, sf,
+  var Area, Bar, Layer, Line, Point, aesthetics, defaults, poly, sf,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -51,6 +51,8 @@
         return new Point(layerSpec, strictmode);
       case 'line':
         return new Line(layerSpec, strictmode);
+      case 'area':
+        return new Area(layerSpec, strictmode);
       case 'bar':
         return new Bar(layerSpec, strictmode);
     }
@@ -186,6 +188,68 @@
       }
     };
 
+    Layer.prototype._fillZeros = function(data, all_x) {
+      var data_x, item, missing, x;
+      data_x = (function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = data.length; _i < _len; _i++) {
+          item = data[_i];
+          _results.push(this._getValue(item, 'x'));
+        }
+        return _results;
+      }).call(this);
+      missing = _.difference(all_x, data_x);
+      return {
+        x: data_x.concat(missing),
+        y: ((function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = data.length; _i < _len; _i++) {
+            item = data[_i];
+            _results.push(this._getValue(item, 'y'));
+          }
+          return _results;
+        }).call(this)).concat((function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = missing.length; _i < _len; _i++) {
+            x = missing[_i];
+            _results.push(0);
+          }
+          return _results;
+        })())
+      };
+    };
+
+    Layer.prototype._stack = function(group) {
+      var data, datas, item, key, tmp, yval, _results,
+        _this = this;
+      datas = poly.groupBy(this.statData, group);
+      _results = [];
+      for (key in datas) {
+        data = datas[key];
+        tmp = 0;
+        yval = this.mapping.y != null ? (function(item) {
+          return item[_this.mapping.y];
+        }) : function(item) {
+          return 0;
+        };
+        _results.push((function() {
+          var _i, _len, _results2;
+          _results2 = [];
+          for (_i = 0, _len = data.length; _i < _len; _i++) {
+            item = data[_i];
+            item.$lower = tmp;
+            tmp += yval(item);
+            _results2.push(item.$upper = tmp);
+          }
+          return _results2;
+        })());
+      }
+      return _results;
+    };
+
     return Layer;
 
   })();
@@ -242,7 +306,17 @@
     }
 
     Line.prototype._calcGeoms = function() {
-      var data, datas, evtData, group, idfn, item, k, key, sample, _i, _len, _results;
+      var all_x, data, datas, evtData, group, idfn, item, k, key, sample, x, y, _i, _len, _ref, _results;
+      all_x = _.uniq((function() {
+        var _i, _len, _ref, _results;
+        _ref = this.statData;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          item = _ref[_i];
+          _results.push(this._getValue(item, 'x'));
+        }
+        return _results;
+      }).call(this));
       group = (function() {
         var _i, _len, _ref, _results;
         _ref = _.without(_.keys(this.mapping), 'x', 'y');
@@ -267,28 +341,13 @@
             "in": [sample[key]]
           };
         }
+        _ref = this._fillZeros(data, all_x), x = _ref.x, y = _ref.y;
         _results.push(this.geoms[idfn(sample)] = {
           marks: {
             0: {
               type: 'line',
-              x: (function() {
-                var _j, _len2, _results2;
-                _results2 = [];
-                for (_j = 0, _len2 = data.length; _j < _len2; _j++) {
-                  item = data[_j];
-                  _results2.push(this._getValue(item, 'x'));
-                }
-                return _results2;
-              }).call(this),
-              y: (function() {
-                var _j, _len2, _results2;
-                _results2 = [];
-                for (_j = 0, _len2 = data.length; _j < _len2; _j++) {
-                  item = data[_j];
-                  _results2.push(this._getValue(item, 'y'));
-                }
-                return _results2;
-              }).call(this),
+              x: x,
+              y: y,
               color: this._getValue(sample, 'color')
             }
           },
@@ -311,31 +370,15 @@
     }
 
     Bar.prototype._calcGeoms = function() {
-      var data, datas, evtData, group, idfn, item, k, key, tmp, v, yval, _i, _j, _len, _len2, _ref, _results,
-        _this = this;
+      var evtData, group, idfn, item, k, v, _i, _len, _ref, _results;
       group = this.mapping.x != null ? [this.mapping.x] : [];
-      datas = poly.groupBy(this.statData, group);
-      for (key in datas) {
-        data = datas[key];
-        tmp = 0;
-        yval = this.mapping.y != null ? (function(item) {
-          return item[_this.mapping.y];
-        }) : function(item) {
-          return 0;
-        };
-        for (_i = 0, _len = data.length; _i < _len; _i++) {
-          item = data[_i];
-          item.$lower = tmp;
-          tmp += yval(item);
-          item.$upper = tmp;
-        }
-      }
+      this._stack(group);
       idfn = this._getIdFunc();
       this.geoms = {};
       _ref = this.statData;
       _results = [];
-      for (_j = 0, _len2 = _ref.length; _j < _len2; _j++) {
-        item = _ref[_j];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
         evtData = {};
         for (k in item) {
           v = item[k];
@@ -361,6 +404,101 @@
     };
 
     return Bar;
+
+  })(Layer);
+
+  Area = (function(_super) {
+
+    __extends(Area, _super);
+
+    function Area() {
+      Area.__super__.constructor.apply(this, arguments);
+    }
+
+    Area.prototype._calcGeoms = function() {
+      var all_x, counters, data, datas, evtData, group, idfn, item, k, key, sample, x, y, y_next, y_previous, _i, _j, _k, _len, _len2, _len3, _results;
+      all_x = _.uniq((function() {
+        var _i, _len, _ref, _results;
+        _ref = this.statData;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          item = _ref[_i];
+          _results.push(this._getValue(item, 'x'));
+        }
+        return _results;
+      }).call(this));
+      counters = {};
+      for (_i = 0, _len = all_x.length; _i < _len; _i++) {
+        key = all_x[_i];
+        counters[key] = 0;
+      }
+      group = (function() {
+        var _j, _len2, _ref, _results;
+        _ref = _.without(_.keys(this.mapping), 'x', 'y');
+        _results = [];
+        for (_j = 0, _len2 = _ref.length; _j < _len2; _j++) {
+          k = _ref[_j];
+          _results.push(this.mapping[k]);
+        }
+        return _results;
+      }).call(this);
+      datas = poly.groupBy(this.statData, group);
+      idfn = this._getIdFunc();
+      this.geoms = {};
+      _results = [];
+      for (k in datas) {
+        data = datas[k];
+        sample = data[0];
+        evtData = {};
+        for (_j = 0, _len2 = group.length; _j < _len2; _j++) {
+          key = group[_j];
+          evtData[key] = {
+            "in": [sample[key]]
+          };
+        }
+        y_previous = (function() {
+          var _k, _len3, _results2;
+          _results2 = [];
+          for (_k = 0, _len3 = all_x.length; _k < _len3; _k++) {
+            x = all_x[_k];
+            _results2.push(counters[x]);
+          }
+          return _results2;
+        })();
+        for (_k = 0, _len3 = data.length; _k < _len3; _k++) {
+          item = data[_k];
+          x = this._getValue(item, 'x');
+          y = this._getValue(item, 'y');
+          counters[x] += y;
+        }
+        y_next = (function() {
+          var _l, _len4, _results2;
+          _results2 = [];
+          for (_l = 0, _len4 = all_x.length; _l < _len4; _l++) {
+            x = all_x[_l];
+            _results2.push(counters[x]);
+          }
+          return _results2;
+        })();
+        _results.push(this.geoms[idfn(sample)] = {
+          marks: {
+            0: {
+              type: 'area',
+              x: all_x,
+              y: {
+                bottom: y_previous,
+                top: y_next
+              },
+              color: this._getValue(sample, 'color')
+            }
+          },
+          evtData: evtData
+        });
+      }
+      return _results;
+    };
+
+    return Area;
 
   })(Layer);
 

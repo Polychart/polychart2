@@ -1,5 +1,5 @@
 (function() {
-  var Circle, CircleRect, Line, Path, Rect, Renderer, Text, poly, renderer,
+  var Area, Circle, CircleRect, Line, Path, Rect, Renderer, Text, poly, renderer,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -214,6 +214,46 @@
 
   })(Renderer);
 
+  Area = (function(_super) {
+
+    __extends(Area, _super);
+
+    function Area() {
+      Area.__super__.constructor.apply(this, arguments);
+    }
+
+    Area.prototype._make = function(paper) {
+      return paper.path();
+    };
+
+    Area.prototype.attr = function(scales, coord, mark, mayflip) {
+      var bottom, top, x, y, _ref, _ref2;
+      _ref = poly.sortArrays(scales.x.sortfn, [mark.x, mark.y.top]), x = _ref[0], y = _ref[1];
+      top = coord.getXY(mayflip, {
+        x: x,
+        y: y
+      });
+      _ref2 = poly.sortArrays((function(a) {
+        return -scales.x.sortfn(a);
+      }), [mark.x, mark.y.bottom]), x = _ref2[0], y = _ref2[1];
+      bottom = coord.getXY(mayflip, {
+        x: x,
+        y: y
+      });
+      x = top.x.concat(bottom.x);
+      y = top.y.concat(bottom.y);
+      return {
+        path: this._makePath(x, y),
+        stroke: this._maybeApply(scales, mark, 'color'),
+        fill: this._maybeApply(scales, mark, 'color'),
+        'stroke-width': '0px'
+      };
+    };
+
+    return Area;
+
+  })(Renderer);
+
   Rect = (function(_super) {
 
     __extends(Rect, _super);
@@ -322,6 +362,7 @@
     cartesian: {
       circle: new Circle(),
       line: new Line(),
+      area: new Area(),
       path: new Path(),
       text: new Text(),
       rect: new Rect()
@@ -330,6 +371,7 @@
       circle: new Circle(),
       path: new Path(),
       line: new Line(),
+      area: new Area(),
       text: new Text(),
       rect: new CircleRect()
     }

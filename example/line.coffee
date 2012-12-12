@@ -139,5 +139,3 @@
     dom: dom
   }
   c = poly.chart spec
-
-
