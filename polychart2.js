@@ -1024,7 +1024,8 @@
 (function() {
   var Cartesian, Coordinate, Polar, poly,
     __hasProp = Object.prototype.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   poly = this.poly || {};
 
@@ -1034,11 +1035,19 @@
       var _ref, _ref2;
       if (params == null) params = {};
       this.flip = (_ref = params.flip) != null ? _ref : false;
+      this.scales = null;
       _ref2 = this.flip ? ['y', 'x'] : ['x', 'y'], this.x = _ref2[0], this.y = _ref2[1];
     }
 
     Coordinate.prototype.make = function(dims) {
       return this.dims = dims;
+    };
+
+    Coordinate.prototype.setScales = function(scales) {
+      return this.scales = {
+        x: scales.x.f,
+        y: scales.y.f
+      };
     };
 
     Coordinate.prototype.clipping = function() {
@@ -1087,20 +1096,20 @@
       return this[aes];
     };
 
-    Cartesian.prototype.getXY = function(mayflip, scales, mark) {
+    Cartesian.prototype.getXY = function(mayflip, mark) {
       var point, scalex, scaley;
       if (mayflip) {
         point = {
-          x: _.isArray(mark.x) ? _.map(mark.x, scales.x) : scales.x(mark.x),
-          y: _.isArray(mark.y) ? _.map(mark.y, scales.y) : scales.y(mark.y)
+          x: _.isArray(mark.x) ? _.map(mark.x, this.scales.x) : this.scales.x(mark.x),
+          y: _.isArray(mark.y) ? _.map(mark.y, this.scales.y) : this.scales.y(mark.y)
         };
         return {
           x: point[this.x],
           y: point[this.y]
         };
       } else {
-        scalex = scales[this.x];
-        scaley = scales[this.y];
+        scalex = this.scales[this.x];
+        scaley = this.scales[this.y];
         return {
           x: _.isArray(mark.x) ? _.map(mark.x, scalex) : scalex(mark.x),
           y: _.isArray(mark.y) ? _.map(mark.y, scaley) : scaley(mark.y)
@@ -1124,6 +1133,7 @@
     __extends(Polar, _super);
 
     function Polar() {
+      this.getXY = __bind(this.getXY, this);
       Polar.__super__.constructor.apply(this, arguments);
     }
 
@@ -1158,7 +1168,7 @@
       }
     };
 
-    Polar.prototype.getXY = function(mayflip, scales, mark) {
+    Polar.prototype.getXY = function(mayflip, mark) {
       var getpos, i, ident, points, r, radius, t, theta, x, xpos, y, ypos, _getx, _gety, _len, _len2, _ref, _ref2, _ref3, _ref4,
         _this = this;
       _getx = function(radius, theta) {
@@ -1179,8 +1189,8 @@
           _ref2 = mark[r];
           for (i = 0, _len = _ref2.length; i < _len; i++) {
             radius = _ref2[i];
-            radius = scales[r](radius);
-            theta = scales[t](mark[t][i]);
+            radius = this.scales[r](radius);
+            theta = this.scales[t](mark[t][i]);
             points.x.push(_getx(radius, theta));
             points.y.push(_gety(radius, theta));
             points.r.push(radius);
@@ -1188,8 +1198,8 @@
           }
           return points;
         }
-        radius = scales[r](mark[r]);
-        theta = scales[t](mark[t]);
+        radius = this.scales[r](mark[r]);
+        theta = this.scales[t](mark[t]);
         return {
           x: _getx(radius, theta),
           y: _gety(radius, theta),
@@ -1207,7 +1217,7 @@
         if (identx && !identy) {
           return {
             x: x.v,
-            y: _gety(scales[r](y), 0)
+            y: _gety(_this.scales[r](y), 0)
           };
         } else if (identx && identy) {
           return {
@@ -1217,11 +1227,11 @@
         } else if (!identx && identy) {
           return {
             y: y.v,
-            x: _gety(scales[t](x), 0)
+            x: _gety(_this.scales[t](x), 0)
           };
         } else {
-          radius = scales[r](y);
-          theta = scales[t](x);
+          radius = _this.scales[r](y);
+          theta = _this.scales[t](x);
           return {
             x: _getx(radius, theta),
             y: _gety(radius, theta)
@@ -2246,22 +2256,15 @@
     }
 
     ScaleSet.prototype.make = function(guideSpec, domains, layers) {
-      var aes, fac, _ref;
       this.guideSpec = guideSpec;
       this.layers = layers;
       this.domains = domains;
       this.domainx = this.domains.x;
       this.domainy = this.domains.y;
-      this.factory = this._makeFactory(guideSpec, domains, this.ranges);
-      this.scales = {};
-      _ref = this.factory;
-      for (aes in _ref) {
-        fac = _ref[aes];
-        this.scales[aes] = this.factory[aes].scale;
-      }
+      this.scales = this._makeScales(guideSpec, domains, this.ranges);
       this.reverse = {
-        x: this.factory.x.reverse,
-        y: this.factory.y.reverse
+        x: this.scales.x.finv,
+        y: this.scales.y.finv
       };
       return this.layerMapping = this._mapLayers(layers);
     };
@@ -2290,44 +2293,42 @@
     };
 
     ScaleSet.prototype._makeXScale = function() {
-      this.factory.x.make(this.domainx, this.ranges.x);
-      return this.scales.x = this.factory.x.scale;
+      return this.scales.x.make(this.domainx, this.ranges.x);
     };
 
     ScaleSet.prototype._makeYScale = function() {
-      this.factory.y.make(this.domainy, this.ranges.y);
-      return this.scales.y = this.factory.y.scale;
+      return this.scales.y.make(this.domainy, this.ranges.y);
     };
 
-    ScaleSet.prototype._makeFactory = function(guideSpec, domains, ranges) {
-      var factory, specScale, _ref, _ref2, _ref3, _ref4;
+    ScaleSet.prototype._makeScales = function(guideSpec, domains, ranges) {
+      var scales, specScale, _ref, _ref2, _ref3, _ref4;
       specScale = function(a) {
         if (guideSpec && (guideSpec[a] != null) && (guideSpec[a].scale != null)) {
           return guideSpec.x.scale;
         }
         return null;
       };
-      factory = {};
-      factory.x = (_ref = specScale('x')) != null ? _ref : poly.scale.linear();
-      factory.x.make(domains.x, ranges.x);
-      factory.y = (_ref2 = specScale('y')) != null ? _ref2 : poly.scale.linear();
-      factory.y.make(domains.y, ranges.y);
+      scales = {};
+      scales.x = (_ref = specScale('x')) != null ? _ref : poly.scale.linear();
+      scales.x.make(domains.x, ranges.x);
+      scales.y = (_ref2 = specScale('y')) != null ? _ref2 : poly.scale.linear();
+      scales.y.make(domains.y, ranges.y);
       if (domains.color != null) {
         if (domains.color.type === 'cat') {
-          factory.color = (_ref3 = specScale('color')) != null ? _ref3 : poly.scale.color();
+          scales.color = (_ref3 = specScale('color')) != null ? _ref3 : poly.scale.color();
         } else {
-          factory.color = (_ref4 = specScale('color')) != null ? _ref4 : poly.scale.gradient({
+          scales.color = (_ref4 = specScale('color')) != null ? _ref4 : poly.scale.gradient({
             upper: 'steelblue',
             lower: 'red'
           });
         }
-        factory.color.make(domains.color);
+        scales.color.make(domains.color);
       }
       if (domains.size != null) {
-        factory.size = specScale('size') || poly.scale.area();
-        factory.size.make(domains.size);
+        scales.size = specScale('size') || poly.scale.area();
+        scales.size.make(domains.size);
       }
-      return factory;
+      return scales;
     };
 
     ScaleSet.prototype.fromPixels = function(start, end) {
@@ -2358,13 +2359,13 @@
     ScaleSet.prototype.makeAxes = function() {
       this.axes.x.make({
         domain: this.domainx,
-        type: this.factory.x.tickType(),
+        type: this.scales.x.tickType(),
         guideSpec: this.getSpec('x'),
         titletext: poly.getLabel(this.layers, 'x')
       });
       this.axes.y.make({
         domain: this.domainy,
-        type: this.factory.y.tickType(),
+        type: this.scales.y.tickType(),
         guideSpec: this.getSpec('y'),
         titletext: poly.getLabel(this.layers, 'y')
       });
@@ -2463,7 +2464,7 @@
         legend.make({
           domain: this.domains[aes],
           guideSpec: this.getSpec(aes),
-          type: this.factory[aes].tickType(),
+          type: this.scales[aes].tickType(),
           mapping: this.layerMapping,
           titletext: poly.getLabel(this.layers, aes)
         });
@@ -2519,7 +2520,7 @@
   Scale = (function() {
 
     function Scale(params) {
-      this.scale = null;
+      this.f = null;
     }
 
     Scale.prototype.make = function(domain) {
@@ -2590,8 +2591,8 @@
 
     function PositionScale(params) {
       this._catWrapper = __bind(this._catWrapper, this);
-      this._numWrapper = __bind(this._numWrapper, this);      this.scale = null;
-      this.reverse = null;
+      this._numWrapper = __bind(this._numWrapper, this);      this.f = null;
+      this.finv = null;
     }
 
     PositionScale.prototype.make = function(domain, range) {
@@ -2656,8 +2657,8 @@
       max = this.domain.max + ((_ref = this.domain.bw) != null ? _ref : 0);
       y = poly.linear(this.domain.min, this.range.min, max, this.range.max);
       x = poly.linear(this.range.min, this.domain.min, this.range.max, max);
-      this.scale = this._numWrapper(this.domain, y);
-      return this.reverse = function(y1, y2) {
+      this.f = this._numWrapper(this.domain, y);
+      return this.finv = function(y1, y2) {
         var xs;
         xs = [x(y1), x(y2)];
         return {
@@ -2693,8 +2694,8 @@
           "in": _this.domain.levels.slice(i1, i2 + 1 || 9e9)
         };
       };
-      this.scale = this._catWrapper(step, y);
-      return this.reverse = x;
+      this.f = this._catWrapper(step, y);
+      return this.finv = x;
     };
 
     return Linear;
@@ -2713,14 +2714,14 @@
       var lg, x, ylin, ylininv;
       lg = Math.log;
       ylin = poly.linear(lg(this.domain.min), this.range.min, lg(this.domain.max), this.range.max);
-      this.scale = this._numWrapper(function(x) {
+      this.f = this._numWrapper(function(x) {
         return ylin(lg(x));
       });
       ylininv = poly.linear(this.range.min, lg(this.domain.min), this.range.max, lg(this.domain.max));
       x = function(y) {
         return Math.exp(ylininv(y));
       };
-      return this.reverse = function(y1, y2) {
+      return this.finv = function(y1, y2) {
         var xs;
         xs = [x(y1), x(y2)];
         return {
@@ -2756,7 +2757,7 @@
       min = this.domain.min === 0 ? 0 : 1;
       sq = Math.sqrt;
       ylin = poly.linear(sq(this.domain.min), min, sq(this.domain.max), 10);
-      return this.scale = this._identityWrapper(function(x) {
+      return this.f = this._identityWrapper(function(x) {
         return ylin(sq(x));
       });
     };
@@ -2782,7 +2783,7 @@
       h = function(v) {
         return _.indexOf(_this.domain.levels, v) / n + 1 / (2 * n);
       };
-      return this.scale = function(value) {
+      return this.f = function(value) {
         return Raphael.hsl(h(value), 0.5, 0.5);
       };
     };
@@ -2790,7 +2791,7 @@
     Color.prototype._makeNum = function() {
       var h;
       h = poly.linear(this.domain.min, 0, this.domain.max, 1);
-      return this.scale = function(value) {
+      return this.f = function(value) {
         return Raphael.hsl(0.5, h(value), 0.5);
       };
     };
@@ -2829,7 +2830,7 @@
       r = poly.linear(this.domain.min, lower.r, this.domain.max, upper.r);
       g = poly.linear(this.domain.min, lower.g, this.domain.max, upper.g);
       b = poly.linear(this.domain.min, lower.b, this.domain.max, upper.b);
-      return this.scale = this._identityWrapper(function(value) {
+      return this.f = this._identityWrapper(function(value) {
         return Raphael.rgb(r(value), g(value), b(value));
       });
     };
@@ -2878,7 +2879,7 @@
     }
 
     Identity.prototype.make = function() {
-      return this.scale = function(x) {
+      return this.f = function(x) {
         return x;
       };
     };
@@ -3942,11 +3943,13 @@
       return path.join(' ');
     };
 
-    Renderer.prototype._maybeApply = function(scale, val) {
-      if (scale != null) {
-        return scale(val);
-      } else if (_.isObject(val)) {
+    Renderer.prototype._maybeApply = function(scales, mark, key) {
+      var val;
+      val = mark[key];
+      if (_.isObject(val) && val.f === 'identity') {
         return val.v;
+      } else if (scales[key] != null) {
+        return scales[key].f(val);
       } else {
         return val;
       }
@@ -3970,13 +3973,13 @@
 
     Circle.prototype.attr = function(scales, coord, mark, mayflip) {
       var stroke, x, y, _ref, _ref2;
-      _ref = coord.getXY(mayflip, scales, mark), x = _ref.x, y = _ref.y;
-      stroke = mark.stroke ? this._maybeApply(scales.stroke, mark.stroke) : this._maybeApply(scales.color, mark.color);
+      _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
+      stroke = mark.stroke ? this._maybeApply(scales, mark, 'stroke') : this._maybeApply(scales, mark, 'color');
       return {
         cx: x,
         cy: y,
-        r: this._maybeApply(scales.size, mark.size),
-        fill: this._maybeApply(scales.color, mark.color),
+        r: this._maybeApply(scales, mark, 'size'),
+        fill: this._maybeApply(scales, mark, 'color'),
         stroke: stroke,
         title: 'omgthisiscool!',
         'stroke-width': (_ref2 = mark['stroke-width']) != null ? _ref2 : '0px'
@@ -4001,7 +4004,7 @@
 
     Line.prototype.attr = function(scales, coord, mark, mayflip) {
       var x, y, _ref;
-      _ref = coord.getXY(mayflip, scales, mark), x = _ref.x, y = _ref.y;
+      _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
       return {
         path: this._makePath(x, y),
         stroke: 'black'
@@ -4026,14 +4029,14 @@
 
     Rect.prototype.attr = function(scales, coord, mark, mayflip) {
       var x, y, _ref;
-      _ref = coord.getXY(mayflip, scales, mark), x = _ref.x, y = _ref.y;
+      _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
       return {
         x: _.min(x),
         y: _.min(y),
         width: Math.abs(x[1] - x[0]),
         height: Math.abs(y[1] - y[0]),
-        fill: this._maybeApply(scales.color, mark.color),
-        stroke: this._maybeApply(scales.color, mark.color),
+        fill: this._maybeApply(scales, mark, 'color'),
+        stroke: this._maybeApply(scales, mark, 'color'),
         'stroke-width': '0px'
       };
     };
@@ -4060,7 +4063,7 @@
       _ref2 = mark.y, y0 = _ref2[0], y1 = _ref2[1];
       mark.x = [x0, x0, x1, x1];
       mark.y = [y0, y1, y1, y0];
-      _ref3 = coord.getXY(mayflip, scales, mark), x = _ref3.x, y = _ref3.y, r = _ref3.r, t = _ref3.t;
+      _ref3 = coord.getXY(mayflip, mark), x = _ref3.x, y = _ref3.y, r = _ref3.r, t = _ref3.t;
       if (coord.flip) {
         x.push(x.splice(0, 1)[0]);
         y.push(y.splice(0, 1)[0]);
@@ -4073,8 +4076,8 @@
       path += "L " + x[2] + " " + y[2] + " A " + r[2] + " " + r[2] + " 0 " + large + " 0 " + x[3] + " " + y[3] + " Z";
       return {
         path: path,
-        fill: this._maybeApply(scales.color, mark.color),
-        stroke: this._maybeApply(scales.color, mark.color),
+        fill: this._maybeApply(scales, mark, 'color'),
+        stroke: this._maybeApply(scales, mark, 'color'),
         'stroke-width': '0px'
       };
     };
@@ -4099,11 +4102,11 @@
 
     Text.prototype.attr = function(scales, coord, mark, mayflip) {
       var m, x, y, _ref, _ref2;
-      _ref = coord.getXY(mayflip, scales, mark), x = _ref.x, y = _ref.y;
+      _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
       m = {
         x: x,
         y: y,
-        text: this._maybeApply(scales.text, mark.text),
+        text: this._maybeApply(scales, mark, 'text'),
         'text-anchor': (_ref2 = mark['text-anchor']) != null ? _ref2 : 'left',
         r: 10,
         fill: 'black'
@@ -4188,7 +4191,7 @@
     };
 
     Graph.prototype.merge = function() {
-      var clipping, dom, domains, layer, renderer, reverse, scales, _i, _len, _ref;
+      var clipping, dom, domains, layer, renderer, scales, _i, _len, _ref;
       domains = this._makeDomains(this.spec, this.layers);
       if (this.scaleSet == null) {
         this.scaleSet = this._makeScaleSet(this.spec, domains);
@@ -4204,7 +4207,7 @@
       if (this.spec.dom) {
         dom = this.spec.dom;
         scales = this.scaleSet.scales;
-        reverse = this.scaleSet.reverse;
+        this.coord.setScales(scales);
         if (this.paper == null) {
           this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
         }

@@ -1,7 +1,8 @@
 (function() {
   var Cartesian, Coordinate, Polar, poly,
     __hasProp = Object.prototype.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   poly = this.poly || {};
 
@@ -11,11 +12,19 @@
       var _ref, _ref2;
       if (params == null) params = {};
       this.flip = (_ref = params.flip) != null ? _ref : false;
+      this.scales = null;
       _ref2 = this.flip ? ['y', 'x'] : ['x', 'y'], this.x = _ref2[0], this.y = _ref2[1];
     }
 
     Coordinate.prototype.make = function(dims) {
       return this.dims = dims;
+    };
+
+    Coordinate.prototype.setScales = function(scales) {
+      return this.scales = {
+        x: scales.x.f,
+        y: scales.y.f
+      };
     };
 
     Coordinate.prototype.clipping = function() {
@@ -64,20 +73,20 @@
       return this[aes];
     };
 
-    Cartesian.prototype.getXY = function(mayflip, scales, mark) {
+    Cartesian.prototype.getXY = function(mayflip, mark) {
       var point, scalex, scaley;
       if (mayflip) {
         point = {
-          x: _.isArray(mark.x) ? _.map(mark.x, scales.x) : scales.x(mark.x),
-          y: _.isArray(mark.y) ? _.map(mark.y, scales.y) : scales.y(mark.y)
+          x: _.isArray(mark.x) ? _.map(mark.x, this.scales.x) : this.scales.x(mark.x),
+          y: _.isArray(mark.y) ? _.map(mark.y, this.scales.y) : this.scales.y(mark.y)
         };
         return {
           x: point[this.x],
           y: point[this.y]
         };
       } else {
-        scalex = scales[this.x];
-        scaley = scales[this.y];
+        scalex = this.scales[this.x];
+        scaley = this.scales[this.y];
         return {
           x: _.isArray(mark.x) ? _.map(mark.x, scalex) : scalex(mark.x),
           y: _.isArray(mark.y) ? _.map(mark.y, scaley) : scaley(mark.y)
@@ -101,6 +110,7 @@
     __extends(Polar, _super);
 
     function Polar() {
+      this.getXY = __bind(this.getXY, this);
       Polar.__super__.constructor.apply(this, arguments);
     }
 
@@ -135,7 +145,7 @@
       }
     };
 
-    Polar.prototype.getXY = function(mayflip, scales, mark) {
+    Polar.prototype.getXY = function(mayflip, mark) {
       var getpos, i, ident, points, r, radius, t, theta, x, xpos, y, ypos, _getx, _gety, _len, _len2, _ref, _ref2, _ref3, _ref4,
         _this = this;
       _getx = function(radius, theta) {
@@ -156,8 +166,8 @@
           _ref2 = mark[r];
           for (i = 0, _len = _ref2.length; i < _len; i++) {
             radius = _ref2[i];
-            radius = scales[r](radius);
-            theta = scales[t](mark[t][i]);
+            radius = this.scales[r](radius);
+            theta = this.scales[t](mark[t][i]);
             points.x.push(_getx(radius, theta));
             points.y.push(_gety(radius, theta));
             points.r.push(radius);
@@ -165,8 +175,8 @@
           }
           return points;
         }
-        radius = scales[r](mark[r]);
-        theta = scales[t](mark[t]);
+        radius = this.scales[r](mark[r]);
+        theta = this.scales[t](mark[t]);
         return {
           x: _getx(radius, theta),
           y: _gety(radius, theta),
@@ -184,7 +194,7 @@
         if (identx && !identy) {
           return {
             x: x.v,
-            y: _gety(scales[r](y), 0)
+            y: _gety(_this.scales[r](y), 0)
           };
         } else if (identx && identy) {
           return {
@@ -194,11 +204,11 @@
         } else if (!identx && identy) {
           return {
             y: y.v,
-            x: _gety(scales[t](x), 0)
+            x: _gety(_this.scales[t](x), 0)
           };
         } else {
-          radius = scales[r](y);
-          theta = scales[t](x);
+          radius = _this.scales[r](y);
+          theta = _this.scales[t](x);
           return {
             x: _getx(radius, theta),
             y: _gety(radius, theta)

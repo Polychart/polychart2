@@ -114,11 +114,13 @@
       return path.join(' ');
     };
 
-    Renderer.prototype._maybeApply = function(scale, val) {
-      if (scale != null) {
-        return scale(val);
-      } else if (_.isObject(val)) {
+    Renderer.prototype._maybeApply = function(scales, mark, key) {
+      var val;
+      val = mark[key];
+      if (_.isObject(val) && val.f === 'identity') {
         return val.v;
+      } else if (scales[key] != null) {
+        return scales[key].f(val);
       } else {
         return val;
       }
@@ -142,13 +144,13 @@
 
     Circle.prototype.attr = function(scales, coord, mark, mayflip) {
       var stroke, x, y, _ref, _ref2;
-      _ref = coord.getXY(mayflip, scales, mark), x = _ref.x, y = _ref.y;
-      stroke = mark.stroke ? this._maybeApply(scales.stroke, mark.stroke) : this._maybeApply(scales.color, mark.color);
+      _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
+      stroke = mark.stroke ? this._maybeApply(scales, mark, 'stroke') : this._maybeApply(scales, mark, 'color');
       return {
         cx: x,
         cy: y,
-        r: this._maybeApply(scales.size, mark.size),
-        fill: this._maybeApply(scales.color, mark.color),
+        r: this._maybeApply(scales, mark, 'size'),
+        fill: this._maybeApply(scales, mark, 'color'),
         stroke: stroke,
         title: 'omgthisiscool!',
         'stroke-width': (_ref2 = mark['stroke-width']) != null ? _ref2 : '0px'
@@ -173,7 +175,7 @@
 
     Line.prototype.attr = function(scales, coord, mark, mayflip) {
       var x, y, _ref;
-      _ref = coord.getXY(mayflip, scales, mark), x = _ref.x, y = _ref.y;
+      _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
       return {
         path: this._makePath(x, y),
         stroke: 'black'
@@ -198,14 +200,14 @@
 
     Rect.prototype.attr = function(scales, coord, mark, mayflip) {
       var x, y, _ref;
-      _ref = coord.getXY(mayflip, scales, mark), x = _ref.x, y = _ref.y;
+      _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
       return {
         x: _.min(x),
         y: _.min(y),
         width: Math.abs(x[1] - x[0]),
         height: Math.abs(y[1] - y[0]),
-        fill: this._maybeApply(scales.color, mark.color),
-        stroke: this._maybeApply(scales.color, mark.color),
+        fill: this._maybeApply(scales, mark, 'color'),
+        stroke: this._maybeApply(scales, mark, 'color'),
         'stroke-width': '0px'
       };
     };
@@ -232,7 +234,7 @@
       _ref2 = mark.y, y0 = _ref2[0], y1 = _ref2[1];
       mark.x = [x0, x0, x1, x1];
       mark.y = [y0, y1, y1, y0];
-      _ref3 = coord.getXY(mayflip, scales, mark), x = _ref3.x, y = _ref3.y, r = _ref3.r, t = _ref3.t;
+      _ref3 = coord.getXY(mayflip, mark), x = _ref3.x, y = _ref3.y, r = _ref3.r, t = _ref3.t;
       if (coord.flip) {
         x.push(x.splice(0, 1)[0]);
         y.push(y.splice(0, 1)[0]);
@@ -245,8 +247,8 @@
       path += "L " + x[2] + " " + y[2] + " A " + r[2] + " " + r[2] + " 0 " + large + " 0 " + x[3] + " " + y[3] + " Z";
       return {
         path: path,
-        fill: this._maybeApply(scales.color, mark.color),
-        stroke: this._maybeApply(scales.color, mark.color),
+        fill: this._maybeApply(scales, mark, 'color'),
+        stroke: this._maybeApply(scales, mark, 'color'),
         'stroke-width': '0px'
       };
     };
@@ -271,11 +273,11 @@
 
     Text.prototype.attr = function(scales, coord, mark, mayflip) {
       var m, x, y, _ref, _ref2;
-      _ref = coord.getXY(mayflip, scales, mark), x = _ref.x, y = _ref.y;
+      _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
       m = {
         x: x,
         y: y,
-        text: this._maybeApply(scales.text, mark.text),
+        text: this._maybeApply(scales, mark, 'text'),
         'text-anchor': (_ref2 = mark['text-anchor']) != null ? _ref2 : 'left',
         r: 10,
         fill: 'black'

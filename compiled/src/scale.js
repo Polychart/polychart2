@@ -36,22 +36,15 @@
     }
 
     ScaleSet.prototype.make = function(guideSpec, domains, layers) {
-      var aes, fac, _ref;
       this.guideSpec = guideSpec;
       this.layers = layers;
       this.domains = domains;
       this.domainx = this.domains.x;
       this.domainy = this.domains.y;
-      this.factory = this._makeFactory(guideSpec, domains, this.ranges);
-      this.scales = {};
-      _ref = this.factory;
-      for (aes in _ref) {
-        fac = _ref[aes];
-        this.scales[aes] = this.factory[aes].scale;
-      }
+      this.scales = this._makeScales(guideSpec, domains, this.ranges);
       this.reverse = {
-        x: this.factory.x.reverse,
-        y: this.factory.y.reverse
+        x: this.scales.x.finv,
+        y: this.scales.y.finv
       };
       return this.layerMapping = this._mapLayers(layers);
     };
@@ -80,44 +73,42 @@
     };
 
     ScaleSet.prototype._makeXScale = function() {
-      this.factory.x.make(this.domainx, this.ranges.x);
-      return this.scales.x = this.factory.x.scale;
+      return this.scales.x.make(this.domainx, this.ranges.x);
     };
 
     ScaleSet.prototype._makeYScale = function() {
-      this.factory.y.make(this.domainy, this.ranges.y);
-      return this.scales.y = this.factory.y.scale;
+      return this.scales.y.make(this.domainy, this.ranges.y);
     };
 
-    ScaleSet.prototype._makeFactory = function(guideSpec, domains, ranges) {
-      var factory, specScale, _ref, _ref2, _ref3, _ref4;
+    ScaleSet.prototype._makeScales = function(guideSpec, domains, ranges) {
+      var scales, specScale, _ref, _ref2, _ref3, _ref4;
       specScale = function(a) {
         if (guideSpec && (guideSpec[a] != null) && (guideSpec[a].scale != null)) {
           return guideSpec.x.scale;
         }
         return null;
       };
-      factory = {};
-      factory.x = (_ref = specScale('x')) != null ? _ref : poly.scale.linear();
-      factory.x.make(domains.x, ranges.x);
-      factory.y = (_ref2 = specScale('y')) != null ? _ref2 : poly.scale.linear();
-      factory.y.make(domains.y, ranges.y);
+      scales = {};
+      scales.x = (_ref = specScale('x')) != null ? _ref : poly.scale.linear();
+      scales.x.make(domains.x, ranges.x);
+      scales.y = (_ref2 = specScale('y')) != null ? _ref2 : poly.scale.linear();
+      scales.y.make(domains.y, ranges.y);
       if (domains.color != null) {
         if (domains.color.type === 'cat') {
-          factory.color = (_ref3 = specScale('color')) != null ? _ref3 : poly.scale.color();
+          scales.color = (_ref3 = specScale('color')) != null ? _ref3 : poly.scale.color();
         } else {
-          factory.color = (_ref4 = specScale('color')) != null ? _ref4 : poly.scale.gradient({
+          scales.color = (_ref4 = specScale('color')) != null ? _ref4 : poly.scale.gradient({
             upper: 'steelblue',
             lower: 'red'
           });
         }
-        factory.color.make(domains.color);
+        scales.color.make(domains.color);
       }
       if (domains.size != null) {
-        factory.size = specScale('size') || poly.scale.area();
-        factory.size.make(domains.size);
+        scales.size = specScale('size') || poly.scale.area();
+        scales.size.make(domains.size);
       }
-      return factory;
+      return scales;
     };
 
     ScaleSet.prototype.fromPixels = function(start, end) {
@@ -148,13 +139,13 @@
     ScaleSet.prototype.makeAxes = function() {
       this.axes.x.make({
         domain: this.domainx,
-        type: this.factory.x.tickType(),
+        type: this.scales.x.tickType(),
         guideSpec: this.getSpec('x'),
         titletext: poly.getLabel(this.layers, 'x')
       });
       this.axes.y.make({
         domain: this.domainy,
-        type: this.factory.y.tickType(),
+        type: this.scales.y.tickType(),
         guideSpec: this.getSpec('y'),
         titletext: poly.getLabel(this.layers, 'y')
       });
@@ -253,7 +244,7 @@
         legend.make({
           domain: this.domains[aes],
           guideSpec: this.getSpec(aes),
-          type: this.factory[aes].tickType(),
+          type: this.scales[aes].tickType(),
           mapping: this.layerMapping,
           titletext: poly.getLabel(this.layers, aes)
         });
@@ -309,7 +300,7 @@
   Scale = (function() {
 
     function Scale(params) {
-      this.scale = null;
+      this.f = null;
     }
 
     Scale.prototype.make = function(domain) {
@@ -380,8 +371,8 @@
 
     function PositionScale(params) {
       this._catWrapper = __bind(this._catWrapper, this);
-      this._numWrapper = __bind(this._numWrapper, this);      this.scale = null;
-      this.reverse = null;
+      this._numWrapper = __bind(this._numWrapper, this);      this.f = null;
+      this.finv = null;
     }
 
     PositionScale.prototype.make = function(domain, range) {
@@ -446,8 +437,8 @@
       max = this.domain.max + ((_ref = this.domain.bw) != null ? _ref : 0);
       y = poly.linear(this.domain.min, this.range.min, max, this.range.max);
       x = poly.linear(this.range.min, this.domain.min, this.range.max, max);
-      this.scale = this._numWrapper(this.domain, y);
-      return this.reverse = function(y1, y2) {
+      this.f = this._numWrapper(this.domain, y);
+      return this.finv = function(y1, y2) {
         var xs;
         xs = [x(y1), x(y2)];
         return {
@@ -483,8 +474,8 @@
           "in": _this.domain.levels.slice(i1, i2 + 1 || 9e9)
         };
       };
-      this.scale = this._catWrapper(step, y);
-      return this.reverse = x;
+      this.f = this._catWrapper(step, y);
+      return this.finv = x;
     };
 
     return Linear;
@@ -503,14 +494,14 @@
       var lg, x, ylin, ylininv;
       lg = Math.log;
       ylin = poly.linear(lg(this.domain.min), this.range.min, lg(this.domain.max), this.range.max);
-      this.scale = this._numWrapper(function(x) {
+      this.f = this._numWrapper(function(x) {
         return ylin(lg(x));
       });
       ylininv = poly.linear(this.range.min, lg(this.domain.min), this.range.max, lg(this.domain.max));
       x = function(y) {
         return Math.exp(ylininv(y));
       };
-      return this.reverse = function(y1, y2) {
+      return this.finv = function(y1, y2) {
         var xs;
         xs = [x(y1), x(y2)];
         return {
@@ -546,7 +537,7 @@
       min = this.domain.min === 0 ? 0 : 1;
       sq = Math.sqrt;
       ylin = poly.linear(sq(this.domain.min), min, sq(this.domain.max), 10);
-      return this.scale = this._identityWrapper(function(x) {
+      return this.f = this._identityWrapper(function(x) {
         return ylin(sq(x));
       });
     };
@@ -572,7 +563,7 @@
       h = function(v) {
         return _.indexOf(_this.domain.levels, v) / n + 1 / (2 * n);
       };
-      return this.scale = function(value) {
+      return this.f = function(value) {
         return Raphael.hsl(h(value), 0.5, 0.5);
       };
     };
@@ -580,7 +571,7 @@
     Color.prototype._makeNum = function() {
       var h;
       h = poly.linear(this.domain.min, 0, this.domain.max, 1);
-      return this.scale = function(value) {
+      return this.f = function(value) {
         return Raphael.hsl(0.5, h(value), 0.5);
       };
     };
@@ -619,7 +610,7 @@
       r = poly.linear(this.domain.min, lower.r, this.domain.max, upper.r);
       g = poly.linear(this.domain.min, lower.g, this.domain.max, upper.g);
       b = poly.linear(this.domain.min, lower.b, this.domain.max, upper.b);
-      return this.scale = this._identityWrapper(function(value) {
+      return this.f = this._identityWrapper(function(value) {
         return Raphael.rgb(r(value), g(value), b(value));
       });
     };
@@ -668,7 +659,7 @@
     }
 
     Identity.prototype.make = function() {
-      return this.scale = function(x) {
+      return this.f = function(x) {
         return x;
       };
     };

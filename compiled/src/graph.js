@@ -54,7 +54,7 @@
     };
 
     Graph.prototype.merge = function() {
-      var clipping, dom, domains, layer, renderer, reverse, scales, _i, _len, _ref;
+      var clipping, dom, domains, layer, renderer, scales, _i, _len, _ref;
       domains = this._makeDomains(this.spec, this.layers);
       if (this.scaleSet == null) {
         this.scaleSet = this._makeScaleSet(this.spec, domains);
@@ -70,7 +70,7 @@
       if (this.spec.dom) {
         dom = this.spec.dom;
         scales = this.scaleSet.scales;
-        reverse = this.scaleSet.reverse;
+        this.coord.setScales(scales);
         if (this.paper == null) {
           this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
         }

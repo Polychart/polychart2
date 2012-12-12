@@ -4,8 +4,10 @@ class Coordinate
   constructor: (params) ->
     params ?= {}
     @flip = params.flip ? false
+    @scales = null
     [@x, @y] = if @flip then ['y', 'x'] else ['x', 'y']
   make: (dims) -> @dims = dims
+  setScales: (scales) -> @scales = x: scales.x.f, y: scales.y.f
   clipping: () ->
     pl = @dims.paddingLeft
     gl = @dims.guideLeft
@@ -30,18 +32,18 @@ class Cartesian extends Coordinate
       max: @dims.paddingTop + @dims.guideTop
     ranges
   axisType: (aes) -> @[aes]
-  getXY: (mayflip, scales, mark) ->
+  getXY: (mayflip, mark) ->
     if mayflip
       point =
-        x: if _.isArray(mark.x) then _.map mark.x, scales.x else scales.x mark.x
-        y: if _.isArray(mark.y) then _.map mark.y, scales.y else scales.y mark.y
+        x: if _.isArray(mark.x) then _.map mark.x, @scales.x else @scales.x mark.x
+        y: if _.isArray(mark.y) then _.map mark.y, @scales.y else @scales.y mark.y
       return {
         x: point[@x]
         y: point[@y]
       }
     else
-      scalex = scales[@x]
-      scaley = scales[@y]
+      scalex = @scales[@x]
+      scaley = @scales[@y]
       return {
         x: if _.isArray(mark.x) then _.map mark.x, scalex else scalex mark.x
         y: if _.isArray(mark.y) then _.map mark.y, scaley else scaley mark.y
@@ -66,7 +68,7 @@ class Polar extends Coordinate
       max: Math.min(@dims.chartWidth,@dims.chartHeight)/2 -10
     ranges
   axisType: (aes) -> if @[aes] == 'x' then 'r' else 't'
-  getXY: (mayflip, scales, mark) ->
+  getXY: (mayflip, mark) =>
     _getx = (radius, theta) => @cx + radius * Math.cos(theta - Math.PI/2)
     _gety = (radius, theta) => @cy + radius * Math.sin(theta - Math.PI/2)
     [r, t] = [@x, @y]
@@ -74,15 +76,15 @@ class Polar extends Coordinate
       if _.isArray mark[r] #and _.isArray mark[t]
         points = x: [], y: [], r: [], t:[]
         for radius, i in mark[r]
-          radius = scales[r] radius
-          theta = scales[t] mark[t][i]
+          radius = @scales[r] radius
+          theta = @scales[t] mark[t][i]
           points.x.push _getx radius, theta
           points.y.push _gety radius, theta
           points.r.push radius
           points.t.push theta
         return points
-      radius = scales[r](mark[r])
-      theta = scales[t](mark[t])
+      radius = @scales[r](mark[r])
+      theta = @scales[t](mark[t])
       return {
         x: _getx radius, theta
         y: _gety radius, theta
@@ -91,21 +93,21 @@ class Polar extends Coordinate
       }
     # else if not mayflip
     ident = (obj) -> _.isObject(obj) and obj.t is 'scalefn' and obj.f is 'identity'
-    getpos = (x,y) ->
+    getpos = (x,y) =>
       identx = ident(x)
       identy = ident(y)
       if identx and not identy # here, y is going to be radius.
         x: x.v
-        y: _gety(scales[r](y), 0)
+        y: _gety(@scales[r](y), 0)
       else if identx and identy
         x: x.v
         y: y.v
       else if not identx and identy
         y: y.v
-        x: _gety(scales[t](x), 0)
+        x: _gety(@scales[t](x), 0)
       else
-        radius = scales[r] y
-        theta = scales[t] x
+        radius = @scales[r] y
+        theta = @scales[t] x
         x: _getx radius, theta
         y: _gety radius, theta
     if _.isArray mark.x
