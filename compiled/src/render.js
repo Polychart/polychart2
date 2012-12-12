@@ -174,11 +174,12 @@
     };
 
     Path.prototype.attr = function(scales, coord, mark, mayflip) {
-      var x, y, _ref;
+      var stroke, x, y, _ref;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
+      stroke = mark.stroke ? this._maybeApply(scales, mark, 'stroke') : this._maybeApply(scales, mark, 'color');
       return {
         path: this._makePath(x, y),
-        stroke: 'black'
+        stroke: stroke
       };
     };
 
@@ -199,12 +200,13 @@
     };
 
     Line.prototype.attr = function(scales, coord, mark, mayflip) {
-      var x, y, _ref, _ref2;
+      var stroke, x, y, _ref, _ref2;
       _ref = poly.sortArrays(scales.x.sortfn, [mark.x, mark.y]), mark.x = _ref[0], mark.y = _ref[1];
       _ref2 = coord.getXY(mayflip, mark), x = _ref2.x, y = _ref2.y;
+      stroke = mark.stroke ? this._maybeApply(scales, mark, 'stroke') : this._maybeApply(scales, mark, 'color');
       return {
         path: this._makePath(x, y),
-        stroke: 'black'
+        stroke: stroke
       };
     };
 

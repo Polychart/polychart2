@@ -142,7 +142,11 @@
   };
 
   /*
-  Sort Arrays
+  Sort Arrays: given a sorting function and some number of arrays, sort all the
+  arrays by the function applied to the first array. This is used for sorting 
+  points for a line chart, i.e. poly.sortArrays(sortFn, [xs, ys])
+  
+  This way, all the points are sorted by (sortFn(x) for x in xs)
   */
 
   poly.sortArrays = function(fn, arrays) {

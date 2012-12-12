@@ -326,13 +326,32 @@
     jsondata = [
       {
         a: 1,
-        b: 5
+        b: 5,
+        c: 'A'
       }, {
         a: 3,
-        b: 4
+        b: 4,
+        c: 'A'
       }, {
         a: 2,
-        b: 3
+        b: 3,
+        c: 'A'
+      }, {
+        a: 2,
+        b: 2,
+        c: 'B'
+      }, {
+        a: 1,
+        b: 4,
+        c: 'B'
+      }, {
+        a: 2.2,
+        b: 3,
+        c: 'B'
+      }, {
+        a: 3,
+        b: 3,
+        c: 'B'
       }
     ];
     data = new poly.Data({
@@ -344,7 +363,8 @@
           data: data,
           type: 'line',
           x: 'a',
-          y: 'b'
+          y: 'b',
+          color: 'c'
         }
       ],
       dom: dom
