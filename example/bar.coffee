@@ -21,7 +21,8 @@
     if type == 'reset'
       jsondata.shift()
       jsondata.push({index:i++, value:Math.random()*10})
-      spec.layers[0].data.update jsondata
+      spec.layers[0].data.update json: jsondata
+    if type == 'data'
       c.make spec
       c.render dom
     if type == 'click'
@@ -47,14 +48,17 @@
   c = poly.chart spec
   c.render dom
 
-  redraw = () ->
+  update = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update jsondata
-    c.make spec
-    c.render dom
-    setTimeout(redraw, 1000)
-  setTimeout(redraw, 1000)
+    data.update json:jsondata
+    setTimeout(update, 1000)
+  setTimeout(update, 1000)
+
+  c.addHandler (type, e) ->
+    if type == 'data'
+      c.make()
+      c.render dom
 
 @examples.bar_polar = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
@@ -76,7 +80,7 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update jsondata
+    spec.layers[0].data.update json:jsondata
     c.make spec
     c.render dom
     setTimeout(redraw, 1000)
@@ -130,7 +134,7 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10})
-    spec.layers[0].data.update jsondata
+    spec.layers[0].data.update json:jsondata
     c.make spec
     c.render dom
     setTimeout(redraw, 1000)
@@ -158,7 +162,7 @@
 
   redraw = () ->
     jsondata.push({index:i++, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10})
-    spec.layers[0].data.update jsondata
+    spec.layers[0].data.update json:jsondata
     c.make spec
     c.render dom
     setTimeout(redraw, 1000)

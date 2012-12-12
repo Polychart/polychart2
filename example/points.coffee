@@ -38,7 +38,7 @@
 
   redraw = () ->
     newspec = spec()
-    initspec.layers[0].data.update(newspec.data)
+    initspec.layers[0].data.update(json:newspec.data)
     c.make(newspec.spec)
     c.render()
     setTimeout(redraw, 1000)

@@ -99,7 +99,9 @@
     redraw = function() {
       var newspec;
       newspec = spec();
-      initspec.layers[0].data.update(newspec.data);
+      initspec.layers[0].data.update({
+        json: newspec.data
+      });
       c.make(newspec.spec);
       c.render();
       return setTimeout(redraw, 1000);

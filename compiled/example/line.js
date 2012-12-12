@@ -56,7 +56,9 @@
         index: i++,
         value: Math.random() * 10
       });
-      spec.layers[0].data.update(jsondata);
+      spec.layers[0].data.update({
+        json: jsondata
+      });
       c.make(spec);
       c.render(dom);
       return setTimeout(redraw, 1000);
@@ -115,7 +117,9 @@
     redraw = function() {
       jsondata.shift();
       jsondata.push(next());
-      spec.layers[0].data.update(jsondata);
+      spec.layers[0].data.update({
+        json: jsondata
+      });
       c.make(spec);
       c.render(dom);
       return setTimeout(redraw, 1000);
@@ -180,7 +184,9 @@
         index: i++,
         value: Math.random() * 10
       });
-      spec.layers[0].data.update(jsondata);
+      spec.layers[0].data.update({
+        json: jsondata
+      });
       c.make(spec);
       c.render(dom);
       return setTimeout(redraw, 1000);
@@ -243,7 +249,9 @@
         index: i++,
         value: Math.random() * 10
       });
-      spec.layers[0].data.update(jsondata);
+      spec.layers[0].data.update({
+        json: jsondata
+      });
       c.make(spec);
       c.render(dom);
       return setTimeout(redraw, 1000);
@@ -308,7 +316,9 @@
         index: i++,
         value: Math.random() * 10
       });
-      spec.layers[0].data.update(jsondata);
+      spec.layers[0].data.update({
+        json: jsondata
+      });
       c.make(spec);
       c.render(dom);
       return setTimeout(redraw, 1000);

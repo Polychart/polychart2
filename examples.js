@@ -57,7 +57,11 @@
           index: i++,
           value: Math.random() * 10
         });
-        spec.layers[0].data.update(jsondata);
+        spec.layers[0].data.update({
+          json: jsondata
+        });
+      }
+      if (type === 'data') {
         c.make(spec);
         c.render(dom);
       }
@@ -67,7 +71,7 @@
   };
 
   this.examples.bar_flip = function(dom) {
-    var c, data, i, jsondata, redraw, spec;
+    var c, data, i, jsondata, spec, update;
     jsondata = (function() {
       var _results;
       _results = [];
@@ -116,18 +120,24 @@
     };
     c = poly.chart(spec);
     c.render(dom);
-    redraw = function() {
+    update = function() {
       jsondata.shift();
       jsondata.push({
         index: i++,
         value: Math.random() * 10
       });
-      spec.layers[0].data.update(jsondata);
-      c.make(spec);
-      c.render(dom);
-      return setTimeout(redraw, 1000);
+      data.update({
+        json: jsondata
+      });
+      return setTimeout(update, 1000);
     };
-    return setTimeout(redraw, 1000);
+    setTimeout(update, 1000);
+    return c.addHandler(function(type, e) {
+      if (type === 'data') {
+        c.make();
+        return c.render(dom);
+      }
+    });
   };
 
   this.examples.bar_polar = function(dom) {
@@ -186,7 +196,9 @@
         index: i++,
         value: Math.random() * 10
       });
-      spec.layers[0].data.update(jsondata);
+      spec.layers[0].data.update({
+        json: jsondata
+      });
       c.make(spec);
       c.render(dom);
       return setTimeout(redraw, 1000);
@@ -304,7 +316,9 @@
         two: (i % 2 === 0 ? 'a' : 'b'),
         value: Math.random() * 10
       });
-      spec.layers[0].data.update(jsondata);
+      spec.layers[0].data.update({
+        json: jsondata
+      });
       c.make(spec);
       c.render(dom);
       return setTimeout(redraw, 1000);
@@ -363,7 +377,9 @@
         two: (i % 2 === 0 ? 'a' : 'b'),
         value: Math.random() * 10
       });
-      spec.layers[0].data.update(jsondata);
+      spec.layers[0].data.update({
+        json: jsondata
+      });
       c.make(spec);
       c.render(dom);
       return setTimeout(redraw, 1000);
@@ -430,7 +446,9 @@
         index: i++,
         value: Math.random() * 10
       });
-      spec.layers[0].data.update(jsondata);
+      spec.layers[0].data.update({
+        json: jsondata
+      });
       c.make(spec);
       c.render(dom);
       return setTimeout(redraw, 1000);
@@ -489,7 +507,9 @@
     redraw = function() {
       jsondata.shift();
       jsondata.push(next());
-      spec.layers[0].data.update(jsondata);
+      spec.layers[0].data.update({
+        json: jsondata
+      });
       c.make(spec);
       c.render(dom);
       return setTimeout(redraw, 1000);
@@ -554,7 +574,9 @@
         index: i++,
         value: Math.random() * 10
       });
-      spec.layers[0].data.update(jsondata);
+      spec.layers[0].data.update({
+        json: jsondata
+      });
       c.make(spec);
       c.render(dom);
       return setTimeout(redraw, 1000);
@@ -617,7 +639,9 @@
         index: i++,
         value: Math.random() * 10
       });
-      spec.layers[0].data.update(jsondata);
+      spec.layers[0].data.update({
+        json: jsondata
+      });
       c.make(spec);
       c.render(dom);
       return setTimeout(redraw, 1000);
@@ -682,7 +706,9 @@
         index: i++,
         value: Math.random() * 10
       });
-      spec.layers[0].data.update(jsondata);
+      spec.layers[0].data.update({
+        json: jsondata
+      });
       c.make(spec);
       c.render(dom);
       return setTimeout(redraw, 1000);
@@ -792,7 +818,9 @@
     redraw = function() {
       var newspec;
       newspec = spec();
-      initspec.layers[0].data.update(newspec.data);
+      initspec.layers[0].data.update({
+        json: newspec.data
+      });
       c.make(newspec.spec);
       c.render();
       return setTimeout(redraw, 1000);

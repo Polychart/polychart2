@@ -12,16 +12,22 @@ class Graph
     @paper = null
     @coord = spec.coord ? poly.coord.cartesian()
     @initial_spec = spec
-    @make spec
+    @make spec, true
 
   reset : () => @make @initial_spec
 
-  make: (spec) ->
+  make: (spec, first=false) ->
+    spec ?= @initial_spec
     @spec = spec
     # creation of layers
     spec.layers ?= []
     @layers ?= @_makeLayers @spec
-    # calculation of statistics & layers
+    # subscribe to changes to data
+    if first
+      dataChange = @handleEvent 'data'
+      for layerObj, id in @layers
+        spec.layers[id].data.subscribe dataChange # changes to data
+    # callback after data processing
     merge = _.after(@layers.length, @merge)
     for layerObj, id in @layers
       layerObj.make spec.layers[id], merge
@@ -62,12 +68,15 @@ class Graph
     @handlers.splice _.indexOf(@handlers, h), 1
 
   handleEvent : (type) =>
+    # POSSIBLE EVENTS: select, click, mover, mout, data
     graph = @
     handler = (params) ->
       obj = @
       if type == 'select'
         {start, end} = params
         obj.evtData = graph.scaleSet.fromPixels start, end
+      else if type == 'data'
+        obj.evtData = {}
       else
         obj.evtData = obj.data('e')
 

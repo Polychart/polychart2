@@ -22,23 +22,33 @@
       this.paper = null;
       this.coord = (_ref = spec.coord) != null ? _ref : poly.coord.cartesian();
       this.initial_spec = spec;
-      this.make(spec);
+      this.make(spec, true);
     }
 
     Graph.prototype.reset = function() {
       return this.make(this.initial_spec);
     };
 
-    Graph.prototype.make = function(spec) {
-      var id, layerObj, merge, _len, _ref, _results;
+    Graph.prototype.make = function(spec, first) {
+      var dataChange, id, layerObj, merge, _len, _len2, _ref, _ref2, _results;
+      if (first == null) first = false;
+      if (spec == null) spec = this.initial_spec;
       this.spec = spec;
       if (spec.layers == null) spec.layers = [];
       if (this.layers == null) this.layers = this._makeLayers(this.spec);
+      if (first) {
+        dataChange = this.handleEvent('data');
+        _ref = this.layers;
+        for (id = 0, _len = _ref.length; id < _len; id++) {
+          layerObj = _ref[id];
+          spec.layers[id].data.subscribe(dataChange);
+        }
+      }
       merge = _.after(this.layers.length, this.merge);
-      _ref = this.layers;
+      _ref2 = this.layers;
       _results = [];
-      for (id = 0, _len = _ref.length; id < _len; id++) {
-        layerObj = _ref[id];
+      for (id = 0, _len2 = _ref2.length; id < _len2; id++) {
+        layerObj = _ref2[id];
         _results.push(layerObj.make(spec.layers[id], merge));
       }
       return _results;
@@ -98,6 +108,8 @@
         if (type === 'select') {
           start = params.start, end = params.end;
           obj.evtData = graph.scaleSet.fromPixels(start, end);
+        } else if (type === 'data') {
+          obj.evtData = {};
         } else {
           obj.evtData = obj.data('e');
         }

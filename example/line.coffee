@@ -20,7 +20,7 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update jsondata
+    spec.layers[0].data.update json:jsondata
     c.make spec
     c.render dom
     setTimeout(redraw, 1000)
@@ -48,7 +48,7 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push(next())
-    spec.layers[0].data.update jsondata
+    spec.layers[0].data.update json:jsondata
     c.make spec
     c.render dom
     setTimeout(redraw, 1000)
@@ -74,7 +74,7 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update jsondata
+    spec.layers[0].data.update json:jsondata
     c.make spec
     c.render dom
     setTimeout(redraw, 1000)
@@ -100,7 +100,7 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update jsondata
+    spec.layers[0].data.update json:jsondata
     c.make spec
     c.render dom
     setTimeout(redraw, 1000)
@@ -126,7 +126,7 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update jsondata
+    spec.layers[0].data.update json:jsondata
     c.make spec
     c.render dom
     setTimeout(redraw, 1000)

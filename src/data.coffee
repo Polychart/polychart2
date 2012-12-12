@@ -11,9 +11,23 @@ or knows how to retrieve data from some source.
 class Data
   constructor: (params) ->
     {@url, @json} = params
-    @frontEnd = !@url
-  update: (json) ->
-    @json = json
+    @dataBackend = params.url?
+    @computeBackend = false
+    @subscribed = []
+  getRaw: (params, callback) ->
+    if @json then return callback(json)
+  update: (params) ->
+    if !@dataBackend
+      @json = params.json
+    else
+      @getRaw()
+    for fn in @subscribed
+      fn()
+  subscribe: (h) ->
+    if _.indexOf(@subscribed, h) is -1
+      @subscribed.push h
+  unsubscribe: (h) ->
+    @subscribed.splice _.indexOf(@subscribed, h), 1
 
 poly.Data = Data
 
@@ -39,7 +53,7 @@ class DataProcess
     #if prevSpec? and prevSpec == dataSpec
     #  return callback @statData, @metaData
     wrappedCallback = @_wrap callback
-    if @dataObj.frontEnd
+    if not @dataObj.computeBackend
       if @strictmode
         wrappedCallback @dataObj.json, {}
       else

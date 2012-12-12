@@ -18,11 +18,37 @@
 
     function Data(params) {
       this.url = params.url, this.json = params.json;
-      this.frontEnd = !this.url;
+      this.dataBackend = params.url != null;
+      this.computeBackend = false;
+      this.subscribed = [];
     }
 
-    Data.prototype.update = function(json) {
-      return this.json = json;
+    Data.prototype.getRaw = function(params, callback) {
+      if (this.json) return callback(json);
+    };
+
+    Data.prototype.update = function(params) {
+      var fn, _i, _len, _ref, _results;
+      if (!this.dataBackend) {
+        this.json = params.json;
+      } else {
+        this.getRaw();
+      }
+      _ref = this.subscribed;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        fn = _ref[_i];
+        _results.push(fn());
+      }
+      return _results;
+    };
+
+    Data.prototype.subscribe = function(h) {
+      if (_.indexOf(this.subscribed, h) === -1) return this.subscribed.push(h);
+    };
+
+    Data.prototype.unsubscribe = function(h) {
+      return this.subscribed.splice(_.indexOf(this.subscribed, h), 1);
     };
 
     return Data;
@@ -55,7 +81,7 @@
       var dataSpec, wrappedCallback;
       dataSpec = poly.spec.layerToData(spec);
       wrappedCallback = this._wrap(callback);
-      if (this.dataObj.frontEnd) {
+      if (!this.dataObj.computeBackend) {
         if (this.strictmode) {
           return wrappedCallback(this.dataObj.json, {});
         } else {
