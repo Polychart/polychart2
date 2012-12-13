@@ -285,6 +285,7 @@ class Linear extends PositionScale
     @finv = (y1, y2) ->
       xs = [x(y1),x(y2)]
       {ge: _.min(xs), le: _.max(xs)}
+  _makeDate: () -> @_makeNum()
   _makeCat: () ->
     step = (@range.max - @range.min) / @domain.levels.length
     y = (x) =>

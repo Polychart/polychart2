@@ -109,7 +109,7 @@
   */
 
   makeDomainSet = function(layerObj, guideSpec, strictmode) {
-    var aes, domain, fromspec, meta, values, _ref, _ref2, _ref3, _ref4, _ref5;
+    var aes, domain, fromspec, meta, values, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
     domain = {};
     for (aes in layerObj.mapping) {
       if (strictmode) {
@@ -124,19 +124,29 @@
             return null;
           }
         };
-        if (poly.typeOf(values) === 'num') {
-          domain[aes] = makeDomain({
-            type: 'num',
-            min: (_ref2 = fromspec('min')) != null ? _ref2 : _.min(values),
-            max: (_ref3 = fromspec('max')) != null ? _ref3 : _.max(values),
-            bw: (_ref4 = fromspec('bw')) != null ? _ref4 : meta.bw
-          });
-        } else {
-          domain[aes] = makeDomain({
-            type: 'cat',
-            levels: (_ref5 = fromspec('levels')) != null ? _ref5 : _.uniq(values),
-            sorted: fromspec('levels') != null
-          });
+        switch (meta.type) {
+          case 'num':
+            domain[aes] = makeDomain({
+              type: 'num',
+              min: (_ref2 = fromspec('min')) != null ? _ref2 : _.min(values),
+              max: (_ref3 = fromspec('max')) != null ? _ref3 : _.max(values),
+              bw: (_ref4 = fromspec('bw')) != null ? _ref4 : meta.bw
+            });
+            break;
+          case 'date':
+            domain[aes] = makeDomain({
+              type: 'date',
+              min: (_ref5 = fromspec('min')) != null ? _ref5 : _.min(values),
+              max: (_ref6 = fromspec('max')) != null ? _ref6 : _.max(values),
+              bw: (_ref7 = fromspec('bw')) != null ? _ref7 : meta.bw
+            });
+            break;
+          case 'cat':
+            domain[aes] = makeDomain({
+              type: 'cat',
+              levels: (_ref8 = fromspec('levels')) != null ? _ref8 : _.uniq(values),
+              sorted: fromspec('levels') != null
+            });
         }
       }
     }
@@ -202,6 +212,28 @@
       }));
       return makeDomain({
         type: 'num',
+        min: min,
+        max: max,
+        bw: bw
+      });
+    },
+    'date': function(domains) {
+      var bw, max, min, _ref;
+      bw = _.uniq(_.map(domains, function(d) {
+        return d.bw;
+      }));
+      if (bw.length > 1) {
+        throw new poly.LengthError("All binwidths are not of the same length");
+      }
+      bw = (_ref = bw[0]) != null ? _ref : void 0;
+      min = _.min(_.map(domains, function(d) {
+        return d.min;
+      }));
+      max = _.max(_.map(domains, function(d) {
+        return d.max;
+      }));
+      return makeDomain({
+        type: 'date',
         min: min,
         max: max,
         bw: bw

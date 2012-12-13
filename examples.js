@@ -998,6 +998,56 @@
     return c = poly.chart(spec);
   };
 
+  this.examples.line_date = function(dom) {
+    var c, data, jsondata, spec;
+    jsondata = [
+      {
+        a: '2012-01-01',
+        b: 5,
+        c: 'A'
+      }, {
+        a: '2012-01-02',
+        b: 6,
+        c: 'A'
+      }, {
+        a: '2012-01-03',
+        b: 3,
+        c: 'A'
+      }, {
+        a: '2012-01-04',
+        b: 2,
+        c: 'B'
+      }, {
+        a: '2012-01-05',
+        b: 4,
+        c: 'B'
+      }, {
+        a: '2012-01-06',
+        b: 3,
+        c: 'B'
+      }, {
+        a: '2012-01-07',
+        b: 3,
+        c: 'B'
+      }
+    ];
+    data = new poly.Data({
+      json: jsondata
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'path',
+          x: 'a',
+          y: 'b'
+        }
+      ],
+      dom: dom
+    };
+    return c = poly.chart(spec);
+  };
+
   this.examples.path = function(dom) {
     var c, data, jsondata, spec;
     jsondata = [
@@ -1039,6 +1089,12 @@
         {
           data: data,
           type: 'path',
+          x: 'a',
+          y: 'b',
+          color: 'c'
+        }, {
+          data: data,
+          type: 'point',
           x: 'a',
           y: 'b',
           color: 'c'

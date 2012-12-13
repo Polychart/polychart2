@@ -140,6 +140,25 @@
   }
   c = poly.chart spec
 
+@examples.line_date = (dom) ->
+  jsondata = [
+    {a:'2012-01-01',b:5,c:'A'},
+    {a:'2012-01-02',b:6,c:'A'},
+    {a:'2012-01-03',b:3,c:'A'}
+    {a:'2012-01-04',b:2,c:'B'},
+    {a:'2012-01-05',b:4,c:'B'},
+    {a:'2012-01-06',b:3,c:'B'},
+    {a:'2012-01-07',b:3,c:'B'}
+  ]
+  data = new poly.Data json:jsondata
+  spec = {
+    layers: [
+      { data: data, type: 'path', x : 'a', y : 'b'}
+    ]
+    dom: dom
+  }
+  c = poly.chart spec
+
 @examples.path = (dom) ->
   jsondata = [
     {a:1,b:5,c:'A'},{a:3,b:4,c:'A'},{a:2,b:3,c:'A'}
@@ -149,6 +168,7 @@
   spec = {
     layers: [
       { data: data, type: 'path', x : 'a', y : 'b', color:'c'}
+      { data: data, type: 'point', x : 'a', y : 'b', color:'c'}
     ]
     dom: dom
   }

@@ -15,11 +15,12 @@ poly.tick.make = (domain, guideSpec, type) ->
     numticks = guideSpec.numticks ? 5 # use default
     ticks = tickValues[type] domain, numticks
   # turn each tick location to an actual tick object
-  formatter = (x) -> x
   if guideSpec.labels
     formatter = (x) -> guideSpec.labels[x] ? x
   else if guideSpec.formatter
     formatter = guideSpec.formatter
+  else
+    formatter = poly.const.formatter[type]
   tickobjs = {}
   tickfn = tickFactory(formatter)
   for t in ticks
@@ -94,7 +95,22 @@ tickValues =
       ticks.push num
     ticks
   'date' : (domain, numticks) -> #TODO
-    return 2
+    {min, max} = domain
+    step = (max-min) / numticks
+    step =
+      if      step < 1.4*1 then 'second'
+      else if step < 1.4*60 then 'minute'
+      else if step < 1.4*60*60 then 'hour'
+      else if step < 1.4*24*60*60 then 'day'
+      else if step < 1.4*7*24*60*60 then 'week'
+      else if step < 1.4*30*24*60*60 then 'month'
+      else 'year'
+    ticks = []
+    current = moment.unix(min).startOf(step)
+    while current.unix() < max
+      ticks.push current.unix()
+      current.add(step+'s', 1)
+    ticks
 
 ###
 # EXPORT

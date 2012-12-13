@@ -101,6 +101,17 @@
       'color': 'steelblue',
       'size': 2,
       'opacity': 0.7
+    },
+    formatter: {
+      'cat': function(x) {
+        return x;
+      },
+      'num': function(x) {
+        return x;
+      },
+      'date': function(x) {
+        return moment.unix(x).format('L');
+      }
     }
   };
 

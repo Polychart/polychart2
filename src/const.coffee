@@ -27,5 +27,9 @@ poly.const =
     'color': 'steelblue'
     'size': 2
     'opacity': 0.7
+  formatter:
+    'cat': (x) -> x #todo: prettify
+    'num': (x) -> x #todo: prettify
+    'date': (x) -> moment.unix(x).format('L')
 
 @poly = poly

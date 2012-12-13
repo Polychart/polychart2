@@ -452,6 +452,10 @@
       };
     };
 
+    Linear.prototype._makeDate = function() {
+      return this._makeNum();
+    };
+
     Linear.prototype._makeCat = function() {
       var step, x, y,
         _this = this;

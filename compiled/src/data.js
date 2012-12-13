@@ -421,7 +421,7 @@
   frontendProcess = function(dataSpec, rawData, metaData, callback) {
     var addMeta, additionalFilter, d, data, filter, key, meta, metaSpec, trans, transSpec, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4;
     data = _.clone(rawData);
-    metaData = {};
+    if (metaData == null) metaData = {};
     addMeta = function(key, meta) {
       var _ref;
       return metaData[key] = _.extend((_ref = metaData[key]) != null ? _ref : {}, meta);

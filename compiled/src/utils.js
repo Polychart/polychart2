@@ -191,9 +191,9 @@
       }
     } else if (meta.type === 'date') {
       if (meta.format) {
-        return moment(value, meta.format);
+        return moment(value, meta.format).unix();
       } else {
-        return moment(value);
+        return moment(value).unix();
       }
     } else {
       return;

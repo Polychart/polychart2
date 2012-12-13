@@ -67,19 +67,28 @@ makeDomainSet = (layerObj, guideSpec, strictmode) ->
       values = flattenGeoms(layerObj.geoms, aes)
       meta = layerObj.getMeta(aes) ? {}
       fromspec = (item) -> if guideSpec[aes]? then guideSpec[aes][item] else null
-      if poly.typeOf(values) == 'num'
-        domain[aes] = makeDomain {
-          type: 'num'
-          min: fromspec('min') ? _.min(values)
-          max: fromspec('max') ? _.max(values)
-          bw: fromspec('bw') ? meta.bw
-        }
-      else
-        domain[aes] = makeDomain {
-          type: 'cat'
-          levels: fromspec('levels') ? _.uniq(values)
-          sorted : fromspec('levels')? #sorted = true <=> user specified
-        }
+      switch meta.type
+        when 'num'
+          domain[aes] = makeDomain {
+            type: 'num'
+            min: fromspec('min') ? _.min(values)
+            max: fromspec('max') ? _.max(values)
+            bw: fromspec('bw') ? meta.bw
+          }
+        when 'date'
+          domain[aes] = makeDomain {
+            type: 'date'
+            min: fromspec('min') ? _.min(values)
+            max: fromspec('max') ? _.max(values)
+            bw: fromspec('bw') ? meta.bw
+          }
+        when 'cat'
+          domain[aes] = makeDomain {
+            type: 'cat'
+            levels: fromspec('levels') ? _.uniq(values)
+            sorted : fromspec('levels')? #sorted = true <=> user specified
+          }
+
   domain
 
 ###
@@ -120,6 +129,14 @@ domainMerge =
     min = _.min _.map(domains, (d) -> d.min)
     max = _.max _.map(domains, (d) -> d.max)
     return makeDomain type: 'num', min: min, max:max, bw: bw
+  'date' : (domains) ->
+    bw = _.uniq _.map(domains, (d) -> d.bw)
+    if bw.length > 1
+      throw new poly.LengthError("All binwidths are not of the same length")
+    bw = bw[0] ? undefined
+    min = _.min _.map(domains, (d) -> d.min)
+    max = _.max _.map(domains, (d) -> d.max)
+    return makeDomain type: 'date', min: min, max:max, bw: bw
   'cat' : (domains) ->
     sortedLevels =
       _.chain(domains).filter((d) -> d.sorted).map((d) -> d.levels).value()

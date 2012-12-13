@@ -253,7 +253,7 @@ Perform the necessary computation in the front end
 frontendProcess = (dataSpec, rawData, metaData, callback) ->
   data = _.clone(rawData)
   # metaData and related f'ns
-  metaData = {}
+  metaData ?= {}
   addMeta = (key, meta) ->  metaData[key] = _.extend (metaData[key] ? {}), meta
   # transforms
   if dataSpec.trans
