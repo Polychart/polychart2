@@ -25,7 +25,7 @@ class Data
         @meta[key].type = poly.typeOf _.pluck(first100, key)
     for item in json
       for key in keys
-        item[key] = poly.parse item[key], @meta[key]
+        item[key] = poly.coerce item[key], @meta[key]
     @raw = json
   getRaw: (callback) ->
     # frontend
@@ -57,7 +57,7 @@ class DataProcess
   ## save the specs
   constructor: (layerSpec, strictmode) ->
     @dataObj = layerSpec.data
-    @initialSpec = poly.spec.layerToData layerSpec
+    @initialSpec = poly.parser.layerToData layerSpec
     @prevSpec = null
     @strictmode = strictmode
     @statData = null
@@ -67,7 +67,7 @@ class DataProcess
 
   ## calculate things...
   make : (spec, callback) ->
-    dataSpec = poly.spec.layerToData spec
+    dataSpec = poly.parser.layerToData spec
     wrappedCallback = @_wrap callback
     if @strictmode
       wrappedCallback @dataObj.json, {}

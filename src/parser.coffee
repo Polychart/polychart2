@@ -201,7 +201,7 @@ layerToDataSpec = (lspec) ->
     select: (dedup select), filter: filters
   }
 
-poly.spec =
+poly.parser =
   tokenize: tokenize
   parse: parse
   layerToData: layerToDataSpec

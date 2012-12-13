@@ -40,7 +40,7 @@
         item = json[_j];
         for (_k = 0, _len3 = keys.length; _k < _len3; _k++) {
           key = keys[_k];
-          item[key] = poly.parse(item[key], this.meta[key]);
+          item[key] = poly.coerce(item[key], this.meta[key]);
         }
       }
       return this.raw = json;
@@ -97,7 +97,7 @@
 
     function DataProcess(layerSpec, strictmode) {
       this._wrap = __bind(this._wrap, this);      this.dataObj = layerSpec.data;
-      this.initialSpec = poly.spec.layerToData(layerSpec);
+      this.initialSpec = poly.parser.layerToData(layerSpec);
       this.prevSpec = null;
       this.strictmode = strictmode;
       this.statData = null;
@@ -110,7 +110,7 @@
 
     DataProcess.prototype.make = function(spec, callback) {
       var dataSpec, wrappedCallback;
-      dataSpec = poly.spec.layerToData(spec);
+      dataSpec = poly.parser.layerToData(spec);
       wrappedCallback = this._wrap(callback);
       if (this.strictmode) wrappedCallback(this.dataObj.json, {});
       if (this.dataObj.computeBackend) {

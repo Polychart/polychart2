@@ -5,7 +5,7 @@ cat compiled/src/utils.js \
     compiled/src/format.js \
     compiled/src/ajax.js \
     compiled/src/exceptions.js \
-    compiled/src/spec.js \
+    compiled/src/parser.js \
     compiled/src/coord.js \
     compiled/src/domain.js \
     compiled/src/tick.js \

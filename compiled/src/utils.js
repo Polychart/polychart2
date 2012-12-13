@@ -180,7 +180,7 @@
   Parse values into correct types
   */
 
-  poly.parse = function(value, meta) {
+  poly.coerce = function(value, meta) {
     if (meta.type === 'cat') {
       return value;
     } else if (meta.type === 'num') {

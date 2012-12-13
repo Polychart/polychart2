@@ -135,7 +135,7 @@ poly.typeOf = (values) ->
 ###
 Parse values into correct types
 ###
-poly.parse = (value, meta) ->
+poly.coerce = (value, meta) ->
   if meta.type is 'cat'
     value
   else if meta.type is 'num'
