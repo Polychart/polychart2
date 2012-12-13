@@ -191,7 +191,11 @@
       }
     } else if (meta.type === 'date') {
       if (meta.format) {
-        return moment(value, meta.format).unix();
+        if (meta.format === 'unix') {
+          return moment.unix(value).unix();
+        } else {
+          return moment(value, meta.format).unix();
+        }
       } else {
         return moment(value).unix();
       }

@@ -118,6 +118,7 @@
 
     function PositionScale(params) {
       this._catWrapper = __bind(this._catWrapper, this);
+      this._dateWrapper = __bind(this._dateWrapper, this);
       this._numWrapper = __bind(this._numWrapper, this);      this.f = null;
       this.finv = null;
     }
@@ -138,6 +139,37 @@
             if (value.f === 'upper') return y(value.v + domain.bw) - space;
             if (value.f === 'lower') return y(value.v) + space;
             if (value.f === 'middle') return y(value.v + domain.bw / 2);
+            if (value.f === 'max') return _this.range.max + value.v;
+            if (value.f === 'min') return _this.range.min + value.v;
+          }
+          throw new poly.UnexpectedObject("Expected a value instead of an object");
+        }
+        return y(value);
+      };
+    };
+
+    PositionScale.prototype._dateWrapper = function(domain, y) {
+      var _this = this;
+      return function(value) {
+        debugger;
+        var space, v, v1, v2;
+        space = 0.001 * (_this.range.max > _this.range.min ? 1 : -1);
+        if (_.isObject(value)) {
+          if (value.t === 'scalefn') {
+            if (value.f === 'identity') return value.v;
+            if (value.f === 'upper') {
+              v = moment.unix(value.v).endOf(domain.bw).unix();
+              return y(v) - space;
+            }
+            if (value.f === 'lower') {
+              v = moment.unix(value.v).startOf(domain.bw).unix();
+              return y(v) + space;
+            }
+            if (value.f === 'middle') {
+              v1 = moment.unix(value.v).endOf(domain.bw).unix();
+              v2 = moment.unix(value.v).startOf(domain.bw).unix();
+              return y(v1 / 2 + v2 / 2);
+            }
             if (value.f === 'max') return _this.range.max + value.v;
             if (value.f === 'min') return _this.range.min + value.v;
           }
@@ -180,10 +212,9 @@
     }
 
     Linear.prototype._makeNum = function() {
-      var max, x, y, _ref;
-      max = this.domain.max + ((_ref = this.domain.bw) != null ? _ref : 0);
-      y = poly.linear(this.domain.min, this.range.min, max, this.range.max);
-      x = poly.linear(this.range.min, this.domain.min, this.range.max, max);
+      var x, y;
+      y = poly.linear(this.domain.min, this.range.min, this.domain.max, this.range.max);
+      x = poly.linear(this.range.min, this.domain.min, this.range.max, this.domain.max);
       this.f = this._numWrapper(this.domain, y);
       return this.finv = function(y1, y2) {
         var xs;
@@ -196,7 +227,18 @@
     };
 
     Linear.prototype._makeDate = function() {
-      return this._makeNum();
+      var x, y;
+      y = poly.linear(this.domain.min, this.range.min, this.domain.max, this.range.max);
+      x = poly.linear(this.range.min, this.domain.min, this.range.max, this.domain.max);
+      this.f = this._dateWrapper(this.domain, y);
+      return this.finv = function(y1, y2) {
+        var xs;
+        xs = [x(y1), x(y2)];
+        return {
+          ge: _.min(xs),
+          le: _.max(xs)
+        };
+      };
     };
 
     Linear.prototype._makeCat = function() {

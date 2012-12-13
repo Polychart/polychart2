@@ -58,7 +58,7 @@ poly.format.number = (exp_original) -> (num) ->
   postfix(formatNumber(rounded), exp_fixed)
 
 poly.format.date = (level) ->
-  if not (level in ['second','minute','hour','day','month', 'year'])
+  if not (level in poly.const.timerange)
     level = 'day'
   if level is 'second'
     (date) -> moment.unix(date).format('h:mm:ss a')
@@ -66,7 +66,7 @@ poly.format.date = (level) ->
     (date) -> moment.unix(date).format('h:mm a')
   else if level is 'hour'
     (date) -> moment.unix(date).format('MMM D h a')
-  else if level is 'day'
+  else if level is 'day' or level is 'week'
     (date) -> moment.unix(date).format('MMM D')
   else if level is 'month'
     (date) -> moment.unix(date).format('YY/MM')

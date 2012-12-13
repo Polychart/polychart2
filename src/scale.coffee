@@ -74,6 +74,26 @@ class PositionScale extends Scale
         if value.f is 'min' then return @range.min + value.v
       throw new poly.UnexpectedObject("Expected a value instead of an object")
     y(value)
+  _dateWrapper: (domain, y) => (value) =>
+    debugger
+    space = 0.001 * (if @range.max > @range.min then 1 else -1)
+    if _.isObject(value)
+      if value.t is 'scalefn'
+        if value.f is 'identity' then return value.v
+        if value.f is 'upper'
+          v = moment.unix(value.v).endOf(domain.bw).unix()
+          return y(v) - space
+        if value.f is 'lower'
+          v = moment.unix(value.v).startOf(domain.bw).unix()
+          return y(v) + space
+        if value.f is 'middle'
+          v1 = moment.unix(value.v).endOf(domain.bw).unix()
+          v2 = moment.unix(value.v).startOf(domain.bw).unix()
+          return y(v1/2 + v2/2)
+        if value.f is 'max' then return @range.max + value.v
+        if value.f is 'min' then return @range.min + value.v
+      throw new poly.UnexpectedObject("Expected a value instead of an object")
+    y(value)
   _catWrapper: (step, y) => (value) =>
     space = 0.001 * (if @range.max > @range.min then 1 else -1)
     if _.isObject(value)
@@ -89,14 +109,19 @@ class PositionScale extends Scale
 
 class Linear extends PositionScale
   _makeNum: () ->
-    max = @domain.max + (@domain.bw ? 0)
-    y = poly.linear(@domain.min, @range.min, max, @range.max)
-    x = poly.linear(@range.min, @domain.min, @range.max, max)
+    y = poly.linear(@domain.min, @range.min, @domain.max, @range.max)
+    x = poly.linear(@range.min, @domain.min, @range.max, @domain.max)
     @f = @_numWrapper @domain, y
     @finv = (y1, y2) ->
       xs = [x(y1),x(y2)]
       {ge: _.min(xs), le: _.max(xs)}
-  _makeDate: () -> @_makeNum()
+  _makeDate: () ->
+    y = poly.linear(@domain.min, @range.min, @domain.max, @range.max)
+    x = poly.linear(@range.min, @domain.min, @range.max, @domain.max)
+    @f = @_dateWrapper @domain, y
+    @finv = (y1, y2) ->
+      xs = [x(y1),x(y2)]
+      {ge: _.min(xs), le: _.max(xs)}
   _makeCat: () ->
     step = (@range.max - @range.min) / @domain.levels.length
     y = (x) =>

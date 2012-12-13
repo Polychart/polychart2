@@ -145,7 +145,10 @@ poly.parse = (value, meta) ->
       +((""+value).replace(/\$|\,/g,''))
   else if meta.type is 'date'
     if meta.format
-      moment(value, meta.format).unix()
+      if meta.format is 'unix'
+        moment.unix(value).unix() #sounds inefficient, but error checks?
+      else
+        moment(value, meta.format).unix()
     else
       moment(value).unix()
   else

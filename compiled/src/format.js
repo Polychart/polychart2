@@ -1,5 +1,6 @@
 (function() {
-  var POSTFIXES, formatNumber, poly, postfix;
+  var POSTFIXES, formatNumber, poly, postfix,
+    __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   poly = this.poly || {};
 
@@ -89,9 +90,7 @@
   };
 
   poly.format.date = function(level) {
-    if (!(level === 'second' || level === 'minute' || level === 'hour' || level === 'day' || level === 'month' || level === 'year')) {
-      level = 'day';
-    }
+    if (!(__indexOf.call(poly["const"].timerange, level) >= 0)) level = 'day';
     if (level === 'second') {
       return function(date) {
         return moment.unix(date).format('h:mm:ss a');
@@ -104,7 +103,7 @@
       return function(date) {
         return moment.unix(date).format('MMM D h a');
       };
-    } else if (level === 'day') {
+    } else if (level === 'day' || level === 'week') {
       return function(date) {
         return moment.unix(date).format('MMM D');
       };

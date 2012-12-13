@@ -162,7 +162,8 @@
     'bin': function(key, transSpec, meta) {
       var binFn, binwidth, name;
       name = transSpec.name, binwidth = transSpec.binwidth;
-      if (meta.type === 'num' && !isNaN(binwidth)) {
+      if (meta.type === 'num') {
+        if (isNaN(binwidth)) throw Error("WTF");
         binwidth = +binwidth;
         binFn = function(item) {
           return item[name] = binwidth * Math.floor(item[key] / binwidth);
@@ -176,7 +177,22 @@
           }
         };
       }
-      if (meta.type === 'date') {}
+      if (meta.type === 'date') {
+        if (!(__indexOf.call(poly["const"].timerange, binwidth) >= 0)) {
+          throw Error("WTF");
+        }
+        binFn = function(item) {
+          return item[name] = moment.unix(item[key]).startOf(binwidth).unix();
+        };
+        return {
+          trans: binFn,
+          meta: {
+            bw: binwidth,
+            binned: true,
+            type: 'date'
+          }
+        };
+      }
     },
     'lag': function(key, transSpec, meta) {
       var i, lag, lagFn, lastn, name;

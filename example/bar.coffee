@@ -169,4 +169,22 @@
   }
   c = poly.chart spec
 
+@examples.bar_date_binned = (dom) ->
+  point = () ->
+    time: moment().add('minutes', Math.random()*26232).unix()
+    value: Math.random()*2
+  data = new poly.Data
+    json:(point() for i in [0..5000])
+    meta: { time: { type: 'date', format: 'unix' } }
+  spec = {
+    layers: [
+      data: data
+      type: 'bar'
+      x: 'bin(time, day)'
+      y: 'sum(value)'
+    ]
+    dom: dom
+  }
+  c = poly.chart spec
+
 

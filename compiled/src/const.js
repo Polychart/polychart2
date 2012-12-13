@@ -22,6 +22,7 @@
       'mean': ['key'],
       'box': ['key']
     },
+    timerange: ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'],
     metas: {
       sort: null,
       stat: null,

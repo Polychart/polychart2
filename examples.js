@@ -584,6 +584,44 @@
     return c = poly.chart(spec);
   };
 
+  this.examples.bar_date_binned = function(dom) {
+    var c, data, i, point, spec;
+    point = function() {
+      return {
+        time: moment().add('minutes', Math.random() * 26232).unix(),
+        value: Math.random() * 2
+      };
+    };
+    data = new poly.Data({
+      json: (function() {
+        var _results;
+        _results = [];
+        for (i = 0; i <= 5000; i++) {
+          _results.push(point());
+        }
+        return _results;
+      })(),
+      meta: {
+        time: {
+          type: 'date',
+          format: 'unix'
+        }
+      }
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: 'bin(time, day)',
+          y: 'sum(value)'
+        }
+      ],
+      dom: dom
+    };
+    return c = poly.chart(spec);
+  };
+
 }).call(this);
 (function() {
   var datafn2;

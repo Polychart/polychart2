@@ -109,7 +109,7 @@
   */
 
   makeDomainSet = function(layerObj, guideSpec, strictmode) {
-    var aes, domain, fromspec, meta, values, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
+    var aes, bw, domain, fromspec, max, meta, min, values, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
     domain = {};
     for (aes in layerObj.mapping) {
       if (strictmode) {
@@ -126,25 +126,35 @@
         };
         switch (meta.type) {
           case 'num':
+            bw = (_ref2 = fromspec('bw')) != null ? _ref2 : meta.bw;
+            min = (_ref3 = fromspec('min')) != null ? _ref3 : _.min(values);
+            max = (_ref4 = fromspec('max')) != null ? _ref4 : _.max(values) + (bw != null ? bw : 0);
             domain[aes] = makeDomain({
               type: 'num',
-              min: (_ref2 = fromspec('min')) != null ? _ref2 : _.min(values),
-              max: (_ref3 = fromspec('max')) != null ? _ref3 : _.max(values),
-              bw: (_ref4 = fromspec('bw')) != null ? _ref4 : meta.bw
+              min: min,
+              max: max,
+              bw: bw
             });
             break;
           case 'date':
+            bw = (_ref5 = fromspec('bw')) != null ? _ref5 : meta.bw;
+            min = (_ref6 = fromspec('min')) != null ? _ref6 : _.min(values);
+            max = fromspec('max');
+            if (!(max != null)) {
+              max = _.max(values);
+              if (bw) max = moment.unix(max).add(bw + 's', 1).unix();
+            }
             domain[aes] = makeDomain({
               type: 'date',
-              min: (_ref5 = fromspec('min')) != null ? _ref5 : _.min(values),
-              max: (_ref6 = fromspec('max')) != null ? _ref6 : _.max(values),
-              bw: (_ref7 = fromspec('bw')) != null ? _ref7 : meta.bw
+              min: min,
+              max: max,
+              bw: bw
             });
             break;
           case 'cat':
             domain[aes] = makeDomain({
               type: 'cat',
-              levels: (_ref8 = fromspec('levels')) != null ? _ref8 : _.uniq(values),
+              levels: (_ref7 = fromspec('levels')) != null ? _ref7 : _.uniq(values),
               sorted: fromspec('levels') != null
             });
         }

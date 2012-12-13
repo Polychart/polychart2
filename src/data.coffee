@@ -104,13 +104,17 @@ when appropriate. (e.g for binning)
 transforms =
   'bin' : (key, transSpec, meta) ->
     {name, binwidth} = transSpec
-    if meta.type is 'num' and !isNaN(binwidth) # empty string?
+    if meta.type is 'num'
+      if isNaN(binwidth) then throw Error("WTF")
       binwidth = +binwidth
       binFn = (item) ->
         item[name] = binwidth * Math.floor item[key]/binwidth
       return trans: binFn, meta: {bw: binwidth, binned: true, type:'num'}
     if meta.type is 'date' # TODO
-      return
+      if not (binwidth in poly.const.timerange) then throw Error("WTF")
+      binFn = (item) ->
+        item[name] = moment.unix(item[key]).startOf(binwidth).unix()
+      return trans: binFn, meta: {bw: binwidth, binned: true, type:'date'}
   'lag' : (key, transSpec, meta) ->
     {name, lag} = transSpec
     lastn = (undefined for i in [1..lag])

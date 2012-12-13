@@ -63,24 +63,32 @@ makeDomainSet = (layerObj, guideSpec, strictmode) ->
     if strictmode
       domain[aes] = makeDomain guideSpec[aes]
     else
-      # TODO: the un-optimized-ness of this seriously hurts
       values = flattenGeoms(layerObj.geoms, aes)
       meta = layerObj.getMeta(aes) ? {}
       fromspec = (item) -> if guideSpec[aes]? then guideSpec[aes][item] else null
       switch meta.type
         when 'num'
+          bw = fromspec('bw') ? meta.bw
+          min = fromspec('min') ? _.min(values)
+          max = fromspec('max') ?  (_.max(values) + (bw ? 0))
           domain[aes] = makeDomain {
             type: 'num'
-            min: fromspec('min') ? _.min(values)
-            max: fromspec('max') ? _.max(values)
-            bw: fromspec('bw') ? meta.bw
+            min: min
+            max: max
+            bw: bw
           }
         when 'date'
+          bw = fromspec('bw') ? meta.bw
+          min = fromspec('min') ? _.min(values)
+          max = fromspec('max')
+          if not max?
+            max = _.max(values)
+            if bw then max = moment.unix(max).add(bw+'s',1).unix()
           domain[aes] = makeDomain {
             type: 'date'
-            min: fromspec('min') ? _.min(values)
-            max: fromspec('max') ? _.max(values)
-            bw: fromspec('bw') ? meta.bw
+            min: min
+            max: max
+            bw: bw
           }
         when 'cat'
           domain[aes] = makeDomain {

@@ -191,7 +191,11 @@
       }
     } else if (meta.type === 'date') {
       if (meta.format) {
-        return moment(value, meta.format).unix();
+        if (meta.format === 'unix') {
+          return moment.unix(value).unix();
+        } else {
+          return moment(value, meta.format).unix();
+        }
       } else {
         return moment(value).unix();
       }
@@ -225,6 +229,7 @@
       'mean': ['key'],
       'box': ['key']
     },
+    timerange: ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'],
     metas: {
       sort: null,
       stat: null,
@@ -322,7 +327,8 @@
 
 }).call(this);
 (function() {
-  var POSTFIXES, formatNumber, poly, postfix;
+  var POSTFIXES, formatNumber, poly, postfix,
+    __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   poly = this.poly || {};
 
@@ -412,9 +418,7 @@
   };
 
   poly.format.date = function(level) {
-    if (!(level === 'second' || level === 'minute' || level === 'hour' || level === 'day' || level === 'month' || level === 'year')) {
-      level = 'day';
-    }
+    if (!(__indexOf.call(poly["const"].timerange, level) >= 0)) level = 'day';
     if (level === 'second') {
       return function(date) {
         return moment.unix(date).format('h:mm:ss a');
@@ -427,7 +431,7 @@
       return function(date) {
         return moment.unix(date).format('MMM D h a');
       };
-    } else if (level === 'day') {
+    } else if (level === 'day' || level === 'week') {
       return function(date) {
         return moment.unix(date).format('MMM D');
       };
@@ -1575,7 +1579,7 @@
   */
 
   makeDomainSet = function(layerObj, guideSpec, strictmode) {
-    var aes, domain, fromspec, meta, values, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
+    var aes, bw, domain, fromspec, max, meta, min, values, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
     domain = {};
     for (aes in layerObj.mapping) {
       if (strictmode) {
@@ -1592,25 +1596,35 @@
         };
         switch (meta.type) {
           case 'num':
+            bw = (_ref2 = fromspec('bw')) != null ? _ref2 : meta.bw;
+            min = (_ref3 = fromspec('min')) != null ? _ref3 : _.min(values);
+            max = (_ref4 = fromspec('max')) != null ? _ref4 : _.max(values) + (bw != null ? bw : 0);
             domain[aes] = makeDomain({
               type: 'num',
-              min: (_ref2 = fromspec('min')) != null ? _ref2 : _.min(values),
-              max: (_ref3 = fromspec('max')) != null ? _ref3 : _.max(values),
-              bw: (_ref4 = fromspec('bw')) != null ? _ref4 : meta.bw
+              min: min,
+              max: max,
+              bw: bw
             });
             break;
           case 'date':
+            bw = (_ref5 = fromspec('bw')) != null ? _ref5 : meta.bw;
+            min = (_ref6 = fromspec('min')) != null ? _ref6 : _.min(values);
+            max = fromspec('max');
+            if (!(max != null)) {
+              max = _.max(values);
+              if (bw) max = moment.unix(max).add(bw + 's', 1).unix();
+            }
             domain[aes] = makeDomain({
               type: 'date',
-              min: (_ref5 = fromspec('min')) != null ? _ref5 : _.min(values),
-              max: (_ref6 = fromspec('max')) != null ? _ref6 : _.max(values),
-              bw: (_ref7 = fromspec('bw')) != null ? _ref7 : meta.bw
+              min: min,
+              max: max,
+              bw: bw
             });
             break;
           case 'cat':
             domain[aes] = makeDomain({
               type: 'cat',
-              levels: (_ref8 = fromspec('levels')) != null ? _ref8 : _.uniq(values),
+              levels: (_ref7 = fromspec('levels')) != null ? _ref7 : _.uniq(values),
               sorted: fromspec('levels') != null
             });
         }
@@ -2593,6 +2607,7 @@
 
     function PositionScale(params) {
       this._catWrapper = __bind(this._catWrapper, this);
+      this._dateWrapper = __bind(this._dateWrapper, this);
       this._numWrapper = __bind(this._numWrapper, this);      this.f = null;
       this.finv = null;
     }
@@ -2613,6 +2628,37 @@
             if (value.f === 'upper') return y(value.v + domain.bw) - space;
             if (value.f === 'lower') return y(value.v) + space;
             if (value.f === 'middle') return y(value.v + domain.bw / 2);
+            if (value.f === 'max') return _this.range.max + value.v;
+            if (value.f === 'min') return _this.range.min + value.v;
+          }
+          throw new poly.UnexpectedObject("Expected a value instead of an object");
+        }
+        return y(value);
+      };
+    };
+
+    PositionScale.prototype._dateWrapper = function(domain, y) {
+      var _this = this;
+      return function(value) {
+        debugger;
+        var space, v, v1, v2;
+        space = 0.001 * (_this.range.max > _this.range.min ? 1 : -1);
+        if (_.isObject(value)) {
+          if (value.t === 'scalefn') {
+            if (value.f === 'identity') return value.v;
+            if (value.f === 'upper') {
+              v = moment.unix(value.v).endOf(domain.bw).unix();
+              return y(v) - space;
+            }
+            if (value.f === 'lower') {
+              v = moment.unix(value.v).startOf(domain.bw).unix();
+              return y(v) + space;
+            }
+            if (value.f === 'middle') {
+              v1 = moment.unix(value.v).endOf(domain.bw).unix();
+              v2 = moment.unix(value.v).startOf(domain.bw).unix();
+              return y(v1 / 2 + v2 / 2);
+            }
             if (value.f === 'max') return _this.range.max + value.v;
             if (value.f === 'min') return _this.range.min + value.v;
           }
@@ -2655,10 +2701,9 @@
     }
 
     Linear.prototype._makeNum = function() {
-      var max, x, y, _ref;
-      max = this.domain.max + ((_ref = this.domain.bw) != null ? _ref : 0);
-      y = poly.linear(this.domain.min, this.range.min, max, this.range.max);
-      x = poly.linear(this.range.min, this.domain.min, this.range.max, max);
+      var x, y;
+      y = poly.linear(this.domain.min, this.range.min, this.domain.max, this.range.max);
+      x = poly.linear(this.range.min, this.domain.min, this.range.max, this.domain.max);
       this.f = this._numWrapper(this.domain, y);
       return this.finv = function(y1, y2) {
         var xs;
@@ -2671,7 +2716,18 @@
     };
 
     Linear.prototype._makeDate = function() {
-      return this._makeNum();
+      var x, y;
+      y = poly.linear(this.domain.min, this.range.min, this.domain.max, this.range.max);
+      x = poly.linear(this.range.min, this.domain.min, this.range.max, this.domain.max);
+      this.f = this._dateWrapper(this.domain, y);
+      return this.finv = function(y1, y2) {
+        var xs;
+        xs = [x(y1), x(y2)];
+        return {
+          ge: _.min(xs),
+          le: _.max(xs)
+        };
+      };
     };
 
     Linear.prototype._makeCat = function() {
@@ -3612,7 +3668,8 @@
     'bin': function(key, transSpec, meta) {
       var binFn, binwidth, name;
       name = transSpec.name, binwidth = transSpec.binwidth;
-      if (meta.type === 'num' && !isNaN(binwidth)) {
+      if (meta.type === 'num') {
+        if (isNaN(binwidth)) throw Error("WTF");
         binwidth = +binwidth;
         binFn = function(item) {
           return item[name] = binwidth * Math.floor(item[key] / binwidth);
@@ -3626,7 +3683,22 @@
           }
         };
       }
-      if (meta.type === 'date') {}
+      if (meta.type === 'date') {
+        if (!(__indexOf.call(poly["const"].timerange, binwidth) >= 0)) {
+          throw Error("WTF");
+        }
+        binFn = function(item) {
+          return item[name] = moment.unix(item[key]).startOf(binwidth).unix();
+        };
+        return {
+          trans: binFn,
+          meta: {
+            bw: binwidth,
+            binned: true,
+            type: 'date'
+          }
+        };
+      }
     },
     'lag': function(key, transSpec, meta) {
       var i, lag, lagFn, lastn, name;
