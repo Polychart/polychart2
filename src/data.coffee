@@ -31,11 +31,11 @@ class Data
     # frontend
     if @json then @raw = @impute @json
     if @csv then @raw = @impute poly.csv.parse(@csv)
-    if @raw then return callback(@raw)
+    if @raw then return callback @raw, @meta
     # backend
     if @url then poly.csv @url, (csv) =>
       @raw = @impute csv
-      callback @raw
+      callback @raw, @meta
   update: (params) ->
     {@json, @csv} = params
     @getRaw () =>
@@ -68,18 +68,14 @@ class DataProcess
   ## calculate things...
   make : (spec, callback) ->
     dataSpec = poly.spec.layerToData spec
-    #if prevSpec? and prevSpec == dataSpec
-    #  return callback @statData, @metaData
     wrappedCallback = @_wrap callback
     if @strictmode
       wrappedCallback @dataObj.json, {}
     if @dataObj.computeBackend
       backendProcess(dataSpec, @dataObj, wrappedCallback)
-    else if @dataObj.dataBackend
-      @dataObj.getRaw (json) ->
-        frontendProcess(dataSpec, json, wrappedCallback)
     else
-      frontendProcess(dataSpec, @dataObj.json, wrappedCallback)
+      @dataObj.getRaw (data, meta) ->
+        frontendProcess(dataSpec, data, meta, wrappedCallback)
 
   _wrap : (callback) => (data, metaData) =>
     # save a copy of the data/meta before going to callback
@@ -254,7 +250,7 @@ Coordinating the actual work being done
 ###
 Perform the necessary computation in the front end
 ###
-frontendProcess = (dataSpec, rawData, callback) ->
+frontendProcess = (dataSpec, rawData, metaData, callback) ->
   data = _.clone(rawData)
   # metaData and related f'ns
   metaData = {}

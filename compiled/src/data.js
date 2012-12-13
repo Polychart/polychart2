@@ -50,11 +50,11 @@
       var _this = this;
       if (this.json) this.raw = this.impute(this.json);
       if (this.csv) this.raw = this.impute(poly.csv.parse(this.csv));
-      if (this.raw) return callback(this.raw);
+      if (this.raw) return callback(this.raw, this.meta);
       if (this.url) {
         return poly.csv(this.url, function(csv) {
           _this.raw = _this.impute(csv);
-          return callback(_this.raw);
+          return callback(_this.raw, _this.meta);
         });
       }
     };
@@ -115,12 +115,10 @@
       if (this.strictmode) wrappedCallback(this.dataObj.json, {});
       if (this.dataObj.computeBackend) {
         return backendProcess(dataSpec, this.dataObj, wrappedCallback);
-      } else if (this.dataObj.dataBackend) {
-        return this.dataObj.getRaw(function(json) {
-          return frontendProcess(dataSpec, json, wrappedCallback);
-        });
       } else {
-        return frontendProcess(dataSpec, this.dataObj.json, wrappedCallback);
+        return this.dataObj.getRaw(function(data, meta) {
+          return frontendProcess(dataSpec, data, meta, wrappedCallback);
+        });
       }
     };
 
@@ -420,8 +418,8 @@
   Perform the necessary computation in the front end
   */
 
-  frontendProcess = function(dataSpec, rawData, callback) {
-    var addMeta, additionalFilter, d, data, filter, key, meta, metaData, metaSpec, trans, transSpec, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4;
+  frontendProcess = function(dataSpec, rawData, metaData, callback) {
+    var addMeta, additionalFilter, d, data, filter, key, meta, metaSpec, trans, transSpec, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4;
     data = _.clone(rawData);
     metaData = {};
     addMeta = function(key, meta) {
