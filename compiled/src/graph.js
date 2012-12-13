@@ -141,7 +141,7 @@
       var tmpRanges;
       this.coord.make(poly.dim.guess(spec));
       tmpRanges = this.coord.ranges();
-      return poly.scale.make(tmpRanges, this.coord);
+      return poly.scaleset(tmpRanges, this.coord);
     };
 
     Graph.prototype._makeDimensions = function(spec, scaleSet) {

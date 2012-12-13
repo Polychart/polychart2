@@ -96,7 +96,7 @@ class Graph
   _makeScaleSet: (spec, domains) ->
     @coord.make poly.dim.guess(spec)
     tmpRanges = @coord.ranges()
-    poly.scale.make tmpRanges, @coord
+    poly.scaleset tmpRanges, @coord
   _makeDimensions: (spec, scaleSet) ->
     poly.dim.make spec, scaleSet.makeAxes(), scaleSet.makeLegends()
   _makePaper: (dom, width, height, handleEvent) ->

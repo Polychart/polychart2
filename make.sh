@@ -10,6 +10,7 @@ cat compiled/src/utils.js \
     compiled/src/tick.js \
     compiled/src/guide.js \
     compiled/src/scale.js \
+    compiled/src/scaleset.js \
     compiled/src/data.js \
     compiled/src/layer.js \
     compiled/src/dim.js \
