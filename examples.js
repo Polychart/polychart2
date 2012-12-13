@@ -584,50 +584,6 @@
     return c = poly.chart(spec);
   };
 
-  this.examples.tiles = function(dom) {
-    var a, b, c, data, i, item, jsondata, spec, value;
-    a = function(i) {
-      return i % 5;
-    };
-    b = function(i) {
-      return Math.floor(i / 5);
-    };
-    value = function() {
-      return Math.random() * 5;
-    };
-    item = function(i) {
-      return {
-        mod5: a(i),
-        floor5: b(i),
-        value: value()
-      };
-    };
-    jsondata = (function() {
-      var _results;
-      _results = [];
-      for (i = 0; i <= 24; i++) {
-        _results.push(item(i));
-      }
-      return _results;
-    })();
-    data = new poly.Data({
-      json: jsondata
-    });
-    spec = {
-      layers: [
-        {
-          data: data,
-          type: 'tile',
-          x: 'bin(mod5, 1)',
-          y: 'bin(floor5,1)',
-          color: 'value'
-        }
-      ],
-      dom: dom
-    };
-    return c = poly.chart(spec);
-  };
-
 }).call(this);
 (function() {
 
@@ -1318,6 +1274,85 @@
         return alert(type);
       }
     });
+  };
+
+}).call(this);
+(function() {
+  var data;
+
+  if (this.examples == null) this.examples = {};
+
+  data = function() {
+    var a, b, i, item, value, _results;
+    a = function(i) {
+      return i % 5;
+    };
+    b = function(i) {
+      return Math.floor(i / 5);
+    };
+    value = function() {
+      return Math.random() * 5;
+    };
+    item = function(i) {
+      return {
+        mod5: a(i),
+        floor5: b(i),
+        value: value()
+      };
+    };
+    _results = [];
+    for (i = 0; i <= 24; i++) {
+      _results.push(item(i));
+    }
+    return _results;
+  };
+
+  this.examples.tiles = function(dom) {
+    var c, spec;
+    data = new poly.Data({
+      json: data()
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'tile',
+          x: 'bin(mod5, 1)',
+          y: 'bin(floor5,1)',
+          color: 'value'
+        }
+      ],
+      dom: dom
+    };
+    return c = poly.chart(spec);
+  };
+
+  this.examples.tiles_bw = function(dom) {
+    var c, spec;
+    data = new poly.Data({
+      json: data()
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'tile',
+          x: 'bin(mod5, 1)',
+          y: 'bin(floor5,1)',
+          color: 'value'
+        }
+      ],
+      guides: {
+        color: {
+          scale: poly.scale.gradient({
+            lower: '#FFF',
+            upper: '#000'
+          })
+        }
+      },
+      dom: dom
+    };
+    return c = poly.chart(spec);
   };
 
 }).call(this);

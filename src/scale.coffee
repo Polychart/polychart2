@@ -60,7 +60,7 @@ class ScaleSet
     # this function contains information about default scales!
     specScale = (a) ->
       if guideSpec and guideSpec[a]? and guideSpec[a].scale?
-        return guideSpec.x.scale
+        return guideSpec[a].scale
       return null
     scales = {}
     # x 
@@ -70,6 +70,7 @@ class ScaleSet
     scales.y = specScale('y') ? poly.scale.linear()
     scales.y.make(domains.y, ranges.y)
     # color
+    debugger
     if domains.color?
       if domains.color.type == 'cat'
         scales.color = specScale('color') ? poly.scale.color()
