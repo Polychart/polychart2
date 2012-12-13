@@ -210,7 +210,8 @@
           type: 'bar',
           x: 'index',
           y: 'value',
-          id: 'index'
+          id: 'index',
+          opacity: 'value'
         }
       ],
       guides: {
@@ -276,7 +277,8 @@
           type: 'bar',
           x: 'index',
           y: 'value',
-          id: 'index'
+          id: 'index',
+          opacity: 'value'
         }
       ],
       guides: {

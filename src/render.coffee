@@ -78,6 +78,7 @@ class Circle extends Renderer # for both cartesian & polar
     cy: y
     r: @_maybeApply scales, mark, 'size'
     fill: @_maybeApply scales, mark, 'color'
+    opacity: @_maybeApply scales, mark, 'opacity'
     stroke: stroke
     title: 'omgthisiscool!'
     'stroke-width': mark['stroke-width'] ? '0px'
@@ -91,8 +92,8 @@ class Path extends Renderer # for both cartesian & polar?
         @_maybeApply scales, mark, 'stroke'
       else
         @_maybeApply scales, mark, 'color'
-    debugger
     path: @_makePath x, y
+    opacity: @_maybeApply scales, mark, 'opacity'
     stroke: stroke
 
 class Line extends Renderer # for both cartesian & polar?
@@ -107,6 +108,7 @@ class Line extends Renderer # for both cartesian & polar?
         @_maybeApply scales, mark, 'color'
     path: @_makePath x, y
     stroke: stroke
+    opacity: @_maybeApply scales, mark, 'opacity'
 
 class Area extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
@@ -120,6 +122,7 @@ class Area extends Renderer # for both cartesian & polar?
 
     path: @_makePath x, y
     stroke: @_maybeApply scales, mark, 'color'
+    opacity: @_maybeApply scales, mark, 'opacity'
     fill: @_maybeApply scales, mark, 'color'
     'stroke-width': '0px'
 
@@ -133,6 +136,7 @@ class Rect extends Renderer # for CARTESIAN only
     height: Math.abs y[1]-y[0]
     fill: @_maybeApply scales, mark, 'color'
     stroke: @_maybeApply scales, mark, 'color'
+    opacity: @_maybeApply scales, mark, 'opacity'
     'stroke-width': '0px'
 
 class CircleRect extends Renderer # FOR POLAR ONLY
@@ -156,6 +160,7 @@ class CircleRect extends Renderer # FOR POLAR ONLY
     path: path
     fill: @_maybeApply scales, mark, 'color'
     stroke: @_maybeApply scales, mark, 'color'
+    opacity: @_maybeApply scales, mark, 'opacity'
     'stroke-width': '0px'
 
 """

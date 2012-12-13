@@ -5,7 +5,7 @@
   data = new poly.Data json:jsondata
   spec = {
     layers: [
-      { data: data, type: 'bar', x : 'index', y : 'value', id: 'index'}
+      { data: data, type: 'bar', x : 'index', y : 'value', id: 'index', opacity:'value'}
     ]
     guides:
       x: type:'num', bw:1
@@ -33,7 +33,7 @@
   data = new poly.Data json:jsondata
   spec = {
     layers: [
-      { data: data, type: 'bar', x : 'index', y : 'value', id: 'index'}
+      { data: data, type: 'bar', x : 'index', y : 'value', id: 'index', opacity:'value'}
     ]
     guides:
       x: type:'num', bw:1

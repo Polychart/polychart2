@@ -15,7 +15,7 @@
     'y': sf.novalue(),
     'color': 'steelblue',
     'size': 2,
-    'opacity': 0.7,
+    'opacity': 0.9,
     'shape': 1
   };
 
@@ -300,7 +300,8 @@
               x: this._getValue(item, 'x'),
               y: this._getValue(item, 'y'),
               color: this._getValue(item, 'color'),
-              size: this._getValue(item, 'size')
+              size: this._getValue(item, 'size'),
+              opacity: this._getValue(item, 'opacity')
             }
           },
           evtData: evtData
@@ -369,7 +370,8 @@
                 }
                 return _results2;
               }).call(this),
-              color: this._getValue(sample, 'color')
+              color: this._getValue(sample, 'color'),
+              opacity: this._getValue(sample, 'opacity')
             }
           },
           evtData: evtData
@@ -433,7 +435,8 @@
               type: 'line',
               x: x,
               y: y,
-              color: this._getValue(sample, 'color')
+              color: this._getValue(sample, 'color'),
+              opacity: this._getValue(sample, 'opacity')
             }
           },
           evtData: evtData
@@ -479,7 +482,8 @@
               type: 'rect',
               x: [sf.lower(this._getValue(item, 'x')), sf.upper(this._getValue(item, 'x'))],
               y: [item.$lower, item.$upper],
-              color: this._getValue(item, 'color')
+              color: this._getValue(item, 'color'),
+              opacity: this._getValue(item, 'opacity')
             }
           },
           evtData: evtData
@@ -574,7 +578,8 @@
                 bottom: y_previous,
                 top: y_next
               },
-              color: this._getValue(sample, 'color')
+              color: this._getValue(sample, 'color'),
+              opacity: this._getValue(sample, 'opacity')
             }
           },
           evtData: evtData
@@ -619,6 +624,7 @@
               text: this._getValue(item, 'text'),
               color: this._getValue(item, 'color'),
               size: this._getValue(item, 'size'),
+              opacity: this._getValue(item, 'opacity'),
               'text-anchor': 'center'
             }
           },
@@ -658,7 +664,8 @@
               x: [sf.lower(this._getValue(item, 'x')), sf.upper(this._getValue(item, 'x'))],
               y: [sf.lower(this._getValue(item, 'y')), sf.upper(this._getValue(item, 'y'))],
               color: this._getValue(item, 'color'),
-              size: this._getValue(item, 'size')
+              size: this._getValue(item, 'size'),
+              opacity: this._getValue(item, 'opacity')
             }
           },
           evtData: evtData
@@ -701,28 +708,32 @@
               y: [y.q2, y.q4, y.q4, y.q2, y.q2],
               stroke: this._getValue(item, 'color'),
               fill: 'none',
-              size: this._getValue(item, 'size')
+              size: this._getValue(item, 'size'),
+              opacity: this._getValue(item, 'opacity')
             },
             lower: {
               type: 'line',
               x: [xm, xm],
               y: [y.q1, y.q2],
               color: this._getValue(item, 'color'),
-              size: this._getValue(item, 'size')
+              size: this._getValue(item, 'size'),
+              opacity: this._getValue(item, 'opacity')
             },
             upper: {
               type: 'line',
               x: [xm, xm],
               y: [y.q4, y.q5],
               color: this._getValue(item, 'color'),
-              size: this._getValue(item, 'size')
+              size: this._getValue(item, 'size'),
+              opacity: this._getValue(item, 'opacity')
             },
             middle: {
               type: 'line',
               x: [xl, xu],
               y: [y.q3, y.q3],
               color: this._getValue(item, 'color'),
-              size: this._getValue(item, 'size')
+              size: this._getValue(item, 'size'),
+              opacity: this._getValue(item, 'opacity')
             }
           },
           evtData: evtData
@@ -735,7 +746,8 @@
             x: xm,
             y: point,
             color: this._getValue(item, 'color'),
-            size: this._getValue(item, 'size')
+            size: this._getValue(item, 'size'),
+            opacity: this._getValue(item, 'opacity')
           };
         }
         _results.push(this.geoms[idfn(item)] = geom);

@@ -1,5 +1,5 @@
 (function() {
-  var Area, Brewer, Color, Gradient, Gradient2, Identity, Linear, Log, PositionScale, Scale, Shape, aesthetics, poly,
+  var Area, Brewer, Color, Gradient, Gradient2, Identity, Linear, Log, Opacity, PositionScale, Scale, Shape, aesthetics, poly,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -34,6 +34,9 @@
     },
     identity: function(params) {
       return new Identity(params);
+    },
+    opacity: function(params) {
+      return new Opacity(params);
     }
   };
 
@@ -335,6 +338,26 @@
     };
 
     return Area;
+
+  })(Scale);
+
+  Opacity = (function(_super) {
+
+    __extends(Opacity, _super);
+
+    function Opacity() {
+      this._makeNum = __bind(this._makeNum, this);
+      Opacity.__super__.constructor.apply(this, arguments);
+    }
+
+    Opacity.prototype._makeNum = function() {
+      var max, min;
+      min = this.domain.min === 0 ? 0 : 0.1;
+      max = 1;
+      return this.f = this._identityWrapper(poly.linear(this.domain.min, min, this.domain.max, max));
+    };
+
+    return Opacity;
 
   })(Scale);
 

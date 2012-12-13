@@ -15,6 +15,7 @@ poly.scale =
   color : (params) -> new Color(params)
   gradient : (params) -> new Gradient(params)
   identity: (params) -> new Identity(params)
+  opacity: (params) -> new Opacity(params)
 
 ###
 Scales here are objects that can construct functions that takes a value from
@@ -156,6 +157,12 @@ class Area extends Scale
     sq = Math.sqrt
     ylin = poly.linear sq(@domain.min), min, sq(@domain.max), 10
     @f = @_identityWrapper (x) -> ylin sq(x)
+
+class Opacity extends Scale
+  _makeNum: () => #range = [0, 1]
+    min = if @domain.min == 0 then 0 else 0.1
+    max = 1
+    @f = @_identityWrapper poly.linear(@domain.min, min, @domain.max, max)
 
 class Color extends Scale
   _makeCat: () => #TEMPORARY

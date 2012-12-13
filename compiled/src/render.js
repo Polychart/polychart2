@@ -151,6 +151,7 @@
         cy: y,
         r: this._maybeApply(scales, mark, 'size'),
         fill: this._maybeApply(scales, mark, 'color'),
+        opacity: this._maybeApply(scales, mark, 'opacity'),
         stroke: stroke,
         title: 'omgthisiscool!',
         'stroke-width': (_ref2 = mark['stroke-width']) != null ? _ref2 : '0px'
@@ -177,9 +178,9 @@
       var stroke, x, y, _ref;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
       stroke = mark.stroke ? this._maybeApply(scales, mark, 'stroke') : this._maybeApply(scales, mark, 'color');
-      debugger;
       return {
         path: this._makePath(x, y),
+        opacity: this._maybeApply(scales, mark, 'opacity'),
         stroke: stroke
       };
     };
@@ -207,7 +208,8 @@
       stroke = mark.stroke ? this._maybeApply(scales, mark, 'stroke') : this._maybeApply(scales, mark, 'color');
       return {
         path: this._makePath(x, y),
-        stroke: stroke
+        stroke: stroke,
+        opacity: this._maybeApply(scales, mark, 'opacity')
       };
     };
 
@@ -246,6 +248,7 @@
       return {
         path: this._makePath(x, y),
         stroke: this._maybeApply(scales, mark, 'color'),
+        opacity: this._maybeApply(scales, mark, 'opacity'),
         fill: this._maybeApply(scales, mark, 'color'),
         'stroke-width': '0px'
       };
@@ -277,6 +280,7 @@
         height: Math.abs(y[1] - y[0]),
         fill: this._maybeApply(scales, mark, 'color'),
         stroke: this._maybeApply(scales, mark, 'color'),
+        opacity: this._maybeApply(scales, mark, 'opacity'),
         'stroke-width': '0px'
       };
     };
@@ -318,6 +322,7 @@
         path: path,
         fill: this._maybeApply(scales, mark, 'color'),
         stroke: this._maybeApply(scales, mark, 'color'),
+        opacity: this._maybeApply(scales, mark, 'opacity'),
         'stroke-width': '0px'
       };
     };

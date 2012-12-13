@@ -11,7 +11,7 @@ defaults = {                # global default values for aesthetics
   'y': sf.novalue()
   'color': 'steelblue'
   'size': 2
-  'opacity': 0.7
+  'opacity': 0.9
   'shape': 1
 }
 
@@ -154,6 +154,7 @@ class Point extends Layer
             y: @_getValue item, 'y'
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
+            opacity: @_getValue item, 'opacity'
         evtData: evtData
 
 class Path extends Layer
@@ -176,6 +177,7 @@ class Path extends Layer
             x: (@_getValue item, 'x' for item in data)
             y: (@_getValue item, 'y' for item in data)
             color: @_getValue sample, 'color'
+            opacity: @_getValue sample, 'opacity'
         evtData: evtData
 
 class Line extends Layer
@@ -202,6 +204,7 @@ class Line extends Layer
             x: x
             y: y
             color: @_getValue sample, 'color'
+            opacity: @_getValue sample, 'opacity'
         evtData: evtData
 
 class Bar extends Layer
@@ -223,6 +226,7 @@ class Bar extends Layer
             x: [sf.lower(@_getValue(item, 'x')), sf.upper(@_getValue(item, 'x'))]
             y: [item.$lower, item.$upper]
             color: @_getValue item, 'color'
+            opacity: @_getValue item, 'opacity'
         evtData: evtData
 
 class Area extends Layer
@@ -256,6 +260,7 @@ class Area extends Layer
             x: all_x
             y: {bottom: y_previous, top: y_next}
             color: @_getValue sample, 'color'
+            opacity: @_getValue sample, 'opacity'
         evtData: evtData
 
 class Text extends Layer
@@ -275,6 +280,7 @@ class Text extends Layer
             text: @_getValue item, 'text'
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
+            opacity: @_getValue item, 'opacity'
             'text-anchor': 'center'
         evtData: evtData
 
@@ -294,6 +300,7 @@ class Tile extends Layer
             y: [sf.lower(@_getValue(item, 'y')), sf.upper(@_getValue(item, 'y'))]
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
+            opacity: @_getValue item, 'opacity'
         evtData: evtData
 
 class Box extends Layer
@@ -318,24 +325,28 @@ class Box extends Layer
             stroke: @_getValue item, 'color'
             fill: 'none'
             size: @_getValue item, 'size'
+            opacity: @_getValue item, 'opacity'
           lower:
             type: 'line'
             x: [xm, xm]
             y: [y.q1, y.q2]
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
+            opacity: @_getValue item, 'opacity'
           upper:
             type: 'line'
             x: [xm, xm]
             y: [y.q4, y.q5]
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
+            opacity: @_getValue item, 'opacity'
           middle:
             type: 'line'
             x: [xl, xu]
             y: [y.q3, y.q3]
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
+            opacity: @_getValue item, 'opacity'
         evtData: evtData
       for point, index in y.outliers
         geom.marks[index] =
@@ -344,6 +355,7 @@ class Box extends Layer
           y: point
           color: @_getValue item, 'color'
           size: @_getValue item, 'size'
+          opacity: @_getValue item, 'opacity'
       @geoms[idfn item] = geom
 
 ###
