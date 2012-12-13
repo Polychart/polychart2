@@ -3405,7 +3405,7 @@
 
 }).call(this);
 (function() {
-  var Area, Bar, Layer, Line, Point, Text, aesthetics, defaults, poly, sf,
+  var Area, Bar, Layer, Line, Path, Point, Text, aesthetics, defaults, poly, sf,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -3459,10 +3459,14 @@
         return new Text(layerSpec, strictmode);
       case 'line':
         return new Line(layerSpec, strictmode);
+      case 'path':
+        return new Path(layerSpec, strictmode);
       case 'area':
         return new Area(layerSpec, strictmode);
       case 'bar':
         return new Bar(layerSpec, strictmode);
+      case 'tile':
+        return new Tile(layerSpec, strictmode);
     }
   };
 
@@ -3702,6 +3706,75 @@
     };
 
     return Point;
+
+  })(Layer);
+
+  Path = (function(_super) {
+
+    __extends(Path, _super);
+
+    function Path() {
+      Path.__super__.constructor.apply(this, arguments);
+    }
+
+    Path.prototype._calcGeoms = function() {
+      var data, datas, evtData, group, idfn, item, k, key, sample, _i, _len, _results;
+      group = (function() {
+        var _i, _len, _ref, _results;
+        _ref = _.without(_.keys(this.mapping), 'x', 'y');
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          k = _ref[_i];
+          _results.push(this.mapping[k]);
+        }
+        return _results;
+      }).call(this);
+      datas = poly.groupBy(this.statData, group);
+      idfn = this._getIdFunc();
+      this.geoms = {};
+      _results = [];
+      for (k in datas) {
+        data = datas[k];
+        sample = data[0];
+        evtData = {};
+        for (_i = 0, _len = group.length; _i < _len; _i++) {
+          key = group[_i];
+          evtData[key] = {
+            "in": [sample[key]]
+          };
+        }
+        _results.push(this.geoms[idfn(sample)] = {
+          marks: {
+            0: {
+              type: 'path',
+              x: (function() {
+                var _j, _len2, _results2;
+                _results2 = [];
+                for (_j = 0, _len2 = data.length; _j < _len2; _j++) {
+                  item = data[_j];
+                  _results2.push(this._getValue(item, 'x'));
+                }
+                return _results2;
+              }).call(this),
+              y: (function() {
+                var _j, _len2, _results2;
+                _results2 = [];
+                for (_j = 0, _len2 = data.length; _j < _len2; _j++) {
+                  item = data[_j];
+                  _results2.push(this._getValue(item, 'y'));
+                }
+                return _results2;
+              }).call(this),
+              color: this._getValue(sample, 'color')
+            }
+          },
+          evtData: evtData
+        });
+      }
+      return _results;
+    };
+
+    return Path;
 
   })(Layer);
 

@@ -40,8 +40,12 @@ poly.layer.make = (layerSpec, strictmode) ->
     when 'point' then return new Point(layerSpec, strictmode)
     when 'text' then return new Text(layerSpec, strictmode)
     when 'line' then return new Line(layerSpec, strictmode)
+    when 'path' then return new Path(layerSpec, strictmode)
     when 'area' then return new Area(layerSpec, strictmode)
     when 'bar' then return new Bar(layerSpec, strictmode)
+    when 'tile' then return new Tile(layerSpec, strictmode)
+    # box
+    # path
 
 ###########
 # CLASSES
@@ -148,6 +152,28 @@ class Point extends Layer
             y: @_getValue item, 'y'
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
+        evtData: evtData
+
+class Path extends Layer
+  _calcGeoms: () ->
+    group = (@mapping[k] for k in _.without(_.keys(@mapping), 'x', 'y'))
+    datas = poly.groupBy @statData, group
+    idfn = @_getIdFunc()
+    @geoms = {}
+    for k, data of datas
+      # use the first data point as a sample
+      sample = data[0] # use this as a sample data
+      # create the eventData
+      evtData = {}
+      for key in group
+        evtData[key] = { in : [sample[key]] }
+      @geoms[idfn sample] =
+        marks:
+          0:
+            type: 'path'
+            x: (@_getValue item, 'x' for item in data)
+            y: (@_getValue item, 'y' for item in data)
+            color: @_getValue sample, 'color'
         evtData: evtData
 
 class Line extends Layer

@@ -139,3 +139,17 @@
     dom: dom
   }
   c = poly.chart spec
+
+@examples.path = (dom) ->
+  jsondata = [
+    {a:1,b:5,c:'A'},{a:3,b:4,c:'A'},{a:2,b:3,c:'A'}
+    {a:2,b:2,c:'B'},{a:1,b:4,c:'B'},{a:2.2,b:3,c:'B'},{a:3,b:3,c:'B'}
+  ]
+  data = new poly.Data json:jsondata
+  spec = {
+    layers: [
+      { data: data, type: 'path', x : 'a', y : 'b', color:'c'}
+    ]
+    dom: dom
+  }
+  c = poly.chart spec
