@@ -348,7 +348,7 @@
         text: this._maybeApply(scales, mark, 'text'),
         'text-anchor': (_ref2 = mark['text-anchor']) != null ? _ref2 : 'left',
         r: 10,
-        fill: 'black'
+        fill: this._maybeApply(scales, mark, 'color') || 'black'
       };
       if (mark.transform != null) m.transform = mark.transform;
       return m;

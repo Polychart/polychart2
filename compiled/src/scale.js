@@ -1,5 +1,6 @@
 (function() {
   var Area, Brewer, Color, Gradient, Gradient2, Identity, Linear, Log, PositionScale, Scale, ScaleSet, Shape, aesthetics, poly,
+    __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -108,6 +109,8 @@
         scales.size = specScale('size') || poly.scale.area();
         scales.size.make(domains.size);
       }
+      scales.text = poly.scale.identity();
+      scales.text.make();
       return scales;
     };
 
@@ -184,7 +187,7 @@
       var aes, m, mapped, merged, merging, _i, _len;
       merging = [];
       for (aes in this.domains) {
-        if (aes === 'x' || aes === 'y' || aes === 'id') continue;
+        if (__indexOf.call(poly["const"].noLegend, aes) >= 0) continue;
         mapped = _.map(layers, function(layer) {
           return layer.mapping[aes];
         });
@@ -655,14 +658,16 @@
     __extends(Identity, _super);
 
     function Identity() {
-      this.make = __bind(this.make, this);
       Identity.__super__.constructor.apply(this, arguments);
     }
 
     Identity.prototype.make = function() {
-      return this.f = function(x) {
+      this.sortfn = function(x) {
         return x;
       };
+      return this.f = this._identityWrapper(function(x) {
+        return x;
+      });
     };
 
     return Identity;
@@ -684,6 +689,9 @@
     },
     gradient: function(params) {
       return new Gradient(params);
+    },
+    identity: function(params) {
+      return new Identity(params);
     }
   });
 

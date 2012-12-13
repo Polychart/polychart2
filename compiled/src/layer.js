@@ -1,5 +1,5 @@
 (function() {
-  var Area, Bar, Layer, Line, Point, aesthetics, defaults, poly, sf,
+  var Area, Bar, Layer, Line, Point, Text, aesthetics, defaults, poly, sf,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -49,6 +49,8 @@
     switch (layerSpec.type) {
       case 'point':
         return new Point(layerSpec, strictmode);
+      case 'text':
+        return new Text(layerSpec, strictmode);
       case 'line':
         return new Line(layerSpec, strictmode);
       case 'area':
@@ -499,6 +501,51 @@
     };
 
     return Area;
+
+  })(Layer);
+
+  Text = (function(_super) {
+
+    __extends(Text, _super);
+
+    function Text() {
+      Text.__super__.constructor.apply(this, arguments);
+    }
+
+    Text.prototype._calcGeoms = function() {
+      var evtData, idfn, item, k, v, _i, _len, _ref, _results;
+      idfn = this._getIdFunc();
+      this.geoms = {};
+      _ref = this.statData;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
+        evtData = {};
+        for (k in item) {
+          v = item[k];
+          evtData[k] = {
+            "in": [v]
+          };
+        }
+        _results.push(this.geoms[idfn(item)] = {
+          marks: {
+            0: {
+              type: 'text',
+              x: this._getValue(item, 'x'),
+              y: this._getValue(item, 'y'),
+              text: this._getValue(item, 'text'),
+              color: this._getValue(item, 'color'),
+              size: this._getValue(item, 'size'),
+              'text-anchor': 'center'
+            }
+          },
+          evtData: evtData
+        });
+      }
+      return _results;
+    };
+
+    return Text;
 
   })(Layer);
 

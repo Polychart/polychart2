@@ -186,7 +186,7 @@ class Text extends Renderer # for both cartesian & polar
       text: @_maybeApply  scales, mark, 'text'
       'text-anchor' : mark['text-anchor'] ? 'left'
       r: 10
-      fill: 'black'
+      fill: @_maybeApply(scales, mark, 'color') or 'black'
     if mark.transform? then m.transform = mark.transform
     m
 

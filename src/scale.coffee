@@ -81,6 +81,9 @@ class ScaleSet
     if domains.size?
       scales.size = specScale('size') || poly.scale.area()
       scales.size.make(domains.size)
+    # text
+    scales.text = poly.scale.identity()
+    scales.text.make()
     scales
 
   fromPixels: (start, end) ->
@@ -126,7 +129,7 @@ class ScaleSet
   _mergeAes: (layers) ->
     merging = [] # array of {aes: __, mapped: ___}
     for aes of @domains
-      if aes in ['x', 'y', 'id'] then continue
+      if aes in poly.const.noLegend then continue
       mapped = _.map layers, (layer) -> layer.mapping[aes]
       if not _.all mapped, _.isUndefined
         merged = false
@@ -350,7 +353,9 @@ class Shape extends Scale
   _makeCat: () ->
 
 class Identity extends Scale
-  make: () => @f = (x) -> x
+  make: () ->
+    @sortfn = (x) -> x
+    @f = @_identityWrapper (x) -> x
 
 poly.scale = _.extend poly.scale,
   linear : (params) -> new Linear(params)
@@ -358,6 +363,7 @@ poly.scale = _.extend poly.scale,
   area : (params) -> new Area(params)
   color : (params) -> new Color(params)
   gradient : (params) -> new Gradient(params)
+  identity: (params) -> new Identity(params)
 
 
 ###

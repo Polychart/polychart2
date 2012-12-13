@@ -26,9 +26,7 @@
       c.make spec
     if type == 'click'
       alert("You clicked on index: " + data.index.in[0])
-    if type == 'select'
-      console.log data
-      #alert("You clicked on index: " + data.index.in[0])
+    #if type == 'select' then console.log data
 
 @examples.bar_flip = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
@@ -98,13 +96,6 @@
     dom: dom
   }
   c = poly.chart spec
-
-  c.addHandler (type, e) ->
-    data = e.evtData
-    if type == 'select'
-      console.log data
-      #alert("You clicked on index: " + data.index.in[0])
-
 
 @examples.bar_sum= (dom) ->
   jsondata = (

@@ -247,8 +247,9 @@
         });
       }
       if (type === 'data') c.make(spec);
-      if (type === 'click') alert("You clicked on index: " + data.index["in"][0]);
-      if (type === 'select') return console.log(data);
+      if (type === 'click') {
+        return alert("You clicked on index: " + data.index["in"][0]);
+      }
     });
   };
 
@@ -430,11 +431,7 @@
       },
       dom: dom
     };
-    c = poly.chart(spec);
-    return c.addHandler(function(type, e) {
-      data = e.evtData;
-      if (type === 'select') return console.log(data);
-    });
+    return c = poly.chart(spec);
   };
 
   this.examples.bar_sum = function(dom) {
@@ -1166,6 +1163,51 @@
       color: {
         "const": '#E01B6A'
       }
+    };
+    spec = {
+      layers: [sampleLayer],
+      coord: poly.coord.polar({
+        flip: true
+      }),
+      dom: dom
+    };
+    c = poly.chart(spec);
+    return c.addHandler(function(type, data) {
+      if (type === 'click' || type === 'reset') {
+        console.log(data);
+        return alert(type);
+      }
+    });
+  };
+
+}).call(this);
+(function() {
+
+  if (this.examples == null) this.examples = {};
+
+  this.examples.text = function(dom) {
+    var c, data, jsondata, sampleLayer, spec;
+    jsondata = [
+      {
+        x: 'A',
+        y: 'X'
+      }, {
+        x: 'B',
+        y: 'Y'
+      }, {
+        x: 'C',
+        y: 'Z'
+      }
+    ];
+    data = new poly.Data({
+      json: jsondata
+    });
+    sampleLayer = {
+      data: data,
+      type: 'text',
+      x: 'x',
+      y: 'y',
+      text: 'y'
     };
     spec = {
       layers: [sampleLayer],

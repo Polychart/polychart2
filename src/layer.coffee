@@ -38,6 +38,7 @@ Public interface to making different layer types.
 poly.layer.make = (layerSpec, strictmode) ->
   switch layerSpec.type
     when 'point' then return new Point(layerSpec, strictmode)
+    when 'text' then return new Text(layerSpec, strictmode)
     when 'line' then return new Line(layerSpec, strictmode)
     when 'area' then return new Area(layerSpec, strictmode)
     when 'bar' then return new Bar(layerSpec, strictmode)
@@ -227,6 +228,26 @@ class Area extends Layer
             x: all_x
             y: {bottom: y_previous, top: y_next}
             color: @_getValue sample, 'color'
+        evtData: evtData
+
+class Text extends Layer
+  _calcGeoms: () ->
+    idfn = @_getIdFunc()
+    @geoms = {}
+    for item in @statData
+      evtData = {}
+      for k, v of item
+        evtData[k] = { in : [v] }
+      @geoms[idfn item] =
+        marks:
+          0:
+            type: 'text'
+            x: @_getValue item, 'x'
+            y: @_getValue item, 'y'
+            text: @_getValue item, 'text'
+            color: @_getValue item, 'color'
+            size: @_getValue item, 'size'
+            'text-anchor': 'center'
         evtData: evtData
 
 ###

@@ -76,4 +76,3 @@
   c.addHandler (type, data) ->
     if type in ['click', 'reset']
       console.log data; alert(type)
-

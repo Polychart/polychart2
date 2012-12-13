@@ -10,7 +10,8 @@
   */
 
   poly["const"] = {
-    aes: ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id'],
+    aes: ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id', 'text'],
+    noLegend: ['x', 'y', 'id', 'text', 'tooltip'],
     trans: {
       'bin': ['key', 'binwidth'],
       'lag': ['key', 'lag']

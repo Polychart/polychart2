@@ -168,7 +168,8 @@
   */
 
   poly["const"] = {
-    aes: ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id'],
+    aes: ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id', 'text'],
+    noLegend: ['x', 'y', 'id', 'text', 'tooltip'],
     trans: {
       'bin': ['key', 'binwidth'],
       'lag': ['key', 'lag']
@@ -2190,9 +2191,7 @@
       _ref = this.mapping;
       for (aes in _ref) {
         value = _ref[aes];
-        if (aes === 'x' || aes === 'y' || aes === 'id' || aes === 'tooltip') {
-          continue;
-        }
+        if (__indexOf.call(poly["const"].noLegend, aes) >= 0) continue;
         value = value[0];
         if (__indexOf.call(this.aes, aes) >= 0) {
           obj[aes] = tick.location;
@@ -2253,6 +2252,7 @@
 }).call(this);
 (function() {
   var Area, Brewer, Color, Gradient, Gradient2, Identity, Linear, Log, PositionScale, Scale, ScaleSet, Shape, aesthetics, poly,
+    __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -2361,6 +2361,8 @@
         scales.size = specScale('size') || poly.scale.area();
         scales.size.make(domains.size);
       }
+      scales.text = poly.scale.identity();
+      scales.text.make();
       return scales;
     };
 
@@ -2437,7 +2439,7 @@
       var aes, m, mapped, merged, merging, _i, _len;
       merging = [];
       for (aes in this.domains) {
-        if (aes === 'x' || aes === 'y' || aes === 'id') continue;
+        if (__indexOf.call(poly["const"].noLegend, aes) >= 0) continue;
         mapped = _.map(layers, function(layer) {
           return layer.mapping[aes];
         });
@@ -2908,14 +2910,16 @@
     __extends(Identity, _super);
 
     function Identity() {
-      this.make = __bind(this.make, this);
       Identity.__super__.constructor.apply(this, arguments);
     }
 
     Identity.prototype.make = function() {
-      return this.f = function(x) {
+      this.sortfn = function(x) {
         return x;
       };
+      return this.f = this._identityWrapper(function(x) {
+        return x;
+      });
     };
 
     return Identity;
@@ -2937,6 +2941,9 @@
     },
     gradient: function(params) {
       return new Gradient(params);
+    },
+    identity: function(params) {
+      return new Identity(params);
     }
   });
 
@@ -3398,7 +3405,7 @@
 
 }).call(this);
 (function() {
-  var Area, Bar, Layer, Line, Point, aesthetics, defaults, poly, sf,
+  var Area, Bar, Layer, Line, Point, Text, aesthetics, defaults, poly, sf,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -3448,6 +3455,8 @@
     switch (layerSpec.type) {
       case 'point':
         return new Point(layerSpec, strictmode);
+      case 'text':
+        return new Text(layerSpec, strictmode);
       case 'line':
         return new Line(layerSpec, strictmode);
       case 'area':
@@ -3901,6 +3910,51 @@
 
   })(Layer);
 
+  Text = (function(_super) {
+
+    __extends(Text, _super);
+
+    function Text() {
+      Text.__super__.constructor.apply(this, arguments);
+    }
+
+    Text.prototype._calcGeoms = function() {
+      var evtData, idfn, item, k, v, _i, _len, _ref, _results;
+      idfn = this._getIdFunc();
+      this.geoms = {};
+      _ref = this.statData;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
+        evtData = {};
+        for (k in item) {
+          v = item[k];
+          evtData[k] = {
+            "in": [v]
+          };
+        }
+        _results.push(this.geoms[idfn(item)] = {
+          marks: {
+            0: {
+              type: 'text',
+              x: this._getValue(item, 'x'),
+              y: this._getValue(item, 'y'),
+              text: this._getValue(item, 'text'),
+              color: this._getValue(item, 'color'),
+              size: this._getValue(item, 'size'),
+              'text-anchor': 'center'
+            }
+          },
+          evtData: evtData
+        });
+      }
+      return _results;
+    };
+
+    return Text;
+
+  })(Layer);
+
   /*
   # EXPORT
   */
@@ -4349,7 +4403,7 @@
         text: this._maybeApply(scales, mark, 'text'),
         'text-anchor': (_ref2 = mark['text-anchor']) != null ? _ref2 : 'left',
         r: 10,
-        fill: 'black'
+        fill: this._maybeApply(scales, mark, 'color') || 'black'
       };
       if (mark.transform != null) m.transform = mark.transform;
       return m;
