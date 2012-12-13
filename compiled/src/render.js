@@ -177,6 +177,7 @@
       var stroke, x, y, _ref;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
       stroke = mark.stroke ? this._maybeApply(scales, mark, 'stroke') : this._maybeApply(scales, mark, 'color');
+      debugger;
       return {
         path: this._makePath(x, y),
         stroke: stroke

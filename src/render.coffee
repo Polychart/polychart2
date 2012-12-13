@@ -91,6 +91,7 @@ class Path extends Renderer # for both cartesian & polar?
         @_maybeApply scales, mark, 'stroke'
       else
         @_maybeApply scales, mark, 'color'
+    debugger
     path: @_makePath x, y
     stroke: stroke
 
@@ -101,7 +102,7 @@ class Line extends Renderer # for both cartesian & polar?
     {x, y} = coord.getXY mayflip, mark
     stroke =
       if mark.stroke
-        @_maybeApply(scales, mark, 'stroke')
+        @_maybeApply scales, mark, 'stroke'
       else
         @_maybeApply scales, mark, 'color'
     path: @_makePath x, y

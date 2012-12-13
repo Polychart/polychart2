@@ -2041,7 +2041,7 @@
 
     Axis.prototype._modify = function(renderer, pt, tick, axisDim) {
       var obj;
-      obj = [];
+      obj = {};
       obj.tick = renderer.animate(pt.tick, this._makeTick(axisDim, tick));
       obj.text = renderer.animate(pt.text, this._makeLabel(axisDim, tick));
       return obj;
@@ -2083,7 +2083,8 @@
       return renderer.add({
         type: 'path',
         y: [y, y],
-        x: [x1, x2]
+        x: [x1, x2],
+        stroke: sf.identity('black')
       });
     };
 
@@ -2101,7 +2102,8 @@
       return {
         type: 'path',
         x: [tick.location, tick.location],
-        y: [sf.identity(axisDim.bottom), sf.identity(axisDim.bottom + 5)]
+        y: [sf.identity(axisDim.bottom), sf.identity(axisDim.bottom + 5)],
+        stroke: sf.identity('black')
       };
     };
 
@@ -2143,7 +2145,8 @@
       return renderer.add({
         type: 'path',
         x: [x, x],
-        y: [y1, y2]
+        y: [y1, y2],
+        stroke: sf.identity('black')
       });
     };
 
@@ -2162,7 +2165,8 @@
       return {
         type: 'path',
         x: [sf.identity(axisDim.left), sf.identity(axisDim.left - 5)],
-        y: [tick.location, tick.location]
+        y: [tick.location, tick.location],
+        stroke: sf.identity('black')
       };
     };
 
@@ -2204,7 +2208,8 @@
       return renderer.add({
         type: 'path',
         x: [x, x],
-        y: [y1, y2]
+        y: [y1, y2],
+        stroke: sf.identity('black')
       });
     };
 
@@ -2223,7 +2228,8 @@
       return {
         type: 'path',
         x: [sf.identity(axisDim.left), sf.identity(axisDim.left - 5)],
-        y: [tick.location, tick.location]
+        y: [tick.location, tick.location],
+        stroke: sf.identity('black')
       };
     };
 
@@ -2287,7 +2293,8 @@
       return {
         type: 'path',
         x: [tick.location, tick.location],
-        y: [sf.max(0), sf.max(3)]
+        y: [sf.max(0), sf.max(3)],
+        stroke: sf.identity('black')
       };
     };
 
@@ -5034,6 +5041,7 @@
       var stroke, x, y, _ref;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
       stroke = mark.stroke ? this._maybeApply(scales, mark, 'stroke') : this._maybeApply(scales, mark, 'color');
+      debugger;
       return {
         path: this._makePath(x, y),
         stroke: stroke

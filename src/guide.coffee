@@ -49,7 +49,7 @@ class Axis extends Guide
     renderer.remove pt.tick
     renderer.remove pt.text
   _modify: (renderer, pt, tick, axisDim) =>
-    obj = []
+    obj = {}
     obj.tick = renderer.animate pt.tick, @_makeTick(axisDim, tick)
     obj.text = renderer.animate pt.text, @_makeLabel(axisDim, tick)
     obj
@@ -63,7 +63,11 @@ class XAxis extends Axis # assumes position = bottom
     y = sf.identity axisDim.bottom
     x1 = sf.identity axisDim.left
     x2 = sf.identity axisDim.left+axisDim.width
-    renderer.add { type: 'path', y: [y, y], x: [x1, x2]}
+    renderer.add
+      type: 'path'
+      y: [y, y]
+      x: [x1, x2]
+      stroke: sf.identity 'black'
   _makeTitle: (axisDim, text) ->
     type: 'text'
     x : sf.identity axisDim.left+axisDim.width/2
@@ -74,6 +78,7 @@ class XAxis extends Axis # assumes position = bottom
     type: 'path'
     x : [tick.location, tick.location]
     y : [sf.identity(axisDim.bottom), sf.identity(axisDim.bottom+5)]
+    stroke: sf.identity 'black'
   _makeLabel: (axisDim, tick) ->
     type: 'text'
     x : tick.location
@@ -90,7 +95,11 @@ class YAxis extends Axis # assumes position = left
     x = sf.identity axisDim.left
     y1 = sf.identity axisDim.top
     y2 = sf.identity axisDim.top+axisDim.height
-    renderer.add { type: 'path', x: [x, x], y: [y1, y2] }
+    renderer.add
+      type: 'path'
+      x: [x, x]
+      y: [y1, y2]
+      stroke: sf.identity 'black'
   _makeTitle: (axisDim, text) ->
     type: 'text'
     x : sf.identity axisDim.left - @maxwidth - 15
@@ -102,6 +111,7 @@ class YAxis extends Axis # assumes position = left
     type: 'path'
     x : [sf.identity(axisDim.left), sf.identity(axisDim.left-5)]
     y : [tick.location, tick.location]
+    stroke: sf.identity 'black'
   _makeLabel: (axisDim, tick) ->
     type: 'text'
     x : sf.identity(axisDim.left-7)
@@ -118,7 +128,11 @@ class RAxis extends Axis # assumes position = left
     x = sf.identity axisDim.left
     y1 = sf.identity axisDim.top
     y2 = sf.identity axisDim.top+axisDim.height/2
-    renderer.add { type: 'path', x: [x, x], y: [y1, y2] }
+    renderer.add
+      type: 'path'
+      x: [x, x]
+      y: [y1, y2]
+      stroke: sf.identity 'black'
   _makeTitle: (axisDim, text) ->
     type: 'text'
     x : sf.identity axisDim.left-@maxwidth-15
@@ -130,6 +144,7 @@ class RAxis extends Axis # assumes position = left
     type: 'path'
     x : [sf.identity(axisDim.left), sf.identity(axisDim.left-5)]
     y : [tick.location, tick.location]
+    stroke: sf.identity 'black'
   _makeLabel: (axisDim, tick) ->
     type: 'text'
     x : sf.identity(axisDim.left-7)
@@ -164,6 +179,7 @@ class TAxis extends Axis # assumes position = ... um, what is it supposed to be?
     type: 'path'
     x : [tick.location, tick.location]
     y : [sf.max(0), sf.max(3)]
+    stroke: sf.identity 'black'
   _makeLabel: (axisDim, tick) ->
     radius = Math.min(axisDim.width, axisDim.height)/2 -10
     type: 'text'
