@@ -1,6 +1,6 @@
 @examples ?= {}
 
-data = () ->
+datafn = () ->
   a = (i) -> i % 5
   b = (i) -> Math.floor(i / 5)
   value = () -> Math.random()*5
@@ -11,7 +11,7 @@ data = () ->
   (item(i) for i in [0..24])
 
 @examples.tiles = (dom) ->
-  data = new poly.Data json:data()
+  data = new poly.Data json:datafn()
   spec = {
     layers: [
       data: data
@@ -25,7 +25,7 @@ data = () ->
   c = poly.chart spec
 
 @examples.tiles_bw = (dom) ->
-  data = new poly.Data json:data()
+  data = new poly.Data json:datafn()
   spec = {
     layers: [
       data: data

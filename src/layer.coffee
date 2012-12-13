@@ -44,8 +44,7 @@ poly.layer.make = (layerSpec, strictmode) ->
     when 'area' then return new Area(layerSpec, strictmode)
     when 'bar' then return new Bar(layerSpec, strictmode)
     when 'tile' then return new Tile(layerSpec, strictmode)
-    # box
-    # path
+    when 'box' then return new Box(layerSpec, strictmode)
 
 ###########
 # CLASSES
@@ -216,7 +215,7 @@ class Bar extends Layer
     for item in @statData
       evtData = {}
       for k, v of item
-        if k isnt 'y' then evtData[k] = { in: [v] }
+        if k isnt 'y' then evtData[@mapping[k]] = { in: [v] }
       @geoms[idfn item] =
         marks:
           0:
@@ -296,6 +295,55 @@ class Tile extends Layer
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
         evtData: evtData
+
+class Box extends Layer
+  _calcGeoms: () ->
+    #group = if @mapping.x? then [@mapping.x] else []
+    # enforce ONE value per x?
+    idfn = @_getIdFunc()
+    @geoms = {}
+    for item in @statData
+      evtData = {} # later
+      x = @_getValue item, 'x'
+      y = @_getValue item, 'y'
+      xl = sf.lower(x)
+      xu = sf.upper(x)
+      xm = sf.middle(x)
+      @geoms[idfn item] =
+        marks:
+          iqr:
+            type: 'path'
+            x: [xl, xl, xu, xu, xl]
+            y: [y.q2, y.q4, y.q4, y.q2, y.q2]
+            stroke: @_getValue item, 'color'
+            fill: 'none'
+            size: @_getValue item, 'size'
+          lower:
+            type: 'line'
+            x: [xm, xm]
+            y: [y.q1, y.q2]
+            color: @_getValue item, 'color'
+            size: @_getValue item, 'size'
+          upper:
+            type: 'line'
+            x: [xm, xm]
+            y: [y.q4, y.q5]
+            color: @_getValue item, 'color'
+            size: @_getValue item, 'size'
+          middle:
+            type: 'line'
+            x: [xl, xu]
+            y: [y.q3, y.q3]
+            color: @_getValue item, 'color'
+            size: @_getValue item, 'size'
+        evtData: evtData
+      for point, index in y.outliers
+        @geoms[idfn item].marks[index] =
+          type: 'circle'
+          x: xm
+          y: point
+          color: @_getValue item, 'color'
+            size: @_getValue item, 'size'
 
 ###
 # EXPORT

@@ -273,7 +273,7 @@
     },
     box: function(spec) {
       return function(values) {
-        var iqr, len, lowerBound, mid, q2, q4, quarter, sortedValues, splitValues, upperBound;
+        var iqr, len, lowerBound, mid, q2, q4, quarter, sortedValues, splitValues, upperBound, _ref;
         len = values.length;
         mid = len / 2;
         sortedValues = _.sortBy(values, function(x) {
@@ -300,7 +300,7 @@
           q3: poly.median(sortedValues, true),
           q4: q4,
           q5: _.max(splitValues["true"]),
-          outliers: splitValues["false"]
+          outliers: (_ref = splitValues["false"]) != null ? _ref : []
         };
       };
     }

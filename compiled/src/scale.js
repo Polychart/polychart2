@@ -94,7 +94,6 @@
       scales.x.make(domains.x, ranges.x);
       scales.y = (_ref2 = specScale('y')) != null ? _ref2 : poly.scale.linear();
       scales.y.make(domains.y, ranges.y);
-      debugger;
       if (domains.color != null) {
         if (domains.color.type === 'cat') {
           scales.color = (_ref3 = specScale('color')) != null ? _ref3 : poly.scale.color();

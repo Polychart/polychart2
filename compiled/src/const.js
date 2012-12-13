@@ -19,7 +19,8 @@
     stat: {
       'count': ['key'],
       'sum': ['key'],
-      'mean': ['key']
+      'mean': ['key'],
+      'box': ['key']
     },
     metas: {
       sort: null,

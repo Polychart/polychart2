@@ -171,13 +171,13 @@ statistics =
     splitValues = _.groupBy(sortedValues,
                             (v) -> v >= lowerBound and v <= upperBound)
     return {
-        q1: _.min(splitValues.true)
-        q2: q2
-        q3: poly.median(sortedValues, true)
-        q4: q4
-        q5: _.max(splitValues.true)
-        outliers: splitValues.false
-           }
+      q1: _.min(splitValues.true)
+      q2: q2
+      q3: poly.median(sortedValues, true)
+      q4: q4
+      q5: _.max(splitValues.true)
+      outliers: splitValues.false ? []
+    }
 ###
 Helper function to figures out which statistics to create, then creates it
 ###

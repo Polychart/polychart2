@@ -586,6 +586,45 @@
 
 }).call(this);
 (function() {
+  var datafn2;
+
+  if (this.examples == null) this.examples = {};
+
+  datafn2 = function() {
+    var i, item, _results;
+    item = function(i) {
+      return {
+        mod3: i % 3 === 0 ? "G1" : i % 3 === 1 ? "G2" : "G3",
+        value: i === 99 ? 15 : Math.random() * 10
+      };
+    };
+    _results = [];
+    for (i = 0; i <= 200; i++) {
+      _results.push(item(i));
+    }
+    return _results;
+  };
+
+  this.examples.box = function(dom) {
+    var data;
+    data = new poly.Data({
+      json: datafn2()
+    });
+    return poly.chart({
+      layers: [
+        {
+          data: data,
+          type: 'box',
+          x: 'mod3',
+          y: 'box(value)'
+        }
+      ],
+      dom: dom
+    });
+  };
+
+}).call(this);
+(function() {
 
   if (this.examples == null) this.examples = {};
 
@@ -1278,11 +1317,11 @@
 
 }).call(this);
 (function() {
-  var data;
+  var datafn;
 
   if (this.examples == null) this.examples = {};
 
-  data = function() {
+  datafn = function() {
     var a, b, i, item, value, _results;
     a = function(i) {
       return i % 5;
@@ -1308,9 +1347,9 @@
   };
 
   this.examples.tiles = function(dom) {
-    var c, spec;
+    var c, data, spec;
     data = new poly.Data({
-      json: data()
+      json: datafn()
     });
     spec = {
       layers: [
@@ -1328,9 +1367,9 @@
   };
 
   this.examples.tiles_bw = function(dom) {
-    var c, spec;
+    var c, data, spec;
     data = new poly.Data({
-      json: data()
+      json: datafn()
     });
     spec = {
       layers: [

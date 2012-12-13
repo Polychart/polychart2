@@ -177,7 +177,8 @@
     stat: {
       'count': ['key'],
       'sum': ['key'],
-      'mean': ['key']
+      'mean': ['key'],
+      'box': ['key']
     },
     metas: {
       sort: null,
@@ -2347,7 +2348,6 @@
       scales.x.make(domains.x, ranges.x);
       scales.y = (_ref2 = specScale('y')) != null ? _ref2 : poly.scale.linear();
       scales.y.make(domains.y, ranges.y);
-      debugger;
       if (domains.color != null) {
         if (domains.color.type === 'cat') {
           scales.color = (_ref3 = specScale('color')) != null ? _ref3 : poly.scale.color();
@@ -3231,7 +3231,7 @@
     },
     box: function(spec) {
       return function(values) {
-        var iqr, len, lowerBound, mid, q2, q4, quarter, sortedValues, splitValues, upperBound;
+        var iqr, len, lowerBound, mid, q2, q4, quarter, sortedValues, splitValues, upperBound, _ref;
         len = values.length;
         mid = len / 2;
         sortedValues = _.sortBy(values, function(x) {
@@ -3258,7 +3258,7 @@
           q3: poly.median(sortedValues, true),
           q4: q4,
           q5: _.max(splitValues["true"]),
-          outliers: splitValues["false"]
+          outliers: (_ref = splitValues["false"]) != null ? _ref : []
         };
       };
     }
@@ -3409,7 +3409,7 @@
 
 }).call(this);
 (function() {
-  var Area, Bar, Layer, Line, Path, Point, Text, Tile, aesthetics, defaults, poly, sf,
+  var Area, Bar, Box, Layer, Line, Path, Point, Text, Tile, aesthetics, defaults, poly, sf,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -3471,6 +3471,8 @@
         return new Bar(layerSpec, strictmode);
       case 'tile':
         return new Tile(layerSpec, strictmode);
+      case 'box':
+        return new Box(layerSpec, strictmode);
     }
   };
 
@@ -3876,7 +3878,7 @@
         for (k in item) {
           v = item[k];
           if (k !== 'y') {
-            evtData[k] = {
+            evtData[this.mapping[k]] = {
               "in": [v]
             };
           }
@@ -4076,6 +4078,87 @@
     };
 
     return Tile;
+
+  })(Layer);
+
+  Box = (function(_super) {
+
+    __extends(Box, _super);
+
+    function Box() {
+      Box.__super__.constructor.apply(this, arguments);
+    }
+
+    Box.prototype._calcGeoms = function() {
+      var evtData, idfn, index, item, point, x, xl, xm, xu, y, _i, _len, _ref, _results;
+      idfn = this._getIdFunc();
+      this.geoms = {};
+      _ref = this.statData;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
+        evtData = {};
+        x = this._getValue(item, 'x');
+        y = this._getValue(item, 'y');
+        xl = sf.lower(x);
+        xu = sf.upper(x);
+        xm = sf.middle(x);
+        this.geoms[idfn(item)] = {
+          marks: {
+            iqr: {
+              type: 'path',
+              x: [xl, xl, xu, xu, xl],
+              y: [y.q2, y.q4, y.q4, y.q2, y.q2],
+              stroke: this._getValue(item, 'color'),
+              fill: 'none',
+              size: this._getValue(item, 'size')
+            },
+            lower: {
+              type: 'line',
+              x: [xm, xm],
+              y: [y.q1, y.q2],
+              color: this._getValue(item, 'color'),
+              size: this._getValue(item, 'size')
+            },
+            upper: {
+              type: 'line',
+              x: [xm, xm],
+              y: [y.q4, y.q5],
+              color: this._getValue(item, 'color'),
+              size: this._getValue(item, 'size')
+            },
+            middle: {
+              type: 'line',
+              x: [xl, xu],
+              y: [y.q3, y.q3],
+              color: this._getValue(item, 'color'),
+              size: this._getValue(item, 'size')
+            }
+          },
+          evtData: evtData
+        };
+        _results.push((function() {
+          var _len2, _ref2, _results2;
+          _ref2 = y.outliers;
+          _results2 = [];
+          for (index = 0, _len2 = _ref2.length; index < _len2; index++) {
+            point = _ref2[index];
+            _results2.push(this.geoms[idfn(item)].marks[index] = {
+              type: 'circle',
+              x: xm,
+              y: point,
+              color: this._getValue(item, 'color', {
+                size: this._getValue(item, 'size')
+              })
+            });
+          }
+          return _results2;
+        }).call(this));
+      }
+      return _results;
+    };
+
+    return Box;
 
   })(Layer);
 

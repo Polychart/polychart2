@@ -70,7 +70,6 @@ class ScaleSet
     scales.y = specScale('y') ? poly.scale.linear()
     scales.y.make(domains.y, ranges.y)
     # color
-    debugger
     if domains.color?
       if domains.color.type == 'cat'
         scales.color = specScale('color') ? poly.scale.color()
