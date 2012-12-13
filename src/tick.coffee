@@ -9,18 +9,19 @@ poly.tick = {}
 Produce an associate array of aesthetics to tick objects.
 ###
 poly.tick.make = (domain, guideSpec, type) ->
+  step = null
   if guideSpec.ticks?
     ticks = guideSpec.ticks # provided by spec
   else
     numticks = guideSpec.numticks ? 5 # use default
-    ticks = tickValues[type] domain, numticks
+    {ticks, step} = tickValues[type] domain, numticks
   # turn each tick location to an actual tick object
   if guideSpec.labels
     formatter = (x) -> guideSpec.labels[x] ? x
   else if guideSpec.formatter
     formatter = guideSpec.formatter
   else
-    formatter = poly.const.formatter[type]
+    formatter = poly.format(type, step)
   tickobjs = {}
   tickfn = tickFactory(formatter)
   for t in ticks
@@ -61,7 +62,7 @@ Function for calculating the location of ticks.
 ###
 tickValues =
   'cat' : (domain, numticks) ->
-    return domain.levels #TODO
+    ticks: domain.levels #TODO
   'num' : (domain, numticks) ->
     {min, max} = domain
     step = getStep max-min, numticks
@@ -70,7 +71,8 @@ tickValues =
     while tmp < max
       ticks.push tmp
       tmp += step
-    ticks
+    ticks: ticks
+    step: Math.floor(Math.log(step)/Math.LN10)
   'num-log' : (domain, numticks) ->
     {min, max} = domain
     lg = (v) -> Math.log(v) / Math.LN10
@@ -93,7 +95,7 @@ tickValues =
         tmp += step
         continue
       ticks.push num
-    ticks
+    ticks: ticks
   'date' : (domain, numticks) -> #TODO
     {min, max} = domain
     step = (max-min) / numticks
@@ -110,7 +112,8 @@ tickValues =
     while current.unix() < max
       ticks.push current.unix()
       current.add(step+'s', 1)
-    ticks
+    ticks: ticks
+    step: step
 
 ###
 # EXPORT

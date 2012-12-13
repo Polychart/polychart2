@@ -2,6 +2,7 @@ rm -r compiled/src/
 coffee --compile --output compiled/src/ src/
 cat compiled/src/utils.js \
     compiled/src/const.js \
+    compiled/src/format.js \
     compiled/src/ajax.js \
     compiled/src/exceptions.js \
     compiled/src/spec.js \

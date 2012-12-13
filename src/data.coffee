@@ -102,26 +102,28 @@ transformation. Also, a metadata description of the transformation is returned
 when appropriate. (e.g for binning)
 ###
 transforms =
-  'bin' : (key, transSpec) ->
+  'bin' : (key, transSpec, meta) ->
     {name, binwidth} = transSpec
-    if !isNaN(binwidth) # empty string?
+    if meta.type is 'num' and !isNaN(binwidth) # empty string?
       binwidth = +binwidth
       binFn = (item) ->
         item[name] = binwidth * Math.floor item[key]/binwidth
-      return trans: binFn, meta: {bw: binwidth, binned: true}
-  'lag' : (key, transSpec) ->
+      return trans: binFn, meta: {bw: binwidth, binned: true, type:'num'}
+    if meta.type is 'date' # TODO
+      return
+  'lag' : (key, transSpec, meta) ->
     {name, lag} = transSpec
     lastn = (undefined for i in [1..lag])
     lagFn = (item) ->
       lastn.push(item[key])
       item[name] = lastn.shift()
-    return trans: lagFn, meta:undefined
+    return trans: lagFn, meta: {type: meta.type}
 
 ###
 Helper function to figures out which transformation to create, then creates it
 ###
-transformFactory = (key, transSpec) ->
-  transforms[transSpec.trans](key, transSpec)
+transformFactory = (key, transSpec, meta) ->
+  transforms[transSpec.trans](key, transSpec, meta)
 
 ###
 FILTERS
@@ -259,7 +261,7 @@ frontendProcess = (dataSpec, rawData, metaData, callback) ->
   if dataSpec.trans
     for transSpec in dataSpec.trans
       {key} = transSpec
-      {trans, meta} = transformFactory(key, transSpec)
+      {trans, meta} = transformFactory(key, transSpec, metaData[key])
       for d in data
         trans(d)
       addMeta transSpec.name, meta
@@ -277,6 +279,9 @@ frontendProcess = (dataSpec, rawData, metaData, callback) ->
   # stats
   if dataSpec.stats and dataSpec.stats.stats and dataSpec.stats.stats.length > 0
     data = calculateStats(data, dataSpec.stats)
+    for statSpec in dataSpec.stats.stats
+      {name} = statSpec
+      addMeta name, {type: 'num'}
   # done
   callback(data, metaData)
 

@@ -14,22 +14,23 @@
   */
 
   poly.tick.make = function(domain, guideSpec, type) {
-    var formatter, numticks, t, tickfn, tickobjs, ticks, _i, _len, _ref;
+    var formatter, numticks, step, t, tickfn, tickobjs, ticks, _i, _len, _ref, _ref2;
+    step = null;
     if (guideSpec.ticks != null) {
       ticks = guideSpec.ticks;
     } else {
       numticks = (_ref = guideSpec.numticks) != null ? _ref : 5;
-      ticks = tickValues[type](domain, numticks);
+      _ref2 = tickValues[type](domain, numticks), ticks = _ref2.ticks, step = _ref2.step;
     }
     if (guideSpec.labels) {
       formatter = function(x) {
-        var _ref2;
-        return (_ref2 = guideSpec.labels[x]) != null ? _ref2 : x;
+        var _ref3;
+        return (_ref3 = guideSpec.labels[x]) != null ? _ref3 : x;
       };
     } else if (guideSpec.formatter) {
       formatter = guideSpec.formatter;
     } else {
-      formatter = poly["const"].formatter[type];
+      formatter = poly.format(type, step);
     }
     tickobjs = {};
     tickfn = tickFactory(formatter);
@@ -99,7 +100,9 @@
 
   tickValues = {
     'cat': function(domain, numticks) {
-      return domain.levels;
+      return {
+        ticks: domain.levels
+      };
     },
     'num': function(domain, numticks) {
       var max, min, step, ticks, tmp;
@@ -111,7 +114,10 @@
         ticks.push(tmp);
         tmp += step;
       }
-      return ticks;
+      return {
+        ticks: ticks,
+        step: Math.floor(Math.log(step) / Math.LN10)
+      };
     },
     'num-log': function(domain, numticks) {
       var exp, lg, lgmax, lgmin, max, min, num, step, tmp;
@@ -144,7 +150,9 @@
         }
         ticks.push(num);
       }
-      return ticks;
+      return {
+        ticks: ticks
+      };
     },
     'date': function(domain, numticks) {
       var current, max, min, step, ticks;
@@ -157,7 +165,10 @@
         ticks.push(current.unix());
         current.add(step + 's', 1);
       }
-      return ticks;
+      return {
+        ticks: ticks,
+        step: step
+      };
     }
   };
 

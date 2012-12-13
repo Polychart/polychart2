@@ -159,10 +159,10 @@
   */
 
   transforms = {
-    'bin': function(key, transSpec) {
+    'bin': function(key, transSpec, meta) {
       var binFn, binwidth, name;
       name = transSpec.name, binwidth = transSpec.binwidth;
-      if (!isNaN(binwidth)) {
+      if (meta.type === 'num' && !isNaN(binwidth)) {
         binwidth = +binwidth;
         binFn = function(item) {
           return item[name] = binwidth * Math.floor(item[key] / binwidth);
@@ -171,12 +171,14 @@
           trans: binFn,
           meta: {
             bw: binwidth,
-            binned: true
+            binned: true,
+            type: 'num'
           }
         };
       }
+      if (meta.type === 'date') {}
     },
-    'lag': function(key, transSpec) {
+    'lag': function(key, transSpec, meta) {
       var i, lag, lagFn, lastn, name;
       name = transSpec.name, lag = transSpec.lag;
       lastn = (function() {
@@ -193,7 +195,9 @@
       };
       return {
         trans: lagFn,
-        meta: void 0
+        meta: {
+          type: meta.type
+        }
       };
     }
   };
@@ -202,8 +206,8 @@
   Helper function to figures out which transformation to create, then creates it
   */
 
-  transformFactory = function(key, transSpec) {
-    return transforms[transSpec.trans](key, transSpec);
+  transformFactory = function(key, transSpec, meta) {
+    return transforms[transSpec.trans](key, transSpec, meta);
   };
 
   /*
@@ -419,7 +423,7 @@
   */
 
   frontendProcess = function(dataSpec, rawData, metaData, callback) {
-    var addMeta, additionalFilter, d, data, filter, key, meta, metaSpec, trans, transSpec, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4;
+    var addMeta, additionalFilter, d, data, filter, key, meta, metaSpec, name, statSpec, trans, transSpec, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3, _ref4, _ref5;
     data = _.clone(rawData);
     if (metaData == null) metaData = {};
     addMeta = function(key, meta) {
@@ -431,7 +435,7 @@
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         transSpec = _ref[_i];
         key = transSpec.key;
-        _ref2 = transformFactory(key, transSpec), trans = _ref2.trans, meta = _ref2.meta;
+        _ref2 = transformFactory(key, transSpec, metaData[key]), trans = _ref2.trans, meta = _ref2.meta;
         for (_j = 0, _len2 = data.length; _j < _len2; _j++) {
           d = data[_j];
           trans(d);
@@ -453,6 +457,14 @@
     }
     if (dataSpec.stats && dataSpec.stats.stats && dataSpec.stats.stats.length > 0) {
       data = calculateStats(data, dataSpec.stats);
+      _ref5 = dataSpec.stats.stats;
+      for (_k = 0, _len3 = _ref5.length; _k < _len3; _k++) {
+        statSpec = _ref5[_k];
+        name = statSpec.name;
+        addMeta(name, {
+          type: 'num'
+        });
+      }
     }
     return callback(data, metaData);
   };

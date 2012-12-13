@@ -150,5 +150,3 @@ poly.parse = (value, meta) ->
       moment(value).unix()
   else
     undefined
-
-
