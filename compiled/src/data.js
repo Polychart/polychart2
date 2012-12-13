@@ -17,31 +17,61 @@
   Data = (function() {
 
     function Data(params) {
-      this.url = params.url, this.json = params.json;
+      this.url = params.url, this.json = params.json, this.csv = params.csv, this.meta = params.meta;
       this.dataBackend = params.url != null;
       this.computeBackend = false;
+      this.raw = null;
+      if (this.meta == null) this.meta = {};
       this.subscribed = [];
     }
 
+    Data.prototype.impute = function(json) {
+      var first100, item, key, keys, _base, _i, _j, _k, _len, _len2, _len3;
+      keys = _.keys(json[0]);
+      first100 = json.slice(0, 100);
+      for (_i = 0, _len = keys.length; _i < _len; _i++) {
+        key = keys[_i];
+        if ((_base = this.meta)[key] == null) _base[key] = {};
+        if (!this.meta[key].type) {
+          this.meta[key].type = poly.typeOf(_.pluck(first100, key));
+        }
+      }
+      for (_j = 0, _len2 = json.length; _j < _len2; _j++) {
+        item = json[_j];
+        for (_k = 0, _len3 = keys.length; _k < _len3; _k++) {
+          key = keys[_k];
+          item[key] = poly.parse(item[key], this.meta[key]);
+        }
+      }
+      return this.raw = json;
+    };
+
     Data.prototype.getRaw = function(callback) {
-      if (this.json) return callback(json);
-      if (this.url) return poly.csv(this.url, callback);
+      var _this = this;
+      if (this.json) this.raw = this.impute(this.json);
+      if (this.csv) this.raw = this.impute(poly.csv.parse(this.csv));
+      if (this.raw) return callback(this.raw);
+      if (this.url) {
+        return poly.csv(this.url, function(csv) {
+          _this.raw = _this.impute(csv);
+          return callback(_this.raw);
+        });
+      }
     };
 
     Data.prototype.update = function(params) {
-      var fn, _i, _len, _ref, _results;
-      if (!this.dataBackend) {
-        this.json = params.json;
-      } else {
-        this.getRaw();
-      }
-      _ref = this.subscribed;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        fn = _ref[_i];
-        _results.push(fn());
-      }
-      return _results;
+      var _this = this;
+      this.json = params.json, this.csv = params.csv;
+      return this.getRaw(function() {
+        var fn, _i, _len, _ref, _results;
+        _ref = _this.subscribed;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          fn = _ref[_i];
+          _results.push(fn());
+        }
+        return _results;
+      });
     };
 
     Data.prototype.subscribe = function(h) {

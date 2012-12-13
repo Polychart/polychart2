@@ -10,20 +10,37 @@ or knows how to retrieve data from some source.
 ###
 class Data
   constructor: (params) ->
-    {@url, @json} = params
+    {@url, @json, @csv, @meta} = params
     @dataBackend = params.url?
     @computeBackend = false
+    @raw = null
+    @meta ?= {}
     @subscribed = []
+  impute: (json) ->
+    keys = _.keys json[0]
+    first100 = json[0..99]
+    for key in keys
+      @meta[key] ?= {}
+      if not @meta[key].type
+        @meta[key].type = poly.typeOf _.pluck(first100, key)
+    for item in json
+      for key in keys
+        item[key] = poly.parse item[key], @meta[key]
+    @raw = json
   getRaw: (callback) ->
-    if @json then return callback(json)
-    if @url then poly.csv @url, callback
+    # frontend
+    if @json then @raw = @impute @json
+    if @csv then @raw = @impute poly.csv.parse(@csv)
+    if @raw then return callback(@raw)
+    # backend
+    if @url then poly.csv @url, (csv) =>
+      @raw = @impute csv
+      callback @raw
   update: (params) ->
-    if !@dataBackend
-      @json = params.json
-    else
-      @getRaw()
-    for fn in @subscribed
-      fn()
+    {@json, @csv} = params
+    @getRaw () =>
+      for fn in @subscribed
+        fn()
   subscribe: (h) ->
     if _.indexOf(@subscribed, h) is -1
       @subscribed.push h
@@ -154,6 +171,7 @@ statistics =
   max: (spec) -> (values) -> _.max(values)
   median: (spec) -> (values) -> poly.median(values)
   box: (spec) -> (values) ->
+    # TODO: handle cases where there are too few values
     len = values.length
     mid = len/2
     sortedValues = _.sortBy(values, (x)->x)

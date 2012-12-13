@@ -1,5 +1,5 @@
 (function() {
-  var poly;
+  var THRESHOLD, poly;
 
   poly = this.poly || {};
 
@@ -153,6 +153,51 @@
     return _.zip.apply(_, _.sortBy(_.zip.apply(_, arrays), function(a) {
       return fn(a[0]);
     }));
+  };
+
+  /*
+  Impute types from values
+  */
+
+  THRESHOLD = 0.95;
+
+  poly.typeOf = function(values) {
+    var date, num, value, _i, _len;
+    date = 0;
+    num = 0;
+    for (_i = 0, _len = values.length; _i < _len; _i++) {
+      value = values[_i];
+      if (!(value != null)) continue;
+      if (!isNaN(value) || !isNaN(value.replace(/\$|\,/g, ''))) num++;
+      if (moment(value).isValid()) date++;
+    }
+    if (num > THRESHOLD * values.length) return 'num';
+    if (date > THRESHOLD * values.length) return 'date';
+    return 'cat';
+  };
+
+  /*
+  Parse values into correct types
+  */
+
+  poly.parse = function(value, meta) {
+    if (meta.type === 'cat') {
+      return value;
+    } else if (meta.type === 'num') {
+      if (!isNaN(value)) {
+        return +value;
+      } else {
+        return +(("" + value).replace(/\$|\,/g, ''));
+      }
+    } else if (meta.type === 'date') {
+      if (meta.format) {
+        return moment(value, meta.format);
+      } else {
+        return moment(value);
+      }
+    } else {
+      return;
+    }
   };
 
 }).call(this);

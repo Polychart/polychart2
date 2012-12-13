@@ -1,5 +1,5 @@
 (function() {
-  var CategoricalDomain, DateDomain, NumericDomain, aesthetics, domainMerge, flattenGeoms, makeDomain, makeDomainSet, mergeDomainSets, mergeDomains, poly, typeOf;
+  var CategoricalDomain, DateDomain, NumericDomain, aesthetics, domainMerge, flattenGeoms, makeDomain, makeDomainSet, mergeDomainSets, mergeDomains, poly;
 
   poly = this.poly || {};
 
@@ -124,7 +124,7 @@
             return null;
           }
         };
-        if (typeOf(values) === 'num') {
+        if (poly.typeOf(values) === 'num') {
           domain[aes] = makeDomain({
             type: 'num',
             min: (_ref2 = fromspec('min')) != null ? _ref2 : _.min(values),
@@ -159,15 +159,6 @@
       }
     }
     return values;
-  };
-
-  /*
-  VERY preliminary TYPEOF function. We need some serious optimization here
-  */
-
-  typeOf = function(values) {
-    if (_.all(values, _.isNumber)) return 'num';
-    return 'cat';
   };
 
   /*

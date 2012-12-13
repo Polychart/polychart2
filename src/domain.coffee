@@ -67,7 +67,7 @@ makeDomainSet = (layerObj, guideSpec, strictmode) ->
       values = flattenGeoms(layerObj.geoms, aes)
       meta = layerObj.getMeta(aes) ? {}
       fromspec = (item) -> if guideSpec[aes]? then guideSpec[aes][item] else null
-      if typeOf(values) == 'num'
+      if poly.typeOf(values) == 'num'
         domain[aes] = makeDomain {
           type: 'num'
           min: fromspec('min') ? _.min(values)
@@ -91,14 +91,6 @@ flattenGeoms = (geoms, aes) ->
     for l, mark of geom.marks
       values = values.concat poly.flatten mark[aes]
   values
-
-###
-VERY preliminary TYPEOF function. We need some serious optimization here
-###
-typeOf = (values) ->
-  if _.all values, _.isNumber
-    return 'num'
-  return 'cat'
 
 
 ###

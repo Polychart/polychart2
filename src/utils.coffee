@@ -109,3 +109,46 @@ This way, all the points are sorted by (sortFn(x) for x in xs)
 ###
 poly.sortArrays = (fn, arrays) ->
   _.zip(_.sortBy(_.zip(arrays...), (a) -> fn(a[0]))...)
+
+
+###
+Impute types from values
+###
+THRESHOLD = 0.95
+poly.typeOf = (values) ->
+  date = 0
+  num = 0
+  for value in values
+    if not value? then continue
+    # check if it's a number
+    if not isNaN(value) or not isNaN value.replace(/\$|\,/g,'')
+      num++
+    # check if it's a date
+    if moment(value).isValid()
+      date++
+  if num > THRESHOLD*values.length
+    return 'num'
+  if date > THRESHOLD*values.length
+    return 'date'
+  return 'cat'
+
+###
+Parse values into correct types
+###
+poly.parse = (value, meta) ->
+  if meta.type is 'cat'
+    value
+  else if meta.type is 'num'
+    if not isNaN value
+      +value
+    else
+      +((""+value).replace(/\$|\,/g,''))
+  else if meta.type is 'date'
+    if meta.format
+      moment(value, meta.format)
+    else
+      moment(value)
+  else
+    undefined
+
+
