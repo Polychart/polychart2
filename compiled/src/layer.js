@@ -680,7 +680,7 @@
     }
 
     Box.prototype._calcGeoms = function() {
-      var evtData, idfn, index, item, point, x, xl, xm, xu, y, _i, _len, _ref, _results;
+      var evtData, geom, idfn, index, item, point, x, xl, xm, xu, y, _i, _len, _len2, _ref, _ref2, _results;
       idfn = this._getIdFunc();
       this.geoms = {};
       _ref = this.statData;
@@ -693,7 +693,7 @@
         xl = sf.lower(x);
         xu = sf.upper(x);
         xm = sf.middle(x);
-        this.geoms[idfn(item)] = {
+        geom = {
           marks: {
             iqr: {
               type: 'path',
@@ -727,23 +727,18 @@
           },
           evtData: evtData
         };
-        _results.push((function() {
-          var _len2, _ref2, _results2;
-          _ref2 = y.outliers;
-          _results2 = [];
-          for (index = 0, _len2 = _ref2.length; index < _len2; index++) {
-            point = _ref2[index];
-            _results2.push(this.geoms[idfn(item)].marks[index] = {
-              type: 'circle',
-              x: xm,
-              y: point,
-              color: this._getValue(item, 'color', {
-                size: this._getValue(item, 'size')
-              })
-            });
-          }
-          return _results2;
-        }).call(this));
+        _ref2 = y.outliers;
+        for (index = 0, _len2 = _ref2.length; index < _len2; index++) {
+          point = _ref2[index];
+          geom.marks[index] = {
+            type: 'circle',
+            x: xm,
+            y: point,
+            color: this._getValue(item, 'color'),
+            size: this._getValue(item, 'size')
+          };
+        }
+        _results.push(this.geoms[idfn(item)] = geom);
       }
       return _results;
     };

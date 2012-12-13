@@ -309,7 +309,7 @@ class Box extends Layer
       xl = sf.lower(x)
       xu = sf.upper(x)
       xm = sf.middle(x)
-      @geoms[idfn item] =
+      geom =
         marks:
           iqr:
             type: 'path'
@@ -338,12 +338,13 @@ class Box extends Layer
             size: @_getValue item, 'size'
         evtData: evtData
       for point, index in y.outliers
-        @geoms[idfn item].marks[index] =
+        geom.marks[index] =
           type: 'circle'
           x: xm
           y: point
           color: @_getValue item, 'color'
-            size: @_getValue item, 'size'
+          size: @_getValue item, 'size'
+      @geoms[idfn item] = geom
 
 ###
 # EXPORT

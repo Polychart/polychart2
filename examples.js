@@ -595,7 +595,7 @@
     item = function(i) {
       return {
         mod3: i % 3 === 0 ? "G1" : i % 3 === 1 ? "G2" : "G3",
-        value: i === 99 ? 15 : Math.random() * 10
+        value: i === 99 ? 25 : Math.random() * 10
       };
     };
     _results = [];
