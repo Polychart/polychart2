@@ -207,9 +207,9 @@
   domainMerge = {
     'num': function(domains) {
       var bw, max, min, _ref;
-      bw = _.uniq(_.map(domains, function(d) {
+      bw = _.compact(_.uniq(_.map(domains, function(d) {
         return d.bw;
-      }));
+      })));
       if (bw.length > 1) {
         throw new poly.LengthError("All binwidths are not of the same length");
       }
@@ -229,9 +229,9 @@
     },
     'date': function(domains) {
       var bw, max, min, _ref;
-      bw = _.uniq(_.map(domains, function(d) {
+      bw = _.compact(_.uniq(_.map(domains, function(d) {
         return d.bw;
-      }));
+      })));
       if (bw.length > 1) {
         throw new poly.LengthError("All binwidths are not of the same length");
       }

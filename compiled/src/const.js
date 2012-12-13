@@ -20,7 +20,8 @@
       'count': ['key'],
       'sum': ['key'],
       'mean': ['key'],
-      'box': ['key']
+      'box': ['key'],
+      'median': ['key']
     },
     timerange: ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'],
     metas: {

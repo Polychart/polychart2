@@ -227,7 +227,8 @@
       'count': ['key'],
       'sum': ['key'],
       'mean': ['key'],
-      'box': ['key']
+      'box': ['key'],
+      'median': ['key']
     },
     timerange: ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'],
     metas: {
@@ -379,23 +380,19 @@
 
   poly.format.number = function(exp_original) {
     return function(num) {
-      var exp, exp_fixed, exp_precision, rounded, _ref, _ref2;
+      var exp, exp_fixed, exp_precision, rounded;
       exp_fixed = 0;
       exp_precision = 0;
-      exp = exp_original != null ? -exp_original : Math.floor(Math.log(Math.abs(num === 0 ? 1 : num)) / Math.LN10);
+      exp = exp_original != null ? exp_original : Math.floor(Math.log(Math.abs(num === 0 ? 1 : num)) / Math.LN10);
       if ((exp_original != null) && (exp === 2 || exp === 5 || exp === 8 || exp === 11)) {
         exp_fixed = exp + 1;
         exp_precision = 1;
       } else if (exp === -1) {
         exp_fixed = 0;
-        exp_precision = (_ref = arguments.length === 2) != null ? _ref : {
-          1: 2
-        };
+        exp_precision = exp_original != null ? 1 : 2;
       } else if (exp === -2) {
         exp_fixed = 0;
-        exp_precision = (_ref2 = arguments.length === 2) != null ? _ref2 : {
-          2: 3
-        };
+        exp_precision = exp_original != null ? 2 : 3;
       } else if (exp === 1 || exp === 2) {
         exp_fixed = 0;
       } else if (exp > 3 && exp < 6) {
@@ -1677,9 +1674,9 @@
   domainMerge = {
     'num': function(domains) {
       var bw, max, min, _ref;
-      bw = _.uniq(_.map(domains, function(d) {
+      bw = _.compact(_.uniq(_.map(domains, function(d) {
         return d.bw;
-      }));
+      })));
       if (bw.length > 1) {
         throw new poly.LengthError("All binwidths are not of the same length");
       }
@@ -1699,9 +1696,9 @@
     },
     'date': function(domains) {
       var bw, max, min, _ref;
-      bw = _.uniq(_.map(domains, function(d) {
+      bw = _.compact(_.uniq(_.map(domains, function(d) {
         return d.bw;
-      }));
+      })));
       if (bw.length > 1) {
         throw new poly.LengthError("All binwidths are not of the same length");
       }
@@ -2640,7 +2637,6 @@
     PositionScale.prototype._dateWrapper = function(domain, y) {
       var _this = this;
       return function(value) {
-        debugger;
         var space, v, v1, v2;
         space = 0.001 * (_this.range.max > _this.range.min ? 1 : -1);
         if (_.isObject(value)) {

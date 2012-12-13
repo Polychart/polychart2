@@ -151,7 +151,6 @@
     PositionScale.prototype._dateWrapper = function(domain, y) {
       var _this = this;
       return function(value) {
-        debugger;
         var space, v, v1, v2;
         space = 0.001 * (_this.range.max > _this.range.min ? 1 : -1);
         if (_.isObject(value)) {

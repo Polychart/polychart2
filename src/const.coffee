@@ -9,7 +9,7 @@ poly.const =
   aes : ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id', 'text']
   noLegend: ['x', 'y', 'id', 'text', 'tooltip']
   trans: {'bin': ['key', 'binwidth'], 'lag': ['key', 'lag']},
-  stat: {'count': ['key'], 'sum': ['key'], 'mean': ['key'], 'box': ['key'],}
+  stat: {'count': ['key'], 'sum': ['key'], 'mean': ['key'], 'box': ['key'], 'median': ['key']}
   timerange: ['second','minute','hour','day','week','month', 'year']
   metas: {sort: null, stat: null, limit: null, asc: true},
   scaleFns :

@@ -130,7 +130,7 @@ can be merged if they share the same properties:
 ###
 domainMerge =
   'num' : (domains) ->
-    bw = _.uniq _.map(domains, (d) -> d.bw)
+    bw = _.compact _.uniq _.map(domains, (d) -> d.bw)
     if bw.length > 1
       throw new poly.LengthError("All binwidths are not of the same length")
     bw = bw[0] ? undefined
@@ -138,7 +138,7 @@ domainMerge =
     max = _.max _.map(domains, (d) -> d.max)
     return makeDomain type: 'num', min: min, max:max, bw: bw
   'date' : (domains) ->
-    bw = _.uniq _.map(domains, (d) -> d.bw)
+    bw = _.compact _.uniq _.map(domains, (d) -> d.bw)
     if bw.length > 1
       throw new poly.LengthError("All binwidths are not of the same length")
     bw = bw[0] ? undefined

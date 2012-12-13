@@ -75,7 +75,6 @@ class PositionScale extends Scale
       throw new poly.UnexpectedObject("Expected a value instead of an object")
     y(value)
   _dateWrapper: (domain, y) => (value) =>
-    debugger
     space = 0.001 * (if @range.max > @range.min then 1 else -1)
     if _.isObject(value)
       if value.t is 'scalefn'

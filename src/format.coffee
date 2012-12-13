@@ -28,17 +28,17 @@ formatNumber = (n) ->
 poly.format.number = (exp_original) -> (num) ->
   exp_fixed = 0
   exp_precision = 0
-  exp = if exp_original? then -exp_original else
+  exp = if exp_original? then exp_original else
     Math.floor(Math.log(Math.abs(if num is 0 then 1 else num))/Math.LN10)
   if exp_original? && (exp == 2 || exp == 5 || exp == 8 || exp == 11)
     exp_fixed = exp + 1
     exp_precision = 1
   else if (exp == -1)
     exp_fixed = 0
-    exp_precision = arguments.length == 2 ? 1 : 2
+    exp_precision = if exp_original? then 1 else 2
   else if (exp == -2)
     exp_fixed = 0
-    exp_precision = arguments.length == 2 ? 2 : 3
+    exp_precision = if exp_original? then 2 else 3
   else if (exp == 1 || exp == 2)
     exp_fixed = 0
   else if (exp > 3 && exp < 6)
