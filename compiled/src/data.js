@@ -134,7 +134,8 @@
     'bin': function(key, transSpec) {
       var binFn, binwidth, name;
       name = transSpec.name, binwidth = transSpec.binwidth;
-      if (_.isNumber(binwidth)) {
+      if (!isNaN(binwidth)) {
+        binwidth = +binwidth;
         binFn = function(item) {
           return item[name] = binwidth * Math.floor(item[key] / binwidth);
         };
@@ -390,20 +391,21 @@
   */
 
   frontendProcess = function(dataSpec, rawData, callback) {
-    var addMeta, additionalFilter, d, data, filter, key, meta, metaData, metaSpec, trans, transSpec, _i, _len, _ref, _ref2, _ref3, _ref4;
+    var addMeta, additionalFilter, d, data, filter, key, meta, metaData, metaSpec, trans, transSpec, _i, _j, _len, _len2, _ref, _ref2, _ref3, _ref4;
     data = _.clone(rawData);
     metaData = {};
     addMeta = function(key, meta) {
       var _ref;
-      return _.extend((_ref = metaData[key]) != null ? _ref : {}, meta);
+      return metaData[key] = _.extend((_ref = metaData[key]) != null ? _ref : {}, meta);
     };
     if (dataSpec.trans) {
       _ref = dataSpec.trans;
-      for (key in _ref) {
-        transSpec = _ref[key];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        transSpec = _ref[_i];
+        key = transSpec.key;
         _ref2 = transformFactory(key, transSpec), trans = _ref2.trans, meta = _ref2.meta;
-        for (_i = 0, _len = data.length; _i < _len; _i++) {
-          d = data[_i];
+        for (_j = 0, _len2 = data.length; _j < _len2; _j++) {
+          d = data[_j];
           trans(d);
         }
         addMeta(transSpec.name, meta);

@@ -109,13 +109,14 @@
   */
 
   makeDomainSet = function(layerObj, guideSpec, strictmode) {
-    var aes, domain, fromspec, values, _ref, _ref2, _ref3;
+    var aes, domain, fromspec, meta, values, _ref, _ref2, _ref3, _ref4, _ref5;
     domain = {};
     for (aes in layerObj.mapping) {
       if (strictmode) {
         domain[aes] = makeDomain(guideSpec[aes]);
       } else {
         values = flattenGeoms(layerObj.geoms, aes);
+        meta = (_ref = layerObj.getMeta(aes)) != null ? _ref : {};
         fromspec = function(item) {
           if (guideSpec[aes] != null) {
             return guideSpec[aes][item];
@@ -126,14 +127,14 @@
         if (typeOf(values) === 'num') {
           domain[aes] = makeDomain({
             type: 'num',
-            min: (_ref = fromspec('min')) != null ? _ref : _.min(values),
-            max: (_ref2 = fromspec('max')) != null ? _ref2 : _.max(values),
-            bw: fromspec('bw')
+            min: (_ref2 = fromspec('min')) != null ? _ref2 : _.min(values),
+            max: (_ref3 = fromspec('max')) != null ? _ref3 : _.max(values),
+            bw: (_ref4 = fromspec('bw')) != null ? _ref4 : meta.bw
           });
         } else {
           domain[aes] = makeDomain({
             type: 'cat',
-            levels: (_ref3 = fromspec('levels')) != null ? _ref3 : _.uniq(values),
+            levels: (_ref5 = fromspec('levels')) != null ? _ref5 : _.uniq(values),
             sorted: fromspec('levels') != null
           });
         }

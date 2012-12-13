@@ -1,5 +1,5 @@
 (function() {
-  var Area, Bar, Layer, Line, Path, Point, Text, aesthetics, defaults, poly, sf,
+  var Area, Bar, Layer, Line, Path, Point, Text, Tile, aesthetics, defaults, poly, sf,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -103,6 +103,14 @@
 
     Layer.prototype._calcGeoms = function() {
       return this.geoms = {};
+    };
+
+    Layer.prototype.getMeta = function(key) {
+      if (this.mapping[key]) {
+        return this.meta[this.mapping[key]];
+      } else {
+        return {};
+      }
     };
 
     Layer.prototype.render = function(render) {
@@ -619,6 +627,45 @@
     };
 
     return Text;
+
+  })(Layer);
+
+  Tile = (function(_super) {
+
+    __extends(Tile, _super);
+
+    function Tile() {
+      Tile.__super__.constructor.apply(this, arguments);
+    }
+
+    Tile.prototype._calcGeoms = function() {
+      var evtData, idfn, item, x, y, _i, _len, _ref, _results;
+      idfn = this._getIdFunc();
+      this.geoms = {};
+      _ref = this.statData;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
+        evtData = {};
+        x = this._getValue(item, 'x');
+        y = this._getValue(item, 'y');
+        _results.push(this.geoms[idfn(item)] = {
+          marks: {
+            0: {
+              type: 'rect',
+              x: [sf.lower(this._getValue(item, 'x')), sf.upper(this._getValue(item, 'x'))],
+              y: [sf.lower(this._getValue(item, 'y')), sf.upper(this._getValue(item, 'y'))],
+              color: this._getValue(item, 'color'),
+              size: this._getValue(item, 'size')
+            }
+          },
+          evtData: evtData
+        });
+      }
+      return _results;
+    };
+
+    return Tile;
 
   })(Layer);
 

@@ -91,7 +91,8 @@ when appropriate. (e.g for binning)
 transforms =
   'bin' : (key, transSpec) ->
     {name, binwidth} = transSpec
-    if _.isNumber binwidth
+    if !isNaN(binwidth) # empty string?
+      binwidth = +binwidth
       binFn = (item) ->
         item[name] = binwidth * Math.floor item[key]/binwidth
       return trans: binFn, meta: {bw: binwidth, binned: true}
@@ -239,10 +240,11 @@ frontendProcess = (dataSpec, rawData, callback) ->
   data = _.clone(rawData)
   # metaData and related f'ns
   metaData = {}
-  addMeta = (key, meta) -> _.extend (metaData[key] ? {}), meta
+  addMeta = (key, meta) ->  metaData[key] = _.extend (metaData[key] ? {}), meta
   # transforms
   if dataSpec.trans
-    for key, transSpec of dataSpec.trans
+    for transSpec in dataSpec.trans
+      {key} = transSpec
       {trans, meta} = transformFactory(key, transSpec)
       for d in data
         trans(d)

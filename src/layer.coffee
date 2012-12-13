@@ -77,6 +77,9 @@ class Layer
     @prevSpec = spec
 
   _calcGeoms: () -> @geoms = {} # layer level geom calculation
+
+  getMeta: (key) ->
+    if @mapping[key] then @meta[@mapping[key]] else {}
  
   # render and animation functions!
   render: (render) =>
@@ -274,6 +277,24 @@ class Text extends Layer
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
             'text-anchor': 'center'
+        evtData: evtData
+
+class Tile extends Layer
+  _calcGeoms: () ->
+    idfn = @_getIdFunc()
+    @geoms = {}
+    for item in @statData
+      evtData = {}
+      x = @_getValue item, 'x'
+      y = @_getValue item, 'y'
+      @geoms[idfn item] =
+        marks:
+          0:
+            type: 'rect'
+            x: [sf.lower(@_getValue(item, 'x')), sf.upper(@_getValue(item, 'x'))]
+            y: [sf.lower(@_getValue(item, 'y')), sf.upper(@_getValue(item, 'y'))]
+            color: @_getValue item, 'color'
+            size: @_getValue item, 'size'
         evtData: evtData
 
 ###

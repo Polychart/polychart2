@@ -65,13 +65,14 @@ makeDomainSet = (layerObj, guideSpec, strictmode) ->
     else
       # TODO: the un-optimized-ness of this seriously hurts
       values = flattenGeoms(layerObj.geoms, aes)
+      meta = layerObj.getMeta(aes) ? {}
       fromspec = (item) -> if guideSpec[aes]? then guideSpec[aes][item] else null
       if typeOf(values) == 'num'
         domain[aes] = makeDomain {
           type: 'num'
           min: fromspec('min') ? _.min(values)
           max: fromspec('max') ? _.max(values)
-          bw: fromspec('bw')
+          bw: fromspec('bw') ? meta.bw
         }
       else
         domain[aes] = makeDomain {
