@@ -704,7 +704,11 @@
         xu = sf.upper(x);
         xm = sf.middle(x);
         geom = {
-          marks: {
+          marks: {},
+          evtData: evtData
+        };
+        if (y.q1) {
+          geom.marks = {
             iqr: {
               type: 'path',
               x: [xl, xl, xu, xu, xl],
@@ -738,9 +742,8 @@
               size: this._getValue(item, 'size'),
               opacity: this._getValue(item, 'opacity')
             }
-          },
-          evtData: evtData
-        };
+          };
+        }
         _ref2 = y.outliers;
         for (index = 0, _len2 = _ref2.length; index < _len2; index++) {
           point = _ref2[index];

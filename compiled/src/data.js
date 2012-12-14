@@ -325,32 +325,37 @@
       return function(values) {
         var iqr, len, lowerBound, mid, q2, q4, quarter, sortedValues, splitValues, upperBound, _ref;
         len = values.length;
-        mid = len / 2;
-        sortedValues = _.sortBy(values, function(x) {
-          return x;
-        });
-        quarter = Math.ceil(mid) / 2;
-        if (quarter % 1 !== 0) {
-          quarter = Math.floor(quarter);
-          q2 = sortedValues[quarter];
-          q4 = sortedValues[(len - 1) - quarter];
-        } else {
-          q2 = (sortedValues[quarter] + sortedValues[quarter - 1]) / 2;
-          q4 = (sortedValues[len - quarter] + sortedValues[(len - quarter) - 1]) / 2;
+        if (len > 5) {
+          mid = len / 2;
+          sortedValues = _.sortBy(values, function(x) {
+            return x;
+          });
+          quarter = Math.ceil(mid) / 2;
+          if (quarter % 1 !== 0) {
+            quarter = Math.floor(quarter);
+            q2 = sortedValues[quarter];
+            q4 = sortedValues[(len - 1) - quarter];
+          } else {
+            q2 = (sortedValues[quarter] + sortedValues[quarter - 1]) / 2;
+            q4 = (sortedValues[len - quarter] + sortedValues[(len - quarter) - 1]) / 2;
+          }
+          iqr = q4 - q2;
+          lowerBound = q2 - (1.5 * iqr);
+          upperBound = q4 + (1.5 * iqr);
+          splitValues = _.groupBy(sortedValues, function(v) {
+            return v >= lowerBound && v <= upperBound;
+          });
+          return {
+            q1: _.min(splitValues["true"]),
+            q2: q2,
+            q3: poly.median(sortedValues, true),
+            q4: q4,
+            q5: _.max(splitValues["true"]),
+            outliers: (_ref = splitValues["false"]) != null ? _ref : []
+          };
         }
-        iqr = q4 - q2;
-        lowerBound = q2 - (1.5 * iqr);
-        upperBound = q4 + (1.5 * iqr);
-        splitValues = _.groupBy(sortedValues, function(v) {
-          return v >= lowerBound && v <= upperBound;
-        });
         return {
-          q1: _.min(splitValues["true"]),
-          q2: q2,
-          q3: poly.median(sortedValues, true),
-          q4: q4,
-          q5: _.max(splitValues["true"]),
-          outliers: (_ref = splitValues["false"]) != null ? _ref : []
+          outliers: values
         };
       };
     }

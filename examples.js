@@ -676,7 +676,7 @@
 
   if (this.examples == null) this.examples = {};
 
-  datafn2 = function() {
+  datafn2 = function(lim) {
     var i, item, _results;
     item = function(i) {
       return {
@@ -685,7 +685,7 @@
       };
     };
     _results = [];
-    for (i = 0; i <= 200; i++) {
+    for (i = 0; 0 <= lim ? i <= lim : i >= lim; 0 <= lim ? i++ : i--) {
       _results.push(item(i));
     }
     return _results;
@@ -694,7 +694,25 @@
   this.examples.box = function(dom) {
     var data;
     data = new poly.Data({
-      json: datafn2()
+      json: datafn2(100)
+    });
+    return poly.chart({
+      layers: [
+        {
+          data: data,
+          type: 'box',
+          x: 'mod3',
+          y: 'box(value)'
+        }
+      ],
+      dom: dom
+    });
+  };
+
+  this.examples.box_small = function(dom) {
+    var data;
+    data = new poly.Data({
+      json: datafn2(8)
     });
     return poly.chart({
       layers: [

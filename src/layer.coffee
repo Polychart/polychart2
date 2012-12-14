@@ -317,8 +317,9 @@ class Box extends Layer
       xl = sf.lower(x)
       xu = sf.upper(x)
       xm = sf.middle(x)
-      geom =
-        marks:
+      geom = marks: {} , evtData: evtData
+      if y.q1 # and therefore y.q2, y.q3, etc...
+        geom.marks =
           iqr:
             type: 'path'
             x: [xl, xl, xu, xu, xl]
@@ -348,7 +349,6 @@ class Box extends Layer
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
             opacity: @_getValue item, 'opacity'
-        evtData: evtData
       for point, index in y.outliers
         geom.marks[index] =
           type: 'circle'

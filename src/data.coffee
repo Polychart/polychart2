@@ -111,7 +111,7 @@ transforms =
       binFn = (item) ->
         item[name] = binwidth * Math.floor item[key]/binwidth
       return trans: binFn, meta: {bw: binwidth, binned: true, type:'num'}
-    if meta.type is 'date' # TODO
+    if meta.type is 'date'
       if not (binwidth in poly.const.timerange)
         throw poly.error.defn "The binwidth #{binwidth} is invalid for a datetime varliable"
       binFn = (item) ->
@@ -177,28 +177,32 @@ statistics =
   box: (spec) -> (values) ->
     # TODO: handle cases where there are too few values
     len = values.length
-    mid = len/2
-    sortedValues = _.sortBy(values, (x)->x)
-    quarter = Math.ceil(mid)/2
-    if quarter % 1 != 0
-        quarter = Math.floor(quarter)
-        q2 = sortedValues[quarter]
-        q4 = sortedValues[(len-1)-quarter]
-    else
-        q2 = (sortedValues[quarter] + sortedValues[quarter-1])/2
-        q4 = (sortedValues[len-quarter] + sortedValues[(len-quarter)-1])/2
-    iqr = q4-q2
-    lowerBound = q2-(1.5*iqr)
-    upperBound = q4+(1.5*iqr)
-    splitValues = _.groupBy(sortedValues,
-                            (v) -> v >= lowerBound and v <= upperBound)
+    if len > 5
+      mid = len/2
+      sortedValues = _.sortBy(values, (x)->x)
+      quarter = Math.ceil(mid)/2
+      if quarter % 1 != 0
+          quarter = Math.floor(quarter)
+          q2 = sortedValues[quarter]
+          q4 = sortedValues[(len-1)-quarter]
+      else
+          q2 = (sortedValues[quarter] + sortedValues[quarter-1])/2
+          q4 = (sortedValues[len-quarter] + sortedValues[(len-quarter)-1])/2
+      iqr = q4-q2
+      lowerBound = q2-(1.5*iqr)
+      upperBound = q4+(1.5*iqr)
+      splitValues = _.groupBy(sortedValues,
+                              (v) -> v >= lowerBound and v <= upperBound)
+      return {
+        q1: _.min(splitValues.true)
+        q2: q2
+        q3: poly.median(sortedValues, true)
+        q4: q4
+        q5: _.max(splitValues.true)
+        outliers: splitValues.false ? []
+      }
     return {
-      q1: _.min(splitValues.true)
-      q2: q2
-      q3: poly.median(sortedValues, true)
-      q4: q4
-      q5: _.max(splitValues.true)
-      outliers: splitValues.false ? []
+      outliers: values
     }
 ###
 Helper function to figures out which statistics to create, then creates it

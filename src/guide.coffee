@@ -284,7 +284,6 @@ class Legend extends Guide
 
 poly.guide = {}
 poly.guide.axis = (type) ->
-  #TODO: handle polar coordinates here
   if type == 'x'
     new XAxis()
   else if type == 'y'
