@@ -180,6 +180,12 @@ class ScaleSet
     legend.remove(renderer) for legend in @deletedLegends
     @deletedLegends = []
     offset = { x: 0, y : 0 }
+
+    # axis offset
+    y = @axes.y.getDimension()
+    if y.position == 'right'
+      offset.x += y.width
+
     maxwidth = 0
     maxheight = dims.height - dims.guideTop - dims.paddingTop
     for legend in @legends # assume position = right

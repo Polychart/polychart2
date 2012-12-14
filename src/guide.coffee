@@ -10,6 +10,8 @@ class Axis extends Guide
   constructor: () ->
     @line = null
     @title = null
+    @position = 'none'
+    @titletext = null
     @ticks = {}
     @pts = {}
   make: (params) =>
@@ -21,6 +23,7 @@ class Axis extends Guide
     axisDim =
       top: dim.paddingTop + dim.guideTop
       left : dim.paddingLeft + dim.guideLeft
+      right: dim.paddingLeft + dim.guideLeft + dim.chartWidth
       bottom : dim.paddingTop + dim.guideTop + dim.chartHeight
       width: dim.chartWidth
       height: dim.chartHeight
@@ -60,8 +63,17 @@ class Axis extends Guide
   _makeLabel: () -> throw poly.error.impl()
 
 class XAxis extends Axis # assumes position = bottom
+  make: (params) =>
+    {position} = params
+    @position = position ? 'bottom'
+    if @position not in ['top', 'bottom', 'none']
+      throw poly.error.defn "X-axis position can't be #{@position}."
+    super(params)
   _renderline : (renderer, axisDim) ->
-    y = sf.identity axisDim.bottom
+    if @position is 'top'
+      y = sf.identity axisDim.top
+    else
+      y = sf.identity axisDim.bottom
     x1 = sf.identity axisDim.left
     x2 = sf.identity axisDim.left+axisDim.width
     renderer.add
@@ -70,30 +82,53 @@ class XAxis extends Axis # assumes position = bottom
       x: [x1, x2]
       stroke: sf.identity 'black'
   _makeTitle: (axisDim, text) ->
+    if @position is 'top'
+      y = sf.identity axisDim.top - 27
+    else
+      y = sf.identity axisDim.bottom + 27
     type: 'text'
     x : sf.identity axisDim.left+axisDim.width/2
-    y : sf.identity axisDim.bottom + 27
+    y : y
     text: text
     'text-anchor' : 'middle'
   _makeTick: (axisDim, tick) ->
+    if @position is 'top'
+      y1 = sf.identity(axisDim.top)
+      y2 = sf.identity(axisDim.top-5)
+    else
+      y1 = sf.identity(axisDim.bottom)
+      y2 = sf.identity(axisDim.bottom+5)
     type: 'path'
     x : [tick.location, tick.location]
-    y : [sf.identity(axisDim.bottom), sf.identity(axisDim.bottom+5)]
+    y : [y1, y2]
     stroke: sf.identity 'black'
   _makeLabel: (axisDim, tick) ->
+    if @position is 'top'
+      y = sf.identity(axisDim.top-15)
+    else
+      y = sf.identity(axisDim.bottom+15)
     type: 'text'
     x : tick.location
-    y : sf.identity(axisDim.bottom+15)
+    y : y
     text: tick.value
     'text-anchor' : 'middle'
   getDimension: () ->
-    position: 'bottom'
+    position: @position ? 'bottom'
     height: 30
     width: 'all'
 
 class YAxis extends Axis # assumes position = left
+  make: (params) =>
+    {position} = params
+    @position = position ? 'left'
+    if @position not in ['left', 'right', 'none']
+      throw poly.error.defn "X-axis position can't be #{@position}."
+    super(params)
   _renderline : (renderer, axisDim) ->
-    x = sf.identity axisDim.left
+    if @position is 'left'
+      x = sf.identity axisDim.left
+    else
+      x = sf.identity axisDim.right
     y1 = sf.identity axisDim.top
     y2 = sf.identity axisDim.top+axisDim.height
     renderer.add
@@ -102,25 +137,39 @@ class YAxis extends Axis # assumes position = left
       y: [y1, y2]
       stroke: sf.identity 'black'
   _makeTitle: (axisDim, text) ->
+    if @position is 'left'
+      x = sf.identity axisDim.left - @maxwidth - 15
+    else
+      x = sf.identity axisDim.right + @maxwidth + 15
     type: 'text'
-    x : sf.identity axisDim.left - @maxwidth - 15
+    x : x
     y : sf.identity axisDim.top+axisDim.height/2
     text: text
     transform : 'r270'
     'text-anchor' : 'middle'
   _makeTick: (axisDim, tick) ->
+    if @position is 'left'
+      x1 = sf.identity(axisDim.left)
+      x2 = sf.identity(axisDim.left-5)
+    else
+      x1 = sf.identity(axisDim.right)
+      x2 = sf.identity(axisDim.right+5)
     type: 'path'
-    x : [sf.identity(axisDim.left), sf.identity(axisDim.left-5)]
+    x : [x1, x2]
     y : [tick.location, tick.location]
     stroke: sf.identity 'black'
   _makeLabel: (axisDim, tick) ->
+    if @position is 'left'
+      x = sf.identity(axisDim.left-7)
+    else
+      x = sf.identity(axisDim.right+7)
     type: 'text'
-    x : sf.identity(axisDim.left-7)
+    x : x
     y : tick.location
     text: tick.value
-    'text-anchor' : 'end'
+    'text-anchor' : if @position is 'left' then 'end' else 'start'
   getDimension: () ->
-    position: 'left'
+    position: @position ? 'right'
     height: 'all'
     width: 20+@maxwidth
 

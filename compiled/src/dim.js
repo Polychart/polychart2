@@ -53,7 +53,7 @@
       if (d.width > maxwidth) maxwidth = d.width;
       offset.y += d.height;
     }
-    dim.guideRight = offset.x + maxwidth;
+    dim.guideRight += offset.x + maxwidth;
     dim.chartHeight = dim.height - dim.paddingTop - dim.paddingBottom - dim.guideTop - dim.guideBottom;
     dim.chartWidth = dim.width - dim.paddingLeft - dim.paddingRight - dim.guideLeft - dim.guideRight;
     return dim;

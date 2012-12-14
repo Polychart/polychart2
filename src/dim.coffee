@@ -43,7 +43,8 @@ poly.dim.make = (spec, axes, legends) ->
     if d.width > maxwidth
       maxwidth = d.width
     offset.y += d.height
-  dim.guideRight = offset.x + maxwidth
+  dim.guideRight += offset.x + maxwidth
+
   dim.chartHeight =
     dim.height-dim.paddingTop-dim.paddingBottom-dim.guideTop-dim.guideBottom
   dim.chartWidth=

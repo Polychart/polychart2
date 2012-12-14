@@ -1987,6 +1987,8 @@
       this.render = __bind(this.render, this);
       this.make = __bind(this.make, this);      this.line = null;
       this.title = null;
+      this.position = 'none';
+      this.titletext = null;
       this.ticks = {};
       this.pts = {};
     }
@@ -2006,6 +2008,7 @@
       axisDim = {
         top: dim.paddingTop + dim.guideTop,
         left: dim.paddingLeft + dim.guideLeft,
+        right: dim.paddingLeft + dim.guideLeft + dim.chartWidth,
         bottom: dim.paddingTop + dim.guideTop + dim.chartHeight,
         width: dim.chartWidth,
         height: dim.chartHeight
@@ -2081,12 +2084,27 @@
     __extends(XAxis, _super);
 
     function XAxis() {
+      this.make = __bind(this.make, this);
       XAxis.__super__.constructor.apply(this, arguments);
     }
 
+    XAxis.prototype.make = function(params) {
+      var position, _ref;
+      position = params.position;
+      this.position = position != null ? position : 'bottom';
+      if ((_ref = this.position) !== 'top' && _ref !== 'bottom' && _ref !== 'none') {
+        throw poly.error.defn("X-axis position can't be " + this.position + ".");
+      }
+      return XAxis.__super__.make.call(this, params);
+    };
+
     XAxis.prototype._renderline = function(renderer, axisDim) {
       var x1, x2, y;
-      y = sf.identity(axisDim.bottom);
+      if (this.position === 'top') {
+        y = sf.identity(axisDim.top);
+      } else {
+        y = sf.identity(axisDim.bottom);
+      }
       x1 = sf.identity(axisDim.left);
       x2 = sf.identity(axisDim.left + axisDim.width);
       return renderer.add({
@@ -2098,37 +2116,58 @@
     };
 
     XAxis.prototype._makeTitle = function(axisDim, text) {
+      var y;
+      if (this.position === 'top') {
+        y = sf.identity(axisDim.top - 27);
+      } else {
+        y = sf.identity(axisDim.bottom + 27);
+      }
       return {
         type: 'text',
         x: sf.identity(axisDim.left + axisDim.width / 2),
-        y: sf.identity(axisDim.bottom + 27),
+        y: y,
         text: text,
         'text-anchor': 'middle'
       };
     };
 
     XAxis.prototype._makeTick = function(axisDim, tick) {
+      var y1, y2;
+      if (this.position === 'top') {
+        y1 = sf.identity(axisDim.top);
+        y2 = sf.identity(axisDim.top - 5);
+      } else {
+        y1 = sf.identity(axisDim.bottom);
+        y2 = sf.identity(axisDim.bottom + 5);
+      }
       return {
         type: 'path',
         x: [tick.location, tick.location],
-        y: [sf.identity(axisDim.bottom), sf.identity(axisDim.bottom + 5)],
+        y: [y1, y2],
         stroke: sf.identity('black')
       };
     };
 
     XAxis.prototype._makeLabel = function(axisDim, tick) {
+      var y;
+      if (this.position === 'top') {
+        y = sf.identity(axisDim.top - 15);
+      } else {
+        y = sf.identity(axisDim.bottom + 15);
+      }
       return {
         type: 'text',
         x: tick.location,
-        y: sf.identity(axisDim.bottom + 15),
+        y: y,
         text: tick.value,
         'text-anchor': 'middle'
       };
     };
 
     XAxis.prototype.getDimension = function() {
+      var _ref;
       return {
-        position: 'bottom',
+        position: (_ref = this.position) != null ? _ref : 'bottom',
         height: 30,
         width: 'all'
       };
@@ -2143,12 +2182,27 @@
     __extends(YAxis, _super);
 
     function YAxis() {
+      this.make = __bind(this.make, this);
       YAxis.__super__.constructor.apply(this, arguments);
     }
 
+    YAxis.prototype.make = function(params) {
+      var position, _ref;
+      position = params.position;
+      this.position = position != null ? position : 'left';
+      if ((_ref = this.position) !== 'left' && _ref !== 'right' && _ref !== 'none') {
+        throw poly.error.defn("X-axis position can't be " + this.position + ".");
+      }
+      return YAxis.__super__.make.call(this, params);
+    };
+
     YAxis.prototype._renderline = function(renderer, axisDim) {
       var x, y1, y2;
-      x = sf.identity(axisDim.left);
+      if (this.position === 'left') {
+        x = sf.identity(axisDim.left);
+      } else {
+        x = sf.identity(axisDim.right);
+      }
       y1 = sf.identity(axisDim.top);
       y2 = sf.identity(axisDim.top + axisDim.height);
       return renderer.add({
@@ -2160,9 +2214,15 @@
     };
 
     YAxis.prototype._makeTitle = function(axisDim, text) {
+      var x;
+      if (this.position === 'left') {
+        x = sf.identity(axisDim.left - this.maxwidth - 15);
+      } else {
+        x = sf.identity(axisDim.right + this.maxwidth + 15);
+      }
       return {
         type: 'text',
-        x: sf.identity(axisDim.left - this.maxwidth - 15),
+        x: x,
         y: sf.identity(axisDim.top + axisDim.height / 2),
         text: text,
         transform: 'r270',
@@ -2171,27 +2231,42 @@
     };
 
     YAxis.prototype._makeTick = function(axisDim, tick) {
+      var x1, x2;
+      if (this.position === 'left') {
+        x1 = sf.identity(axisDim.left);
+        x2 = sf.identity(axisDim.left - 5);
+      } else {
+        x1 = sf.identity(axisDim.right);
+        x2 = sf.identity(axisDim.right + 5);
+      }
       return {
         type: 'path',
-        x: [sf.identity(axisDim.left), sf.identity(axisDim.left - 5)],
+        x: [x1, x2],
         y: [tick.location, tick.location],
         stroke: sf.identity('black')
       };
     };
 
     YAxis.prototype._makeLabel = function(axisDim, tick) {
+      var x;
+      if (this.position === 'left') {
+        x = sf.identity(axisDim.left - 7);
+      } else {
+        x = sf.identity(axisDim.right + 7);
+      }
       return {
         type: 'text',
-        x: sf.identity(axisDim.left - 7),
+        x: x,
         y: tick.location,
         text: tick.value,
-        'text-anchor': 'end'
+        'text-anchor': this.position === 'left' ? 'end' : 'start'
       };
     };
 
     YAxis.prototype.getDimension = function() {
+      var _ref;
       return {
-        position: 'left',
+        position: (_ref = this.position) != null ? _ref : 'right',
         height: 'all',
         width: 20 + this.maxwidth
       };
@@ -3244,7 +3319,7 @@
     };
 
     ScaleSet.prototype.renderLegends = function(dims, renderer) {
-      var legend, maxheight, maxwidth, newdim, offset, _i, _j, _len, _len2, _ref, _ref2, _results;
+      var legend, maxheight, maxwidth, newdim, offset, y, _i, _j, _len, _len2, _ref, _ref2, _results;
       _ref = this.deletedLegends;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         legend = _ref[_i];
@@ -3255,6 +3330,8 @@
         x: 0,
         y: 0
       };
+      y = this.axes.y.getDimension();
+      if (y.position === 'right') offset.x += y.width;
       maxwidth = 0;
       maxheight = dims.height - dims.guideTop - dims.paddingTop;
       _ref2 = this.legends;
@@ -4623,7 +4700,7 @@
       if (d.width > maxwidth) maxwidth = d.width;
       offset.y += d.height;
     }
-    dim.guideRight = offset.x + maxwidth;
+    dim.guideRight += offset.x + maxwidth;
     dim.chartHeight = dim.height - dim.paddingTop - dim.paddingBottom - dim.guideTop - dim.guideBottom;
     dim.chartWidth = dim.width - dim.paddingLeft - dim.paddingRight - dim.guideLeft - dim.guideRight;
     return dim;

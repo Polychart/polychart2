@@ -245,7 +245,7 @@
     };
 
     ScaleSet.prototype.renderLegends = function(dims, renderer) {
-      var legend, maxheight, maxwidth, newdim, offset, _i, _j, _len, _len2, _ref, _ref2, _results;
+      var legend, maxheight, maxwidth, newdim, offset, y, _i, _j, _len, _len2, _ref, _ref2, _results;
       _ref = this.deletedLegends;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         legend = _ref[_i];
@@ -256,6 +256,8 @@
         x: 0,
         y: 0
       };
+      y = this.axes.y.getDimension();
+      if (y.position === 'right') offset.x += y.width;
       maxwidth = 0;
       maxheight = dims.height - dims.guideTop - dims.paddingTop;
       _ref2 = this.legends;
