@@ -1992,8 +1992,9 @@
     }
 
     Axis.prototype.make = function(params) {
-      var domain, guideSpec, type;
-      domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.titletext = params.titletext;
+      var domain, guideSpec, key, type, _ref;
+      domain = params.domain, type = params.type, guideSpec = params.guideSpec, key = params.key;
+      this.titletext = (_ref = guideSpec.title) != null ? _ref : key;
       this.ticks = poly.tick.make(domain, guideSpec, type);
       return this.maxwidth = _.max(_.map(this.ticks, function(t) {
         return poly.strSize(t.value);
@@ -3128,13 +3129,13 @@
         domain: this.domainx,
         type: this.scales.x.tickType(),
         guideSpec: this.getSpec('x'),
-        titletext: poly.getLabel(this.layers, 'x')
+        key: poly.getLabel(this.layers, 'x')
       });
       this.axes.y.make({
         domain: this.domainy,
         type: this.scales.y.tickType(),
         guideSpec: this.getSpec('y'),
-        titletext: poly.getLabel(this.layers, 'y')
+        key: poly.getLabel(this.layers, 'y')
       });
       return this.axes;
     };

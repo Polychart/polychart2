@@ -97,12 +97,12 @@ class ScaleSet
       domain: @domainx
       type: @scales.x.tickType()
       guideSpec: @getSpec 'x'
-      titletext: poly.getLabel @layers, 'x'
+      key: poly.getLabel @layers, 'x'
     @axes.y.make
       domain: @domainy
       type: @scales.y.tickType()
       guideSpec: @getSpec 'y'
-      titletext: poly.getLabel @layers, 'y'
+      key: poly.getLabel @layers, 'y'
     @axes
   renderAxes: (dims, renderer) ->
     @axes.x.render dims, renderer

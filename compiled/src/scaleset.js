@@ -133,13 +133,13 @@
         domain: this.domainx,
         type: this.scales.x.tickType(),
         guideSpec: this.getSpec('x'),
-        titletext: poly.getLabel(this.layers, 'x')
+        key: poly.getLabel(this.layers, 'x')
       });
       this.axes.y.make({
         domain: this.domainy,
         type: this.scales.y.tickType(),
         guideSpec: this.getSpec('y'),
-        titletext: poly.getLabel(this.layers, 'y')
+        key: poly.getLabel(this.layers, 'y')
       });
       return this.axes;
     };

@@ -13,7 +13,8 @@ class Axis extends Guide
     @ticks = {}
     @pts = {}
   make: (params) =>
-    {domain, type, guideSpec, @titletext} = params
+    {domain, type, guideSpec, key} = params
+    @titletext = guideSpec.title ? key
     @ticks = poly.tick.make domain, guideSpec, type
     @maxwidth =_.max _.map @ticks, (t) -> poly.strSize t.value
   render: (dim, renderer) =>

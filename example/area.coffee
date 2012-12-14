@@ -10,6 +10,9 @@
     layers: [
       { data: data, type: 'area', x : 'a', y : 'b', color:'c'}
     ]
+    guides:
+      x: title: 'The x-axis'
+      y: title: 'The y-axis'
     dom: dom
   }
   c = poly.chart spec

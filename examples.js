@@ -48,6 +48,14 @@
           color: 'c'
         }
       ],
+      guides: {
+        x: {
+          title: 'The x-axis'
+        },
+        y: {
+          title: 'The y-axis'
+        }
+      },
       dom: dom
     };
     return c = poly.chart(spec);

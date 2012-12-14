@@ -36,8 +36,9 @@
     }
 
     Axis.prototype.make = function(params) {
-      var domain, guideSpec, type;
-      domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.titletext = params.titletext;
+      var domain, guideSpec, key, type, _ref;
+      domain = params.domain, type = params.type, guideSpec = params.guideSpec, key = params.key;
+      this.titletext = (_ref = guideSpec.title) != null ? _ref : key;
       this.ticks = poly.tick.make(domain, guideSpec, type);
       return this.maxwidth = _.max(_.map(this.ticks, function(t) {
         return poly.strSize(t.value);
