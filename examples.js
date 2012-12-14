@@ -54,6 +54,9 @@
         },
         y: {
           title: 'The y-axis'
+        },
+        color: {
+          title: 'Some Color'
         }
       },
       dom: dom
@@ -165,6 +168,9 @@
           type: 'num',
           min: 0,
           max: 15
+        },
+        color: {
+          title: "Parity"
         }
       },
       dom: dom

@@ -238,7 +238,7 @@
           guideSpec: this.getSpec(aes),
           type: this.scales[aes].tickType(),
           mapping: this.layerMapping,
-          titletext: poly.getLabel(this.layers, aes)
+          keys: poly.getLabel(this.layers, aes)
         });
       }
       return this.legends;

@@ -392,13 +392,16 @@
     }
 
     Legend.prototype.make = function(params) {
-      var domain, guideSpec, type;
-      domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.mapping = params.mapping, this.titletext = params.titletext;
+      var domain, guideSpec, keys, tickWidth, titleWidth, type, _ref;
+      domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.mapping = params.mapping, keys = params.keys;
+      this.titletext = (_ref = guideSpec.title) != null ? _ref : keys;
       this.ticks = poly.tick.make(domain, guideSpec, type);
       this.height = this.TITLEHEIGHT + this.SPACING + this.TICKHEIGHT * _.size(this.ticks);
-      return this.maxwidth = _.max(_.map(this.ticks, function(t) {
+      titleWidth = poly.strSize(this.titletext);
+      tickWidth = _.max(_.map(this.ticks, function(t) {
         return poly.strSize(t.value);
       }));
+      return this.maxwidth = Math.max(titleWidth, tickWidth);
     };
 
     Legend.prototype.render = function(dim, renderer, offset) {

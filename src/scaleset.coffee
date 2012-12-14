@@ -173,7 +173,7 @@ class ScaleSet
         guideSpec: @getSpec aes
         type: @scales[aes].tickType()
         mapping: @layerMapping
-        titletext: poly.getLabel(@layers, aes)
+        keys: poly.getLabel(@layers, aes)
     @legends
   renderLegends: (dims, renderer) ->
     # NOTE: if this is changed, change dim.coffee dimension calculation

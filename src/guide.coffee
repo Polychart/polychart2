@@ -200,10 +200,13 @@ class Legend extends Guide
     @ticks = {}
     @pts = {}
   make: (params) =>
-    {domain, type, guideSpec, @mapping, @titletext} = params
+    {domain, type, guideSpec, @mapping, keys} = params
+    @titletext = guideSpec.title ? keys
     @ticks = poly.tick.make domain, guideSpec, type
     @height = @TITLEHEIGHT + @SPACING + @TICKHEIGHT*_.size @ticks
-    @maxwidth = _.max _.map @ticks, (t) -> poly.strSize t.value
+    titleWidth = poly.strSize @titletext
+    tickWidth = _.max _.map @ticks, (t) -> poly.strSize t.value
+    @maxwidth = Math.max titleWidth, tickWidth
   render: (dim, renderer, offset) -> # assume position = RIGHT
     legendDim =
       top: dim.paddingTop + dim.guideTop + offset.y
