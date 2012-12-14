@@ -62,7 +62,13 @@ Function for calculating the location of ticks.
 ###
 tickValues =
   'cat' : (domain, numticks) ->
-    ticks: domain.levels #TODO
+    len = domain.levels.length
+    step = Math.max 1, Math.round(len/numticks)
+    ticks = []
+    for item, i in domain.levels
+      if i % step == 0
+        ticks.push item
+    ticks: ticks
   'num' : (domain, numticks) ->
     {min, max} = domain
     step = getStep max-min, numticks

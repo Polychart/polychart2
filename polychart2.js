@@ -1868,8 +1868,17 @@
 
   tickValues = {
     'cat': function(domain, numticks) {
+      var i, item, len, step, ticks, _len, _ref;
+      len = domain.levels.length;
+      step = Math.max(1, Math.round(len / numticks));
+      ticks = [];
+      _ref = domain.levels;
+      for (i = 0, _len = _ref.length; i < _len; i++) {
+        item = _ref[i];
+        if (i % step === 0) ticks.push(item);
+      }
       return {
-        ticks: domain.levels
+        ticks: ticks
       };
     },
     'num': function(domain, numticks) {
