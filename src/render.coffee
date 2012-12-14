@@ -21,10 +21,6 @@ poly.paper = (dom, w, h, handleEvent) ->
   paper
 ###
 Helper function for rendering all the geoms of an object
-
-TODO: 
-- make add & remove animations
-- make everything animateWith some standard object
 ###
 poly.render = (handleEvent, paper, scales, coord, mayflip, clipping) ->
   add: (mark, evtData) ->

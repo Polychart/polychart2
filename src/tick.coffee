@@ -102,7 +102,7 @@ tickValues =
         continue
       ticks.push num
     ticks: ticks
-  'date' : (domain, numticks) -> #TODO
+  'date' : (domain, numticks) ->
     {min, max} = domain
     step = (max-min) / numticks
     step =

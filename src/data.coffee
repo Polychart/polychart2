@@ -175,7 +175,6 @@ statistics =
   max: (spec) -> (values) -> _.max(values)
   median: (spec) -> (values) -> poly.median(values)
   box: (spec) -> (values) ->
-    # TODO: handle cases where there are too few values
     len = values.length
     if len > 5
       mid = len/2

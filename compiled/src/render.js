@@ -50,10 +50,6 @@
 
   /*
   Helper function for rendering all the geoms of an object
-  
-  TODO: 
-  - make add & remove animations
-  - make everything animateWith some standard object
   */
 
   poly.render = function(handleEvent, paper, scales, coord, mayflip, clipping) {

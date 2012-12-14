@@ -93,8 +93,6 @@
   Given an aesthetic mapping in the "geom" object, flatten it and extract only
   the values from it. This is so that even if a compound object is encoded in an
   aestehtic, we have the correct set of values to calculate the min/max.
-  
-  TODO: handles the "novalue" case (when x or y has no mapping)
   */
 
   poly.flatten = function(values) {
@@ -103,7 +101,7 @@
     if (values != null) {
       if (_.isObject(values)) {
         if (values.t === 'scalefn') {
-          flat.push(values.v);
+          if (values.f !== 'novalue') flat.push(values.v);
         } else {
           for (k in values) {
             v = values[k];
