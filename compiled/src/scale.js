@@ -66,15 +66,15 @@
     };
 
     Scale.prototype._makeNum = function() {
-      throw new poly.NotImplemented("_makeNum is not implemented");
+      throw poly.error.impl("You are using a scale that does not support numbers");
     };
 
     Scale.prototype._makeDate = function() {
-      throw new poly.NotImplemented("_makeDate is not implemented");
+      throw poly.error.impl("You are using a scale that does not support dates");
     };
 
     Scale.prototype._makeCat = function() {
-      throw new poly.NotImplemented("_makeCat is not implemented");
+      throw poly.error.impl("You are using a scale that does not support categoies");
     };
 
     Scale.prototype.tickType = function() {
@@ -145,7 +145,7 @@
             if (value.f === 'max') return _this.range.max + value.v;
             if (value.f === 'min') return _this.range.min + value.v;
           }
-          throw new poly.UnexpectedObject("Expected a value instead of an object");
+          throw poly.error.input("Unknown object " + value + " is passed to a scale");
         }
         return y(value);
       };
@@ -175,7 +175,7 @@
             if (value.f === 'max') return _this.range.max + value.v;
             if (value.f === 'min') return _this.range.min + value.v;
           }
-          throw new poly.UnexpectedObject("Expected a value instead of an object");
+          throw poly.error.input("Unknown object " + value + " is passed to a scale");
         }
         return y(value);
       };
@@ -195,7 +195,7 @@
             if (value.f === 'max') return _this.range.max + value.v;
             if (value.f === 'min') return _this.range.min + value.v;
           }
-          throw new poly.UnexpectedObject("wtf is this object?");
+          throw poly.error.input("Unknown object " + value + " is passed to a scale");
         }
         return y(value) + step / 2;
       };

@@ -9,9 +9,6 @@
   zipWith = function(op) {
     return function(xs, ys) {
       var ix, xval, _len, _results;
-      if (xs.length !== ys.length) {
-        throw Error("zipWith: lists have different length: [" + xs + "], [" + ys + "]");
-      }
       _results = [];
       for (ix = 0, _len = xs.length; ix < _len; ix++) {
         xval = xs[ix];
@@ -247,7 +244,7 @@
         return [str.slice(substr.length), op(substr)];
       }
     }
-    throw new Error("cannot tokenize: " + str);
+    throw poly.error.impl("There is an error in your specification at " + str);
   };
 
   tokenize = function(str) {
@@ -380,7 +377,7 @@
   };
 
   parseFail = function(stream) {
-    throw Error("unable to parse: " + (stream.toString()));
+    throw poly.error.impl("There is an error in your specification at " + (stream.toString()));
   };
 
   parse = function(str) {
@@ -388,7 +385,7 @@
     stream = new Stream(tokenize(str));
     expr = parseExpr(stream);
     if (stream.peek() !== null) {
-      throw Error("expected end of stream, but found: " + (stream.toString()));
+      throw poly.error.impl("There is an error in your specification at " + (stream.toString()));
     }
     return expr;
   };
@@ -470,7 +467,7 @@
           results[optype].push(result);
           return result.name;
         } else {
-          throw Error("unknown operation: " + fname);
+          throw poly.error.impl("The operation " + fname + " is not recognized. Please check your specifications.");
         }
       }
     };

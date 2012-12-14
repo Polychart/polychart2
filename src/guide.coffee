@@ -4,7 +4,7 @@ sf = poly.const.scaleFns
 
 class Guide
   constructor: () ->
-  getDimension: () -> throw new poly.NotImplemented()
+  getDimension: () -> throw poly.error.impl()
 
 class Axis extends Guide
   constructor: () ->
@@ -53,10 +53,10 @@ class Axis extends Guide
     obj.tick = renderer.animate pt.tick, @_makeTick(axisDim, tick)
     obj.text = renderer.animate pt.text, @_makeLabel(axisDim, tick)
     obj
-  _renderline : () -> throw new poly.NotImplemented()
-  _makeTitle: () -> throw new poly.NotImplemented()
-  _makeTick : () -> throw new poly.NotImplemented()
-  _makeLabel: () -> throw new poly.NotImplemented()
+  _renderline : () -> throw poly.error.impl()
+  _makeTitle: () -> throw poly.error.impl()
+  _makeTick : () -> throw poly.error.impl()
+  _makeLabel: () -> throw poly.error.impl()
 
 class XAxis extends Axis # assumes position = bottom
   _renderline : (renderer, axisDim) ->

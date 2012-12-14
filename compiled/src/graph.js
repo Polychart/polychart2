@@ -12,6 +12,9 @@
       this.merge = __bind(this.merge, this);
       this.reset = __bind(this.reset, this);
       var _ref;
+      if (!(spec != null)) {
+        throw poly.error.defn("No graph specification is passed in!");
+      }
       this.handlers = [];
       this.layers = null;
       this.scaleSet = null;
@@ -21,27 +24,36 @@
       this.paper = null;
       this.coord = (_ref = spec.coord) != null ? _ref : poly.coord.cartesian();
       this.initial_spec = spec;
-      this.make(spec, true);
+      this.dataSubscribed = false;
+      this.make(spec);
     }
 
     Graph.prototype.reset = function() {
+      if (!(this.initial_spec != null)) {
+        throw poly.error.defn("No graph specification is passed in!");
+      }
       return this.make(this.initial_spec);
     };
 
-    Graph.prototype.make = function(spec, first) {
+    Graph.prototype.make = function(spec) {
       var dataChange, id, layerObj, merge, _len, _len2, _ref, _ref2, _results;
-      if (first == null) first = false;
       if (spec == null) spec = this.initial_spec;
       this.spec = spec;
-      if (spec.layers == null) spec.layers = [];
+      if (!(spec.layers != null)) {
+        throw poly.error.defn("No layers are defined in the specification.");
+      }
       if (this.layers == null) this.layers = this._makeLayers(this.spec);
-      if (first) {
+      if (!this.dataSubscribed) {
         dataChange = this.handleEvent('data');
         _ref = this.layers;
         for (id = 0, _len = _ref.length; id < _len; id++) {
           layerObj = _ref[id];
+          if (!(spec.layers[id].data != null)) {
+            throw poly.error.defn("Layer " + id + " does not have data to plot!");
+          }
           spec.layers[id].data.subscribe(dataChange);
         }
+        this.dataSubscribed = true;
       }
       merge = _.after(this.layers.length, this.merge);
       _ref2 = this.layers;
@@ -67,26 +79,27 @@
       }
       this.scaleSet.setRanges(this.ranges);
       this._legacy(domains);
-      if (this.spec.dom) {
-        dom = this.spec.dom;
-        scales = this.scaleSet.scales;
-        this.coord.setScales(scales);
-        if (this.paper == null) {
-          this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
-        }
-        clipping = this.coord.clipping(this.dims);
-        renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true, clipping);
-        _ref = this.layers;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          layer = _ref[_i];
-          layer.render(renderer);
-        }
-        renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, false);
-        this.scaleSet.makeAxes();
-        this.scaleSet.renderAxes(this.dims, renderer);
-        this.scaleSet.makeLegends();
-        return this.scaleSet.renderLegends(this.dims, renderer);
+      if (!this.spec.dom) {
+        throw poly.error.defn("No DOM element specified. Where to make plot?");
       }
+      dom = this.spec.dom;
+      scales = this.scaleSet.scales;
+      this.coord.setScales(scales);
+      if (this.paper == null) {
+        this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
+      }
+      clipping = this.coord.clipping(this.dims);
+      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true, clipping);
+      _ref = this.layers;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        layer = _ref[_i];
+        layer.render(renderer);
+      }
+      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, false);
+      this.scaleSet.makeAxes();
+      this.scaleSet.renderAxes(this.dims, renderer);
+      this.scaleSet.makeLegends();
+      return this.scaleSet.renderLegends(this.dims, renderer);
     };
 
     Graph.prototype.addHandler = function(h) {

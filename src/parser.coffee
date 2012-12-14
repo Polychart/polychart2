@@ -4,8 +4,8 @@ poly = @poly || {}
 # utilities
 ###############################################################################
 zipWith = (op) -> (xs, ys) ->
-  if xs.length isnt ys.length
-    throw Error("zipWith: lists have different length: [#{xs}], [#{ys}]")
+  #if xs.length isnt ys.length
+  #  trow some error ("zipWith: lists have different length: [#{xs}], [#{ys}]")
   op(xval, ys[ix]) for xval, ix in xs
 zip = zipWith (xval, yval) -> [xval, yval]
 assocsToObj = (assocs) ->
@@ -76,7 +76,7 @@ matchToken = (str) ->
     if match
       substr = match[0]
       return [str[substr.length..], op substr]
-  throw new Error("cannot tokenize: #{str}")
+  throw poly.error.impl("There is an error in your specification at #{str}")
 tokenize = (str) ->
   loop
     str = str.replace(/^\s+/, '')
@@ -110,12 +110,13 @@ expect = (stream, fail, alts) ->
       if token.tag is tag
         return express(stream)
   fail stream
-parseFail = (stream) -> throw Error("unable to parse: #{stream.toString()}")
+parseFail = (stream) ->
+  throw poly.error.impl("There is an error in your specification at #{stream.toString()}")
 parse = (str) ->
   stream = new Stream (tokenize str)
   expr = parseExpr(stream)
   if stream.peek() isnt null
-    throw Error("expected end of stream, but found: #{stream.toString()}")
+    throw poly.error.impl("There is an error in your specification at #{stream.toString()}")
   expr
 parseExpr = (stream) ->
   expect(stream, parseFail,
@@ -162,7 +163,7 @@ extractOps = (expr) ->
         results[optype].push result
         result.name
       else
-        throw Error("unknown operation: #{fname}")
+        throw poly.error.impl("The operation #{fname} is not recognized. Please check your specifications.")
   }
   expr.visit(extractor)
   results

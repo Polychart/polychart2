@@ -163,7 +163,9 @@
       var binFn, binwidth, name;
       name = transSpec.name, binwidth = transSpec.binwidth;
       if (meta.type === 'num') {
-        if (isNaN(binwidth)) throw Error("WTF");
+        if (isNaN(binwidth)) {
+          throw poly.error.defn("The binwidth " + binwidth + " is invalid for a numeric varliable");
+        }
         binwidth = +binwidth;
         binFn = function(item) {
           return item[name] = binwidth * Math.floor(item[key] / binwidth);
@@ -179,7 +181,7 @@
       }
       if (meta.type === 'date') {
         if (!(__indexOf.call(poly["const"].timerange, binwidth) >= 0)) {
-          throw Error("WTF");
+          throw poly.error.defn("The binwidth " + binwidth + " is invalid for a datetime varliable");
         }
         binFn = function(item) {
           return item[name] = moment.unix(item[key]).startOf(binwidth).unix();

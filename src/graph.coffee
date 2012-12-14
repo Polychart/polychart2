@@ -3,6 +3,8 @@ poly = @poly || {}
 # Graph Object
 class Graph
   constructor: (spec) ->
+    if not spec?
+      throw poly.error.defn "No graph specification is passed in!"
     @handlers = []
     @layers = null
     @scaleSet = null
@@ -12,21 +14,29 @@ class Graph
     @paper = null
     @coord = spec.coord ? poly.coord.cartesian()
     @initial_spec = spec
-    @make spec, true
+    @dataSubscribed = false
+    @make spec
 
-  reset : () => @make @initial_spec
+  reset : () =>
+    if not @initial_spec?
+      throw poly.error.defn "No graph specification is passed in!"
+    @make @initial_spec
 
-  make: (spec, first=false) ->
+  make: (spec) ->
     spec ?= @initial_spec
     @spec = spec
     # creation of layers
-    spec.layers ?= []
+    if not spec.layers?
+      throw poly.error.defn "No layers are defined in the specification."
     @layers ?= @_makeLayers @spec
     # subscribe to changes to data
-    if first
+    if not @dataSubscribed
       dataChange = @handleEvent 'data'
       for layerObj, id in @layers
-        spec.layers[id].data.subscribe dataChange # changes to data
+        if not spec.layers[id].data?
+          throw poly.error.defn "Layer #{id} does not have data to plot!"
+        spec.layers[id].data.subscribe dataChange
+      @dataSubscribed = true
     # callback after data processing
     merge = _.after(@layers.length, @merge)
     for layerObj, id in @layers
@@ -46,23 +56,24 @@ class Graph
     @_legacy(domains)
 
     # render : (dom) =>
-    if @spec.dom
-      dom = @spec.dom
-      scales = @scaleSet.scales
-      @coord.setScales scales
-      @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent
-      clipping = @coord.clipping @dims
-      # render each layer
-      renderer = poly.render @handleEvent, @paper, scales, @coord, true, clipping
-      for layer in @layers
-        layer.render renderer
-      # render axes
-      renderer = poly.render @handleEvent, @paper, scales, @coord, false
+    if not @spec.dom
+      throw poly.error.defn "No DOM element specified. Where to make plot?"
+    dom = @spec.dom
+    scales = @scaleSet.scales
+    @coord.setScales scales
+    @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent
+    clipping = @coord.clipping @dims
+    # render each layer
+    renderer = poly.render @handleEvent, @paper, scales, @coord, true, clipping
+    for layer in @layers
+      layer.render renderer
+    # render axes
+    renderer = poly.render @handleEvent, @paper, scales, @coord, false
 
-      @scaleSet.makeAxes()
-      @scaleSet.renderAxes @dims, renderer
-      @scaleSet.makeLegends()
-      @scaleSet.renderLegends @dims, renderer
+    @scaleSet.makeAxes()
+    @scaleSet.renderAxes @dims, renderer
+    @scaleSet.makeLegends()
+    @scaleSet.renderLegends @dims, renderer
 
   addHandler : (h) -> @handlers.push h
   removeHandler: (h) ->

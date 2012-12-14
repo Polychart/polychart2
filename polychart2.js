@@ -310,18 +310,105 @@
       'color': 'steelblue',
       'size': 2,
       'opacity': 0.7
-    },
-    formatter: {
-      'cat': function(x) {
-        return x;
-      },
-      'num': function(x) {
-        return x;
-      },
-      'date': function(x) {
-        return moment.unix(x).format('L');
-      }
     }
+  };
+
+  this.poly = poly;
+
+}).call(this);
+(function() {
+  var DataError, DefinitionError, DependencyError, ModeError, NotImplemented, UnknownInput, poly,
+    __hasProp = Object.prototype.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
+
+  poly = this.poly || {};
+
+  DefinitionError = (function(_super) {
+
+    __extends(DefinitionError, _super);
+
+    function DefinitionError(message) {
+      this.message = message;
+      this.name = "DefinitionError";
+    }
+
+    return DefinitionError;
+
+  })(Error);
+
+  DependencyError = (function(_super) {
+
+    __extends(DependencyError, _super);
+
+    function DependencyError(message) {
+      this.message = message;
+      this.name = "DependencyError";
+    }
+
+    return DependencyError;
+
+  })(Error);
+
+  ModeError = (function(_super) {
+
+    __extends(ModeError, _super);
+
+    function ModeError(message) {
+      this.message = message;
+      this.name = "ModeError";
+    }
+
+    return ModeError;
+
+  })(Error);
+
+  DataError = (function(_super) {
+
+    __extends(DataError, _super);
+
+    function DataError(message) {
+      this.message = message;
+      this.name = "DataError";
+    }
+
+    return DataError;
+
+  })(Error);
+
+  UnknownInput = (function(_super) {
+
+    __extends(UnknownInput, _super);
+
+    function UnknownInput(message) {
+      this.message = message;
+      this.name = "UnknownInput";
+    }
+
+    return UnknownInput;
+
+  })(Error);
+
+  NotImplemented = (function(_super) {
+
+    __extends(NotImplemented, _super);
+
+    function NotImplemented(message) {
+      this.message = message;
+      this.name = "ModeError";
+    }
+
+    return NotImplemented;
+
+  })(Error);
+
+  poly.error = {
+    data: DataError,
+    depn: DependencyError,
+    defn: DefinitionError,
+    mode: ModeError,
+    impl: NotImplemented,
+    input: UnknownInput,
+    unknown: Error
   };
 
   this.poly = poly;
@@ -588,89 +675,6 @@
 
 }).call(this);
 (function() {
-  var LengthError, NotImplemented, StrictModeError, UnexpectedObject, UnknownError, poly,
-    __hasProp = Object.prototype.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
-
-  poly = this.poly || {};
-
-  NotImplemented = (function(_super) {
-
-    __extends(NotImplemented, _super);
-
-    function NotImplemented(message) {
-      this.message = message != null ? message : "Not implemented";
-      this.name = "NotImplemented";
-    }
-
-    return NotImplemented;
-
-  })(Error);
-
-  poly.NotImplemented = NotImplemented;
-
-  UnexpectedObject = (function(_super) {
-
-    __extends(UnexpectedObject, _super);
-
-    function UnexpectedObject(message) {
-      this.message = message != null ? message : "Unexpected Object";
-      this.name = "UnexpectedObject";
-    }
-
-    return UnexpectedObject;
-
-  })(Error);
-
-  poly.UnexpectedObject = UnexpectedObject;
-
-  StrictModeError = (function(_super) {
-
-    __extends(StrictModeError, _super);
-
-    function StrictModeError(message) {
-      this.message = message != null ? message : "Can't use strict mode here";
-      this.name = "StrictModeError";
-    }
-
-    return StrictModeError;
-
-  })(Error);
-
-  poly.StrictModeError = StrictModeError;
-
-  LengthError = (function(_super) {
-
-    __extends(LengthError, _super);
-
-    function LengthError(message) {
-      this.message = message != null ? message : "Unexpected length";
-      this.name = "LengthError";
-    }
-
-    return LengthError;
-
-  })(Error);
-
-  poly.LengthError = LengthError;
-
-  UnknownError = (function(_super) {
-
-    __extends(UnknownError, _super);
-
-    function UnknownError(message) {
-      this.message = message != null ? message : "Unknown error";
-      this.name = "UnknownError";
-    }
-
-    return UnknownError;
-
-  })(Error);
-
-  poly.UnknownError = UnknownError;
-
-}).call(this);
-(function() {
   var Call, Comma, Const, Expr, Ident, LParen, Literal, RParen, Stream, Symbol, Token, assocsToObj, dedup, dedupOnKey, dictGet, dictGets, expect, extractOps, layerToDataSpec, matchToken, mergeObjLists, parse, parseCall, parseCallArgs, parseConst, parseExpr, parseFail, parseSymbolic, poly, showCall, showList, tag, tokenize, tokenizers, zip, zipWith, _ref,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
@@ -681,9 +685,6 @@
   zipWith = function(op) {
     return function(xs, ys) {
       var ix, xval, _len, _results;
-      if (xs.length !== ys.length) {
-        throw Error("zipWith: lists have different length: [" + xs + "], [" + ys + "]");
-      }
       _results = [];
       for (ix = 0, _len = xs.length; ix < _len; ix++) {
         xval = xs[ix];
@@ -919,7 +920,7 @@
         return [str.slice(substr.length), op(substr)];
       }
     }
-    throw new Error("cannot tokenize: " + str);
+    throw poly.error.impl("There is an error in your specification at " + str);
   };
 
   tokenize = function(str) {
@@ -1052,7 +1053,7 @@
   };
 
   parseFail = function(stream) {
-    throw Error("unable to parse: " + (stream.toString()));
+    throw poly.error.impl("There is an error in your specification at " + (stream.toString()));
   };
 
   parse = function(str) {
@@ -1060,7 +1061,7 @@
     stream = new Stream(tokenize(str));
     expr = parseExpr(stream);
     if (stream.peek() !== null) {
-      throw Error("expected end of stream, but found: " + (stream.toString()));
+      throw poly.error.impl("There is an error in your specification at " + (stream.toString()));
     }
     return expr;
   };
@@ -1142,7 +1143,7 @@
           results[optype].push(result);
           return result.name;
         } else {
-          throw Error("unknown operation: " + fname);
+          throw poly.error.impl("The operation " + fname + " is not recognized. Please check your specifications.");
         }
       }
     };
@@ -1678,7 +1679,7 @@
         return d.bw;
       })));
       if (bw.length > 1) {
-        throw new poly.LengthError("All binwidths are not of the same length");
+        throw poly.error.data("Not all layers have the same binwidth.");
       }
       bw = (_ref = bw[0]) != null ? _ref : void 0;
       min = _.min(_.map(domains, function(d) {
@@ -1700,7 +1701,7 @@
         return d.bw;
       })));
       if (bw.length > 1) {
-        throw new poly.LengthError("All binwidths are not of the same length");
+        throw poly.error.data("Not all layers have the same binwidth.");
       }
       bw = (_ref = bw[0]) != null ? _ref : void 0;
       min = _.min(_.map(domains, function(d) {
@@ -1729,7 +1730,7 @@
         return d.levels;
       }).value();
       if (sortedLevels.length > 0 && _.intersection.apply(this, sortedLevels)) {
-        throw new poly.UnknownError();
+        throw poly.error.data("You are trying to combine incompatiabl sorted domains in the same axis.");
       }
       sortedLevels = [_.flatten(sortedLevels, true)];
       levels = _.union.apply(this, sortedLevels.concat(unsortedLevels));
@@ -1753,7 +1754,7 @@
       return d.type;
     }));
     if (types.length > 1) {
-      throw new poly.TypeError("Not all domains are of the same type");
+      throw poly.error.data("You are trying to merge data of different types in the same axis or legend.");
     }
     return domainMerge[types[0]](domains);
   };
@@ -1962,7 +1963,7 @@
     function Guide() {}
 
     Guide.prototype.getDimension = function() {
-      throw new poly.NotImplemented();
+      throw poly.error.impl();
     };
 
     return Guide;
@@ -2048,19 +2049,19 @@
     };
 
     Axis.prototype._renderline = function() {
-      throw new poly.NotImplemented();
+      throw poly.error.impl();
     };
 
     Axis.prototype._makeTitle = function() {
-      throw new poly.NotImplemented();
+      throw poly.error.impl();
     };
 
     Axis.prototype._makeTick = function() {
-      throw new poly.NotImplemented();
+      throw poly.error.impl();
     };
 
     Axis.prototype._makeLabel = function() {
-      throw new poly.NotImplemented();
+      throw poly.error.impl();
     };
 
     return Axis;
@@ -2559,15 +2560,15 @@
     };
 
     Scale.prototype._makeNum = function() {
-      throw new poly.NotImplemented("_makeNum is not implemented");
+      throw poly.error.impl("You are using a scale that does not support numbers");
     };
 
     Scale.prototype._makeDate = function() {
-      throw new poly.NotImplemented("_makeDate is not implemented");
+      throw poly.error.impl("You are using a scale that does not support dates");
     };
 
     Scale.prototype._makeCat = function() {
-      throw new poly.NotImplemented("_makeCat is not implemented");
+      throw poly.error.impl("You are using a scale that does not support categoies");
     };
 
     Scale.prototype.tickType = function() {
@@ -2638,7 +2639,7 @@
             if (value.f === 'max') return _this.range.max + value.v;
             if (value.f === 'min') return _this.range.min + value.v;
           }
-          throw new poly.UnexpectedObject("Expected a value instead of an object");
+          throw poly.error.input("Unknown object " + value + " is passed to a scale");
         }
         return y(value);
       };
@@ -2668,7 +2669,7 @@
             if (value.f === 'max') return _this.range.max + value.v;
             if (value.f === 'min') return _this.range.min + value.v;
           }
-          throw new poly.UnexpectedObject("Expected a value instead of an object");
+          throw poly.error.input("Unknown object " + value + " is passed to a scale");
         }
         return y(value);
       };
@@ -2688,7 +2689,7 @@
             if (value.f === 'max') return _this.range.max + value.v;
             if (value.f === 'min') return _this.range.min + value.v;
           }
-          throw new poly.UnexpectedObject("wtf is this object?");
+          throw poly.error.input("Unknown object " + value + " is passed to a scale");
         }
         return y(value) + step / 2;
       };
@@ -3432,7 +3433,9 @@
       var binFn, binwidth, name;
       name = transSpec.name, binwidth = transSpec.binwidth;
       if (meta.type === 'num') {
-        if (isNaN(binwidth)) throw Error("WTF");
+        if (isNaN(binwidth)) {
+          throw poly.error.defn("The binwidth " + binwidth + " is invalid for a numeric varliable");
+        }
         binwidth = +binwidth;
         binFn = function(item) {
           return item[name] = binwidth * Math.floor(item[key] / binwidth);
@@ -3448,7 +3451,7 @@
       }
       if (meta.type === 'date') {
         if (!(__indexOf.call(poly["const"].timerange, binwidth) >= 0)) {
-          throw Error("WTF");
+          throw poly.error.defn("The binwidth " + binwidth + " is invalid for a datetime varliable");
         }
         binFn = function(item) {
           return item[name] = moment.unix(item[key]).startOf(binwidth).unix();
@@ -3874,6 +3877,9 @@
       this.dataprocess.make(spec, function(statData, metaData) {
         _this.statData = statData;
         _this.meta = metaData;
+        if (!(_this.statData != null)) {
+          throw poly.error.data("No data is passed into the layer");
+        }
         _this._calcGeoms();
         return callback();
       });
@@ -4647,10 +4653,12 @@
 
   poly.paper = function(dom, w, h, handleEvent) {
     var bg, end, handler, onend, onmove, onstart, paper, start;
+    if (!(typeof Raphael !== "undefined" && Raphael !== null)) {
+      throw poly.error.depn("The dependency Raphael is not included.");
+    }
     paper = Raphael(dom, w, h);
     bg = paper.rect(0, 0, w, h).attr('stroke-width', 0);
     bg.click(handleEvent('reset'));
-    paper;
     handler = handleEvent('select');
     start = end = null;
     onstart = function() {
@@ -4730,7 +4738,7 @@
     };
 
     Renderer.prototype._make = function() {
-      throw new poly.NotImplemented();
+      throw poly.error.impl();
     };
 
     Renderer.prototype.animate = function(pt, scales, coord, mark, mayflip) {
@@ -4738,7 +4746,7 @@
     };
 
     Renderer.prototype.attr = function(scales, coord, mark, mayflip) {
-      throw new poly.NotImplemented();
+      throw poly.error.impl();
     };
 
     Renderer.prototype._makePath = function(xs, ys, type) {
@@ -4987,9 +4995,9 @@
       m = {
         x: x,
         y: y,
+        r: 10,
         text: this._maybeApply(scales, mark, 'text'),
         'text-anchor': (_ref2 = mark['text-anchor']) != null ? _ref2 : 'left',
-        r: 10,
         fill: this._maybeApply(scales, mark, 'color') || 'black'
       };
       if (mark.transform != null) m.transform = mark.transform;
@@ -5034,6 +5042,9 @@
       this.merge = __bind(this.merge, this);
       this.reset = __bind(this.reset, this);
       var _ref;
+      if (!(spec != null)) {
+        throw poly.error.defn("No graph specification is passed in!");
+      }
       this.handlers = [];
       this.layers = null;
       this.scaleSet = null;
@@ -5043,27 +5054,36 @@
       this.paper = null;
       this.coord = (_ref = spec.coord) != null ? _ref : poly.coord.cartesian();
       this.initial_spec = spec;
-      this.make(spec, true);
+      this.dataSubscribed = false;
+      this.make(spec);
     }
 
     Graph.prototype.reset = function() {
+      if (!(this.initial_spec != null)) {
+        throw poly.error.defn("No graph specification is passed in!");
+      }
       return this.make(this.initial_spec);
     };
 
-    Graph.prototype.make = function(spec, first) {
+    Graph.prototype.make = function(spec) {
       var dataChange, id, layerObj, merge, _len, _len2, _ref, _ref2, _results;
-      if (first == null) first = false;
       if (spec == null) spec = this.initial_spec;
       this.spec = spec;
-      if (spec.layers == null) spec.layers = [];
+      if (!(spec.layers != null)) {
+        throw poly.error.defn("No layers are defined in the specification.");
+      }
       if (this.layers == null) this.layers = this._makeLayers(this.spec);
-      if (first) {
+      if (!this.dataSubscribed) {
         dataChange = this.handleEvent('data');
         _ref = this.layers;
         for (id = 0, _len = _ref.length; id < _len; id++) {
           layerObj = _ref[id];
+          if (!(spec.layers[id].data != null)) {
+            throw poly.error.defn("Layer " + id + " does not have data to plot!");
+          }
           spec.layers[id].data.subscribe(dataChange);
         }
+        this.dataSubscribed = true;
       }
       merge = _.after(this.layers.length, this.merge);
       _ref2 = this.layers;
@@ -5089,26 +5109,27 @@
       }
       this.scaleSet.setRanges(this.ranges);
       this._legacy(domains);
-      if (this.spec.dom) {
-        dom = this.spec.dom;
-        scales = this.scaleSet.scales;
-        this.coord.setScales(scales);
-        if (this.paper == null) {
-          this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
-        }
-        clipping = this.coord.clipping(this.dims);
-        renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true, clipping);
-        _ref = this.layers;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          layer = _ref[_i];
-          layer.render(renderer);
-        }
-        renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, false);
-        this.scaleSet.makeAxes();
-        this.scaleSet.renderAxes(this.dims, renderer);
-        this.scaleSet.makeLegends();
-        return this.scaleSet.renderLegends(this.dims, renderer);
+      if (!this.spec.dom) {
+        throw poly.error.defn("No DOM element specified. Where to make plot?");
       }
+      dom = this.spec.dom;
+      scales = this.scaleSet.scales;
+      this.coord.setScales(scales);
+      if (this.paper == null) {
+        this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
+      }
+      clipping = this.coord.clipping(this.dims);
+      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true, clipping);
+      _ref = this.layers;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        layer = _ref[_i];
+        layer.render(renderer);
+      }
+      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, false);
+      this.scaleSet.makeAxes();
+      this.scaleSet.renderAxes(this.dims, renderer);
+      this.scaleSet.makeLegends();
+      return this.scaleSet.renderLegends(this.dims, renderer);
     };
 
     Graph.prototype.addHandler = function(h) {

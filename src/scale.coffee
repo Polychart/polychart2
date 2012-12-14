@@ -33,11 +33,11 @@ class Scale
       when 'date' then return @_makeDate()
       when 'cat' then return @_makeCat()
   _makeNum: () ->
-    throw new poly.NotImplemented("_makeNum is not implemented")
+    throw poly.error.impl "You are using a scale that does not support numbers"
   _makeDate: () ->
-    throw new poly.NotImplemented("_makeDate is not implemented")
+    throw poly.error.impl "You are using a scale that does not support dates"
   _makeCat: () ->
-    throw new poly.NotImplemented("_makeCat is not implemented")
+    throw poly.error.impl "You are using a scale that does not support categoies"
   tickType: () ->
     switch @domain.type
       when 'num' then return @_tickNum @domain
@@ -73,7 +73,7 @@ class PositionScale extends Scale
         if value.f is 'middle' then return y(value.v+domain.bw/2)
         if value.f is 'max' then return @range.max + value.v
         if value.f is 'min' then return @range.min + value.v
-      throw new poly.UnexpectedObject("Expected a value instead of an object")
+      throw poly.error.input "Unknown object #{value} is passed to a scale"
     y(value)
   _dateWrapper: (domain, y) => (value) =>
     space = 0.001 * (if @range.max > @range.min then 1 else -1)
@@ -92,7 +92,7 @@ class PositionScale extends Scale
           return y(v1/2 + v2/2)
         if value.f is 'max' then return @range.max + value.v
         if value.f is 'min' then return @range.min + value.v
-      throw new poly.UnexpectedObject("Expected a value instead of an object")
+      throw poly.error.input "Unknown object #{value} is passed to a scale"
     y(value)
   _catWrapper: (step, y) => (value) =>
     space = 0.001 * (if @range.max > @range.min then 1 else -1)
@@ -104,7 +104,7 @@ class PositionScale extends Scale
         if value.f is 'middle' then return y(value.v) + step/2
         if value.f is 'max' then return @range.max + value.v
         if value.f is 'min' then return @range.min + value.v
-      throw new poly.UnexpectedObject("wtf is this object?")
+      throw poly.error.input "Unknown object #{value} is passed to a scale"
     y(value) + step/2
 
 class Linear extends PositionScale

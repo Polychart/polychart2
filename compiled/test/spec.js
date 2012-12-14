@@ -1,37 +1,37 @@
 (function() {
 
-  module("Specs");
+  module("parsers");
 
   test("expressions", function() {
-    equal(poly.spec.tokenize('A').toString(), '<symbol,A>');
-    equal(poly.spec.parse('A').toString(), 'Ident(A)');
-    equal(poly.spec.tokenize('  A').toString(), '<symbol,A>');
-    equal(poly.spec.parse('  A').toString(), 'Ident(A)');
-    equal(poly.spec.tokenize('3.3445').toString(), '<literal,3.3445>');
-    equal(poly.spec.parse('3.3445').toString(), 'Const(3.3445)');
-    equal(poly.spec.tokenize('mean(A )').toString(), '<symbol,mean>,<(>,<symbol,A>,<)>');
-    equal(poly.spec.parse('mean(A )').toString(), 'Call(mean,[Ident(A)])');
-    equal(poly.spec.tokenize(' mean(A )').toString(), '<symbol,mean>,<(>,<symbol,A>,<)>');
-    equal(poly.spec.parse('mean(A )').toString(), 'Call(mean,[Ident(A)])');
-    equal(poly.spec.tokenize('mean( A )  ').toString(), '<symbol,mean>,<(>,<symbol,A>,<)>');
-    equal(poly.spec.parse('mean( A )  ').toString(), 'Call(mean,[Ident(A)])');
-    equal(poly.spec.tokenize('log(mean(sum(A_0), 10), 2.7188, CCC)').toString(), '<symbol,log>,<(>,<symbol,mean>,<(>,<symbol,sum>,<(>,<symbol,A_0>,<)>,<,>,<literal,10>,<)>,<,>,<literal,2.7188>,<,>,<symbol,CCC>,<)>');
-    equal(poly.spec.parse('log(mean(sum(A_0), 10), 2.7188, CCC)').toString(), 'Call(log,[Call(mean,[Call(sum,[Ident(A_0)]),Const(10)]),Const(2.7188),Ident(CCC)])');
-    equal(poly.spec.tokenize('this(should, break').toString(), '<symbol,this>,<(>,<symbol,should>,<,>,<symbol,break>');
+    equal(poly.parser.tokenize('A').toString(), '<symbol,A>');
+    equal(poly.parser.parse('A').toString(), 'Ident(A)');
+    equal(poly.parser.tokenize('  A').toString(), '<symbol,A>');
+    equal(poly.parser.parse('  A').toString(), 'Ident(A)');
+    equal(poly.parser.tokenize('3.3445').toString(), '<literal,3.3445>');
+    equal(poly.parser.parse('3.3445').toString(), 'Const(3.3445)');
+    equal(poly.parser.tokenize('mean(A )').toString(), '<symbol,mean>,<(>,<symbol,A>,<)>');
+    equal(poly.parser.parse('mean(A )').toString(), 'Call(mean,[Ident(A)])');
+    equal(poly.parser.tokenize(' mean(A )').toString(), '<symbol,mean>,<(>,<symbol,A>,<)>');
+    equal(poly.parser.parse('mean(A )').toString(), 'Call(mean,[Ident(A)])');
+    equal(poly.parser.tokenize('mean( A )  ').toString(), '<symbol,mean>,<(>,<symbol,A>,<)>');
+    equal(poly.parser.parse('mean( A )  ').toString(), 'Call(mean,[Ident(A)])');
+    equal(poly.parser.tokenize('log(mean(sum(A_0), 10), 2.7188, CCC)').toString(), '<symbol,log>,<(>,<symbol,mean>,<(>,<symbol,sum>,<(>,<symbol,A_0>,<)>,<,>,<literal,10>,<)>,<,>,<literal,2.7188>,<,>,<symbol,CCC>,<)>');
+    equal(poly.parser.parse('log(mean(sum(A_0), 10), 2.7188, CCC)').toString(), 'Call(log,[Call(mean,[Call(sum,[Ident(A_0)]),Const(10)]),Const(2.7188),Ident(CCC)])');
+    equal(poly.parser.tokenize('this(should, break').toString(), '<symbol,this>,<(>,<symbol,should>,<,>,<symbol,break>');
     try {
-      poly.spec.parse('this(should, break').toString();
+      poly.parser.parse('this(should, break').toString();
       ok(false, 'this(should, break');
     } catch (e) {
       equal(e.message, 'unable to parse: Stream([])');
     }
     try {
-      poly.spec.parse(')this(should, break').toString();
+      poly.parser.parse(')this(should, break').toString();
       ok(false, ')this(should, break');
     } catch (e) {
       equal(e.message, 'unable to parse: Stream([<)>,<symbol,this>,<(>,<symbol,should>,<,>,<symbol,break>])');
     }
     try {
-      poly.spec.parse('this should break').toString();
+      poly.parser.parse('this should break').toString();
       return ok(false, 'this should break');
     } catch (e) {
       return equal(e.message, "expected end of stream, but found: Stream([<symbol,should>,<symbol,break>])");
@@ -39,8 +39,8 @@
   });
 
   test("extraction: nothing (smoke test)", function() {
-    var layerSpec, spec;
-    layerSpec = {
+    var layerparser, parser;
+    layerparser = {
       type: "point",
       y: {
         "var": "b"
@@ -55,17 +55,17 @@
         "var": "c"
       }
     };
-    spec = poly.spec.layerToData(layerSpec);
-    deepEqual(spec.filter, {});
-    deepEqual(spec.meta, {});
-    deepEqual(spec.select, ['a', 'b', 'c']);
-    deepEqual(spec.stats.stats, []);
-    return deepEqual(spec.trans, []);
+    parser = poly.parser.layerToData(layerparser);
+    deepEqual(parser.filter, {});
+    deepEqual(parser.meta, {});
+    deepEqual(parser.select, ['a', 'b', 'c']);
+    deepEqual(parser.stats.stats, []);
+    return deepEqual(parser.trans, []);
   });
 
   test("extraction: simple, one stat (smoke test)", function() {
-    var layerSpec, spec;
-    layerSpec = {
+    var layerparser, parser;
+    layerparser = {
       type: "point",
       x: {
         "var": "a"
@@ -74,24 +74,24 @@
         "var": "sum(b)"
       }
     };
-    spec = poly.spec.layerToData(layerSpec);
-    deepEqual(spec.filter, {});
-    deepEqual(spec.meta, {});
-    deepEqual(spec.select, ['a', 'sum(b)']);
-    deepEqual(spec.stats.stats, [
+    parser = poly.parser.layerToData(layerparser);
+    deepEqual(parser.filter, {});
+    deepEqual(parser.meta, {});
+    deepEqual(parser.select, ['a', 'sum(b)']);
+    deepEqual(parser.stats.stats, [
       {
         key: 'b',
         stat: 'sum',
         name: 'sum(b)'
       }
     ]);
-    deepEqual(spec.stats.groups, ['a']);
-    return deepEqual(spec.trans, []);
+    deepEqual(parser.stats.groups, ['a']);
+    return deepEqual(parser.trans, []);
   });
 
   test("extraction: stats", function() {
-    var layerSpec, spec;
-    layerSpec = {
+    var layerparser, parser;
+    layerparser = {
       type: "point",
       y: {
         "var": "b",
@@ -114,29 +114,29 @@
         }
       }
     };
-    spec = poly.spec.layerToData(layerSpec);
-    deepEqual(spec.filter, layerSpec.filter);
-    deepEqual(spec.meta, {
+    parser = poly.parser.layerToData(layerparser);
+    deepEqual(parser.filter, layerparser.filter);
+    deepEqual(parser.meta, {
       b: {
         sort: 'a',
         asc: true
       }
     });
-    deepEqual(spec.select, ['a', 'b', 'sum(c)']);
-    deepEqual(spec.stats.groups, ['a', 'b']);
-    deepEqual(spec.stats.stats, [
+    deepEqual(parser.select, ['a', 'b', 'sum(c)']);
+    deepEqual(parser.stats.groups, ['a', 'b']);
+    deepEqual(parser.stats.stats, [
       {
         key: 'c',
         name: 'sum(c)',
         stat: 'sum'
       }
     ]);
-    return deepEqual(spec.trans, []);
+    return deepEqual(parser.trans, []);
   });
 
   test("extraction: transforms", function() {
-    var layerSpec, spec;
-    layerSpec = {
+    var layerparser, parser;
+    layerparser = {
       type: "point",
       y: {
         "var": "b",
@@ -159,24 +159,24 @@
         }
       }
     };
-    spec = poly.spec.layerToData(layerSpec);
-    deepEqual(spec.filter, layerSpec.filter);
-    deepEqual(spec.meta, {
+    parser = poly.parser.layerToData(layerparser);
+    deepEqual(parser.filter, layerparser.filter);
+    deepEqual(parser.meta, {
       b: {
         sort: 'a',
         asc: true
       }
     });
-    deepEqual(spec.select, ['lag(a,1)', 'b', 'sum(c)']);
-    deepEqual(spec.stats.groups, ['lag(a,1)', 'b']);
-    deepEqual(spec.stats.stats, [
+    deepEqual(parser.select, ['lag(a,1)', 'b', 'sum(c)']);
+    deepEqual(parser.stats.groups, ['lag(a,1)', 'b']);
+    deepEqual(parser.stats.stats, [
       {
         key: 'c',
         name: 'sum(c)',
         stat: 'sum'
       }
     ]);
-    deepEqual(spec.trans, [
+    deepEqual(parser.trans, [
       {
         key: 'a',
         lag: '1',
@@ -184,7 +184,7 @@
         trans: 'lag'
       }
     ]);
-    layerSpec = {
+    layerparser = {
       type: "point",
       y: {
         "var": "b",
@@ -207,24 +207,24 @@
         }
       }
     };
-    spec = poly.spec.layerToData(layerSpec);
-    deepEqual(spec.filter, layerSpec.filter);
-    deepEqual(spec.meta, {
+    parser = poly.parser.layerToData(layerparser);
+    deepEqual(parser.filter, layerparser.filter);
+    deepEqual(parser.meta, {
       b: {
         sort: 'a',
         asc: true
       }
     });
-    deepEqual(spec.select, ['bin(a,1)', 'b', 'sum(c)']);
-    deepEqual(spec.stats.groups, ['bin(a,1)', 'b']);
-    deepEqual(spec.stats.stats, [
+    deepEqual(parser.select, ['bin(a,1)', 'b', 'sum(c)']);
+    deepEqual(parser.stats.groups, ['bin(a,1)', 'b']);
+    deepEqual(parser.stats.stats, [
       {
         key: 'c',
         name: 'sum(c)',
         stat: 'sum'
       }
     ]);
-    deepEqual(spec.trans, [
+    deepEqual(parser.trans, [
       {
         key: 'a',
         binwidth: '1',
@@ -232,7 +232,7 @@
         trans: 'bin'
       }
     ]);
-    layerSpec = {
+    layerparser = {
       type: "point",
       y: {
         "var": "lag(c , -0xaF1) "
@@ -247,17 +247,17 @@
         "var": "bin(a, 10)"
       }
     };
-    spec = poly.spec.layerToData(layerSpec);
-    deepEqual(spec.select, ["bin(a,0.10)", "lag(c,-0xaF1)", "mean(lag(c,0))", "bin(a,10)"]);
-    deepEqual(spec.stats.groups, ["bin(a,0.10)", "lag(c,-0xaF1)", "bin(a,10)"]);
-    deepEqual(spec.stats.stats, [
+    parser = poly.parser.layerToData(layerparser);
+    deepEqual(parser.select, ["bin(a,0.10)", "lag(c,-0xaF1)", "mean(lag(c,0))", "bin(a,10)"]);
+    deepEqual(parser.stats.groups, ["bin(a,0.10)", "lag(c,-0xaF1)", "bin(a,10)"]);
+    deepEqual(parser.stats.stats, [
       {
         key: "lag(c,0)",
         name: "mean(lag(c,0))",
         stat: "mean"
       }
     ]);
-    return deepEqual(spec.trans, [
+    return deepEqual(parser.trans, [
       {
         "key": "a",
         "binwidth": "10",
@@ -283,8 +283,8 @@
   });
 
   test("extraction: UTF8", function() {
-    var layerSpec, spec;
-    layerSpec = {
+    var layerparser, parser;
+    layerparser = {
       type: "point",
       y: {
         "var": "lag(',f+/\\\'c' , -1) "
@@ -299,8 +299,8 @@
         "var": "bin(\"a-+->\\\"b\", '漢\\\'字')"
       }
     };
-    spec = poly.spec.layerToData(layerSpec);
-    return deepEqual(spec.select, ["bin(汉字漢字,10.4e20", "lag(',f+/\\\'c',-1", "mean(lag(c,-1))", "bin(\"a-+->\\\"b\", '漢\\\'字')"]);
+    parser = poly.parser.layerToData(layerparser);
+    return deepEqual(parser.select, ["bin(汉字漢字,10.4e20", "lag(',f+/\\\'c',-1", "mean(lag(c,-1))", "bin(\"a-+->\\\"b\", '漢\\\'字')"]);
   });
 
 }).call(this);

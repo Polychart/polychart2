@@ -66,11 +66,12 @@ class Layer
 
   make: (layerSpec, callback) -> # mostly just read and interpret the the spec
     spec = poly.layer.toStrictMode layerSpec
-    #if @prevSpec and spec == @prevSpec then return callback()
     @_makeMappings spec
     @dataprocess.make spec, (statData, metaData) =>
       @statData = statData
       @meta = metaData
+      if not @statData?
+        throw poly.error.data "No data is passed into the layer"
       @_calcGeoms()
       callback()
     @prevSpec = spec

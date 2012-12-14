@@ -97,6 +97,9 @@
       this.dataprocess.make(spec, function(statData, metaData) {
         _this.statData = statData;
         _this.meta = metaData;
+        if (!(_this.statData != null)) {
+          throw poly.error.data("No data is passed into the layer");
+        }
         _this._calcGeoms();
         return callback();
       });

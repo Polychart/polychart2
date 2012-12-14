@@ -11,10 +11,12 @@
 
   poly.paper = function(dom, w, h, handleEvent) {
     var bg, end, handler, onend, onmove, onstart, paper, start;
+    if (!(typeof Raphael !== "undefined" && Raphael !== null)) {
+      throw poly.error.depn("The dependency Raphael is not included.");
+    }
     paper = Raphael(dom, w, h);
     bg = paper.rect(0, 0, w, h).attr('stroke-width', 0);
     bg.click(handleEvent('reset'));
-    paper;
     handler = handleEvent('select');
     start = end = null;
     onstart = function() {
@@ -94,7 +96,7 @@
     };
 
     Renderer.prototype._make = function() {
-      throw new poly.NotImplemented();
+      throw poly.error.impl();
     };
 
     Renderer.prototype.animate = function(pt, scales, coord, mark, mayflip) {
@@ -102,7 +104,7 @@
     };
 
     Renderer.prototype.attr = function(scales, coord, mark, mayflip) {
-      throw new poly.NotImplemented();
+      throw poly.error.impl();
     };
 
     Renderer.prototype._makePath = function(xs, ys, type) {
@@ -351,9 +353,9 @@
       m = {
         x: x,
         y: y,
+        r: 10,
         text: this._maybeApply(scales, mark, 'text'),
         'text-anchor': (_ref2 = mark['text-anchor']) != null ? _ref2 : 'left',
-        r: 10,
         fill: this._maybeApply(scales, mark, 'color') || 'black'
       };
       if (mark.transform != null) m.transform = mark.transform;

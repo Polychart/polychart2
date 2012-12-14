@@ -14,7 +14,7 @@
     function Guide() {}
 
     Guide.prototype.getDimension = function() {
-      throw new poly.NotImplemented();
+      throw poly.error.impl();
     };
 
     return Guide;
@@ -100,19 +100,19 @@
     };
 
     Axis.prototype._renderline = function() {
-      throw new poly.NotImplemented();
+      throw poly.error.impl();
     };
 
     Axis.prototype._makeTitle = function() {
-      throw new poly.NotImplemented();
+      throw poly.error.impl();
     };
 
     Axis.prototype._makeTick = function() {
-      throw new poly.NotImplemented();
+      throw poly.error.impl();
     };
 
     Axis.prototype._makeLabel = function() {
-      throw new poly.NotImplemented();
+      throw poly.error.impl();
     };
 
     return Axis;

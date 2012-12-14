@@ -132,7 +132,7 @@ domainMerge =
   'num' : (domains) ->
     bw = _.compact _.uniq _.map(domains, (d) -> d.bw)
     if bw.length > 1
-      throw new poly.LengthError("All binwidths are not of the same length")
+      throw poly.error.data "Not all layers have the same binwidth."
     bw = bw[0] ? undefined
     min = _.min _.map(domains, (d) -> d.min)
     max = _.max _.map(domains, (d) -> d.max)
@@ -140,7 +140,7 @@ domainMerge =
   'date' : (domains) ->
     bw = _.compact _.uniq _.map(domains, (d) -> d.bw)
     if bw.length > 1
-      throw new poly.LengthError("All binwidths are not of the same length")
+      throw poly.error.data "Not all layers have the same binwidth."
     bw = bw[0] ? undefined
     min = _.min _.map(domains, (d) -> d.min)
     max = _.max _.map(domains, (d) -> d.max)
@@ -151,7 +151,7 @@ domainMerge =
     unsortedLevels =
       _.chain(domains).filter((d) -> !d.sorted).map((d) -> d.levels).value()
     if sortedLevels.length > 0 and _.intersection.apply @, sortedLevels
-      throw new poly.UnknownError()
+      throw poly.error.data "You are trying to combine incompatiabl sorted domains in the same axis."
     sortedLevels = [_.flatten(sortedLevels, true)]
     levels = _.union.apply @, sortedLevels.concat(unsortedLevels)
     if sortedLevels[0].length is 0
@@ -165,7 +165,7 @@ same type, and they share certain properties.
 mergeDomains = (domains) ->
   types = _.uniq _.map(domains, (d) -> d.type)
   if types.length > 1
-    throw new poly.TypeError("Not all domains are of the same type")
+    throw poly.error.data "You are trying to merge data of different types in the same axis or legend."
   domainMerge[types[0]](domains)
 
 ###

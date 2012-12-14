@@ -211,7 +211,7 @@
         return d.bw;
       })));
       if (bw.length > 1) {
-        throw new poly.LengthError("All binwidths are not of the same length");
+        throw poly.error.data("Not all layers have the same binwidth.");
       }
       bw = (_ref = bw[0]) != null ? _ref : void 0;
       min = _.min(_.map(domains, function(d) {
@@ -233,7 +233,7 @@
         return d.bw;
       })));
       if (bw.length > 1) {
-        throw new poly.LengthError("All binwidths are not of the same length");
+        throw poly.error.data("Not all layers have the same binwidth.");
       }
       bw = (_ref = bw[0]) != null ? _ref : void 0;
       min = _.min(_.map(domains, function(d) {
@@ -262,7 +262,7 @@
         return d.levels;
       }).value();
       if (sortedLevels.length > 0 && _.intersection.apply(this, sortedLevels)) {
-        throw new poly.UnknownError();
+        throw poly.error.data("You are trying to combine incompatiabl sorted domains in the same axis.");
       }
       sortedLevels = [_.flatten(sortedLevels, true)];
       levels = _.union.apply(this, sortedLevels.concat(unsortedLevels));
@@ -286,7 +286,7 @@
       return d.type;
     }));
     if (types.length > 1) {
-      throw new poly.TypeError("Not all domains are of the same type");
+      throw poly.error.data("You are trying to merge data of different types in the same axis or legend.");
     }
     return domainMerge[types[0]](domains);
   };

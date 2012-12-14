@@ -4,11 +4,12 @@ poly = @poly || {}
 # GLOBALS
 ###
 poly.paper = (dom, w, h, handleEvent) ->
+  if not Raphael?
+    throw poly.error.depn "The dependency Raphael is not included."
   paper = Raphael(dom, w, h)
   # add click handler for clicking outside of things
   bg = paper.rect(0,0,w,h).attr('stroke-width', 0)
   bg.click handleEvent('reset')
-  paper
   # add dragging handle for selecting
   handler = handleEvent('select')
   start = end = null
@@ -49,10 +50,10 @@ class Renderer
     for k, v of @attr(scales, coord, mark, mayflip)
       pt.attr(k, v)
     pt
-  _make : () -> throw new poly.NotImplemented()
+  _make : () -> throw poly.error.impl()
   animate: (pt, scales, coord, mark, mayflip) ->
     pt.animate @attr(scales, coord, mark, mayflip), 300
-  attr: (scales, coord, mark, mayflip) -> throw new poly.NotImplemented()
+  attr: (scales, coord, mark, mayflip) -> throw poly.error.impl()
   _makePath : (xs, ys, type='L') ->
     path = _.map xs, (x, i) -> (if i == 0 then 'M' else type) + x+' '+ys[i]
     path.join(' ')
@@ -185,13 +186,12 @@ class Text extends Renderer # for both cartesian & polar
   _make: (paper) -> paper.text()
   attr: (scales, coord, mark, mayflip) ->
     {x, y} = coord.getXY mayflip, mark
-
     m =
       x: x
       y: y
+      r: 10
       text: @_maybeApply  scales, mark, 'text'
       'text-anchor' : mark['text-anchor'] ? 'left'
-      r: 10
       fill: @_maybeApply(scales, mark, 'color') or 'black'
     if mark.transform? then m.transform = mark.transform
     m

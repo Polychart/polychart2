@@ -105,13 +105,15 @@ transforms =
   'bin' : (key, transSpec, meta) ->
     {name, binwidth} = transSpec
     if meta.type is 'num'
-      if isNaN(binwidth) then throw Error("WTF")
+      if isNaN(binwidth)
+        throw poly.error.defn "The binwidth #{binwidth} is invalid for a numeric varliable"
       binwidth = +binwidth
       binFn = (item) ->
         item[name] = binwidth * Math.floor item[key]/binwidth
       return trans: binFn, meta: {bw: binwidth, binned: true, type:'num'}
     if meta.type is 'date' # TODO
-      if not (binwidth in poly.const.timerange) then throw Error("WTF")
+      if not (binwidth in poly.const.timerange)
+        throw poly.error.defn "The binwidth #{binwidth} is invalid for a datetime varliable"
       binFn = (item) ->
         item[name] = moment.unix(item[key]).startOf(binwidth).unix()
       return trans: binFn, meta: {bw: binwidth, binned: true, type:'date'}
