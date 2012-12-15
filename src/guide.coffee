@@ -64,8 +64,8 @@ class Axis extends Guide
 
 class XAxis extends Axis # assumes position = bottom
   make: (params) =>
-    {position} = params
-    @position = position ? 'bottom'
+    {guideSpec} = params
+    @position = guideSpec.position ? 'bottom'
     if @position not in ['top', 'bottom', 'none']
       throw poly.error.defn "X-axis position can't be #{@position}."
     super(params)
@@ -119,8 +119,8 @@ class XAxis extends Axis # assumes position = bottom
 
 class YAxis extends Axis # assumes position = left
   make: (params) =>
-    {position} = params
-    @position = position ? 'left'
+    {guideSpec} = params
+    @position = guideSpec.position ? 'left'
     if @position not in ['left', 'right', 'none']
       throw poly.error.defn "X-axis position can't be #{@position}."
     super(params)

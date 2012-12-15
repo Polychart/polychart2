@@ -2089,10 +2089,10 @@
     }
 
     XAxis.prototype.make = function(params) {
-      var position, _ref;
-      position = params.position;
-      this.position = position != null ? position : 'bottom';
-      if ((_ref = this.position) !== 'top' && _ref !== 'bottom' && _ref !== 'none') {
+      var guideSpec, _ref, _ref2;
+      guideSpec = params.guideSpec;
+      this.position = (_ref = guideSpec.position) != null ? _ref : 'bottom';
+      if ((_ref2 = this.position) !== 'top' && _ref2 !== 'bottom' && _ref2 !== 'none') {
         throw poly.error.defn("X-axis position can't be " + this.position + ".");
       }
       return XAxis.__super__.make.call(this, params);
@@ -2187,10 +2187,10 @@
     }
 
     YAxis.prototype.make = function(params) {
-      var position, _ref;
-      position = params.position;
-      this.position = position != null ? position : 'left';
-      if ((_ref = this.position) !== 'left' && _ref !== 'right' && _ref !== 'none') {
+      var guideSpec, _ref, _ref2;
+      guideSpec = params.guideSpec;
+      this.position = (_ref = guideSpec.position) != null ? _ref : 'left';
+      if ((_ref2 = this.position) !== 'left' && _ref2 !== 'right' && _ref2 !== 'none') {
         throw poly.error.defn("X-axis position can't be " + this.position + ".");
       }
       return YAxis.__super__.make.call(this, params);

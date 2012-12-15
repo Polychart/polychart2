@@ -167,7 +167,11 @@
         y: {
           type: 'num',
           min: 0,
-          max: 15
+          max: 15,
+          position: 'right'
+        },
+        x: {
+          position: 'bottom'
         },
         color: {
           title: "Parity"
