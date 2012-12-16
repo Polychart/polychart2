@@ -671,7 +671,7 @@
         {
           data: data,
           type: 'bar',
-          x: 'bin(time, day)',
+          x: 'bin(time, "day")',
           y: 'median(value)'
         }, {
           data: data,

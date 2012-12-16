@@ -399,14 +399,32 @@
 
   })(Error);
 
-  poly.error = {
-    data: DataError,
-    depn: DependencyError,
-    defn: DefinitionError,
-    mode: ModeError,
-    impl: NotImplemented,
-    input: UnknownInput,
-    unknown: Error
+  poly.error = function(msg) {
+    return new Error(msg);
+  };
+
+  poly.error.data = function(msg) {
+    return new DataError(msg);
+  };
+
+  poly.error.depn = function(msg) {
+    return new DependencyError(msg);
+  };
+
+  poly.error.defn = function(msg) {
+    return new DefinitionError(msg);
+  };
+
+  poly.error.mode = function(msg) {
+    return new ModeError(msg);
+  };
+
+  poly.error.impl = function(msg) {
+    return new NotImplemented(msg);
+  };
+
+  poly.error.input = function(msg) {
+    return new UnknownInput(msg);
   };
 
   this.poly = poly;
@@ -918,7 +936,7 @@
         return [str.slice(substr.length), op(substr)];
       }
     }
-    throw poly.error.impl("There is an error in your specification at " + str);
+    throw poly.error.defn("There is an error in your specification at " + str);
   };
 
   tokenize = function(str) {
@@ -1051,7 +1069,7 @@
   };
 
   parseFail = function(stream) {
-    throw poly.error.impl("There is an error in your specification at " + (stream.toString()));
+    throw poly.error.defn("There is an error in your specification at " + (stream.toString()));
   };
 
   parse = function(str) {
@@ -1059,7 +1077,7 @@
     stream = new Stream(tokenize(str));
     expr = parseExpr(stream);
     if (stream.peek() !== null) {
-      throw poly.error.impl("There is an error in your specification at " + (stream.toString()));
+      throw poly.error.defn("There is an error in your specification at " + (stream.toString()));
     }
     return expr;
   };
@@ -1141,7 +1159,7 @@
           results[optype].push(result);
           return result.name;
         } else {
-          throw poly.error.impl("The operation " + fname + " is not recognized. Please check your specifications.");
+          throw poly.error.defn("The operation " + fname + " is not recognized. Please check your specifications.");
         }
       }
     };

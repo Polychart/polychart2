@@ -83,14 +83,32 @@
 
   })(Error);
 
-  poly.error = {
-    data: DataError,
-    depn: DependencyError,
-    defn: DefinitionError,
-    mode: ModeError,
-    impl: NotImplemented,
-    input: UnknownInput,
-    unknown: Error
+  poly.error = function(msg) {
+    return new Error(msg);
+  };
+
+  poly.error.data = function(msg) {
+    return new DataError(msg);
+  };
+
+  poly.error.depn = function(msg) {
+    return new DependencyError(msg);
+  };
+
+  poly.error.defn = function(msg) {
+    return new DefinitionError(msg);
+  };
+
+  poly.error.mode = function(msg) {
+    return new ModeError(msg);
+  };
+
+  poly.error.impl = function(msg) {
+    return new NotImplemented(msg);
+  };
+
+  poly.error.input = function(msg) {
+    return new UnknownInput(msg);
   };
 
   this.poly = poly;

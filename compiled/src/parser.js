@@ -244,7 +244,7 @@
         return [str.slice(substr.length), op(substr)];
       }
     }
-    throw poly.error.impl("There is an error in your specification at " + str);
+    throw poly.error.defn("There is an error in your specification at " + str);
   };
 
   tokenize = function(str) {
@@ -377,7 +377,7 @@
   };
 
   parseFail = function(stream) {
-    throw poly.error.impl("There is an error in your specification at " + (stream.toString()));
+    throw poly.error.defn("There is an error in your specification at " + (stream.toString()));
   };
 
   parse = function(str) {
@@ -385,7 +385,7 @@
     stream = new Stream(tokenize(str));
     expr = parseExpr(stream);
     if (stream.peek() !== null) {
-      throw poly.error.impl("There is an error in your specification at " + (stream.toString()));
+      throw poly.error.defn("There is an error in your specification at " + (stream.toString()));
     }
     return expr;
   };
@@ -467,7 +467,7 @@
           results[optype].push(result);
           return result.name;
         } else {
-          throw poly.error.impl("The operation " + fname + " is not recognized. Please check your specifications.");
+          throw poly.error.defn("The operation " + fname + " is not recognized. Please check your specifications.");
         }
       }
     };

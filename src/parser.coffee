@@ -76,7 +76,7 @@ matchToken = (str) ->
     if match
       substr = match[0]
       return [str[substr.length..], op substr]
-  throw poly.error.impl("There is an error in your specification at #{str}")
+  throw poly.error.defn("There is an error in your specification at #{str}")
 tokenize = (str) ->
   loop
     str = str.replace(/^\s+/, '')
@@ -111,12 +111,12 @@ expect = (stream, fail, alts) ->
         return express(stream)
   fail stream
 parseFail = (stream) ->
-  throw poly.error.impl("There is an error in your specification at #{stream.toString()}")
+  throw poly.error.defn("There is an error in your specification at #{stream.toString()}")
 parse = (str) ->
   stream = new Stream (tokenize str)
   expr = parseExpr(stream)
   if stream.peek() isnt null
-    throw poly.error.impl("There is an error in your specification at #{stream.toString()}")
+    throw poly.error.defn("There is an error in your specification at #{stream.toString()}")
   expr
 parseExpr = (stream) ->
   expect(stream, parseFail,
@@ -163,7 +163,7 @@ extractOps = (expr) ->
         results[optype].push result
         result.name
       else
-        throw poly.error.impl("The operation #{fname} is not recognized. Please check your specifications.")
+        throw poly.error.defn("The operation #{fname} is not recognized. Please check your specifications.")
   }
   expr.visit(extractor)
   results
