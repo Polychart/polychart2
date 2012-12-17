@@ -3,6 +3,12 @@ poly = @poly || {}
 ###############################################################################
 # utilities
 ###############################################################################
+unquote = (str, quote) ->
+  n = str.length
+  for quote in ['"', "'"]
+    if str[0] is quote and str[n-1] is quote
+      return str[1..(n-2)]
+  return str
 zipWith = (op) -> (xs, ys) ->
   #if xs.length isnt ys.length
   #  trow some error ("zipWith: lists have different length: [#{xs}], [#{ys}]")
@@ -53,10 +59,14 @@ class Token
   toString: -> "<#{@contents().toString()}>"
   contents: -> [@tag]
 class Symbol extends Token
-  constructor: (@name) -> super Token.Tag.symbol
+  constructor: (@name) ->
+    @name = unquote @name
+    super Token.Tag.symbol
   contents: -> super().concat([@name])
 class Literal extends Token
-  constructor: (@val) -> super Token.Tag.literal
+  constructor: (@val) ->
+    @val = unquote @val
+    super Token.Tag.literal
   contents: -> super().concat([@val])
 [LParen, RParen, Comma] = (new Token(tag) for tag in [
   Token.Tag.lparen, Token.Tag.rparen, Token.Tag.comma])

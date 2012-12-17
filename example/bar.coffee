@@ -171,7 +171,7 @@
 
 @examples.bar_date_binned = (dom) ->
   point = () ->
-    time: moment().add('minutes', Math.random()*26232).unix()
+    time: moment().add('minutes', Math.random()*206232).unix()
     value: Math.random()*2
   data = new poly.Data
     json:(point() for i in [0..5000])
@@ -180,7 +180,7 @@
     layers: [
       data: data
       type: 'bar'
-      x: 'bin(time, day)'
+      x: 'bin("time", "month")'
       y: 'sum(value)'
     ]
     dom: dom
@@ -198,7 +198,7 @@
     layers: [ {
         data: data
         type: 'bar'
-        x: 'bin(time, "day")'
+        x: 'bin(time, day)'
         y: 'median(value)'
       }, {
         data: data

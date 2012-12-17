@@ -691,12 +691,25 @@
 
 }).call(this);
 (function() {
-  var Call, Comma, Const, Expr, Ident, LParen, Literal, RParen, Stream, Symbol, Token, assocsToObj, dedup, dedupOnKey, dictGet, dictGets, expect, extractOps, layerToDataSpec, matchToken, mergeObjLists, parse, parseCall, parseCallArgs, parseConst, parseExpr, parseFail, parseSymbolic, poly, showCall, showList, tag, tokenize, tokenizers, zip, zipWith, _ref,
+  var Call, Comma, Const, Expr, Ident, LParen, Literal, RParen, Stream, Symbol, Token, assocsToObj, dedup, dedupOnKey, dictGet, dictGets, expect, extractOps, layerToDataSpec, matchToken, mergeObjLists, parse, parseCall, parseCallArgs, parseConst, parseExpr, parseFail, parseSymbolic, poly, showCall, showList, tag, tokenize, tokenizers, unquote, zip, zipWith, _ref,
     __slice = Array.prototype.slice,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
   poly = this.poly || {};
+
+  unquote = function(str, quote) {
+    var n, _i, _len, _ref;
+    n = str.length;
+    _ref = ['"', "'"];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      quote = _ref[_i];
+      if (str[0] === quote && str[n - 1] === quote) {
+        return str.slice(1, (n - 2) + 1 || 9e9);
+      }
+    }
+    return str;
+  };
 
   zipWith = function(op) {
     return function(xs, ys) {
@@ -863,6 +876,7 @@
 
     function Symbol(name) {
       this.name = name;
+      this.name = unquote(this.name);
       Symbol.__super__.constructor.call(this, Token.Tag.symbol);
     }
 
@@ -880,6 +894,7 @@
 
     function Literal(val) {
       this.val = val;
+      this.val = unquote(this.val);
       Literal.__super__.constructor.call(this, Token.Tag.literal);
     }
 

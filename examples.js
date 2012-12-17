@@ -608,7 +608,7 @@
     var c, data, i, point, spec;
     point = function() {
       return {
-        time: moment().add('minutes', Math.random() * 26232).unix(),
+        time: moment().add('minutes', Math.random() * 206232).unix(),
         value: Math.random() * 2
       };
     };
@@ -633,7 +633,7 @@
         {
           data: data,
           type: 'bar',
-          x: 'bin(time, day)',
+          x: 'bin("time", "month")',
           y: 'sum(value)'
         }
       ],
@@ -671,7 +671,7 @@
         {
           data: data,
           type: 'bar',
-          x: 'bin(time, "day")',
+          x: 'bin(time, day)',
           y: 'median(value)'
         }, {
           data: data,
