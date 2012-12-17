@@ -33,7 +33,7 @@
         key = keys[_i];
         if ((_base = this.meta)[key] == null) _base[key] = {};
         if (!this.meta[key].type) {
-          this.meta[key].type = poly.typeOf(_.pluck(first100, key));
+          this.meta[key].type = poly.varType(_.pluck(first100, key));
         }
       }
       for (_j = 0, _len2 = json.length; _j < _len2; _j++) {

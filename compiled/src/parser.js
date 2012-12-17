@@ -51,26 +51,26 @@
   };
 
   dictGets = function(dict, keyVals) {
-    var defval, final, key, val;
-    final = {};
+    var defval, fin, key, val;
+    fin = {};
     for (key in keyVals) {
       defval = keyVals[key];
       val = dictGet(dict, key, defval);
-      if (val !== null) final[key] = val;
+      if (val !== null) fin[key] = val;
     }
-    return final;
+    return fin;
   };
 
   mergeObjLists = function(dicts) {
-    var dict, final, key, _i, _len;
-    final = {};
+    var dict, fin, key, _i, _len;
+    fin = {};
     for (_i = 0, _len = dicts.length; _i < _len; _i++) {
       dict = dicts[_i];
       for (key in dict) {
-        final[key] = dict[key].concat(dictGet(final, key, []));
+        fin[key] = dict[key].concat(dictGet(fin, key, []));
       }
     }
-    return final;
+    return fin;
   };
 
   dedup = function(vals, trans) {

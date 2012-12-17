@@ -159,7 +159,7 @@
 
   THRESHOLD = 0.95;
 
-  poly.typeOf = function(values) {
+  poly.varType = function(values) {
     var date, num, value, _i, _len;
     date = 0;
     num = 0;
@@ -201,5 +201,11 @@
       return;
     }
   };
+
+  /*
+  # EXPORT
+  */
+
+  this.poly = poly;
 
 }).call(this);

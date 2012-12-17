@@ -114,7 +114,7 @@ poly.sortArrays = (fn, arrays) ->
 Impute types from values
 ###
 THRESHOLD = 0.95
-poly.typeOf = (values) ->
+poly.varType = (values) ->
   date = 0
   num = 0
   for value in values
@@ -152,3 +152,8 @@ poly.coerce = (value, meta) ->
       moment(value).unix()
   else
     undefined
+
+###
+# EXPORT
+###
+@poly = poly

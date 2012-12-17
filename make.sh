@@ -1,6 +1,8 @@
+# Polychart2.js
 rm -r compiled/src/
 coffee --compile --output compiled/src/ src/
-cat compiled/src/utils.js \
+awk 'FNR==1{print ";"}1' \
+    compiled/src/utils.js \
     compiled/src/const.js \
     compiled/src/error.js \
     compiled/src/format.js \
@@ -17,8 +19,14 @@ cat compiled/src/utils.js \
     compiled/src/dim.js \
     compiled/src/render.js \
     compiled/src/graph.js > polychart2.js
+python utils/uglify.py --source=polychart2.js --dest=polychart2.min.js
+awk 'FNR==1{print ";"}1' lib/underscore.js lib/moment.js lib/raphael.js polychart2.min.js > polychart2.standalone.js
+
+# Unit Tests
 rm -r compiled/test/
 coffee --compile --output compiled/test/ test/
+
+# Examples
 rm -r compiled/example/
 coffee --compile --output compiled/example/ example/
 cat compiled/example/* > examples.js

@@ -1,3 +1,4 @@
+;
 (function() {
   var THRESHOLD, poly;
 
@@ -159,7 +160,7 @@
 
   THRESHOLD = 0.95;
 
-  poly.typeOf = function(values) {
+  poly.varType = function(values) {
     var date, num, value, _i, _len;
     date = 0;
     num = 0;
@@ -202,7 +203,14 @@
     }
   };
 
+  /*
+  # EXPORT
+  */
+
+  this.poly = poly;
+
 }).call(this);
+;
 (function() {
   var poly;
 
@@ -314,6 +322,7 @@
   this.poly = poly;
 
 }).call(this);
+;
 (function() {
   var DataError, DefinitionError, DependencyError, ModeError, NotImplemented, UnknownInput, poly,
     __hasProp = Object.prototype.hasOwnProperty,
@@ -430,6 +439,7 @@
   this.poly = poly;
 
 }).call(this);
+;
 (function() {
   var POSTFIXES, formatNumber, poly, postfix,
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -547,6 +557,7 @@
   };
 
 }).call(this);
+;
 (function() {
 
   poly.xhr = function(url, mime, callback) {
@@ -690,6 +701,7 @@
   poly.csv = poly.dsv(",", "text/csv");
 
 }).call(this);
+;
 (function() {
   var Call, Comma, Const, Expr, Ident, LParen, Literal, RParen, Stream, Symbol, Token, assocsToObj, dedup, dedupOnKey, dictGet, dictGets, expect, extractOps, layerToDataSpec, matchToken, mergeObjLists, parse, parseCall, parseCallArgs, parseConst, parseExpr, parseFail, parseSymbolic, poly, showCall, showList, tag, tokenize, tokenizers, unquote, zip, zipWith, _ref,
     __slice = Array.prototype.slice,
@@ -743,26 +755,26 @@
   };
 
   dictGets = function(dict, keyVals) {
-    var defval, final, key, val;
-    final = {};
+    var defval, fin, key, val;
+    fin = {};
     for (key in keyVals) {
       defval = keyVals[key];
       val = dictGet(dict, key, defval);
-      if (val !== null) final[key] = val;
+      if (val !== null) fin[key] = val;
     }
-    return final;
+    return fin;
   };
 
   mergeObjLists = function(dicts) {
-    var dict, final, key, _i, _len;
-    final = {};
+    var dict, fin, key, _i, _len;
+    fin = {};
     for (_i = 0, _len = dicts.length; _i < _len; _i++) {
       dict = dicts[_i];
       for (key in dict) {
-        final[key] = dict[key].concat(dictGet(final, key, []));
+        fin[key] = dict[key].concat(dictGet(fin, key, []));
       }
     }
-    return final;
+    return fin;
   };
 
   dedup = function(vals, trans) {
@@ -1248,6 +1260,7 @@
   this.poly = poly;
 
 }).call(this);
+;
 (function() {
   var Cartesian, Coordinate, Polar, poly,
     __hasProp = Object.prototype.hasOwnProperty,
@@ -1497,6 +1510,7 @@
   };
 
 }).call(this);
+;
 (function() {
   var CategoricalDomain, DateDomain, NumericDomain, aesthetics, domainMerge, flattenGeoms, makeDomain, makeDomainSet, mergeDomainSets, mergeDomains, poly;
 
@@ -1797,6 +1811,7 @@
   this.poly = poly;
 
 }).call(this);
+;
 (function() {
   var Tick, getStep, poly, tickFactory, tickValues;
 
@@ -1987,6 +2002,7 @@
   this.poly = poly;
 
 }).call(this);
+;
 (function() {
   var Axis, Guide, Legend, RAxis, TAxis, XAxis, YAxis, poly, sf,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -2611,6 +2627,7 @@
   this.poly = poly;
 
 }).call(this);
+;
 (function() {
   var Area, Brewer, Color, Gradient, Gradient2, Identity, Linear, Log, Opacity, PositionScale, Scale, Shape, aesthetics, poly,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -3105,6 +3122,7 @@
   this.poly = poly;
 
 }).call(this);
+;
 (function() {
   var ScaleSet, poly,
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -3389,6 +3407,7 @@
   })();
 
 }).call(this);
+;
 (function() {
   var Data, DataProcess, backendProcess, calculateMeta, calculateStats, filterFactory, filters, frontendProcess, poly, statistics, statsFactory, transformFactory, transforms,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -3424,7 +3443,7 @@
         key = keys[_i];
         if ((_base = this.meta)[key] == null) _base[key] = {};
         if (!this.meta[key].type) {
-          this.meta[key].type = poly.typeOf(_.pluck(first100, key));
+          this.meta[key].type = poly.varType(_.pluck(first100, key));
         }
       }
       for (_j = 0, _len2 = json.length; _j < _len2; _j++) {
@@ -3904,6 +3923,7 @@
   this.poly = poly;
 
 }).call(this);
+;
 (function() {
   var Area, Bar, Box, Layer, Line, Path, Point, Text, Tile, aesthetics, defaults, poly, sf,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
@@ -4678,6 +4698,7 @@
   this.poly = poly;
 
 }).call(this);
+;
 (function() {
   var poly;
 
@@ -4769,6 +4790,7 @@
   this.poly = poly;
 
 }).call(this);
+;
 (function() {
   var Area, Circle, CircleRect, Line, Path, Rect, Renderer, Text, poly, renderer,
     __hasProp = Object.prototype.hasOwnProperty,
@@ -5153,6 +5175,7 @@
   };
 
 }).call(this);
+;
 (function() {
   var Graph, poly,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };

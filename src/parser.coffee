@@ -21,18 +21,18 @@ assocsToObj = (assocs) ->
   obj
 dictGet = (dict, key, defval = null) -> (key of dict and dict[key]) or defval
 dictGets = (dict, keyVals) ->
-  final = {}
+  fin = {}
   for key, defval of keyVals
     val = dictGet(dict, key, defval)
     if val isnt null
-      final[key] = val
-  final
+      fin[key] = val
+  fin
 mergeObjLists = (dicts) ->
-  final = {}
+  fin = {}
   for dict in dicts
     for key of dict
-      final[key] = dict[key].concat(dictGet(final, key, []))
-  final
+      fin[key] = dict[key].concat(dictGet(fin, key, []))
+  fin
 dedup = (vals, trans = (x) -> x) ->
   unique = {}
   unique[trans val] = val for val in vals

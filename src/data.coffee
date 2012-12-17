@@ -22,7 +22,7 @@ class Data
     for key in keys
       @meta[key] ?= {}
       if not @meta[key].type
-        @meta[key].type = poly.typeOf _.pluck(first100, key)
+        @meta[key].type = poly.varType _.pluck(first100, key)
     for item in json
       for key in keys
         item[key] = poly.coerce item[key], @meta[key]
