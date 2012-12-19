@@ -1,3 +1,3 @@
   }
   return poly;
-})(window.gg);
+})(window.polyjs);

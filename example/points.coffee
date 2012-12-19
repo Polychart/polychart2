@@ -4,7 +4,7 @@
   one = () -> Math.random()*10
   spec = () ->
     jsondata = ({x:one(), y:one(), c:one()} for i in [0..10])
-    data = new gg.Data json:jsondata
+    data = new polyjs.Data json:jsondata
     sampleLayer =
       data: data
       type: 'point'
@@ -35,7 +35,7 @@
       dom: dom
 
   initspec = spec().spec
-  c = gg.chart(initspec)
+  c = polyjs.chart(initspec)
 
   redraw = () ->
     newspec = spec()
@@ -46,7 +46,7 @@
 
 @examples.point2 = (dom) ->
   jsondata = [{x:'A',y:2},{x:'B',y:3},{x:'C',y:1}]
-  data = new gg.Data({ json: jsondata })
+  data = new polyjs.Data({ json: jsondata })
   sampleLayer = {
     dom: dom
     data: data,
@@ -57,21 +57,21 @@
     color: 'x'
   }
   spec =  { layers: [sampleLayer], dom:dom }
-  c = gg.chart(spec)
+  c = polyjs.chart(spec)
 
 @examples.point3 = (dom) ->
   jsondata = [{x:'A',y:'X'},{x:'B',y:'Y'},{x:'C',y:'Z'}]
-  data = new gg.Data({ json: jsondata })
+  data = new polyjs.Data({ json: jsondata })
   sampleLayer = { data: data, type: 'point', x: 'x', y: 'y', color: {const:'#E01B6A'} }
   spec =  { layers: [sampleLayer], dom:dom }
-  c = gg.chart(spec)
+  c = polyjs.chart(spec)
 
 @examples.point3_flip = (dom) ->
   jsondata = [{x:'A',y:'X'},{x:'B',y:'Y'},{x:'C',y:'Z'}]
-  data = new gg.Data({ json: jsondata })
+  data = new polyjs.Data({ json: jsondata })
   sampleLayer = { data: data, type: 'point', x: 'x', y: 'y', color: {const:'#E01B6A'} }
-  spec =  { layers: [sampleLayer], coord: gg.coord.polar(flip:true) , dom:dom}
-  c = gg.chart(spec)
+  spec =  { layers: [sampleLayer], coord: polyjs.coord.polar(flip:true) , dom:dom}
+  c = polyjs.chart(spec)
 
   c.addHandler (type, data) ->
     if type in ['click', 'reset']

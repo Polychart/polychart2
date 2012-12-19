@@ -2,7 +2,7 @@
 
 @examples.line = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = new gg.Data json:jsondata
+  data = new polyjs.Data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'line', x : 'index', y : 'value'}
@@ -14,7 +14,7 @@
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
   redraw = () ->
     jsondata.shift()
@@ -31,7 +31,7 @@
     s += v
     {index:i++, value:v, total:s}
   jsondata = (next() for i in [0..10])
-  data = new gg.Data json:jsondata
+  data = new polyjs.Data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'line', x : 'index', y : 'total'}
@@ -41,7 +41,7 @@
       y: min:0
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
   redraw = () ->
     jsondata.shift()
@@ -53,7 +53,7 @@
 
 @examples.line_flip = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = new gg.Data json:jsondata
+  data = new polyjs.Data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'line', x : 'index', y : 'value'}
@@ -63,10 +63,10 @@
       y :
         type:'num', min:0, max:10, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
-    coord: gg.coord.cartesian(flip:true)
+    coord: polyjs.coord.cartesian(flip:true)
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
   redraw = () ->
     jsondata.shift()
@@ -78,7 +78,7 @@
 
 @examples.line_polar = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = new gg.Data json:jsondata
+  data = new polyjs.Data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'line', x : 'index', y : 'value'}
@@ -88,10 +88,10 @@
       y :
         type:'num', min:0, max:10, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
-    coord: gg.coord.polar()
+    coord: polyjs.coord.polar()
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
   redraw = () ->
     jsondata.shift()
@@ -103,7 +103,7 @@
 
 @examples.line_polar_flip = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = new gg.Data json:jsondata
+  data = new polyjs.Data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'line', x : 'index', y : 'value'}
@@ -113,10 +113,10 @@
       y :
         type:'num', min:0, max:10, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
-    coord: gg.coord.polar(flip:true)
+    coord: polyjs.coord.polar(flip:true)
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
   redraw = () ->
     jsondata.shift()
@@ -131,14 +131,14 @@
     {a:1,b:5,c:'A'},{a:3,b:4,c:'A'},{a:2,b:3,c:'A'}
     {a:2,b:2,c:'B'},{a:1,b:4,c:'B'},{a:2.2,b:3,c:'B'},{a:3,b:3,c:'B'}
   ]
-  data = new gg.Data json:jsondata
+  data = new polyjs.Data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'line', x : 'a', y : 'b', color:'c'}
     ]
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
 @examples.line_date = (dom) ->
   jsondata = [
@@ -150,21 +150,21 @@
     {a:'2012-01-06',b:3,c:'B'},
     {a:'2012-01-07',b:3,c:'B'}
   ]
-  data = new gg.Data json:jsondata
+  data = new polyjs.Data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'path', x : 'a', y : 'b'}
     ]
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
 @examples.path = (dom) ->
   jsondata = [
     {a:1,b:5,c:'A'},{a:3,b:4,c:'A'},{a:2,b:3,c:'A'}
     {a:2,b:2,c:'B'},{a:1,b:4,c:'B'},{a:2.2,b:3,c:'B'},{a:3,b:3,c:'B'}
   ]
-  data = new gg.Data json:jsondata
+  data = new polyjs.Data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'path', x : 'a', y : 'b', color:'c'}
@@ -172,4 +172,4 @@
     ]
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec

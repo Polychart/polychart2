@@ -2,7 +2,7 @@
 
 @examples.bar = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = new gg.Data json:jsondata
+  data = new polyjs.Data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'bar', x : 'index', y : 'value', id: 'index', opacity:'value'}
@@ -14,7 +14,7 @@
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
   c.addHandler (type, e) ->
     data = e.evtData
@@ -30,7 +30,7 @@
 
 @examples.bar_flip = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = new gg.Data json:jsondata
+  data = new polyjs.Data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'bar', x : 'index', y : 'value', id: 'index', opacity:'value'}
@@ -40,10 +40,10 @@
       y :
         type:'num', min:0, max:10, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
-    coord: gg.coord.cartesian(flip: true)
+    coord: polyjs.coord.cartesian(flip: true)
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
   update = () ->
     jsondata.shift()
@@ -58,7 +58,7 @@
 
 @examples.bar_polar = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = new gg.Data json:jsondata
+  data = new polyjs.Data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'bar', x : 'index', y : 'value', id: 'index'}
@@ -68,10 +68,10 @@
       y :
         type:'num', min:0, max:10, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
-    coord: gg.coord.polar( flip: true)
+    coord: polyjs.coord.polar( flip: true)
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
   redraw = () ->
     jsondata.shift()
@@ -83,7 +83,7 @@
 
 @examples.bar_static = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = new gg.Data json:jsondata
+  data = new polyjs.Data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'bar', x : 'index', y : 'value', id: 'index'}
@@ -95,13 +95,13 @@
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
 @examples.bar_sum= (dom) ->
   jsondata = (
     {index:i, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10} for i in [0..5]
   )
-  data = new gg.Data json:jsondata
+  data = new polyjs.Data json:jsondata
   spec = {
     layers: [
       data: data
@@ -117,7 +117,7 @@
       y: min:0, max: 30
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
   redraw = () ->
     jsondata.shift()
@@ -131,7 +131,7 @@
   jsondata = (
     {index:i, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10} for i in [0..10]
   )
-  data = new gg.Data json:jsondata
+  data = new polyjs.Data json:jsondata
   spec = {
     layers: [
       data: data
@@ -145,7 +145,7 @@
       x: labels:{'a':'Even Numbers', 'b':'Odd Numbers'}
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
   redraw = () ->
     jsondata.push({index:i++, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10})
@@ -155,7 +155,7 @@
   setTimeout(redraw, 1000)
 
 @examples.bar_ajax_csv = (dom) ->
-  data = new gg.Data url:"data/test.csv"
+  data = new polyjs.Data url:"data/test.csv"
   spec = {
     layers: [
       data: data
@@ -167,13 +167,13 @@
     guide:
       y: {type: 'num'}
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
 @examples.bar_date_binned = (dom) ->
   point = () ->
     time: moment().add('minutes', Math.random()*206232).unix()
     value: Math.random()*2
-  data = new gg.Data
+  data = new polyjs.Data
     json:(point() for i in [0..5000])
     meta: { time: { type: 'date', format: 'unix' } }
   spec = {
@@ -185,13 +185,13 @@
     ]
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
 @examples.bar_date_binned2 = (dom) ->
   point = () ->
     time: moment().add('minutes', Math.random()*23803).unix()
     value: Math.random()
-  data = new gg.Data
+  data = new polyjs.Data
     json:(point() for i in [0..500])
     meta: { time: { type: 'date', format: 'unix' } }
   spec = {
@@ -210,6 +210,6 @@
     ]
     dom: dom
   }
-  c = gg.chart spec
+  c = polyjs.chart spec
 
 

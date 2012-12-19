@@ -4,7 +4,7 @@ jsondata= [
   {x: 2, y: 1},
   {x: 3, y: 3}
 ]
-data = new gg.Data (json: jsondata)
+data = new polyjs.Data (json: jsondata)
 sampleLayer = {data: data, type: 'point', x: 'x', y: 'y'}
 
 test "domain: strict mode num & cat", ->
@@ -14,7 +14,7 @@ test "domain: strict mode num & cat", ->
     guides:
       x: { type: 'num', min: 2, max: 4, bw : 3 }
       y: { type: 'cat', levels: [1,2,3], labels: {1: 'One', 2: 'Five'} }
-  {domains, ticks} = gg.chart spec
+  {domains, ticks} = polyjs.chart spec
   equal domains.x.type, 'num'
   equal domains.x.min , 2
   equal domains.x.max, 4
@@ -34,7 +34,7 @@ test "scale: x and v:", ->
     guides:
       x: { type: 'num', min: 2, max: 4, bw : 3 }
       y: { type: 'num', min: 1, max: 3 }
-  {domains, scales, layers} = gg.chart spec
+  {domains, scales, layers} = polyjs.chart spec
   equal domains.x.type, 'num'
   equal domains.x.min , 2
   equal domains.x.max, 4

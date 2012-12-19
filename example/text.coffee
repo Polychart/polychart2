@@ -2,11 +2,11 @@
 
 @examples.text = (dom) ->
   jsondata = [{x:'A',y:'X'},{x:'B',y:'Y'},{x:'C',y:'Z'}]
-  data = new gg.Data({ json: jsondata })
+  data = new polyjs.Data({ json: jsondata })
   sampleLayer =
     data: data, type: 'text', x: 'x', y: 'y', text: 'y'
-  spec =  { layers: [sampleLayer], coord: gg.coord.polar(flip:true) , dom:dom}
-  c = gg.chart(spec)
+  spec =  { layers: [sampleLayer], coord: polyjs.coord.polar(flip:true) , dom:dom}
+  c = polyjs.chart(spec)
 
   c.addHandler (type, data) ->
     if type in ['click', 'reset']

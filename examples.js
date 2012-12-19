@@ -39,7 +39,7 @@
         c: 'B'
       }
     ];
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -65,7 +65,7 @@
       },
       dom: dom
     };
-    return c = gg.chart(spec);
+    return c = polyjs.chart(spec);
   };
 
   this.examples.area_single = function(dom) {
@@ -81,7 +81,7 @@
       }
       return _results;
     })();
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -109,7 +109,7 @@
       },
       dom: dom
     };
-    c = gg.chart(spec);
+    c = polyjs.chart(spec);
     update = function() {
       jsondata.shift();
       jsondata.push({
@@ -156,7 +156,7 @@
       }
       return _results;
     })();
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -185,7 +185,7 @@
       },
       dom: dom
     };
-    c = gg.chart(spec);
+    c = polyjs.chart(spec);
     update = function() {
       var j, _i, _len, _ref1;
       _ref1 = [1, 2];
@@ -230,7 +230,7 @@
       }
       return _results;
     })();
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -264,7 +264,7 @@
       },
       dom: dom
     };
-    c = gg.chart(spec);
+    c = polyjs.chart(spec);
     return c.addHandler(function(type, e) {
       data = e.evtData;
       if (type === 'reset') {
@@ -299,7 +299,7 @@
       }
       return _results;
     })();
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -331,12 +331,12 @@
           }
         }
       },
-      coord: gg.coord.cartesian({
+      coord: polyjs.coord.cartesian({
         flip: true
       }),
       dom: dom
     };
-    c = gg.chart(spec);
+    c = polyjs.chart(spec);
     update = function() {
       jsondata.shift();
       jsondata.push({
@@ -369,7 +369,7 @@
       }
       return _results;
     })();
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -400,12 +400,12 @@
           }
         }
       },
-      coord: gg.coord.polar({
+      coord: polyjs.coord.polar({
         flip: true
       }),
       dom: dom
     };
-    c = gg.chart(spec);
+    c = polyjs.chart(spec);
     redraw = function() {
       jsondata.shift();
       jsondata.push({
@@ -434,7 +434,7 @@
       }
       return _results;
     })();
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -467,7 +467,7 @@
       },
       dom: dom
     };
-    return c = gg.chart(spec);
+    return c = polyjs.chart(spec);
   };
 
   this.examples.bar_sum = function(dom) {
@@ -484,7 +484,7 @@
       }
       return _results;
     })();
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -519,7 +519,7 @@
       },
       dom: dom
     };
-    c = gg.chart(spec);
+    c = polyjs.chart(spec);
     redraw = function() {
       jsondata.shift();
       jsondata.push({
@@ -550,7 +550,7 @@
       }
       return _results;
     })();
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -580,7 +580,7 @@
       },
       dom: dom
     };
-    c = gg.chart(spec);
+    c = polyjs.chart(spec);
     redraw = function() {
       jsondata.push({
         index: i++,
@@ -598,7 +598,7 @@
 
   this.examples.bar_ajax_csv = function(dom) {
     var c, data, spec;
-    data = new gg.Data({
+    data = new polyjs.Data({
       url: "data/test.csv"
     });
     spec = {
@@ -617,7 +617,7 @@
         }
       }
     };
-    return c = gg.chart(spec);
+    return c = polyjs.chart(spec);
   };
 
   this.examples.bar_date_binned = function(dom) {
@@ -628,7 +628,7 @@
         value: Math.random() * 2
       };
     };
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: (function() {
         var _i, _results;
         _results = [];
@@ -655,7 +655,7 @@
       ],
       dom: dom
     };
-    return c = gg.chart(spec);
+    return c = polyjs.chart(spec);
   };
 
   this.examples.bar_date_binned2 = function(dom) {
@@ -666,7 +666,7 @@
         value: Math.random()
       };
     };
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: (function() {
         var _i, _results;
         _results = [];
@@ -701,7 +701,7 @@
       ],
       dom: dom
     };
-    return c = gg.chart(spec);
+    return c = polyjs.chart(spec);
   };
 
 }).call(this);
@@ -730,10 +730,10 @@
 
   this.examples.box = function(dom) {
     var data;
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: datafn2(100)
     });
-    return gg.chart({
+    return polyjs.chart({
       layers: [
         {
           data: data,
@@ -748,10 +748,10 @@
 
   this.examples.box_small = function(dom) {
     var data;
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: datafn2(8)
     });
-    return gg.chart({
+    return polyjs.chart({
       layers: [
         {
           data: data,
@@ -786,7 +786,7 @@
       }
       return _results;
     })();
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -820,7 +820,7 @@
       },
       dom: dom
     };
-    c = gg.chart(spec);
+    c = polyjs.chart(spec);
     redraw = function() {
       jsondata.shift();
       jsondata.push({
@@ -858,7 +858,7 @@
       }
       return _results;
     })();
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -883,7 +883,7 @@
       },
       dom: dom
     };
-    c = gg.chart(spec);
+    c = polyjs.chart(spec);
     redraw = function() {
       jsondata.shift();
       jsondata.push(next());
@@ -909,7 +909,7 @@
       }
       return _results;
     })();
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -941,12 +941,12 @@
           }
         }
       },
-      coord: gg.coord.cartesian({
+      coord: polyjs.coord.cartesian({
         flip: true
       }),
       dom: dom
     };
-    c = gg.chart(spec);
+    c = polyjs.chart(spec);
     redraw = function() {
       jsondata.shift();
       jsondata.push({
@@ -975,7 +975,7 @@
       }
       return _results;
     })();
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -1007,10 +1007,10 @@
           }
         }
       },
-      coord: gg.coord.polar(),
+      coord: polyjs.coord.polar(),
       dom: dom
     };
-    c = gg.chart(spec);
+    c = polyjs.chart(spec);
     redraw = function() {
       jsondata.shift();
       jsondata.push({
@@ -1039,7 +1039,7 @@
       }
       return _results;
     })();
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -1071,12 +1071,12 @@
           }
         }
       },
-      coord: gg.coord.polar({
+      coord: polyjs.coord.polar({
         flip: true
       }),
       dom: dom
     };
-    c = gg.chart(spec);
+    c = polyjs.chart(spec);
     redraw = function() {
       jsondata.shift();
       jsondata.push({
@@ -1125,7 +1125,7 @@
         c: 'B'
       }
     ];
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -1140,7 +1140,7 @@
       ],
       dom: dom
     };
-    return c = gg.chart(spec);
+    return c = polyjs.chart(spec);
   };
 
   this.examples.line_date = function(dom) {
@@ -1176,7 +1176,7 @@
         c: 'B'
       }
     ];
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -1190,7 +1190,7 @@
       ],
       dom: dom
     };
-    return c = gg.chart(spec);
+    return c = polyjs.chart(spec);
   };
 
   this.examples.path = function(dom) {
@@ -1226,7 +1226,7 @@
         c: 'B'
       }
     ];
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     spec = {
@@ -1247,7 +1247,7 @@
       ],
       dom: dom
     };
-    return c = gg.chart(spec);
+    return c = polyjs.chart(spec);
   };
 
 }).call(this);
@@ -1278,7 +1278,7 @@
         }
         return _results;
       })();
-      data = new gg.Data({
+      data = new polyjs.Data({
         json: jsondata
       });
       sampleLayer = {
@@ -1352,7 +1352,7 @@
       };
     };
     initspec = spec().spec;
-    c = gg.chart(initspec);
+    c = polyjs.chart(initspec);
     redraw = function() {
       var newspec;
       newspec = spec();
@@ -1379,7 +1379,7 @@
         y: 1
       }
     ];
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     sampleLayer = {
@@ -1397,7 +1397,7 @@
       layers: [sampleLayer],
       dom: dom
     };
-    return c = gg.chart(spec);
+    return c = polyjs.chart(spec);
   };
 
   this.examples.point3 = function(dom) {
@@ -1414,7 +1414,7 @@
         y: 'Z'
       }
     ];
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     sampleLayer = {
@@ -1430,7 +1430,7 @@
       layers: [sampleLayer],
       dom: dom
     };
-    return c = gg.chart(spec);
+    return c = polyjs.chart(spec);
   };
 
   this.examples.point3_flip = function(dom) {
@@ -1447,7 +1447,7 @@
         y: 'Z'
       }
     ];
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     sampleLayer = {
@@ -1461,12 +1461,12 @@
     };
     spec = {
       layers: [sampleLayer],
-      coord: gg.coord.polar({
+      coord: polyjs.coord.polar({
         flip: true
       }),
       dom: dom
     };
-    c = gg.chart(spec);
+    c = polyjs.chart(spec);
     return c.addHandler(function(type, data) {
       if (type === 'click' || type === 'reset') {
         console.log(data);
@@ -1498,7 +1498,7 @@
         y: 'Z'
       }
     ];
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: jsondata
     });
     sampleLayer = {
@@ -1510,12 +1510,12 @@
     };
     spec = {
       layers: [sampleLayer],
-      coord: gg.coord.polar({
+      coord: polyjs.coord.polar({
         flip: true
       }),
       dom: dom
     };
-    c = gg.chart(spec);
+    c = polyjs.chart(spec);
     return c.addHandler(function(type, data) {
       if (type === 'click' || type === 'reset') {
         console.log(data);
@@ -1560,7 +1560,7 @@
 
   this.examples.tiles = function(dom) {
     var c, data, spec;
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: datafn()
     });
     spec = {
@@ -1575,12 +1575,12 @@
       ],
       dom: dom
     };
-    return c = gg.chart(spec);
+    return c = polyjs.chart(spec);
   };
 
   this.examples.tiles_bw = function(dom) {
     var c, data, spec;
-    data = new gg.Data({
+    data = new polyjs.Data({
       json: datafn()
     });
     spec = {
@@ -1595,7 +1595,7 @@
       ],
       guides: {
         color: {
-          scale: gg.scale.gradient({
+          scale: polyjs.scale.gradient({
             lower: '#FFF',
             upper: '#000'
           })
@@ -1603,7 +1603,7 @@
       },
       dom: dom
     };
-    return c = gg.chart(spec);
+    return c = polyjs.chart(spec);
   };
 
 }).call(this);
