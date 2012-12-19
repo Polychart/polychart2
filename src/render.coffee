@@ -75,7 +75,6 @@ class Circle extends Renderer # for both cartesian & polar
     fill: @_maybeApply scales, mark, 'color'
     opacity: @_maybeApply scales, mark, 'opacity'
     stroke: stroke
-    title: 'omgthisiscool!'
     'stroke-width': mark['stroke-width'] ? '0px'
 
 class Path extends Renderer # for both cartesian & polar?

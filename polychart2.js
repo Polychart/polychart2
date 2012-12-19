@@ -5097,7 +5097,6 @@ or knows how to retrieve data from some source.
         fill: this._maybeApply(scales, mark, 'color'),
         opacity: this._maybeApply(scales, mark, 'opacity'),
         stroke: stroke,
-        title: 'omgthisiscool!',
         'stroke-width': (_ref1 = mark['stroke-width']) != null ? _ref1 : '0px'
       };
     };
