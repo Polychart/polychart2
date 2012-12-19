@@ -1,5 +1,3 @@
-poly = @poly || {}
-
 ###
 Group an array of data items by the value of certain columns.
 
@@ -38,16 +36,12 @@ poly.median = (values, sorted=false) ->
     if mid % 1 != 0 then return values[Math.floor(mid)]
     return (values[mid-1]+values[mid])/2
 
-@poly = poly
-
-
 ###
 Produces a function that counts how many times it has been called
 ###
 poly.counter = () ->
   i = 0
   () -> i++
-
 
 ###
 Given an OLD array and NEW array, split the points in (OLD union NEW) into
@@ -152,8 +146,3 @@ poly.coerce = (value, meta) ->
       moment(value).unix()
   else
     undefined
-
-###
-# EXPORT
-###
-@poly = poly

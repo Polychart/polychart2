@@ -1,5 +1,3 @@
-poly = @poly || {}
-
 ###
 # GLOBALS
 ###
@@ -305,8 +303,3 @@ backendProcess = (dataSpec, rawData, callback) ->
 For debug purposes only
 ###
 poly.data.frontendProcess = frontendProcess
-
-###
-# EXPORT
-###
-@poly = poly

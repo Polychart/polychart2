@@ -1,5 +1,3 @@
-poly = @poly || {}
-
 ###
 # CONSTANTS
 ###
@@ -199,9 +197,3 @@ class Identity extends Scale
   make: () ->
     @sortfn = (x) -> x
     @f = @_identityWrapper (x) -> x
-
-###
-# EXPORT
-###
-@poly = poly
-

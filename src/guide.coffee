@@ -1,5 +1,3 @@
-poly = @poly || {}
-
 sf = poly.const.scaleFns
 
 class Guide
@@ -346,5 +344,3 @@ poly.guide.axis = (type) ->
   else if type == 't'
     new TAxis()
 poly.guide.legend = (aes) -> return new Legend(aes)
-
-@poly = poly

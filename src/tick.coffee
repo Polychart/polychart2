@@ -1,5 +1,3 @@
-poly = @poly || {}
-
 ###
 # GLOBALS
 ###
@@ -120,8 +118,3 @@ tickValues =
       current.add(step+'s', 1)
     ticks: ticks
     step: step
-
-###
-# EXPORT
-###
-@poly = poly

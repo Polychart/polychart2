@@ -7,8 +7,8 @@ datafn2 = (lim) ->
   (item(i) for i in [0..lim])
 
 @examples.box = (dom) ->
-  data = new poly.Data json:datafn2(100)
-  poly.chart
+  data = new gg.Data json:datafn2(100)
+  gg.chart
     layers: [
       data: data
       type: 'box'
@@ -18,8 +18,8 @@ datafn2 = (lim) ->
     dom: dom
 
 @examples.box_small = (dom) ->
-  data = new poly.Data json:datafn2(8)
-  poly.chart
+  data = new gg.Data json:datafn2(8)
+  gg.chart
     layers: [
       data: data
       type: 'box'

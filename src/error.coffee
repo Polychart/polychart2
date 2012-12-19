@@ -1,5 +1,3 @@
-poly = @poly || {}
-
 class DefinitionError extends Error
   constructor: (@message) ->
     @name = "DefinitionError"
@@ -31,5 +29,3 @@ poly.error.defn = (msg) -> new DefinitionError(msg)
 poly.error.mode = (msg) -> new ModeError(msg)
 poly.error.impl = (msg) -> new NotImplemented(msg)
 poly.error.input = (msg) -> new UnknownInput(msg)
-
-@poly = poly

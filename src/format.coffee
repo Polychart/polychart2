@@ -1,5 +1,3 @@
-poly = @poly || {}
-
 poly.format = (type, step) ->
   switch type
     when 'cat' then return poly.format.identity

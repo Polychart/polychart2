@@ -11,7 +11,7 @@ datafn = () ->
   (item(i) for i in [0..24])
 
 @examples.tiles = (dom) ->
-  data = new poly.Data json:datafn()
+  data = new gg.Data json:datafn()
   spec = {
     layers: [
       data: data
@@ -22,10 +22,10 @@ datafn = () ->
     ]
     dom: dom
   }
-  c = poly.chart spec
+  c = gg.chart spec
 
 @examples.tiles_bw = (dom) ->
-  data = new poly.Data json:datafn()
+  data = new gg.Data json:datafn()
   spec = {
     layers: [
       data: data
@@ -35,8 +35,8 @@ datafn = () ->
       color: 'value'
     ]
     guides:
-      color: { scale: poly.scale.gradient(lower: '#FFF', upper:'#000') }
+      color: { scale: gg.scale.gradient(lower: '#FFF', upper:'#000') }
     dom: dom
   }
-  c = poly.chart spec
+  c = gg.chart spec
 

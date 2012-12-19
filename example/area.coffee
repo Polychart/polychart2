@@ -5,7 +5,7 @@
     {a:1,b:5,c:'A'},{a:3,b:4,c:'A'},{a:2,b:3,c:'A'}
     {a:2,b:2,c:'B'},{a:1,b:4,c:'B'},{a:2.2,b:3,c:'B'},{a:3,b:3,c:'B'}
   ]
-  data = new poly.Data json:jsondata
+  data = new gg.Data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'area', x : 'a', y : 'b', color:'c'}
@@ -16,11 +16,11 @@
       color: title:'Some Color'
     dom: dom
   }
-  c = poly.chart spec
+  c = gg.chart spec
 
 @examples.area_single = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = new poly.Data json:jsondata
+  data = new gg.Data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'area', x : 'index', y : 'value'}
@@ -31,7 +31,7 @@
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
     dom: dom
   }
-  c = poly.chart spec
+  c = gg.chart spec
 
   update = () ->
     jsondata.shift()
@@ -47,7 +47,7 @@
   value = () -> 2 + Math.random()*5
   item = (i) -> {index:Math.floor(i/2), even: even(i), value:value()}
   jsondata = (item(i) for i in [0..19])
-  data = new poly.Data json:jsondata
+  data = new gg.Data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'area', x : 'index', y : 'value', color: 'even'}
@@ -62,7 +62,7 @@
         title: "Parity"
     dom: dom
   }
-  c = poly.chart spec
+  c = gg.chart spec
 
   update = () ->
     for j in [1,2]

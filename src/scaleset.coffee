@@ -1,5 +1,3 @@
-poly = @poly || {}
-
 poly.scaleset = (guideSpec, domains, ranges) ->
   return new ScaleSet(guideSpec, domains, ranges)
 

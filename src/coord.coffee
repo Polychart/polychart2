@@ -1,5 +1,3 @@
-poly = @poly || {}
-
 class Coordinate
   constructor: (params) ->
     params ?= {}

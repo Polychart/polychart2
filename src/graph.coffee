@@ -1,5 +1,3 @@
-poly = @poly || {}
-
 # Graph Object
 class Graph
   constructor: (spec) ->
@@ -123,5 +121,3 @@ class Graph
       @ticks[k] = v.ticks
 
 poly.chart = (spec) -> new Graph(spec)
-
-@poly = poly

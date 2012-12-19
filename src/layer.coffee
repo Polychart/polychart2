@@ -1,5 +1,3 @@
-poly = @poly || {}
-
 ##########
 # CONSTANTS
 ##########
@@ -358,8 +356,3 @@ class Box extends Layer
           size: @_getValue item, 'size'
           opacity: @_getValue item, 'opacity'
       @geoms[idfn item] = geom
-
-###
-# EXPORT
-###
-@poly = poly

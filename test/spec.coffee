@@ -1,41 +1,41 @@
 module "parsers"
 test "expressions", ->
-  equal poly.parser.tokenize('A').toString(), '<symbol,A>'
-  equal poly.parser.parse('A').toString(), 'Ident(A)'
+  equal gg.parser.tokenize('A').toString(), '<symbol,A>'
+  equal gg.parser.parse('A').toString(), 'Ident(A)'
 
-  equal poly.parser.tokenize('  A').toString(), '<symbol,A>'
-  equal poly.parser.parse('  A').toString(), 'Ident(A)'
+  equal gg.parser.tokenize('  A').toString(), '<symbol,A>'
+  equal gg.parser.parse('  A').toString(), 'Ident(A)'
 
-  equal poly.parser.tokenize('3.3445').toString(), '<literal,3.3445>'
-  equal poly.parser.parse('3.3445').toString(), 'Const(3.3445)'
+  equal gg.parser.tokenize('3.3445').toString(), '<literal,3.3445>'
+  equal gg.parser.parse('3.3445').toString(), 'Const(3.3445)'
 
-  equal poly.parser.tokenize('mean(A )').toString(), '<symbol,mean>,<(>,<symbol,A>,<)>'
-  equal poly.parser.parse('mean(A )').toString(), 'Call(mean,[Ident(A)])'
+  equal gg.parser.tokenize('mean(A )').toString(), '<symbol,mean>,<(>,<symbol,A>,<)>'
+  equal gg.parser.parse('mean(A )').toString(), 'Call(mean,[Ident(A)])'
 
-  equal poly.parser.tokenize(' mean(A )').toString(), '<symbol,mean>,<(>,<symbol,A>,<)>'
-  equal poly.parser.parse('mean(A )').toString(), 'Call(mean,[Ident(A)])'
+  equal gg.parser.tokenize(' mean(A )').toString(), '<symbol,mean>,<(>,<symbol,A>,<)>'
+  equal gg.parser.parse('mean(A )').toString(), 'Call(mean,[Ident(A)])'
 
-  equal poly.parser.tokenize('mean( A )  ').toString(), '<symbol,mean>,<(>,<symbol,A>,<)>'
-  equal poly.parser.parse('mean( A )  ').toString(), 'Call(mean,[Ident(A)])'
+  equal gg.parser.tokenize('mean( A )  ').toString(), '<symbol,mean>,<(>,<symbol,A>,<)>'
+  equal gg.parser.parse('mean( A )  ').toString(), 'Call(mean,[Ident(A)])'
 
-  equal poly.parser.tokenize('log(mean(sum(A_0), 10), 2.7188, CCC)').toString(), '<symbol,log>,<(>,<symbol,mean>,<(>,<symbol,sum>,<(>,<symbol,A_0>,<)>,<,>,<literal,10>,<)>,<,>,<literal,2.7188>,<,>,<symbol,CCC>,<)>'
-  equal poly.parser.parse('log(mean(sum(A_0), 10), 2.7188, CCC)').toString(), 'Call(log,[Call(mean,[Call(sum,[Ident(A_0)]),Const(10)]),Const(2.7188),Ident(CCC)])'
+  equal gg.parser.tokenize('log(mean(sum(A_0), 10), 2.7188, CCC)').toString(), '<symbol,log>,<(>,<symbol,mean>,<(>,<symbol,sum>,<(>,<symbol,A_0>,<)>,<,>,<literal,10>,<)>,<,>,<literal,2.7188>,<,>,<symbol,CCC>,<)>'
+  equal gg.parser.parse('log(mean(sum(A_0), 10), 2.7188, CCC)').toString(), 'Call(log,[Call(mean,[Call(sum,[Ident(A_0)]),Const(10)]),Const(2.7188),Ident(CCC)])'
 
-  equal poly.parser.tokenize('this(should, break').toString(), '<symbol,this>,<(>,<symbol,should>,<,>,<symbol,break>'
+  equal gg.parser.tokenize('this(should, break').toString(), '<symbol,this>,<(>,<symbol,should>,<,>,<symbol,break>'
   try
-    poly.parser.parse('this(should, break').toString()
+    gg.parser.parse('this(should, break').toString()
     ok false, 'this(should, break'
   catch e
     equal e.message, 'unable to parse: Stream([])'
 
   try
-    poly.parser.parse(')this(should, break').toString()
+    gg.parser.parse(')this(should, break').toString()
     ok false, ')this(should, break'
   catch e
     equal e.message, 'unable to parse: Stream([<)>,<symbol,this>,<(>,<symbol,should>,<,>,<symbol,break>])'
 
   try
-    poly.parser.parse('this should break').toString()
+    gg.parser.parse('this should break').toString()
     ok false, 'this should break'
   catch e
     equal e.message, "expected end of stream, but found: Stream([<symbol,should>,<symbol,break>])"
@@ -48,7 +48,7 @@ test "extraction: nothing (smoke test)", ->
     color: {const: "blue"},
     opacity: {var: "c"},
   }
-  parser = poly.parser.layerToData layerparser
+  parser = gg.parser.layerToData layerparser
   deepEqual parser.filter, {}
   deepEqual parser.meta, {}
   deepEqual parser.select, ['a', 'b', 'c']
@@ -61,7 +61,7 @@ test "extraction: simple, one stat (smoke test)", ->
     x: {var: "a"},
     y: {var: "sum(b)"},
   }
-  parser = poly.parser.layerToData layerparser
+  parser = gg.parser.layerToData layerparser
   deepEqual parser.filter, {}
   deepEqual parser.meta, {}
   deepEqual parser.select, ['a', 'sum(b)']
@@ -78,7 +78,7 @@ test "extraction: stats", ->
     opacity: {var: "sum(c)"},
     filter: {a: {gt: 0, lt: 100}},
   }
-  parser = poly.parser.layerToData layerparser
+  parser = gg.parser.layerToData layerparser
   deepEqual parser.filter, layerparser.filter
   deepEqual parser.meta, {b: {sort:'a', asc:true}}
   deepEqual parser.select, ['a', 'b', 'sum(c)']
@@ -95,7 +95,7 @@ test "extraction: transforms", ->
     opacity: {var: "sum(c)"},
     filter: {a: {gt: 0, lt: 100}},
   }
-  parser = poly.parser.layerToData layerparser
+  parser = gg.parser.layerToData layerparser
   deepEqual parser.filter, layerparser.filter
   deepEqual parser.meta, {b: {sort:'a', asc:true}}
   deepEqual parser.select, ['lag(a,1)', 'b', 'sum(c)']
@@ -111,7 +111,7 @@ test "extraction: transforms", ->
     opacity: {var: "sum(c)"},
     filter: {a: {gt: 0, lt: 100}},
   }
-  parser = poly.parser.layerToData layerparser
+  parser = gg.parser.layerToData layerparser
   deepEqual parser.filter, layerparser.filter
   deepEqual parser.meta, {b: {sort:'a', asc:true}}
   deepEqual parser.select, ['bin(a,1)', 'b', 'sum(c)']
@@ -125,7 +125,7 @@ test "extraction: transforms", ->
     x: {var: "bin(a, 0.10)"}
     color: {var: "mean(lag(c,0))"}
     opacity: {var: "bin(a, 10)"}
-  parser = poly.parser.layerToData layerparser
+  parser = gg.parser.layerToData layerparser
   deepEqual parser.select, ["bin(a,0.10)", "lag(c,-0xaF1)", "mean(lag(c,0))", "bin(a,10)"]
   deepEqual parser.stats.groups, ["bin(a,0.10)", "lag(c,-0xaF1)", "bin(a,10)"]
   deepEqual parser.stats.stats, [key: "lag(c,0)", name: "mean(lag(c,0))", stat: "mean" ]
@@ -164,6 +164,6 @@ test "extraction: UTF8", ->
     x: {var: "bin(汉字漢字, 10.4e20)"}
     color: {var: "mean(lag(c, -1))"}
     opacity: {var: "bin(\"a-+->\\\"b\", '漢\\\'字')"}
-  parser = poly.parser.layerToData layerparser
+  parser = gg.parser.layerToData layerparser
   deepEqual parser.select, ["bin(汉字漢字,10.4e20", "lag(',f+/\\\'c',-1", "mean(lag(c,-1))", "bin(\"a-+->\\\"b\", '漢\\\'字')"]
 

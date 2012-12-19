@@ -1,7 +1,7 @@
 # Polychart2.js
 rm -r compiled/src/
 coffee --compile --output compiled/src/ src/
-awk 'FNR==1{print ";"}1' \
+cat \
     compiled/src/utils.js \
     compiled/src/const.js \
     compiled/src/error.js \
@@ -18,7 +18,9 @@ awk 'FNR==1{print ";"}1' \
     compiled/src/layer.js \
     compiled/src/dim.js \
     compiled/src/render.js \
-    compiled/src/graph.js > polychart2.js
+    compiled/src/graph.js > compiled/src/polychart2.bare.js
+cat make/header.js compiled/src/polychart2.bare.js make/footer.js > polychart2.js
+
 rm polychart2.min.js
 python make/uglify.py --source=polychart2.js --dest=polychart2.min.js
 rm polychart2.standalone.js

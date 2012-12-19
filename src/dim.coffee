@@ -1,5 +1,3 @@
-poly = @poly || {}
-
 ###
 # GLOBALS
 ###
@@ -72,8 +70,3 @@ poly.dim.guess = (spec) ->
 ###
 # CLASSES
 ###
-
-###
-# EXPORT
-###
-@poly = poly

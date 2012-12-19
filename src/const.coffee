@@ -1,5 +1,3 @@
-poly = @poly || {}
-
 ###
 CONSTANTS
 ---------
@@ -28,5 +26,3 @@ poly.const =
     'color': 'steelblue'
     'size': 2
     'opacity': 0.7
-
-@poly = poly

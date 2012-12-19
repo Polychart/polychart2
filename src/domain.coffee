@@ -1,5 +1,3 @@
-poly = @poly || {}
-
 ###
 # CONSTANTS
 ###
@@ -167,8 +165,3 @@ mergeDomains = (domains) ->
   if types.length > 1
     throw poly.error.data "You are trying to merge data of different types in the same axis or legend."
   domainMerge[types[0]](domains)
-
-###
-# EXPORT
-###
-@poly = poly
