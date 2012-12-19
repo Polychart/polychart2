@@ -546,34 +546,37 @@ These are constants that are referred to throughout the coebase
     };
   };
 
-  poly.format.date = function(level) {
-    if (!(__indexOf.call(poly["const"].timerange, level) >= 0)) {
-      level = 'day';
-    }
-    if (level === 'second') {
-      return function(date) {
-        return moment.unix(date).format('h:mm:ss a');
-      };
-    } else if (level === 'minute') {
-      return function(date) {
-        return moment.unix(date).format('h:mm a');
-      };
-    } else if (level === 'hour') {
-      return function(date) {
-        return moment.unix(date).format('MMM D h a');
-      };
-    } else if (level === 'day' || level === 'week') {
-      return function(date) {
-        return moment.unix(date).format('MMM D');
-      };
-    } else if (level === 'month') {
-      return function(date) {
-        return moment.unix(date).format('YY/MM');
-      };
-    } else if (level === 'year') {
-      return function(date) {
-        return moment.unix(date).format('YYYY');
-      };
+  poly.format.date = function(format) {
+    var level;
+    if ((__indexOf.call(poly["const"].timerange, format) >= 0)) {
+      level = format;
+      if (level === 'second') {
+        return function(date) {
+          return moment.unix(date).format('h:mm:ss a');
+        };
+      } else if (level === 'minute') {
+        return function(date) {
+          return moment.unix(date).format('h:mm a');
+        };
+      } else if (level === 'hour') {
+        return function(date) {
+          return moment.unix(date).format('MMM D h a');
+        };
+      } else if (level === 'day' || level === 'week') {
+        return function(date) {
+          return moment.unix(date).format('MMM D');
+        };
+      } else if (level === 'month') {
+        return function(date) {
+          return moment.unix(date).format('YY/MM');
+        };
+      } else if (level === 'year') {
+        return function(date) {
+          return moment.unix(date).format('YYYY');
+        };
+      }
+    } else {
+      return moment.unix(date).format(format);
     }
   };
 
