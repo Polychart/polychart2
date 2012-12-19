@@ -8,7 +8,7 @@ adds interactive elements to take full advantage of the web.
 Key Features
 ------------
 
-### H3 Static Charts
+### Static Charts
 
 Charts are defined in Polychart2 by providing a combinations of 
 
@@ -24,7 +24,7 @@ Charts are defined in Polychart2 by providing a combinations of
 The full list of supported layers, aesthetics, scales and coordinates and how
 they are specified can be found in the documentations.
 
-### H3 Data Processing
+### Data Processing
 
 The Polychart2 library can perform simple statistical calculations based on
 existing data. For example, it is possible to plot the total number of sales
@@ -38,7 +38,7 @@ the front end.
 The full list of supported operations and integration details are provided in
 the documentations.
 
-### H3 Interaction
+### Interaction
 
 Charts created by Polychart2 is interactive by nature, and uses an event-based
 model for interaction. Events are thrown when the underlying data changes, or 
