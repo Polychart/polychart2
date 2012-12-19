@@ -24,6 +24,7 @@ class Data
     for item in json
       for key in keys
         item[key] = poly.coerce item[key], @meta[key]
+    @key = keys
     @raw = json
   getRaw: (callback) ->
     # frontend
@@ -44,6 +45,22 @@ class Data
       @subscribed.push h
   unsubscribe: (h) ->
     @subscribed.splice _.indexOf(@subscribed, h), 1
+
+  # functions for backwards compatibility
+  keys: () -> @key
+  rename: () -> true
+  renameMany: () -> true
+  remove: () -> false
+  filter: () -> @
+  sort: () -> @
+  derive: () -> @
+  getMeta: (key) -> @meta[key]
+  type: (key) ->
+    t = @meta[key].type
+    if t is 'num' then 'number' else t
+  get: (key) -> _.pluck @raw, key
+  len: () -> @raw.length
+  getObject: (i) -> @raw[i]
 
 poly.Data = Data
 

@@ -3571,6 +3571,7 @@ or knows how to retrieve data from some source.
           item[key] = poly.coerce(item[key], this.meta[key]);
         }
       }
+      this.key = keys;
       return this.raw = json;
     };
 
@@ -3616,6 +3617,60 @@ or knows how to retrieve data from some source.
 
     Data.prototype.unsubscribe = function(h) {
       return this.subscribed.splice(_.indexOf(this.subscribed, h), 1);
+    };
+
+    Data.prototype.keys = function() {
+      return this.key;
+    };
+
+    Data.prototype.rename = function() {
+      return true;
+    };
+
+    Data.prototype.renameMany = function() {
+      return true;
+    };
+
+    Data.prototype.remove = function() {
+      return false;
+    };
+
+    Data.prototype.filter = function() {
+      return this;
+    };
+
+    Data.prototype.sort = function() {
+      return this;
+    };
+
+    Data.prototype.derive = function() {
+      return this;
+    };
+
+    Data.prototype.getMeta = function(key) {
+      return this.meta[key];
+    };
+
+    Data.prototype.type = function(key) {
+      var t;
+      t = this.meta[key].type;
+      if (t === 'num') {
+        return 'number';
+      } else {
+        return t;
+      }
+    };
+
+    Data.prototype.get = function(key) {
+      return _.pluck(this.raw, key);
+    };
+
+    Data.prototype.len = function() {
+      return this.raw.length;
+    };
+
+    Data.prototype.getObject = function(i) {
+      return this.raw[i];
     };
 
     return Data;
