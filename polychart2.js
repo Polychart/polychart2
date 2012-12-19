@@ -3673,6 +3673,14 @@ or knows how to retrieve data from some source.
       return this.raw[i];
     };
 
+    Data.prototype.max = function(key) {
+      return _.max(this.get(key));
+    };
+
+    Data.prototype.min = function(key) {
+      return _.min(this.get(key));
+    };
+
     return Data;
 
   })();

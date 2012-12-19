@@ -61,6 +61,8 @@ class Data
   get: (key) -> _.pluck @raw, key
   len: () -> @raw.length
   getObject: (i) -> @raw[i]
+  max: (key) -> _.max @get(key)
+  min: (key) -> _.min @get(key)
 
 poly.Data = Data
 
