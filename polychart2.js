@@ -5506,7 +5506,10 @@ or knows how to retrieve data from some source.
 
     Graph.prototype._makePaper = function(dom, width, height, handleEvent) {
       var paper;
-      return paper = poly.paper(document.getElementById(dom), width, height, handleEvent);
+      if (_.isString(dom)) {
+        dom = document.getElementById(dom);
+      }
+      return paper = poly.paper(dom, width, height, handleEvent);
     };
 
     Graph.prototype._legacy = function(domains) {

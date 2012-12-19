@@ -109,7 +109,8 @@ class Graph
   _makeDimensions: (spec, scaleSet) ->
     poly.dim.make spec, scaleSet.makeAxes(), scaleSet.makeLegends()
   _makePaper: (dom, width, height, handleEvent) ->
-    paper = poly.paper document.getElementById(dom), width, height, handleEvent
+    if _.isString dom then dom = document.getElementById(dom)
+    paper = poly.paper dom, width, height, handleEvent
 
   _legacy: (domains) =>
     # LEGACY: tick calculation
