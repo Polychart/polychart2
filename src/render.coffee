@@ -161,24 +161,6 @@ class CircleRect extends Renderer # FOR POLAR ONLY
       stroke: @_maybeApply scales, mark, 'color'
       'stroke-width': '0px'
 
-"""
-class HLine extends Renderer # for both cartesian & polar?
-  _make: (paper) -> paper.path()
-  attr: (scales, coord, mark) ->
-    y = scales.y mark.y
-    path: @_makePath([0, 100000], [y, y])
-    stroke: 'black'
-    'stroke-width': '1px'
-
-class VLine extends Renderer # for both cartesian & polar?
-  _make: (paper) -> paper.path()
-  attr: (scales, coord, mark) ->
-    x = scales.x mark.x
-    path: @_makePath([x, x], [0, 100000])
-    stroke: 'black'
-    'stroke-width': '1px'
-"""
-
 class Text extends Renderer # for both cartesian & polar
   _make: (paper) -> paper.text()
   attr: (scales, coord, mark, mayflip) ->
@@ -200,8 +182,6 @@ renderer =
     path: new Path()
     text: new Text()
     rect: new Rect()
-    #hline: new HLine()
-    #vline: new VLine()
   polar:
     circle: new Circle()
     path: new Path()
