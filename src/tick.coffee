@@ -113,6 +113,8 @@ tickValues =
       else 'year'
     ticks = []
     current = moment.unix(min).startOf(step)
+    if current.unix() < min
+      current.add(step+'s', 1)
     while current.unix() < max
       ticks.push current.unix()
       current.add(step+'s', 1)

@@ -2081,6 +2081,9 @@ These are constants that are referred to throughout the coebase
       step = step < 1.4 * 1 ? 'second' : step < 1.4 * 60 ? 'minute' : step < 1.4 * 60 * 60 ? 'hour' : step < 1.4 * 24 * 60 * 60 ? 'day' : step < 1.4 * 7 * 24 * 60 * 60 ? 'week' : step < 1.4 * 30 * 24 * 60 * 60 ? 'month' : 'year';
       ticks = [];
       current = moment.unix(min).startOf(step);
+      if (current.unix() < min) {
+        current.add(step + 's', 1);
+      }
       while (current.unix() < max) {
         ticks.push(current.unix());
         current.add(step + 's', 1);
