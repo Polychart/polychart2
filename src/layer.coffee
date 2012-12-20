@@ -319,13 +319,14 @@ class Box extends Layer
       if y.q1 # and therefore y.q2, y.q3, etc...
         geom.marks =
           iqr:
-            type: 'path'
-            x: [xl, xl, xu, xu, xl]
-            y: [y.q2, y.q4, y.q4, y.q2, y.q2]
+            type: 'rect'
+            x: [xl, xu]
+            y: [y.q2, y.q4]
             stroke: @_getValue item, 'color'
-            fill: 'none'
+            color: sf.identity 'white'
             size: @_getValue item, 'size'
             opacity: @_getValue item, 'opacity'
+            'stroke-width': '1px'
           q1:
             type: 'line'
             x: [xl, xu]

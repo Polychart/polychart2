@@ -748,6 +748,25 @@
     });
   };
 
+  this.examples.box_polar = function(dom) {
+    var data;
+    data = new polyjs.Data({
+      json: datafn2(100)
+    });
+    return polyjs.chart({
+      layers: [
+        {
+          data: data,
+          type: 'box',
+          x: 'mod3',
+          y: 'box(value)'
+        }
+      ],
+      dom: dom,
+      coord: polyjs.coord.polar()
+    });
+  };
+
   this.examples.box_small = function(dom) {
     var data;
     data = new polyjs.Data({

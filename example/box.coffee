@@ -17,6 +17,18 @@ datafn2 = (lim) ->
     ]
     dom: dom
 
+@examples.box_polar = (dom) ->
+  data = new polyjs.Data json:datafn2(100)
+  polyjs.chart
+    layers: [
+      data: data
+      type: 'box'
+      x: 'mod3'
+      y: 'box(value)'
+    ]
+    dom: dom
+    coord: polyjs.coord.polar()
+
 @examples.box_small = (dom) ->
   data = new polyjs.Data json:datafn2(8)
   polyjs.chart

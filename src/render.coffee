@@ -128,14 +128,16 @@ class Rect extends Renderer # for CARTESIAN only
   _make: (paper) -> paper.rect()
   attr: (scales, coord, mark, mayflip) ->
     {x, y} = coord.getXY mayflip, mark
+    stroke = @_maybeApply scales, mark,
+      if mark.stroke then 'stroke' else 'color'
     @_shared scales, mark,
       x: _.min x
       y: _.min y
       width: Math.abs x[1]-x[0]
       height: Math.abs y[1]-y[0]
       fill: @_maybeApply scales, mark, 'color'
-      stroke: @_maybeApply scales, mark, 'color'
-      'stroke-width': '0px'
+      stroke: stroke
+      'stroke-width': @_maybeApply scales, mark, 'stroke-width' ? '0px'
 
 class CircleRect extends Renderer # FOR POLAR ONLY
   _make: (paper) -> paper.path()
@@ -155,11 +157,13 @@ class CircleRect extends Renderer # FOR POLAR ONLY
     large = if Math.abs(t[3]-t[2]) > Math.PI then 1 else 0
     path += "L #{x[2]} #{y[2]} A #{r[2]} #{r[2]} 0 #{large} 0 #{x[3]} #{y[3]} Z"
 
+    stroke = @_maybeApply scales, mark,
+      if mark.stroke then 'stroke' else 'color'
     @_shared scales, mark,
       path: path
       fill: @_maybeApply scales, mark, 'color'
-      stroke: @_maybeApply scales, mark, 'color'
-      'stroke-width': '0px'
+      stroke: stroke
+      'stroke-width': @_maybeApply scales, mark, 'stroke-width' ? '0px'
 
 class Text extends Renderer # for both cartesian & polar
   _make: (paper) -> paper.text()

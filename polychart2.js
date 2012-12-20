@@ -5009,13 +5009,14 @@ or knows how to retrieve data from some source.
         if (y.q1) {
           geom.marks = {
             iqr: {
-              type: 'path',
-              x: [xl, xl, xu, xu, xl],
-              y: [y.q2, y.q4, y.q4, y.q2, y.q2],
+              type: 'rect',
+              x: [xl, xu],
+              y: [y.q2, y.q4],
               stroke: this._getValue(item, 'color'),
-              fill: 'none',
+              color: sf.identity('white'),
               size: this._getValue(item, 'size'),
-              opacity: this._getValue(item, 'opacity')
+              opacity: this._getValue(item, 'opacity'),
+              'stroke-width': '1px'
             },
             q1: {
               type: 'line',
@@ -5462,16 +5463,17 @@ or knows how to retrieve data from some source.
     };
 
     Rect.prototype.attr = function(scales, coord, mark, mayflip) {
-      var x, y, _ref;
+      var stroke, x, y, _ref;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
+      stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
       return this._shared(scales, mark, {
         x: _.min(x),
         y: _.min(y),
         width: Math.abs(x[1] - x[0]),
         height: Math.abs(y[1] - y[0]),
         fill: this._maybeApply(scales, mark, 'color'),
-        stroke: this._maybeApply(scales, mark, 'color'),
-        'stroke-width': '0px'
+        stroke: stroke,
+        'stroke-width': this._maybeApply(scales, mark, 'stroke-width' != null ? 'stroke-width' : '0px')
       });
     };
 
@@ -5492,7 +5494,7 @@ or knows how to retrieve data from some source.
     };
 
     CircleRect.prototype.attr = function(scales, coord, mark, mayflip) {
-      var large, path, r, t, x, x0, x1, y, y0, y1, _ref, _ref1, _ref2;
+      var large, path, r, stroke, t, x, x0, x1, y, y0, y1, _ref, _ref1, _ref2;
       _ref = mark.x, x0 = _ref[0], x1 = _ref[1];
       _ref1 = mark.y, y0 = _ref1[0], y1 = _ref1[1];
       mark.x = [x0, x0, x1, x1];
@@ -5508,11 +5510,12 @@ or knows how to retrieve data from some source.
       path = "M " + x[0] + " " + y[0] + " A " + r[0] + " " + r[0] + " 0 " + large + " 1 " + x[1] + " " + y[1];
       large = Math.abs(t[3] - t[2]) > Math.PI ? 1 : 0;
       path += "L " + x[2] + " " + y[2] + " A " + r[2] + " " + r[2] + " 0 " + large + " 0 " + x[3] + " " + y[3] + " Z";
+      stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
       return this._shared(scales, mark, {
         path: path,
         fill: this._maybeApply(scales, mark, 'color'),
-        stroke: this._maybeApply(scales, mark, 'color'),
-        'stroke-width': '0px'
+        stroke: stroke,
+        'stroke-width': this._maybeApply(scales, mark, 'stroke-width' != null ? 'stroke-width' : '0px')
       });
     };
 
