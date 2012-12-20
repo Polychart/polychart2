@@ -5303,6 +5303,22 @@ or knows how to retrieve data from some source.
       }
     };
 
+    Renderer.prototype._shared = function(scales, mark, attr) {
+      var maybeAdd,
+        _this = this;
+      maybeAdd = function(aes) {
+        if ((mark[aes] != null) && !(attr[aes] != null)) {
+          return attr[aes] = _this._maybeApply(scales, mark, aes);
+        }
+      };
+      maybeAdd('opacity');
+      maybeAdd('stroke-width');
+      maybeAdd('stroke-dasharray');
+      maybeAdd('stroke-dashoffset');
+      maybeAdd('transform');
+      return attr;
+    };
+
     return Renderer;
 
   })();
@@ -5320,18 +5336,20 @@ or knows how to retrieve data from some source.
     };
 
     Circle.prototype.attr = function(scales, coord, mark, mayflip) {
-      var stroke, x, y, _ref, _ref1;
+      var attr, fill, stroke, x, y, _ref;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
-      stroke = mark.stroke ? this._maybeApply(scales, mark, 'stroke') : this._maybeApply(scales, mark, 'color');
-      return {
+      stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
+      attr = {
         cx: x,
         cy: y,
         r: this._maybeApply(scales, mark, 'size'),
-        fill: this._maybeApply(scales, mark, 'color'),
-        opacity: this._maybeApply(scales, mark, 'opacity'),
-        stroke: stroke,
-        'stroke-width': (_ref1 = mark['stroke-width']) != null ? _ref1 : '0px'
+        stroke: stroke
       };
+      fill = this._maybeApply(scales, mark, 'color');
+      if (fill && fill !== 'none') {
+        attr.fill = fill;
+      }
+      return this._shared(scales, mark, attr);
     };
 
     return Circle;
@@ -5353,14 +5371,11 @@ or knows how to retrieve data from some source.
     Path.prototype.attr = function(scales, coord, mark, mayflip) {
       var stroke, x, y, _ref;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
-      stroke = mark.stroke ? this._maybeApply(scales, mark, 'stroke') : this._maybeApply(scales, mark, 'color');
-      return {
+      stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
+      return this._shared(scales, mark, {
         path: this._makePath(x, y),
-        opacity: this._maybeApply(scales, mark, 'opacity'),
-        'stroke-dasharray': this._maybeApply(scales, mark, 'stroke-dasharray'),
-        'stroke-dashoffset': this._maybeApply(scales, mark, 'stroke-dashoffset'),
         stroke: stroke
-      };
+      });
     };
 
     return Path;
@@ -5383,14 +5398,11 @@ or knows how to retrieve data from some source.
       var stroke, x, y, _ref, _ref1;
       _ref = poly.sortArrays(scales.x.sortfn, [mark.x, mark.y]), mark.x = _ref[0], mark.y = _ref[1];
       _ref1 = coord.getXY(mayflip, mark), x = _ref1.x, y = _ref1.y;
-      stroke = mark.stroke ? this._maybeApply(scales, mark, 'stroke') : this._maybeApply(scales, mark, 'color');
-      return {
+      stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
+      return this._shared(scales, mark, {
         path: this._makePath(x, y),
-        'stroke-dasharray': this._maybeApply(scales, mark, 'stroke-dasharray'),
-        'stroke-dashoffset': this._maybeApply(scales, mark, 'stroke-dashoffset'),
-        stroke: stroke,
-        opacity: this._maybeApply(scales, mark, 'opacity')
-      };
+        stroke: stroke
+      });
     };
 
     return Line;
@@ -5425,13 +5437,12 @@ or knows how to retrieve data from some source.
       });
       x = top.x.concat(bottom.x);
       y = top.y.concat(bottom.y);
-      return {
+      return this._shared(scales, mark, {
         path: this._makePath(x, y),
         stroke: this._maybeApply(scales, mark, 'color'),
-        opacity: this._maybeApply(scales, mark, 'opacity'),
         fill: this._maybeApply(scales, mark, 'color'),
         'stroke-width': '0px'
-      };
+      });
     };
 
     return Area;
@@ -5453,16 +5464,15 @@ or knows how to retrieve data from some source.
     Rect.prototype.attr = function(scales, coord, mark, mayflip) {
       var x, y, _ref;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
-      return {
+      return this._shared(scales, mark, {
         x: _.min(x),
         y: _.min(y),
         width: Math.abs(x[1] - x[0]),
         height: Math.abs(y[1] - y[0]),
         fill: this._maybeApply(scales, mark, 'color'),
         stroke: this._maybeApply(scales, mark, 'color'),
-        opacity: this._maybeApply(scales, mark, 'opacity'),
         'stroke-width': '0px'
-      };
+      });
     };
 
     return Rect;
@@ -5498,13 +5508,12 @@ or knows how to retrieve data from some source.
       path = "M " + x[0] + " " + y[0] + " A " + r[0] + " " + r[0] + " 0 " + large + " 1 " + x[1] + " " + y[1];
       large = Math.abs(t[3] - t[2]) > Math.PI ? 1 : 0;
       path += "L " + x[2] + " " + y[2] + " A " + r[2] + " " + r[2] + " 0 " + large + " 0 " + x[3] + " " + y[3] + " Z";
-      return {
+      return this._shared(scales, mark, {
         path: path,
         fill: this._maybeApply(scales, mark, 'color'),
         stroke: this._maybeApply(scales, mark, 'color'),
-        opacity: this._maybeApply(scales, mark, 'opacity'),
         'stroke-width': '0px'
-      };
+      });
     };
 
     return CircleRect;
@@ -5527,20 +5536,16 @@ or knows how to retrieve data from some source.
     };
 
     Text.prototype.attr = function(scales, coord, mark, mayflip) {
-      var m, x, y, _ref, _ref1;
+      var x, y, _ref, _ref1;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
-      m = {
+      return this._shared(scales, mark, {
         x: x,
         y: y,
         r: 10,
         text: this._maybeApply(scales, mark, 'text'),
         'text-anchor': (_ref1 = mark['text-anchor']) != null ? _ref1 : 'left',
         fill: this._maybeApply(scales, mark, 'color') || 'black'
-      };
-      if (mark.transform != null) {
-        m.transform = mark.transform;
-      }
-      return m;
+      });
     };
 
     return Text;

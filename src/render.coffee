@@ -59,54 +59,55 @@ class Renderer
       scales[key].f(val)
     else
       val
+  _shared : (scales, mark, attr) ->
+    maybeAdd = (aes) =>
+      if mark[aes]? and not attr[aes]?
+        attr[aes] = @_maybeApply scales, mark, aes
+    maybeAdd('opacity')
+    maybeAdd('stroke-width')
+    maybeAdd('stroke-dasharray')
+    maybeAdd('stroke-dashoffset')
+    maybeAdd('transform')
+    attr
+
 
 class Circle extends Renderer # for both cartesian & polar
   _make: (paper) -> paper.circle()
   attr: (scales, coord, mark, mayflip) ->
     {x, y} = coord.getXY mayflip, mark
-    stroke =
-      if mark.stroke
-        @_maybeApply(scales, mark, 'stroke')
-      else
-        @_maybeApply scales, mark, 'color'
-    cx: x
-    cy: y
-    r: @_maybeApply scales, mark, 'size'
-    fill: @_maybeApply scales, mark, 'color'
-    opacity: @_maybeApply scales, mark, 'opacity'
-    stroke: stroke
-    'stroke-width': mark['stroke-width'] ? '0px'
+    stroke = @_maybeApply scales, mark,
+      if mark.stroke then 'stroke' else 'color'
+    attr =
+      cx: x
+      cy: y
+      r: @_maybeApply scales, mark, 'size'
+      stroke: stroke
+
+    fill = @_maybeApply scales, mark, 'color'
+    if fill and fill isnt 'none' then attr.fill = fill
+
+    @_shared scales, mark, attr
 
 class Path extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
   attr: (scales, coord, mark, mayflip) ->
     {x, y} = coord.getXY mayflip, mark
-    stroke =
-      if mark.stroke
-        @_maybeApply scales, mark, 'stroke'
-      else
-        @_maybeApply scales, mark, 'color'
-    path: @_makePath x, y
-    opacity: @_maybeApply scales, mark, 'opacity'
-    'stroke-dasharray': @_maybeApply scales, mark, 'stroke-dasharray'
-    'stroke-dashoffset': @_maybeApply scales, mark, 'stroke-dashoffset'
-    stroke: stroke
+    stroke = @_maybeApply scales, mark,
+      if mark.stroke then 'stroke' else 'color'
+    @_shared scales, mark,
+      path: @_makePath x, y
+      stroke: stroke
 
 class Line extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
   attr: (scales, coord, mark, mayflip) ->
     [mark.x,mark.y] = poly.sortArrays scales.x.sortfn, [mark.x,mark.y]
     {x, y} = coord.getXY mayflip, mark
-    stroke =
-      if mark.stroke
-        @_maybeApply scales, mark, 'stroke'
-      else
-        @_maybeApply scales, mark, 'color'
-    path: @_makePath x, y
-    'stroke-dasharray': @_maybeApply scales, mark, 'stroke-dasharray'
-    'stroke-dashoffset': @_maybeApply scales, mark, 'stroke-dashoffset'
-    stroke: stroke
-    opacity: @_maybeApply scales, mark, 'opacity'
+    stroke = @_maybeApply scales, mark,
+      if mark.stroke then 'stroke' else 'color'
+    @_shared scales, mark,
+      path: @_makePath x, y
+      stroke: stroke
 
 class Area extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
@@ -117,25 +118,24 @@ class Area extends Renderer # for both cartesian & polar?
     bottom = coord.getXY mayflip, {x:x, y:y}
     x = top.x.concat bottom.x
     y = top.y.concat bottom.y
-
-    path: @_makePath x, y
-    stroke: @_maybeApply scales, mark, 'color'
-    opacity: @_maybeApply scales, mark, 'opacity'
-    fill: @_maybeApply scales, mark, 'color'
-    'stroke-width': '0px'
+    @_shared scales, mark,
+      path: @_makePath x, y
+      stroke: @_maybeApply scales, mark, 'color'
+      fill: @_maybeApply scales, mark, 'color'
+      'stroke-width': '0px'
 
 class Rect extends Renderer # for CARTESIAN only
   _make: (paper) -> paper.rect()
   attr: (scales, coord, mark, mayflip) ->
     {x, y} = coord.getXY mayflip, mark
-    x: _.min x
-    y: _.min y
-    width: Math.abs x[1]-x[0]
-    height: Math.abs y[1]-y[0]
-    fill: @_maybeApply scales, mark, 'color'
-    stroke: @_maybeApply scales, mark, 'color'
-    opacity: @_maybeApply scales, mark, 'opacity'
-    'stroke-width': '0px'
+    @_shared scales, mark,
+      x: _.min x
+      y: _.min y
+      width: Math.abs x[1]-x[0]
+      height: Math.abs y[1]-y[0]
+      fill: @_maybeApply scales, mark, 'color'
+      stroke: @_maybeApply scales, mark, 'color'
+      'stroke-width': '0px'
 
 class CircleRect extends Renderer # FOR POLAR ONLY
   _make: (paper) -> paper.path()
@@ -155,11 +155,11 @@ class CircleRect extends Renderer # FOR POLAR ONLY
     large = if Math.abs(t[3]-t[2]) > Math.PI then 1 else 0
     path += "L #{x[2]} #{y[2]} A #{r[2]} #{r[2]} 0 #{large} 0 #{x[3]} #{y[3]} Z"
 
-    path: path
-    fill: @_maybeApply scales, mark, 'color'
-    stroke: @_maybeApply scales, mark, 'color'
-    opacity: @_maybeApply scales, mark, 'opacity'
-    'stroke-width': '0px'
+    @_shared scales, mark,
+      path: path
+      fill: @_maybeApply scales, mark, 'color'
+      stroke: @_maybeApply scales, mark, 'color'
+      'stroke-width': '0px'
 
 """
 class HLine extends Renderer # for both cartesian & polar?
@@ -183,15 +183,14 @@ class Text extends Renderer # for both cartesian & polar
   _make: (paper) -> paper.text()
   attr: (scales, coord, mark, mayflip) ->
     {x, y} = coord.getXY mayflip, mark
-    m =
+
+    @_shared scales, mark,
       x: x
       y: y
       r: 10
       text: @_maybeApply  scales, mark, 'text'
       'text-anchor' : mark['text-anchor'] ? 'left'
       fill: @_maybeApply(scales, mark, 'color') or 'black'
-    if mark.transform? then m.transform = mark.transform
-    m
 
 renderer =
   cartesian:
