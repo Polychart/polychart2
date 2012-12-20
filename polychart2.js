@@ -2916,16 +2916,32 @@ These are constants that are referred to throughout the coebase
               return value.v;
             }
             if (value.f === 'upper') {
-              v = moment.unix(value.v).endOf(domain.bw).unix();
+              if (domain.bw !== 'week') {
+                v = moment.unix(value.v).endOf(domain.bw).unix();
+              } else {
+                v = moment.unix(value.v).day(7).unix();
+              }
               return y(v) - space;
             }
             if (value.f === 'lower') {
-              v = moment.unix(value.v).startOf(domain.bw).unix();
+              if (domain.bw !== 'week') {
+                v = moment.unix(value.v).startOf(domain.bw).unix();
+              } else {
+                v = moment.unix(value.v).day(0).unix();
+              }
               return y(v) + space;
             }
             if (value.f === 'middle') {
-              v1 = moment.unix(value.v).endOf(domain.bw).unix();
-              v2 = moment.unix(value.v).startOf(domain.bw).unix();
+              if (domain.bw !== 'week') {
+                v1 = moment.unix(value.v).endOf(domain.bw).unix();
+              } else {
+                v1 = moment.unix(value.v).day(7).unix();
+              }
+              if (domain.bw !== 'week') {
+                v2 = moment.unix(value.v).startOf(domain.bw).unix();
+              } else {
+                v2 = moment.unix(value.v).day(0).unix();
+              }
               return y(v1 / 2 + v2 / 2);
             }
             if (value.f === 'max') {
@@ -3831,7 +3847,11 @@ or knows how to retrieve data from some source.
           throw poly.error.defn("The binwidth " + binwidth + " is invalid for a datetime varliable");
         }
         binFn = function(item) {
-          return item[name] = moment.unix(item[key]).startOf(binwidth).unix();
+          if (binwidth === 'week') {
+            return item[name] = moment.unix(item[key]).day(0).unix();
+          } else {
+            return item[name] = moment.unix(item[key]).startOf(binwidth).unix();
+          }
         };
         return {
           trans: binFn,

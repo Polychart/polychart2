@@ -135,7 +135,10 @@ transforms =
       if not (binwidth in poly.const.timerange)
         throw poly.error.defn "The binwidth #{binwidth} is invalid for a datetime varliable"
       binFn = (item) ->
-        item[name] = moment.unix(item[key]).startOf(binwidth).unix()
+        if binwidth is 'week'
+          item[name] = moment.unix(item[key]).day(0).unix()
+        else
+          item[name] = moment.unix(item[key]).startOf(binwidth).unix()
       return trans: binFn, meta: {bw: binwidth, binned: true, type:'date'}
   'lag' : (key, transSpec, meta) ->
     {name, lag} = transSpec

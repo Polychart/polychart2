@@ -74,19 +74,33 @@ class PositionScale extends Scale
       throw poly.error.input "Unknown object #{value} is passed to a scale"
     y(value)
   _dateWrapper: (domain, y) => (value) =>
+
     space = 0.001 * (if @range.max > @range.min then 1 else -1)
     if _.isObject(value)
       if value.t is 'scalefn'
         if value.f is 'identity' then return value.v
         if value.f is 'upper'
-          v = moment.unix(value.v).endOf(domain.bw).unix()
+          if domain.bw != 'week'
+            v = moment.unix(value.v).endOf(domain.bw).unix()
+          else
+            v = moment.unix(value.v).day(7).unix()
           return y(v) - space
         if value.f is 'lower'
-          v = moment.unix(value.v).startOf(domain.bw).unix()
+          if domain.bw != 'week'
+            v = moment.unix(value.v).startOf(domain.bw).unix()
+          else
+            v = moment.unix(value.v).day(0).unix()
           return y(v) + space
         if value.f is 'middle'
-          v1 = moment.unix(value.v).endOf(domain.bw).unix()
-          v2 = moment.unix(value.v).startOf(domain.bw).unix()
+          if domain.bw != 'week'
+            v1 = moment.unix(value.v).endOf(domain.bw).unix()
+          else
+            v1 = moment.unix(value.v).day(7).unix()
+
+          if domain.bw != 'week'
+            v2 = moment.unix(value.v).startOf(domain.bw).unix()
+          else
+            v2 = moment.unix(value.v).day(0).unix()
           return y(v1/2 + v2/2)
         if value.f is 'max' then return @range.max + value.v
         if value.f is 'min' then return @range.min + value.v
