@@ -2969,24 +2969,18 @@ These are constants that are referred to throughout the coebase
 
     PositionScale.prototype.make = function(domain, range) {
       this.range = range;
+      this.space = 0.05;
       return PositionScale.__super__.make.call(this, domain);
     };
 
     PositionScale.prototype._numWrapper = function(domain, y) {
       var _this = this;
       return function(value) {
-        var space;
-        space = 0.001 * (_this.range.max > _this.range.min ? 1 : -1);
+        var lower, space, upper;
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
             if (value.f === 'identity') {
               return value.v;
-            }
-            if (value.f === 'upper') {
-              return y(value.v + domain.bw) - space;
-            }
-            if (value.f === 'lower') {
-              return y(value.v) + space;
             }
             if (value.f === 'middle') {
               return y(value.v + domain.bw / 2);
@@ -2996,6 +2990,15 @@ These are constants that are referred to throughout the coebase
             }
             if (value.f === 'min') {
               return _this.range.min + value.v;
+            }
+            upper = y(value.v + domain.bw);
+            lower = y(value.v);
+            space = (upper - lower) * _this.space;
+            if (value.f === 'upper') {
+              return upper - space;
+            }
+            if (value.f === 'lower') {
+              return lower + space;
             }
           }
           throw poly.error.input("Unknown object " + value + " is passed to a scale");
@@ -3007,47 +3010,32 @@ These are constants that are referred to throughout the coebase
     PositionScale.prototype._dateWrapper = function(domain, y) {
       var _this = this;
       return function(value) {
-        var space, v, v1, v2;
+        var lower, space, upper, v;
         space = 0.001 * (_this.range.max > _this.range.min ? 1 : -1);
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
             if (value.f === 'identity') {
               return value.v;
             }
-            if (value.f === 'upper') {
-              if (domain.bw !== 'week') {
-                v = moment.unix(value.v).endOf(domain.bw).unix();
-              } else {
-                v = moment.unix(value.v).day(7).unix();
-              }
-              return y(v) - space;
-            }
-            if (value.f === 'lower') {
-              if (domain.bw !== 'week') {
-                v = moment.unix(value.v).startOf(domain.bw).unix();
-              } else {
-                v = moment.unix(value.v).day(0).unix();
-              }
-              return y(v) + space;
-            }
-            if (value.f === 'middle') {
-              if (domain.bw !== 'week') {
-                v1 = moment.unix(value.v).endOf(domain.bw).unix();
-              } else {
-                v1 = moment.unix(value.v).day(7).unix();
-              }
-              if (domain.bw !== 'week') {
-                v2 = moment.unix(value.v).startOf(domain.bw).unix();
-              } else {
-                v2 = moment.unix(value.v).day(0).unix();
-              }
-              return y(v1 / 2 + v2 / 2);
-            }
             if (value.f === 'max') {
               return _this.range.max + value.v;
             }
             if (value.f === 'min') {
               return _this.range.min + value.v;
+            }
+            upper = domain.bw !== 'week' ? moment.unix(value.v).endOf(domain.bw).unix() : moment.unix(value.v).day(7).unix();
+            upper = y(upper);
+            lower = domain.bw !== 'week' ? v = moment.unix(value.v).startOf(domain.bw).unix() : v = moment.unix(value.v).day(0).unix();
+            lower = y(lower);
+            space = (upper - lower) * _this.space;
+            if (value.f === 'upper') {
+              return upper - space;
+            }
+            if (value.f === 'lower') {
+              return lower + space;
+            }
+            if (value.f === 'middle') {
+              return upper / 2 + lower / 2;
             }
           }
           throw poly.error.input("Unknown object " + value + " is passed to a scale");
@@ -3060,7 +3048,7 @@ These are constants that are referred to throughout the coebase
       var _this = this;
       return function(value) {
         var space;
-        space = 0.001 * (_this.range.max > _this.range.min ? 1 : -1);
+        space = step * _this.space;
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
             if (value.f === 'identity') {

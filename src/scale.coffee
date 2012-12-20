@@ -58,19 +58,24 @@ class PositionScale extends Scale
     @finv = null
   make: (domain, range) ->
     @range = range
+    @space = 0.05
     super(domain)
   _numWrapper: (domain, y) => (value) =>
     # NOTE: the below spacing makes sure that animation in polar coordinates
     # behave as expected. Test with polar bar charts to see...
-    space = 0.001 * (if @range.max > @range.min then 1 else -1)
     if _.isObject(value)
       if value.t is 'scalefn'
         if value.f is 'identity' then return value.v
-        if value.f is 'upper' then return y(value.v+domain.bw) - space
-        if value.f is 'lower' then return y(value.v) + space
         if value.f is 'middle' then return y(value.v+domain.bw/2)
         if value.f is 'max' then return @range.max + value.v
         if value.f is 'min' then return @range.min + value.v
+
+        upper = y(value.v+domain.bw)
+        lower = y(value.v)
+        space = (upper - lower) * @space # 5%. Sign matters!
+        if value.f is 'upper' then return upper - space
+        if value.f is 'lower' then return lower + space
+
       throw poly.error.input "Unknown object #{value} is passed to a scale"
     y(value)
   _dateWrapper: (domain, y) => (value) =>
@@ -79,35 +84,29 @@ class PositionScale extends Scale
     if _.isObject(value)
       if value.t is 'scalefn'
         if value.f is 'identity' then return value.v
-        if value.f is 'upper'
+        if value.f is 'max' then return @range.max + value.v
+        if value.f is 'min' then return @range.min + value.v
+
+        upper =
           if domain.bw != 'week'
-            v = moment.unix(value.v).endOf(domain.bw).unix()
+            moment.unix(value.v).endOf(domain.bw).unix()
           else
-            v = moment.unix(value.v).day(7).unix()
-          return y(v) - space
-        if value.f is 'lower'
+            moment.unix(value.v).day(7).unix()
+        upper = y(upper)
+        lower =
           if domain.bw != 'week'
             v = moment.unix(value.v).startOf(domain.bw).unix()
           else
             v = moment.unix(value.v).day(0).unix()
-          return y(v) + space
-        if value.f is 'middle'
-          if domain.bw != 'week'
-            v1 = moment.unix(value.v).endOf(domain.bw).unix()
-          else
-            v1 = moment.unix(value.v).day(7).unix()
-
-          if domain.bw != 'week'
-            v2 = moment.unix(value.v).startOf(domain.bw).unix()
-          else
-            v2 = moment.unix(value.v).day(0).unix()
-          return y(v1/2 + v2/2)
-        if value.f is 'max' then return @range.max + value.v
-        if value.f is 'min' then return @range.min + value.v
+        lower = y(lower)
+        space = (upper - lower) * @space # 5%. Sign matters!
+        if value.f is 'upper' then return upper - space
+        if value.f is 'lower' then return lower + space
+        if value.f is 'middle' then return upper/2 + lower/2
       throw poly.error.input "Unknown object #{value} is passed to a scale"
     y(value)
   _catWrapper: (step, y) => (value) =>
-    space = 0.001 * (if @range.max > @range.min then 1 else -1)
+    space = step * @space
     if _.isObject(value)
       if value.t is 'scalefn'
         if value.f is 'identity' then return value.v
