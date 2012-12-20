@@ -328,35 +328,35 @@ class Box extends Layer
             opacity: @_getValue item, 'opacity'
             'stroke-width': '1px'
           q1:
-            type: 'line'
+            type: 'pline'
             x: [xl, xu]
             y: [y.q1, y.q1]
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
             opacity: @_getValue item, 'opacity'
           lower:
-            type: 'line'
+            type: 'pline'
             x: [xm, xm]
             y: [y.q1, y.q2]
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
             opacity: @_getValue item, 'opacity'
           q5:
-            type: 'line'
+            type: 'pline'
             x: [xl, xu]
             y: [y.q5, y.q5]
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
             opacity: @_getValue item, 'opacity'
           upper:
-            type: 'line'
+            type: 'pline'
             x: [xm, xm]
             y: [y.q4, y.q5]
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
             opacity: @_getValue item, 'opacity'
           middle:
-            type: 'line'
+            type: 'pline'
             x: [xl, xu]
             y: [y.q3, y.q3]
             color: @_getValue item, 'color'

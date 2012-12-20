@@ -109,6 +109,29 @@ class Line extends Renderer # for both cartesian & polar?
       path: @_makePath x, y
       stroke: stroke
 
+# The difference between Line and PolarLine is that Polar Line MAY plot a circle
+class PolarLine extends Renderer
+  _make: (paper) -> paper.path()
+  attr: (scales, coord, mark, mayflip) ->
+    {x, y, r, t} = coord.getXY mayflip, mark
+    debugger
+    path =
+      if _.max(r) - _.min(r) < poly.const.epsilon
+        r = r[0]
+        path = "M #{x[0]} #{y[0]}"
+        for i in [1..x.length-1]
+          large = if Math.abs(t[i]-t[i-1]) > Math.PI then 1 else 0
+          dir = if t[i]-t[i-1] > 0 then 1 else 0
+          path += "A #{r} #{r} 0 #{large} #{dir} #{x[i]} #{y[i]}"
+        path
+      else
+        @_makePath x, y
+    stroke = @_maybeApply scales, mark,
+      if mark.stroke then 'stroke' else 'color'
+    @_shared scales, mark,
+      path: path
+      stroke: stroke
+
 class Area extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
   attr: (scales, coord, mark, mayflip) ->
@@ -182,6 +205,7 @@ renderer =
   cartesian:
     circle: new Circle()
     line: new Line()
+    pline: new Line() # may plot a circle in polar coord, but same as line here
     area: new Area()
     path: new Path()
     text: new Text()
@@ -190,6 +214,7 @@ renderer =
     circle: new Circle()
     path: new Path()
     line: new Line()
+    pline: new PolarLine() # pline may plot a circle
     area: new Area()
     text: new Text()
     rect: new CircleRect()

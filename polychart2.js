@@ -5019,7 +5019,7 @@ or knows how to retrieve data from some source.
               'stroke-width': '1px'
             },
             q1: {
-              type: 'line',
+              type: 'pline',
               x: [xl, xu],
               y: [y.q1, y.q1],
               color: this._getValue(item, 'color'),
@@ -5027,7 +5027,7 @@ or knows how to retrieve data from some source.
               opacity: this._getValue(item, 'opacity')
             },
             lower: {
-              type: 'line',
+              type: 'pline',
               x: [xm, xm],
               y: [y.q1, y.q2],
               color: this._getValue(item, 'color'),
@@ -5035,7 +5035,7 @@ or knows how to retrieve data from some source.
               opacity: this._getValue(item, 'opacity')
             },
             q5: {
-              type: 'line',
+              type: 'pline',
               x: [xl, xu],
               y: [y.q5, y.q5],
               color: this._getValue(item, 'color'),
@@ -5043,7 +5043,7 @@ or knows how to retrieve data from some source.
               opacity: this._getValue(item, 'opacity')
             },
             upper: {
-              type: 'line',
+              type: 'pline',
               x: [xm, xm],
               y: [y.q4, y.q5],
               color: this._getValue(item, 'color'),
@@ -5051,7 +5051,7 @@ or knows how to retrieve data from some source.
               opacity: this._getValue(item, 'opacity')
             },
             middle: {
-              type: 'line',
+              type: 'pline',
               x: [xl, xu],
               y: [y.q3, y.q3],
               color: this._getValue(item, 'color'),
@@ -5178,7 +5178,7 @@ or knows how to retrieve data from some source.
 
 
 (function() {
-  var Area, Circle, CircleRect, Line, Path, Rect, Renderer, Text, renderer,
+  var Area, Circle, CircleRect, Line, Path, PolarLine, Rect, Renderer, Text, renderer,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -5410,6 +5410,48 @@ or knows how to retrieve data from some source.
 
   })(Renderer);
 
+  PolarLine = (function(_super) {
+
+    __extends(PolarLine, _super);
+
+    function PolarLine() {
+      return PolarLine.__super__.constructor.apply(this, arguments);
+    }
+
+    PolarLine.prototype._make = function(paper) {
+      return paper.path();
+    };
+
+    PolarLine.prototype.attr = function(scales, coord, mark, mayflip) {
+      var dir, i, large, path, r, stroke, t, x, y, _ref;
+      _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y, r = _ref.r, t = _ref.t;
+      debugger;
+      path = (function() {
+        var _i, _ref1;
+        if (_.max(r) - _.min(r) < poly["const"].epsilon) {
+          r = r[0];
+          path = "M " + x[0] + " " + y[0];
+          for (i = _i = 1, _ref1 = x.length - 1; 1 <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = 1 <= _ref1 ? ++_i : --_i) {
+            large = Math.abs(t[i] - t[i - 1]) > Math.PI ? 1 : 0;
+            dir = t[i] - t[i - 1] > 0 ? 1 : 0;
+            path += "A " + r + " " + r + " 0 " + large + " " + dir + " " + x[i] + " " + y[i];
+          }
+          return path;
+        } else {
+          return this._makePath(x, y);
+        }
+      }).call(this);
+      stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
+      return this._shared(scales, mark, {
+        path: path,
+        stroke: stroke
+      });
+    };
+
+    return PolarLine;
+
+  })(Renderer);
+
   Area = (function(_super) {
 
     __extends(Area, _super);
@@ -5556,6 +5598,7 @@ or knows how to retrieve data from some source.
     cartesian: {
       circle: new Circle(),
       line: new Line(),
+      pline: new Line(),
       area: new Area(),
       path: new Path(),
       text: new Text(),
@@ -5565,6 +5608,7 @@ or knows how to retrieve data from some source.
       circle: new Circle(),
       path: new Path(),
       line: new Line(),
+      pline: new PolarLine(),
       area: new Area(),
       text: new Text(),
       rect: new CircleRect()
