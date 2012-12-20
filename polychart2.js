@@ -88,19 +88,52 @@ Output:
 
   /*
   Given an OLD array and NEW array, split the points in (OLD union NEW) into
-  three sets: 
+  three sets:
     - deleted
     - kept
     - added
-  TODO: make this a one-pass algorithm
   */
 
 
   poly.compare = function(oldarr, newarr) {
+    var added, deleted, kept, newElem, newIndex, oldElem, oldIndex, sortedNewarr, sortedOldarr;
+    sortedOldarr = _.sortBy(oldarr, function(x) {
+      return x;
+    });
+    sortedNewarr = _.sortBy(newarr, function(x) {
+      return x;
+    });
+    deleted = [];
+    kept = [];
+    added = [];
+    oldIndex = newIndex = 0;
+    while (oldIndex < sortedOldarr.length || newIndex < sortedNewarr.length) {
+      oldElem = sortedOldarr[oldIndex];
+      newElem = sortedNewarr[newIndex];
+      if (oldIndex >= sortedOldarr.length) {
+        added.push(newElem);
+        newIndex += 1;
+      } else if (newIndex >= sortedNewarr.length) {
+        deleted.push(oldElem);
+        oldIndex += 1;
+      } else if (oldElem < newElem) {
+        deleted.push(oldElem);
+        oldIndex += 1;
+      } else if (oldElem > newElem) {
+        added.push(newElem);
+        newIndex += 1;
+      } else if (oldElem === newElem) {
+        kept.push(oldElem);
+        oldIndex += 1;
+        newIndex += 1;
+      } else {
+        throw DataError("Unknown data encounted");
+      }
+    }
     return {
-      deleted: _.difference(oldarr, newarr),
-      kept: _.intersection(newarr, oldarr),
-      added: _.difference(newarr, oldarr)
+      deleted: deleted,
+      kept: kept,
+      added: added
     };
   };
 
@@ -161,7 +194,7 @@ Output:
 
   /*
   Sort Arrays: given a sorting function and some number of arrays, sort all the
-  arrays by the function applied to the first array. This is used for sorting 
+  arrays by the function applied to the first array. This is used for sorting
   points for a line chart, i.e. poly.sortArrays(sortFn, [xs, ys])
   
   This way, all the points are sorted by (sortFn(x) for x in xs)

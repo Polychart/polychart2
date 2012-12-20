@@ -45,16 +45,40 @@ poly.counter = () ->
 
 ###
 Given an OLD array and NEW array, split the points in (OLD union NEW) into
-three sets: 
+three sets:
   - deleted
   - kept
   - added
-TODO: make this a one-pass algorithm
 ###
 poly.compare = (oldarr, newarr) ->
-  deleted : _.difference(oldarr, newarr)
-  kept    : _.intersection(newarr, oldarr)
-  added   : _.difference(newarr, oldarr)
+  sortedOldarr = _.sortBy(oldarr, (x) -> x)
+  sortedNewarr = _.sortBy(newarr, (x) -> x)
+  deleted = []; kept = []; added = []
+  oldIndex = newIndex = 0
+  while oldIndex < sortedOldarr.length or newIndex < sortedNewarr.length
+    oldElem = sortedOldarr[oldIndex]
+    newElem = sortedNewarr[newIndex]
+    if oldIndex >= sortedOldarr.length
+      added.push(newElem)
+      newIndex += 1
+    else if newIndex >= sortedNewarr.length
+      deleted.push(oldElem)
+      oldIndex += 1
+    else if oldElem < newElem
+      deleted.push(oldElem)
+      oldIndex += 1
+    else if oldElem > newElem
+      added.push(newElem)
+      newIndex += 1
+    else if oldElem == newElem
+      kept.push(oldElem)
+      oldIndex += 1; newIndex += 1
+    else throw DataError("Unknown data encounted")
+  return {
+    deleted : deleted
+    kept    : kept
+    added   : added
+    }
 
 ###
 Given an aesthetic mapping in the "geom" object, flatten it and extract only
@@ -95,7 +119,7 @@ poly.strSize = (str) -> (str+"").length * 7
 
 ###
 Sort Arrays: given a sorting function and some number of arrays, sort all the
-arrays by the function applied to the first array. This is used for sorting 
+arrays by the function applied to the first array. This is used for sorting
 points for a line chart, i.e. poly.sortArrays(sortFn, [xs, ys])
 
 This way, all the points are sorted by (sortFn(x) for x in xs)
