@@ -23,11 +23,13 @@ class Data
         @meta[key].type = poly.varType _.pluck(first100, key)
     for item in json
       for key in keys
-        item[key] = poly.coerce item[key], @meta[key]
+        if _.isString item[key]
+          item[key] = poly.coerce item[key], @meta[key]
     @key = keys
     @raw = json
   getRaw: (callback) ->
     # frontend
+    if @raw then return callback @raw, @meta
     if @json then @raw = @impute @json
     if @csv then @raw = @impute poly.csv.parse(@csv)
     if @raw then return callback @raw, @meta
@@ -37,6 +39,7 @@ class Data
       callback @raw, @meta
   update: (params) ->
     {@json, @csv} = params
+    @raw = null
     @getRaw () =>
       for fn in @subscribed
         fn()

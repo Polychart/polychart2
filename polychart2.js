@@ -3601,7 +3601,9 @@ or knows how to retrieve data from some source.
         item = json[_j];
         for (_k = 0, _len2 = keys.length; _k < _len2; _k++) {
           key = keys[_k];
-          item[key] = poly.coerce(item[key], this.meta[key]);
+          if (_.isString(item[key])) {
+            item[key] = poly.coerce(item[key], this.meta[key]);
+          }
         }
       }
       this.key = keys;
@@ -3610,6 +3612,9 @@ or knows how to retrieve data from some source.
 
     Data.prototype.getRaw = function(callback) {
       var _this = this;
+      if (this.raw) {
+        return callback(this.raw, this.meta);
+      }
       if (this.json) {
         this.raw = this.impute(this.json);
       }
@@ -3630,6 +3635,7 @@ or knows how to retrieve data from some source.
     Data.prototype.update = function(params) {
       var _this = this;
       this.json = params.json, this.csv = params.csv;
+      this.raw = null;
       return this.getRaw(function() {
         var fn, _i, _len, _ref, _results;
         _ref = _this.subscribed;
