@@ -88,6 +88,8 @@ class Path extends Renderer # for both cartesian & polar?
         @_maybeApply scales, mark, 'color'
     path: @_makePath x, y
     opacity: @_maybeApply scales, mark, 'opacity'
+    'stroke-dasharray': @_maybeApply scales, mark, 'stroke-dasharray'
+    'stroke-dashoffset': @_maybeApply scales, mark, 'stroke-dashoffset'
     stroke: stroke
 
 class Line extends Renderer # for both cartesian & polar?
@@ -101,6 +103,8 @@ class Line extends Renderer # for both cartesian & polar?
       else
         @_maybeApply scales, mark, 'color'
     path: @_makePath x, y
+    'stroke-dasharray': @_maybeApply scales, mark, 'stroke-dasharray'
+    'stroke-dashoffset': @_maybeApply scales, mark, 'stroke-dashoffset'
     stroke: stroke
     opacity: @_maybeApply scales, mark, 'opacity'
 

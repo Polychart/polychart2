@@ -326,10 +326,24 @@ class Box extends Layer
             fill: 'none'
             size: @_getValue item, 'size'
             opacity: @_getValue item, 'opacity'
+          q1:
+            type: 'line'
+            x: [xl, xu]
+            y: [y.q1, y.q1]
+            color: @_getValue item, 'color'
+            size: @_getValue item, 'size'
+            opacity: @_getValue item, 'opacity'
           lower:
             type: 'line'
             x: [xm, xm]
             y: [y.q1, y.q2]
+            color: @_getValue item, 'color'
+            size: @_getValue item, 'size'
+            opacity: @_getValue item, 'opacity'
+          q5:
+            type: 'line'
+            x: [xl, xu]
+            y: [y.q5, y.q5]
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
             opacity: @_getValue item, 'opacity'

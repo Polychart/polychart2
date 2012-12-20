@@ -2289,6 +2289,8 @@ These are constants that are referred to throughout the coebase
         throw poly.error.impl();
       }
       obj.stroke = '#CCC';
+      obj['stroke-dasharray'] = '- ';
+      obj['stroke-dashoffset'] = 3;
       return obj;
     };
 
@@ -5015,10 +5017,26 @@ or knows how to retrieve data from some source.
               size: this._getValue(item, 'size'),
               opacity: this._getValue(item, 'opacity')
             },
+            q1: {
+              type: 'line',
+              x: [xl, xu],
+              y: [y.q1, y.q1],
+              color: this._getValue(item, 'color'),
+              size: this._getValue(item, 'size'),
+              opacity: this._getValue(item, 'opacity')
+            },
             lower: {
               type: 'line',
               x: [xm, xm],
               y: [y.q1, y.q2],
+              color: this._getValue(item, 'color'),
+              size: this._getValue(item, 'size'),
+              opacity: this._getValue(item, 'opacity')
+            },
+            q5: {
+              type: 'line',
+              x: [xl, xu],
+              y: [y.q5, y.q5],
               color: this._getValue(item, 'color'),
               size: this._getValue(item, 'size'),
               opacity: this._getValue(item, 'opacity')
@@ -5339,6 +5357,8 @@ or knows how to retrieve data from some source.
       return {
         path: this._makePath(x, y),
         opacity: this._maybeApply(scales, mark, 'opacity'),
+        'stroke-dasharray': this._maybeApply(scales, mark, 'stroke-dasharray'),
+        'stroke-dashoffset': this._maybeApply(scales, mark, 'stroke-dashoffset'),
         stroke: stroke
       };
     };
@@ -5366,6 +5386,8 @@ or knows how to retrieve data from some source.
       stroke = mark.stroke ? this._maybeApply(scales, mark, 'stroke') : this._maybeApply(scales, mark, 'color');
       return {
         path: this._makePath(x, y),
+        'stroke-dasharray': this._maybeApply(scales, mark, 'stroke-dasharray'),
+        'stroke-dashoffset': this._maybeApply(scales, mark, 'stroke-dashoffset'),
         stroke: stroke,
         opacity: this._maybeApply(scales, mark, 'opacity')
       };

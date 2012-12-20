@@ -97,6 +97,8 @@ class Axis extends Guide
   _makeGrid: (obj) ->
     if !obj then throw poly.error.impl()
     obj.stroke = '#CCC'
+    obj['stroke-dasharray'] = '- '
+    obj['stroke-dashoffset'] = 3
     obj
 
 class XAxis extends Axis # assumes position = bottom
