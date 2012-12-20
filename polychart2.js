@@ -2159,9 +2159,13 @@ These are constants that are referred to throughout the coebase
     }
 
     Axis.prototype.make = function(params) {
-      var domain, guideSpec, key, type, _ref;
+      var domain, guideSpec, key, type, _ref, _ref1, _ref2, _ref3, _ref4;
       domain = params.domain, type = params.type, guideSpec = params.guideSpec, key = params.key;
       this.titletext = (_ref = guideSpec.title) != null ? _ref : key;
+      this.renderTick = (_ref1 = guideSpec.renderTick) != null ? _ref1 : true;
+      this.renderGrid = (_ref2 = guideSpec.renderGrid) != null ? _ref2 : true;
+      this.renderLabel = (_ref3 = guideSpec.renderLabel) != null ? _ref3 : true;
+      this.renderLine = (_ref4 = guideSpec.renderLine) != null ? _ref4 : true;
       this.ticks = poly.tick.make(domain, guideSpec, type);
       return this.maxwidth = _.max(_.map(this.ticks, function(t) {
         return poly.strSize(t.value);
@@ -2182,10 +2186,12 @@ These are constants that are referred to throughout the coebase
       axisDim.centerx = axisDim.left + axisDim.width / 2;
       axisDim.centery = axisDim.top + axisDim.height / 2;
       axisDim.radius = Math.min(axisDim.width, axisDim.height) / 2 - 10;
-      if (this.line != null) {
-        renderer.remove(this.line);
+      if (this.renderLine) {
+        if (this.line != null) {
+          renderer.remove(this.line);
+        }
+        this.line = this._renderline(renderer, axisDim);
       }
-      this.line = this._renderline(renderer, axisDim);
       if (this.title != null) {
         this.title = renderer.animate(this.title, this._makeTitle(axisDim, this.titletext));
       } else {
@@ -2212,26 +2218,44 @@ These are constants that are referred to throughout the coebase
     Axis.prototype._add = function(renderer, tick, axisDim) {
       var obj;
       obj = {};
-      obj.tick = renderer.add(this._makeTick(axisDim, tick));
-      obj.text = renderer.add(this._makeLabel(axisDim, tick));
-      obj.grid = renderer.add(this._makeGrid(axisDim, tick));
-      obj.grid.toBack();
+      if (this.renderTick) {
+        obj.tick = renderer.add(this._makeTick(axisDim, tick));
+      }
+      if (this.renderLabel) {
+        obj.text = renderer.add(this._makeLabel(axisDim, tick));
+      }
+      if (this.renderGrid) {
+        obj.grid = renderer.add(this._makeGrid(axisDim, tick));
+        obj.grid.toBack();
+      }
       return obj;
     };
 
     Axis.prototype._delete = function(renderer, pt) {
-      renderer.remove(pt.tick);
-      renderer.remove(pt.text);
-      return renderer.remove(pt.grid);
+      if (this.renderTick) {
+        renderer.remove(pt.tick);
+      }
+      if (this.renderLabel) {
+        renderer.remove(pt.text);
+      }
+      if (this.renderGrid) {
+        return renderer.remove(pt.grid);
+      }
     };
 
     Axis.prototype._modify = function(renderer, pt, tick, axisDim) {
       var obj;
       obj = {};
-      obj.tick = renderer.animate(pt.tick, this._makeTick(axisDim, tick));
-      obj.text = renderer.animate(pt.text, this._makeLabel(axisDim, tick));
-      obj.grid = renderer.animate(pt.grid, this._makeGrid(axisDim, tick));
-      obj.grid.toBack();
+      if (this.renderTick) {
+        obj.tick = renderer.animate(pt.tick, this._makeTick(axisDim, tick));
+      }
+      if (this.renderLabel) {
+        obj.text = renderer.animate(pt.text, this._makeLabel(axisDim, tick));
+      }
+      if (this.renderGrid) {
+        obj.grid = renderer.animate(pt.grid, this._makeGrid(axisDim, tick));
+        obj.grid.toBack();
+      }
       return obj;
     };
 
@@ -2264,7 +2288,7 @@ These are constants that are referred to throughout the coebase
       if (!obj) {
         throw poly.error.impl();
       }
-      obj.stroke = '#999';
+      obj.stroke = '#CCC';
       return obj;
     };
 

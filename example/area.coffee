@@ -11,8 +11,8 @@
       { data: data, type: 'area', x : 'a', y : 'b', color:'c'}
     ]
     guides:
-      x: title: 'The x-axis'
-      y: title: 'The y-axis'
+      x: title: 'The x-axis', renderGrid: false
+      y: title: 'The y-axis', renderLine: false
       color: title:'Some Color'
     dom: dom
   }

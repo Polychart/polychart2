@@ -14,7 +14,13 @@ class Axis extends Guide
     @pts = {}
   make: (params) =>
     {domain, type, guideSpec, key} = params
+    # options
     @titletext = guideSpec.title ? key
+    @renderTick = guideSpec.renderTick ? true
+    @renderGrid = guideSpec.renderGrid ? true
+    @renderLabel = guideSpec.renderLabel ? true
+    @renderLine = guideSpec.renderLine ? true
+    # ticks
     @ticks = poly.tick.make domain, guideSpec, type
     @maxwidth =_.max _.map @ticks, (t) -> poly.strSize t.value
   render: (dim, coord, renderer) =>
@@ -31,8 +37,10 @@ class Axis extends Guide
     axisDim.centerx = axisDim.left + axisDim.width/2
     axisDim.centery = axisDim.top + axisDim.height/2
     axisDim.radius = Math.min(axisDim.width, axisDim.height)/2 -10
-    if @line? then renderer.remove @line
-    @line = @_renderline renderer, axisDim
+    if @renderLine
+      if @line? then renderer.remove @line
+      @line = @_renderline renderer, axisDim
+
     if @title?
       @title = renderer.animate @title, @_makeTitle(axisDim, @titletext)
     else
@@ -50,21 +58,30 @@ class Axis extends Guide
     @rendered = true
   _add: (renderer, tick, axisDim) =>
     obj = {}
-    obj.tick = renderer.add @_makeTick(axisDim, tick)
-    obj.text = renderer.add @_makeLabel(axisDim, tick)
-    obj.grid = renderer.add @_makeGrid(axisDim, tick)
-    obj.grid.toBack()
+    if @renderTick
+      obj.tick = renderer.add @_makeTick(axisDim, tick)
+    if @renderLabel
+      obj.text = renderer.add @_makeLabel(axisDim, tick)
+    if @renderGrid
+      obj.grid = renderer.add @_makeGrid(axisDim, tick)
+      obj.grid.toBack()
     obj
   _delete: (renderer, pt) ->
-    renderer.remove pt.tick
-    renderer.remove pt.text
-    renderer.remove pt.grid
+    if @renderTick
+      renderer.remove pt.tick
+    if @renderLabel
+      renderer.remove pt.text
+    if @renderGrid
+      renderer.remove pt.grid
   _modify: (renderer, pt, tick, axisDim) =>
     obj = {}
-    obj.tick = renderer.animate pt.tick, @_makeTick(axisDim, tick)
-    obj.text = renderer.animate pt.text, @_makeLabel(axisDim, tick)
-    obj.grid = renderer.animate pt.grid, @_makeGrid(axisDim, tick)
-    obj.grid.toBack()
+    if @renderTick
+      obj.tick = renderer.animate pt.tick, @_makeTick(axisDim, tick)
+    if @renderLabel
+      obj.text = renderer.animate pt.text, @_makeLabel(axisDim, tick)
+    if @renderGrid
+      obj.grid = renderer.animate pt.grid, @_makeGrid(axisDim, tick)
+      obj.grid.toBack()
     obj
   _renderline : () -> throw poly.error.impl()
   _makeTitle: () -> throw poly.error.impl()
@@ -79,7 +96,7 @@ class Axis extends Guide
     obj
   _makeGrid: (obj) ->
     if !obj then throw poly.error.impl()
-    obj.stroke = '#999'
+    obj.stroke = '#CCC'
     obj
 
 class XAxis extends Axis # assumes position = bottom

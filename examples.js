@@ -54,10 +54,12 @@
       ],
       guides: {
         x: {
-          title: 'The x-axis'
+          title: 'The x-axis',
+          renderGrid: false
         },
         y: {
-          title: 'The y-axis'
+          title: 'The y-axis',
+          renderLine: false
         },
         color: {
           title: 'Some Color'
