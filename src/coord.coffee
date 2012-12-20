@@ -15,11 +15,16 @@ class Coordinate
     w = @dims.chartWidth
     h = @dims.chartHeight
     [pl+gl, pt+gt, w, h]
-   
+  getScale: (aes) ->
   ranges: () ->
 
 class Cartesian extends Coordinate
   type: 'cartesian'
+  getScale: (aes) ->
+    if aes in ['x','y']
+      @scales[@[aes]]
+    else
+      throw poly.error.input "Coordinates only keep x & y scales"
   ranges: () ->
     ranges = {}
     ranges[@x] =
@@ -57,6 +62,13 @@ class Polar extends Coordinate
     @dims = dims
     @cx = @dims.paddingLeft + @dims.guideLeft + @dims.chartWidth/2
     @cy = @dims.paddingTop + @dims.guideTop + @dims.chartHeight/2
+  getScale: (aes) ->
+    if aes is 'r'
+      @scales[@x]
+    else if aes is 't'
+      @scales[@y]
+    else
+      throw poly.error.input "Coordinates only keep r & t scales"
   ranges: () ->
     [r, t] = [@x, @y]
     ranges = {}

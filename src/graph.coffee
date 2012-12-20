@@ -59,6 +59,7 @@ class Graph
     dom = @spec.dom
     scales = @scaleSet.scales
     @coord.setScales scales
+    @scaleSet.coord = @coord
     @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent
     clipping = @coord.clipping @dims
     # render each layer

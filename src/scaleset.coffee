@@ -103,8 +103,8 @@ class ScaleSet
       key: poly.getLabel @layers, 'y'
     @axes
   renderAxes: (dims, renderer) ->
-    @axes.x.render dims, renderer
-    @axes.y.render dims, renderer
+    @axes.x.render dims, @coord, renderer
+    @axes.y.render dims, @coord, renderer
 
   _mapLayers: (layers) ->
     obj = {}

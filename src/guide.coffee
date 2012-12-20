@@ -17,7 +17,10 @@ class Axis extends Guide
     @titletext = guideSpec.title ? key
     @ticks = poly.tick.make domain, guideSpec, type
     @maxwidth =_.max _.map @ticks, (t) -> poly.strSize t.value
-  render: (dim, renderer) =>
+  render: (dim, coord, renderer) =>
+    # NOTE: coords are included for making guide rendering for polar coordinates
+    # managable. Ideally it should NOT be here and is rather a hack.
+    @coord = coord
     axisDim =
       top: dim.paddingTop + dim.guideTop
       left : dim.paddingLeft + dim.guideLeft
@@ -25,6 +28,9 @@ class Axis extends Guide
       bottom : dim.paddingTop + dim.guideTop + dim.chartHeight
       width: dim.chartWidth
       height: dim.chartHeight
+    axisDim.centerx = axisDim.left + axisDim.width/2
+    axisDim.centery = axisDim.top + axisDim.height/2
+    axisDim.radius = Math.min(axisDim.width, axisDim.height)/2 -10
     if @line? then renderer.remove @line
     @line = @_renderline renderer, axisDim
     if @title?
@@ -46,19 +52,35 @@ class Axis extends Guide
     obj = {}
     obj.tick = renderer.add @_makeTick(axisDim, tick)
     obj.text = renderer.add @_makeLabel(axisDim, tick)
+    obj.grid = renderer.add @_makeGrid(axisDim, tick)
+    obj.grid.toBack()
     obj
   _delete: (renderer, pt) ->
     renderer.remove pt.tick
     renderer.remove pt.text
+    renderer.remove pt.grid
   _modify: (renderer, pt, tick, axisDim) =>
     obj = {}
     obj.tick = renderer.animate pt.tick, @_makeTick(axisDim, tick)
     obj.text = renderer.animate pt.text, @_makeLabel(axisDim, tick)
+    obj.grid = renderer.animate pt.grid, @_makeGrid(axisDim, tick)
+    obj.grid.toBack()
     obj
   _renderline : () -> throw poly.error.impl()
   _makeTitle: () -> throw poly.error.impl()
-  _makeTick : () -> throw poly.error.impl()
-  _makeLabel: () -> throw poly.error.impl()
+  _makeTick : (obj) ->
+    if !obj then throw poly.error.impl()
+    obj.type = 'path'
+    obj.stroke = sf.identity 'black'
+    obj
+  _makeLabel: (obj) ->
+    if !obj then throw poly.error.impl()
+    obj.type = 'text'
+    obj
+  _makeGrid: (obj) ->
+    if !obj then throw poly.error.impl()
+    obj.stroke = '#999'
+    obj
 
 class XAxis extends Axis # assumes position = bottom
   make: (params) =>
@@ -96,20 +118,26 @@ class XAxis extends Axis # assumes position = bottom
     else
       y1 = sf.identity(axisDim.bottom)
       y2 = sf.identity(axisDim.bottom+5)
-    type: 'path'
-    x : [tick.location, tick.location]
-    y : [y1, y2]
-    stroke: sf.identity 'black'
+    super
+      x : [tick.location, tick.location]
+      y : [y1, y2]
   _makeLabel: (axisDim, tick) ->
     if @position is 'top'
       y = sf.identity(axisDim.top-15)
     else
       y = sf.identity(axisDim.bottom+15)
-    type: 'text'
-    x : tick.location
-    y : y
-    text: tick.value
-    'text-anchor' : 'middle'
+    super
+      x : tick.location
+      y : y
+      text: tick.value
+      'text-anchor' : 'middle'
+  _makeGrid: (axisDim, tick) ->
+    y1 = sf.identity(axisDim.top)
+    y2 = sf.identity(axisDim.bottom)
+    super
+      type: 'path'
+      x : [tick.location, tick.location]
+      y : [y1, y2]
   getDimension: () ->
     position: @position ? 'bottom'
     height: 30
@@ -152,20 +180,26 @@ class YAxis extends Axis # assumes position = left
     else
       x1 = sf.identity(axisDim.right)
       x2 = sf.identity(axisDim.right+5)
-    type: 'path'
-    x : [x1, x2]
-    y : [tick.location, tick.location]
-    stroke: sf.identity 'black'
+    super
+      x : [x1, x2]
+      y : [tick.location, tick.location]
   _makeLabel: (axisDim, tick) ->
     if @position is 'left'
       x = sf.identity(axisDim.left-7)
     else
       x = sf.identity(axisDim.right+7)
-    type: 'text'
-    x : x
-    y : tick.location
-    text: tick.value
-    'text-anchor' : if @position is 'left' then 'end' else 'start'
+    super
+      x : x
+      y : tick.location
+      text: tick.value
+      'text-anchor' : if @position is 'left' then 'end' else 'start'
+  _makeGrid: (axisDim, tick) ->
+    x1 = sf.identity(axisDim.left)
+    x2 = sf.identity(axisDim.right)
+    super
+      type: 'path'
+      y : [tick.location, tick.location]
+      x : [x1, x2]
   getDimension: () ->
     position: @position ? 'right'
     height: 'all'
@@ -189,16 +223,23 @@ class RAxis extends Axis # assumes position = left
     transform : 'r270'
     'text-anchor' : 'middle'
   _makeTick: (axisDim, tick) ->
-    type: 'path'
-    x : [sf.identity(axisDim.left), sf.identity(axisDim.left-5)]
-    y : [tick.location, tick.location]
-    stroke: sf.identity 'black'
+    super
+      x : [sf.identity(axisDim.left), sf.identity(axisDim.left-5)]
+      y : [tick.location, tick.location]
   _makeLabel: (axisDim, tick) ->
-    type: 'text'
-    x : sf.identity(axisDim.left-7)
-    y : tick.location
-    text: tick.value
-    'text-anchor' : 'end'
+    super
+      x : sf.identity(axisDim.left-7)
+      y : tick.location
+      text: tick.value
+      'text-anchor' : 'end'
+  _makeGrid: (axisDim, tick) ->
+    super
+      type: 'circle'
+      x: sf.identity axisDim.centerx
+      y: sf.identity axisDim.centery
+      size: sf.identity @coord.getScale('r') tick.location
+      fill: sf.identity('white')
+      'stroke-width': 1
   getDimension: () ->
     position: 'left'
     height: 'all'
@@ -206,12 +247,11 @@ class RAxis extends Axis # assumes position = left
 
 class TAxis extends Axis # assumes position = ... um, what is it supposed to be?
   _renderline : (renderer, axisDim) ->
-    radius = Math.min(axisDim.width, axisDim.height)/2 -10
     renderer.add {
       type: 'circle',
-      x: sf.identity axisDim.left + axisDim.width/2
-      y: sf.identity axisDim.top + axisDim.height/2
-      size: sf.identity radius
+      x: sf.identity axisDim.centerx
+      y: sf.identity axisDim.centery
+      size: sf.identity axisDim.radius
       color: sf.identity('none')
       stroke: sf.identity('black')
       'stroke-width': 1
@@ -223,18 +263,25 @@ class TAxis extends Axis # assumes position = ... um, what is it supposed to be?
     text: text
     'text-anchor' : 'middle'
   _makeTick: (axisDim, tick) ->
-    radius = Math.min(axisDim.width, axisDim.height)/2 -10
-    type: 'path'
-    x : [tick.location, tick.location]
-    y : [sf.max(0), sf.max(3)]
-    stroke: sf.identity 'black'
+    super
+      x : [tick.location, tick.location]
+      y : [sf.max(0), sf.max(3)]
   _makeLabel: (axisDim, tick) ->
-    radius = Math.min(axisDim.width, axisDim.height)/2 -10
-    type: 'text'
-    x : tick.location
-    y : sf.max(12)
-    text: tick.value
-    'text-anchor' : 'middle'
+    super
+      x : tick.location
+      y : sf.max(12)
+      text: tick.value
+      'text-anchor' : 'middle'
+  _makeGrid: (axisDim, tick) ->
+    x1 = sf.identity axisDim.centerx
+    y1 = sf.identity axisDim.centery
+    theta = @coord.getScale('t')(tick.location) - Math.PI/2
+    x2 = sf.identity(axisDim.centerx + axisDim.radius * Math.cos(theta))
+    y2 = sf.identity(axisDim.centery + axisDim.radius * Math.sin(theta))
+    super
+      type: 'path'
+      y : [y1, y2]
+      x : [x1, x2]
   getDimension: () -> {}
 
 class Legend extends Guide

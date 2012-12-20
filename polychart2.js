@@ -1379,6 +1379,8 @@ These are constants that are referred to throughout the coebase
       return [pl + gl, pt + gt, w, h];
     };
 
+    Coordinate.prototype.getScale = function(aes) {};
+
     Coordinate.prototype.ranges = function() {};
 
     return Coordinate;
@@ -1394,6 +1396,14 @@ These are constants that are referred to throughout the coebase
     }
 
     Cartesian.prototype.type = 'cartesian';
+
+    Cartesian.prototype.getScale = function(aes) {
+      if (aes === 'x' || aes === 'y') {
+        return this.scales[this[aes]];
+      } else {
+        throw poly.error.input("Coordinates only keep x & y scales");
+      }
+    };
 
     Cartesian.prototype.ranges = function() {
       var ranges;
@@ -1460,6 +1470,16 @@ These are constants that are referred to throughout the coebase
       this.dims = dims;
       this.cx = this.dims.paddingLeft + this.dims.guideLeft + this.dims.chartWidth / 2;
       return this.cy = this.dims.paddingTop + this.dims.guideTop + this.dims.chartHeight / 2;
+    };
+
+    Polar.prototype.getScale = function(aes) {
+      if (aes === 'r') {
+        return this.scales[this.x];
+      } else if (aes === 't') {
+        return this.scales[this.y];
+      } else {
+        throw poly.error.input("Coordinates only keep r & t scales");
+      }
     };
 
     Polar.prototype.ranges = function() {
@@ -2148,8 +2168,9 @@ These are constants that are referred to throughout the coebase
       }));
     };
 
-    Axis.prototype.render = function(dim, renderer) {
+    Axis.prototype.render = function(dim, coord, renderer) {
       var added, axisDim, deleted, kept, newpts, t, _i, _j, _k, _len, _len1, _len2, _ref;
+      this.coord = coord;
       axisDim = {
         top: dim.paddingTop + dim.guideTop,
         left: dim.paddingLeft + dim.guideLeft,
@@ -2158,6 +2179,9 @@ These are constants that are referred to throughout the coebase
         width: dim.chartWidth,
         height: dim.chartHeight
       };
+      axisDim.centerx = axisDim.left + axisDim.width / 2;
+      axisDim.centery = axisDim.top + axisDim.height / 2;
+      axisDim.radius = Math.min(axisDim.width, axisDim.height) / 2 - 10;
       if (this.line != null) {
         renderer.remove(this.line);
       }
@@ -2190,12 +2214,15 @@ These are constants that are referred to throughout the coebase
       obj = {};
       obj.tick = renderer.add(this._makeTick(axisDim, tick));
       obj.text = renderer.add(this._makeLabel(axisDim, tick));
+      obj.grid = renderer.add(this._makeGrid(axisDim, tick));
+      obj.grid.toBack();
       return obj;
     };
 
     Axis.prototype._delete = function(renderer, pt) {
       renderer.remove(pt.tick);
-      return renderer.remove(pt.text);
+      renderer.remove(pt.text);
+      return renderer.remove(pt.grid);
     };
 
     Axis.prototype._modify = function(renderer, pt, tick, axisDim) {
@@ -2203,6 +2230,8 @@ These are constants that are referred to throughout the coebase
       obj = {};
       obj.tick = renderer.animate(pt.tick, this._makeTick(axisDim, tick));
       obj.text = renderer.animate(pt.text, this._makeLabel(axisDim, tick));
+      obj.grid = renderer.animate(pt.grid, this._makeGrid(axisDim, tick));
+      obj.grid.toBack();
       return obj;
     };
 
@@ -2214,12 +2243,29 @@ These are constants that are referred to throughout the coebase
       throw poly.error.impl();
     };
 
-    Axis.prototype._makeTick = function() {
-      throw poly.error.impl();
+    Axis.prototype._makeTick = function(obj) {
+      if (!obj) {
+        throw poly.error.impl();
+      }
+      obj.type = 'path';
+      obj.stroke = sf.identity('black');
+      return obj;
     };
 
-    Axis.prototype._makeLabel = function() {
-      throw poly.error.impl();
+    Axis.prototype._makeLabel = function(obj) {
+      if (!obj) {
+        throw poly.error.impl();
+      }
+      obj.type = 'text';
+      return obj;
+    };
+
+    Axis.prototype._makeGrid = function(obj) {
+      if (!obj) {
+        throw poly.error.impl();
+      }
+      obj.stroke = '#999';
+      return obj;
     };
 
     return Axis;
@@ -2287,12 +2333,10 @@ These are constants that are referred to throughout the coebase
         y1 = sf.identity(axisDim.bottom);
         y2 = sf.identity(axisDim.bottom + 5);
       }
-      return {
-        type: 'path',
+      return XAxis.__super__._makeTick.call(this, {
         x: [tick.location, tick.location],
-        y: [y1, y2],
-        stroke: sf.identity('black')
-      };
+        y: [y1, y2]
+      });
     };
 
     XAxis.prototype._makeLabel = function(axisDim, tick) {
@@ -2302,13 +2346,23 @@ These are constants that are referred to throughout the coebase
       } else {
         y = sf.identity(axisDim.bottom + 15);
       }
-      return {
-        type: 'text',
+      return XAxis.__super__._makeLabel.call(this, {
         x: tick.location,
         y: y,
         text: tick.value,
         'text-anchor': 'middle'
-      };
+      });
+    };
+
+    XAxis.prototype._makeGrid = function(axisDim, tick) {
+      var y1, y2;
+      y1 = sf.identity(axisDim.top);
+      y2 = sf.identity(axisDim.bottom);
+      return XAxis.__super__._makeGrid.call(this, {
+        type: 'path',
+        x: [tick.location, tick.location],
+        y: [y1, y2]
+      });
     };
 
     XAxis.prototype.getDimension = function() {
@@ -2386,12 +2440,10 @@ These are constants that are referred to throughout the coebase
         x1 = sf.identity(axisDim.right);
         x2 = sf.identity(axisDim.right + 5);
       }
-      return {
-        type: 'path',
+      return YAxis.__super__._makeTick.call(this, {
         x: [x1, x2],
-        y: [tick.location, tick.location],
-        stroke: sf.identity('black')
-      };
+        y: [tick.location, tick.location]
+      });
     };
 
     YAxis.prototype._makeLabel = function(axisDim, tick) {
@@ -2401,13 +2453,23 @@ These are constants that are referred to throughout the coebase
       } else {
         x = sf.identity(axisDim.right + 7);
       }
-      return {
-        type: 'text',
+      return YAxis.__super__._makeLabel.call(this, {
         x: x,
         y: tick.location,
         text: tick.value,
         'text-anchor': this.position === 'left' ? 'end' : 'start'
-      };
+      });
+    };
+
+    YAxis.prototype._makeGrid = function(axisDim, tick) {
+      var x1, x2;
+      x1 = sf.identity(axisDim.left);
+      x2 = sf.identity(axisDim.right);
+      return YAxis.__super__._makeGrid.call(this, {
+        type: 'path',
+        y: [tick.location, tick.location],
+        x: [x1, x2]
+      });
     };
 
     YAxis.prototype.getDimension = function() {
@@ -2456,22 +2518,30 @@ These are constants that are referred to throughout the coebase
     };
 
     RAxis.prototype._makeTick = function(axisDim, tick) {
-      return {
-        type: 'path',
+      return RAxis.__super__._makeTick.call(this, {
         x: [sf.identity(axisDim.left), sf.identity(axisDim.left - 5)],
-        y: [tick.location, tick.location],
-        stroke: sf.identity('black')
-      };
+        y: [tick.location, tick.location]
+      });
     };
 
     RAxis.prototype._makeLabel = function(axisDim, tick) {
-      return {
-        type: 'text',
+      return RAxis.__super__._makeLabel.call(this, {
         x: sf.identity(axisDim.left - 7),
         y: tick.location,
         text: tick.value,
         'text-anchor': 'end'
-      };
+      });
+    };
+
+    RAxis.prototype._makeGrid = function(axisDim, tick) {
+      return RAxis.__super__._makeGrid.call(this, {
+        type: 'circle',
+        x: sf.identity(axisDim.centerx),
+        y: sf.identity(axisDim.centery),
+        size: sf.identity(this.coord.getScale('r')(tick.location)),
+        fill: sf.identity('white'),
+        'stroke-width': 1
+      });
     };
 
     RAxis.prototype.getDimension = function() {
@@ -2495,13 +2565,11 @@ These are constants that are referred to throughout the coebase
     }
 
     TAxis.prototype._renderline = function(renderer, axisDim) {
-      var radius;
-      radius = Math.min(axisDim.width, axisDim.height) / 2 - 10;
       return renderer.add({
         type: 'circle',
-        x: sf.identity(axisDim.left + axisDim.width / 2),
-        y: sf.identity(axisDim.top + axisDim.height / 2),
-        size: sf.identity(radius),
+        x: sf.identity(axisDim.centerx),
+        y: sf.identity(axisDim.centery),
+        size: sf.identity(axisDim.radius),
         color: sf.identity('none'),
         stroke: sf.identity('black'),
         'stroke-width': 1
@@ -2519,26 +2587,33 @@ These are constants that are referred to throughout the coebase
     };
 
     TAxis.prototype._makeTick = function(axisDim, tick) {
-      var radius;
-      radius = Math.min(axisDim.width, axisDim.height) / 2 - 10;
-      return {
-        type: 'path',
+      return TAxis.__super__._makeTick.call(this, {
         x: [tick.location, tick.location],
-        y: [sf.max(0), sf.max(3)],
-        stroke: sf.identity('black')
-      };
+        y: [sf.max(0), sf.max(3)]
+      });
     };
 
     TAxis.prototype._makeLabel = function(axisDim, tick) {
-      var radius;
-      radius = Math.min(axisDim.width, axisDim.height) / 2 - 10;
-      return {
-        type: 'text',
+      return TAxis.__super__._makeLabel.call(this, {
         x: tick.location,
         y: sf.max(12),
         text: tick.value,
         'text-anchor': 'middle'
-      };
+      });
+    };
+
+    TAxis.prototype._makeGrid = function(axisDim, tick) {
+      var theta, x1, x2, y1, y2;
+      x1 = sf.identity(axisDim.centerx);
+      y1 = sf.identity(axisDim.centery);
+      theta = this.coord.getScale('t')(tick.location) - Math.PI / 2;
+      x2 = sf.identity(axisDim.centerx + axisDim.radius * Math.cos(theta));
+      y2 = sf.identity(axisDim.centery + axisDim.radius * Math.sin(theta));
+      return TAxis.__super__._makeGrid.call(this, {
+        type: 'path',
+        y: [y1, y2],
+        x: [x1, x2]
+      });
     };
 
     TAxis.prototype.getDimension = function() {
@@ -3428,8 +3503,8 @@ These are constants that are referred to throughout the coebase
     };
 
     ScaleSet.prototype.renderAxes = function(dims, renderer) {
-      this.axes.x.render(dims, renderer);
-      return this.axes.y.render(dims, renderer);
+      this.axes.x.render(dims, this.coord, renderer);
+      return this.axes.y.render(dims, this.coord, renderer);
     };
 
     ScaleSet.prototype._mapLayers = function(layers) {
@@ -5552,6 +5627,7 @@ or knows how to retrieve data from some source.
       dom = this.spec.dom;
       scales = this.scaleSet.scales;
       this.coord.setScales(scales);
+      this.scaleSet.coord = this.coord;
       if ((_ref1 = this.paper) == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
       }
