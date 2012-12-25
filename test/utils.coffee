@@ -25,6 +25,15 @@ test "compare", ->
   deepEqual polyjs.compare([1,2,3,4,5,6], [1,2,3]), {deleted: [4,5,6], kept: [1,2,3], added: []}
   deepEqual polyjs.compare(['A','B','C'], ['B', 'D']), {deleted: ['A', 'C'], kept: ['B'], added: ['D']}
 
+test "sample", ->
+  x = {a:2, b:3, c:4, d:5, e:7, f:8, g:9}
+  y = polyjs.sample x, 3
+  equal _.size(y), 3
+  y = polyjs.sample x, 5
+  equal _.size(y), 5
+  y = polyjs.sample x, 100
+  equal _.size(y), _.size(x)
+
 test "flatten", ->
   deepEqual polyjs.flatten(null), []
   deepEqual polyjs.flatten(2), [2]

@@ -28,6 +28,9 @@ poly.layer.toStrictMode = (spec) ->
   # wrap all aesthetic in object
   for aes in aesthetics
     if spec[aes] and _.isString spec[aes] then spec[aes] = { var: spec[aes] }
+  # provide a dfault "sample" value
+  if not spec.sample?
+    spec.sample = 500
   spec
 
 ###
@@ -58,22 +61,23 @@ class Layer
   constructor: (layerSpec, strict) ->
     @initialSpec = poly.layer.toStrictMode layerSpec
     @prevSpec = null
+    @spec = null
     @dataprocess = new poly.DataProcess @initialSpec, strict
     @pts = {}
 
   reset : () => @make @initialSpec
 
   make: (layerSpec, callback) -> # mostly just read and interpret the the spec
-    spec = poly.layer.toStrictMode layerSpec
-    @_makeMappings spec
-    @dataprocess.make spec, (statData, metaData) =>
+    @spec = poly.layer.toStrictMode layerSpec
+    @_makeMappings @spec
+    @dataprocess.make @spec, (statData, metaData) =>
       @statData = statData
       @meta = metaData
       if not @statData?
         throw poly.error.data "No data is passed into the layer"
       @_calcGeoms()
       callback()
-    @prevSpec = spec
+    @prevSpec = @spec
 
   _calcGeoms: () -> @geoms = {} # layer level geom calculation
 
@@ -82,15 +86,24 @@ class Layer
  
   # render and animation functions!
   render: (render) =>
+    geoms =
+      if @spec.sample is false
+        @geoms
+      else if _.isNumber @spec.sample
+        poly.sample @geoms, @spec.sample
+      else
+        throw poly.error.defn "A layer's 'sample' definition should be an integer, not #{@spec.sample}"
+
     newpts = {}
-    {deleted, kept, added} = poly.compare _.keys(@pts), _.keys(@geoms)
+    {deleted, kept, added} = poly.compare _.keys(@pts), _.keys(geoms)
     for id in deleted
       @_delete render, @pts[id]
     for id in added
-      newpts[id] = @_add render, @geoms[id]
+      newpts[id] = @_add render, geoms[id]
     for id in kept
-      newpts[id] = @_modify render, @pts[id], @geoms[id]
+      newpts[id] = @_modify render, @pts[id], geoms[id]
     @pts = newpts
+    sampled :  _.size(geoms) isnt _.size(@geoms)
   _delete : (render, points) ->
     for id2, pt of points
       render.remove pt

@@ -81,7 +81,7 @@ class Graph
     # render each layer
     renderer = poly.render @handleEvent, @paper, scales, @coord, true, clipping
     for layer in @layers
-      layer.render renderer
+      {sampled} = layer.render renderer
     # render axes
     renderer = poly.render @handleEvent, @paper, scales, @coord, false
 

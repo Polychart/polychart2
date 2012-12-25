@@ -44,6 +44,12 @@ poly.counter = () ->
   () -> i++
 
 ###
+Sample an associate array (object)
+###
+poly.sample = (assoc, num) ->
+  _.pick assoc, _.shuffle(_.keys(assoc)).splice(0, num)
+
+###
 Given an OLD array and NEW array, split the points in (OLD union NEW) into
 three sets:
   - deleted

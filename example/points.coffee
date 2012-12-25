@@ -1,7 +1,8 @@
 @examples ?= {}
 
+one = () -> Math.random()*10
+
 @examples.point = (dom) ->
-  one = () -> Math.random()*10
   spec = () ->
     jsondata = ({x:one(), y:one(), c:one()} for i in [0..10])
     data = new polyjs.Data json:jsondata
@@ -43,6 +44,20 @@
     c.make(newspec.spec)
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
+
+@examples.point_sampled = (dom) ->
+  jsondata = ({x:one(), y:one(), c:one()} for i in [0..1000])
+  data = new polyjs.Data json:jsondata
+  c = polyjs.chart
+    layer:
+      data:data, type:'point', x:'x', y:'y', sample:50
+    dom:dom
+  redraw = () ->
+    c.make()
+    setTimeout(redraw, 1000)
+  setTimeout(redraw, 1000)
+
+
 
 @examples.point2 = (dom) ->
   jsondata = [{x:'A',y:2},{x:'B',y:3},{x:'C',y:1}]

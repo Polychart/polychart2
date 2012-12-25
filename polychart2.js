@@ -87,6 +87,15 @@ Output:
   };
 
   /*
+  Sample an associate array (object)
+  */
+
+
+  poly.sample = function(assoc, num) {
+    return _.pick(assoc, _.shuffle(_.keys(assoc)).splice(0, num));
+  };
+
+  /*
   Given an OLD array and NEW array, split the points in (OLD union NEW) into
   three sets:
     - deleted
@@ -4336,6 +4345,9 @@ or knows how to retrieve data from some source.
         };
       }
     }
+    if (!(spec.sample != null)) {
+      spec.sample = 500;
+    }
     return spec;
   };
 
@@ -4386,6 +4398,7 @@ or knows how to retrieve data from some source.
       this.reset = __bind(this.reset, this);
       this.initialSpec = poly.layer.toStrictMode(layerSpec);
       this.prevSpec = null;
+      this.spec = null;
       this.dataprocess = new poly.DataProcess(this.initialSpec, strict);
       this.pts = {};
     }
@@ -4395,11 +4408,10 @@ or knows how to retrieve data from some source.
     };
 
     Layer.prototype.make = function(layerSpec, callback) {
-      var spec,
-        _this = this;
-      spec = poly.layer.toStrictMode(layerSpec);
-      this._makeMappings(spec);
-      this.dataprocess.make(spec, function(statData, metaData) {
+      var _this = this;
+      this.spec = poly.layer.toStrictMode(layerSpec);
+      this._makeMappings(this.spec);
+      this.dataprocess.make(this.spec, function(statData, metaData) {
         _this.statData = statData;
         _this.meta = metaData;
         if (!(_this.statData != null)) {
@@ -4408,7 +4420,7 @@ or knows how to retrieve data from some source.
         _this._calcGeoms();
         return callback();
       });
-      return this.prevSpec = spec;
+      return this.prevSpec = this.spec;
     };
 
     Layer.prototype._calcGeoms = function() {
@@ -4424,22 +4436,34 @@ or knows how to retrieve data from some source.
     };
 
     Layer.prototype.render = function(render) {
-      var added, deleted, id, kept, newpts, _i, _j, _k, _len, _len1, _len2, _ref;
+      var added, deleted, geoms, id, kept, newpts, _i, _j, _k, _len, _len1, _len2, _ref;
+      geoms = (function() {
+        if (this.spec.sample === false) {
+          return this.geoms;
+        } else if (_.isNumber(this.spec.sample)) {
+          return poly.sample(this.geoms, this.spec.sample);
+        } else {
+          throw poly.error.defn("A layer's 'sample' definition should be an integer, not " + this.spec.sample);
+        }
+      }).call(this);
       newpts = {};
-      _ref = poly.compare(_.keys(this.pts), _.keys(this.geoms)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
+      _ref = poly.compare(_.keys(this.pts), _.keys(geoms)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
       for (_i = 0, _len = deleted.length; _i < _len; _i++) {
         id = deleted[_i];
         this._delete(render, this.pts[id]);
       }
       for (_j = 0, _len1 = added.length; _j < _len1; _j++) {
         id = added[_j];
-        newpts[id] = this._add(render, this.geoms[id]);
+        newpts[id] = this._add(render, geoms[id]);
       }
       for (_k = 0, _len2 = kept.length; _k < _len2; _k++) {
         id = kept[_k];
-        newpts[id] = this._modify(render, this.pts[id], this.geoms[id]);
+        newpts[id] = this._modify(render, this.pts[id], geoms[id]);
       }
-      return this.pts = newpts;
+      this.pts = newpts;
+      return {
+        sampled: _.size(geoms) !== _.size(this.geoms)
+      };
     };
 
     Layer.prototype._delete = function(render, points) {
@@ -5739,7 +5763,7 @@ or knows how to retrieve data from some source.
     };
 
     Graph.prototype.merge = function() {
-      var clipping, dom, domains, layer, renderer, scales, _i, _len, _ref, _ref1, _ref2;
+      var clipping, dom, domains, layer, renderer, sampled, scales, _i, _len, _ref, _ref1, _ref2;
       domains = this._makeDomains(this.spec, this.layers);
       if ((_ref = this.scaleSet) == null) {
         this.scaleSet = this._makeScaleSet(this.spec, domains);
@@ -5767,7 +5791,7 @@ or knows how to retrieve data from some source.
       _ref2 = this.layers;
       for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
         layer = _ref2[_i];
-        layer.render(renderer);
+        sampled = layer.render(renderer).sampled;
       }
       renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, false);
       this.scaleSet.makeAxes();
