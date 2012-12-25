@@ -50,14 +50,94 @@ class Data
   unsubscribe: (h) ->
     @subscribed.splice _.indexOf(@subscribed, h), 1
 
-  # functions for backwards compatibility
+  # functions for backwards compatibility: DO NOT USE!
   keys: () -> @key
-  rename: () -> true
-  renameMany: () -> true
-  remove: () -> false
-  filter: () -> @
-  sort: () -> @
-  derive: () -> @
+  checkRename: (from, to) ->
+    if to is ''
+      throw poly.err.defn "Column names cannot be an empty string"
+    if _.indexOf(@key, from) is '-1'
+      throw poly.err.defn "The key #{from} doesn't exist!"
+    if _.indexOf(@key, to) isnt '-1'
+      throw poly.err.defn "The key #{to} already exists!"
+  rename: (from, to, checked=false) ->
+    from = from.toString()
+    to = to.toString()
+    if not checked then @checkRename from, to
+    for item in @raw
+      item[to] = item[from]
+      delete item[from]
+    k = _.indexOf(@key, from)
+    @key[k] = to
+    @meta[to] = @meta[from]
+    delete @meta[from]
+    true
+  renameMany: (map) ->
+    for from, to of map
+      @checkRename from, to
+    for from, to of map
+      @rename from, to, true
+    true
+  remove: (key) ->
+    index = _.indexOf(@key, key)
+    if index is '-1'
+      return false #throw poly.err.defn "The key #{key} doesn't exist!"
+    @key.splice index, 1
+    delete @meta[key]
+    for item in @raw
+      delete item[key]
+    true
+  filter: (strfn) ->
+    fn =
+      if _.isFunction strfn
+        strfn
+      else if _.isString strfn
+        new Function('d', "with(d) { return #{strfn};}")
+      else
+        () -> true
+    newdata = []
+    for item in @raw
+      if fn item
+        newdata.push item
+    newobj = new Data json: newdata, meta: @meta
+    newobj.getData ->
+    newobj
+  sort: (key, desc) ->
+    type = @type key
+    newdata =_.clone(@raw)
+    sortfn = if type is 'cat' then poly.sortString else poly.sortNum
+    newdata.sort (a,b) -> sortfn a[key], b[key]
+    if desc then newdata.reverse()
+    debugger
+    newobj = new Data json: newdata, meta: @meta
+    newobj.getData ->
+    newobj
+  derive: (fnstr, key, opts) ->
+    opts ?= {}
+    {dryrun, context} = opts
+    if not key? then key = _uniqueId("var_")
+    context ?= {}
+    if _.isFunction(fnstr)
+      compute = fnstr
+      hasFnStr = false
+    else
+      hasFnStr = true
+      compute = new Function('d', "with(this) { with(d) { return #{fnstr if '' then "" else fnstr};}}")
+
+    for item in @raw
+      value = compute.call context,item
+      if _.isFunction value
+        throw poly.err.defn "Derivation function returned another function."
+      item[key] = value
+    if dryrun then return success:true, values: _.pluck @raw[0..10], key
+
+    if not (key in @key)
+      @key.push key
+    if not (key of @meta)
+      @meta[key] =
+        type : poly.varType _.pluck(@raw[0..100], key)
+        derived: true
+      if hasFnStr then @meta[key].formula = fnstr
+    key
   getMeta: (key) -> @meta[key]
   type: (key) ->
     t = @meta[key].type

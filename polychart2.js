@@ -224,7 +224,7 @@ Output:
   THRESHOLD = 0.95;
 
   poly.varType = function(values) {
-    var date, num, value, _i, _len;
+    var date, m, num, value, _i, _len;
     date = 0;
     num = 0;
     for (_i = 0, _len = values.length; _i < _len; _i++) {
@@ -235,7 +235,8 @@ Output:
       if (!isNaN(value) || !isNaN(value.replace(/\$|\,/g, ''))) {
         num++;
       }
-      if (moment(value).isValid()) {
+      m = moment(value);
+      if ((m != null) && m.isValid()) {
         date++;
       }
     }
@@ -274,6 +275,54 @@ Output:
       }
     } else {
       return void 0;
+    }
+  };
+
+  poly.sortString = function(a, b) {
+    var al, bl;
+    if (a === b) {
+      return 0;
+    }
+    if (!_.isString(a)) {
+      a = "" + a;
+    }
+    if (!_.isString(b)) {
+      b = "" + b;
+    }
+    al = a.toLowerCase();
+    bl = b.toLowerCase();
+    if (al === bl) {
+      if (a < b) {
+        return -1;
+      } else if (a > b) {
+        return 1;
+      } else {
+        return 0;
+      }
+    } else {
+      if (al < bl) {
+        return -1;
+      } else if (al > bl) {
+        return 1;
+      } else {
+        return 0;
+      }
+    }
+  };
+
+  poly.sortNum = function(a, b) {
+    if (a === b) {
+      return 0;
+    } else if (a === null) {
+      return 1;
+    } else if (b === null) {
+      return -1;
+    } else if (a < b) {
+      return -1;
+    } else if (a > b) {
+      return 1;
+    } else {
+      return 0;
     }
   };
 
@@ -3717,8 +3766,8 @@ or knows how to retrieve data from some source.
 
 (function() {
   var Data, DataProcess, backendProcess, calculateMeta, calculateStats, filterFactory, filters, frontendProcess, statistics, statsFactory, transformFactory, transforms,
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   Data = (function() {
 
@@ -3814,28 +3863,158 @@ or knows how to retrieve data from some source.
       return this.key;
     };
 
-    Data.prototype.rename = function() {
+    Data.prototype.checkRename = function(from, to) {
+      if (to === '') {
+        throw poly.err.defn("Column names cannot be an empty string");
+      }
+      if (_.indexOf(this.key, from) === '-1') {
+        throw poly.err.defn("The key " + from + " doesn't exist!");
+      }
+      if (_.indexOf(this.key, to) !== '-1') {
+        throw poly.err.defn("The key " + to + " already exists!");
+      }
+    };
+
+    Data.prototype.rename = function(from, to, checked) {
+      var item, k, _i, _len, _ref;
+      if (checked == null) {
+        checked = false;
+      }
+      from = from.toString();
+      to = to.toString();
+      if (!checked) {
+        this.checkRename(from, to);
+      }
+      _ref = this.raw;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
+        item[to] = item[from];
+        delete item[from];
+      }
+      k = _.indexOf(this.key, from);
+      this.key[k] = to;
+      this.meta[to] = this.meta[from];
+      delete this.meta[from];
       return true;
     };
 
-    Data.prototype.renameMany = function() {
+    Data.prototype.renameMany = function(map) {
+      var from, to;
+      for (from in map) {
+        to = map[from];
+        this.checkRename(from, to);
+      }
+      for (from in map) {
+        to = map[from];
+        this.rename(from, to, true);
+      }
       return true;
     };
 
-    Data.prototype.remove = function() {
-      return false;
+    Data.prototype.remove = function(key) {
+      var index, item, _i, _len, _ref;
+      index = _.indexOf(this.key, key);
+      if (index === '-1') {
+        return false;
+      }
+      this.key.splice(index, 1);
+      delete this.meta[key];
+      _ref = this.raw;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
+        delete item[key];
+      }
+      return true;
     };
 
-    Data.prototype.filter = function() {
-      return this;
+    Data.prototype.filter = function(strfn) {
+      var fn, item, newdata, newobj, _i, _len, _ref;
+      fn = _.isFunction(strfn) ? strfn : _.isString(strfn) ? new Function('d', "with(d) { return " + strfn + ";}") : function() {
+        return true;
+      };
+      newdata = [];
+      _ref = this.raw;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
+        if (fn(item)) {
+          newdata.push(item);
+        }
+      }
+      newobj = new Data({
+        json: newdata,
+        meta: this.meta
+      });
+      newobj.getData(function() {});
+      return newobj;
     };
 
-    Data.prototype.sort = function() {
-      return this;
+    Data.prototype.sort = function(key, desc) {
+      var newdata, newobj, sortfn, type;
+      type = this.type(key);
+      newdata = _.clone(this.raw);
+      sortfn = type === 'cat' ? poly.sortString : poly.sortNum;
+      newdata.sort(function(a, b) {
+        return sortfn(a[key], b[key]);
+      });
+      if (desc) {
+        newdata.reverse();
+      }
+      debugger;
+      newobj = new Data({
+        json: newdata,
+        meta: this.meta
+      });
+      newobj.getData(function() {});
+      return newobj;
     };
 
-    Data.prototype.derive = function() {
-      return this;
+    Data.prototype.derive = function(fnstr, key, opts) {
+      var compute, context, dryrun, hasFnStr, item, value, _i, _len, _ref;
+      if (opts == null) {
+        opts = {};
+      }
+      dryrun = opts.dryrun, context = opts.context;
+      if (!(key != null)) {
+        key = _uniqueId("var_");
+      }
+      if (context == null) {
+        context = {};
+      }
+      if (_.isFunction(fnstr)) {
+        compute = fnstr;
+        hasFnStr = false;
+      } else {
+        hasFnStr = true;
+        compute = new Function('d', "with(this) { with(d) { return " + (fnstr('' ? "" : fnstr)) + ";}}");
+      }
+      _ref = this.raw;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
+        value = compute.call(context, item);
+        if (_.isFunction(value)) {
+          throw poly.err.defn("Derivation function returned another function.");
+        }
+        item[key] = value;
+      }
+      if (dryrun) {
+        return {
+          success: true,
+          values: _.pluck(this.raw.slice(0, 11), key)
+        };
+      }
+      if (!(__indexOf.call(this.key, key) >= 0)) {
+        this.key.push(key);
+      }
+      if (!(key in this.meta)) {
+        this.meta[key] = {
+          type: poly.varType(_.pluck(this.raw.slice(0, 101), key)),
+          derived: true
+        };
+        if (hasFnStr) {
+          this.meta[key].formula = fnstr;
+        }
+      }
+      return key;
     };
 
     Data.prototype.getMeta = function(key) {
@@ -4610,7 +4789,6 @@ or knows how to retrieve data from some source.
     };
 
     Layer.prototype._stack = function(group) {
-      debugger;
       var data, datas, item, key, tmp, yval, _results,
         _this = this;
       datas = poly.groupBy(this.statData, group);
@@ -4639,7 +4817,6 @@ or knows how to retrieve data from some source.
     };
 
     Layer.prototype._dodge = function(group) {
-      debugger;
       var aes, datas, groupAes, groupKey, item, key, numgroup, order, orderfn, values, yval, _i, _len, _ref, _results,
         _this = this;
       groupAes = _.without(_.keys(this.mapping), 'x', 'y', 'id');

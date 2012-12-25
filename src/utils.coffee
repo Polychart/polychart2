@@ -147,7 +147,8 @@ poly.varType = (values) ->
     if not isNaN(value) or not isNaN value.replace(/\$|\,/g,'')
       num++
     # check if it's a date
-    if moment(value).isValid()
+    m = moment(value)
+    if m? and m.isValid()
       date++
   if num > THRESHOLD*values.length
     return 'num'
@@ -176,3 +177,26 @@ poly.coerce = (value, meta) ->
       moment(value).unix()
   else
     undefined
+
+poly.sortString = (a, b) ->
+  if a is b then return 0
+  if not _.isString(a) then a = "" + a
+  if not _.isString(b) then b = "" + b
+  al = a.toLowerCase()
+  bl = b.toLowerCase()
+  if al is bl
+    if a < b        then -1
+    else if a > b   then  1
+    else                  0
+  else
+    if al < bl      then -1
+    else if al > bl then  1
+    else                  0
+
+poly.sortNum = (a, b) ->
+  if a is b then 0
+  else if a is null then return 1
+  else if b is null then -1
+  else if a < b then return -1
+  else if a > b then 1
+  else 0
