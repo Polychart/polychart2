@@ -156,11 +156,11 @@ class Layer
     yval = if @mapping.y? then ((item) => item[@mapping.y]) else (item) -> 0
     for key, datas of poly.groupBy @statData, group
       order = {}
-      tmp = {}
       numgroup = 1
       for aes in groupAes
-        order[aes] = _.uniq (@_getValue item, aes for item in datas)
-        numgroup *= order[aes].length
+        values = _.uniq (@_getValue item, aes for item in datas)
+        numgroup *= values.length
+        order[aes] = _.sortBy values, (x) -> x
       orderfn = (item) =>
         m = numgroup
         n = 0
@@ -171,10 +171,6 @@ class Layer
       for item in datas
         item.$n = orderfn(item)
         item.$m = numgroup
-        tmp[item.$n] ?= 0
-        item.$lower = tmp[item.$n]
-        tmp[item.$n] += yval(item)
-        item.$upper = tmp[item.$n]
 
 class Point extends Layer
   _calcGeoms: () ->
@@ -261,7 +257,9 @@ class Bar extends Layer
     else
       throw poly.error.defn "Bar chart position #{@position} is unknown."
   _calcGeomsDodge: () ->
-    @_dodge(if @mapping.x? then [@mapping.x] else [])
+    group = if @mapping.x? then [@mapping.x] else []
+    @_dodge group
+    @_stack group.concat "$n"
     @geoms = {}
     idfn = @_getIdFunc()
     for item in @statData
@@ -279,7 +277,6 @@ class Bar extends Layer
             color: @_getValue item, 'color'
             opacity: @_getValue item, 'opacity'
         evtData: evtData
-
   _calcGeomsStack: () ->
     group = if @mapping.x? then [@mapping.x] else []
     @_stack group

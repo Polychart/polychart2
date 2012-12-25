@@ -4610,6 +4610,7 @@ or knows how to retrieve data from some source.
     };
 
     Layer.prototype._stack = function(group) {
+      debugger;
       var data, datas, item, key, tmp, yval, _results,
         _this = this;
       datas = poly.groupBy(this.statData, group);
@@ -4638,7 +4639,8 @@ or knows how to retrieve data from some source.
     };
 
     Layer.prototype._dodge = function(group) {
-      var aes, datas, groupAes, groupKey, item, key, numgroup, order, orderfn, tmp, yval, _i, _len, _ref, _results,
+      debugger;
+      var aes, datas, groupAes, groupKey, item, key, numgroup, order, orderfn, values, yval, _i, _len, _ref, _results,
         _this = this;
       groupAes = _.without(_.keys(this.mapping), 'x', 'y', 'id');
       groupKey = _.toArray(_.pick(this.mapping, groupAes));
@@ -4652,11 +4654,10 @@ or knows how to retrieve data from some source.
       for (key in _ref) {
         datas = _ref[key];
         order = {};
-        tmp = {};
         numgroup = 1;
         for (_i = 0, _len = groupAes.length; _i < _len; _i++) {
           aes = groupAes[_i];
-          order[aes] = _.uniq((function() {
+          values = _.uniq((function() {
             var _j, _len1, _results1;
             _results1 = [];
             for (_j = 0, _len1 = datas.length; _j < _len1; _j++) {
@@ -4665,7 +4666,10 @@ or knows how to retrieve data from some source.
             }
             return _results1;
           }).call(this));
-          numgroup *= order[aes].length;
+          numgroup *= values.length;
+          order[aes] = _.sortBy(values, function(x) {
+            return x;
+          });
         }
         orderfn = function(item) {
           var m, n, _j, _len1;
@@ -4679,18 +4683,12 @@ or knows how to retrieve data from some source.
           return n;
         };
         _results.push((function() {
-          var _j, _len1, _name, _ref1, _results1;
+          var _j, _len1, _results1;
           _results1 = [];
           for (_j = 0, _len1 = datas.length; _j < _len1; _j++) {
             item = datas[_j];
             item.$n = orderfn(item);
-            item.$m = numgroup;
-            if ((_ref1 = tmp[_name = item.$n]) == null) {
-              tmp[_name] = 0;
-            }
-            item.$lower = tmp[item.$n];
-            tmp[item.$n] += yval(item);
-            _results1.push(item.$upper = tmp[item.$n]);
+            _results1.push(item.$m = numgroup);
           }
           return _results1;
         })());
@@ -4908,8 +4906,10 @@ or knows how to retrieve data from some source.
     };
 
     Bar.prototype._calcGeomsDodge = function() {
-      var evtData, idfn, item, k, lower, upper, v, _i, _len, _ref, _results;
-      this._dodge(this.mapping.x != null ? [this.mapping.x] : []);
+      var evtData, group, idfn, item, k, lower, upper, v, _i, _len, _ref, _results;
+      group = this.mapping.x != null ? [this.mapping.x] : [];
+      this._dodge(group);
+      this._stack(group.concat("$n"));
       this.geoms = {};
       idfn = this._getIdFunc();
       _ref = this.statData;
