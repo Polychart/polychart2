@@ -5173,7 +5173,7 @@ or knows how to retrieve data from some source.
     }
 
     Box.prototype._calcGeoms = function() {
-      var evtData, geom, idfn, index, item, point, x, xl, xm, xu, y, _i, _j, _len, _len1, _ref, _ref1, _results;
+      var color, evtData, geom, idfn, index, item, opacity, point, size, x, xl, xm, xu, y, _i, _j, _len, _len1, _ref, _ref1, _results;
       idfn = this._getIdFunc();
       this.geoms = {};
       _ref = this.statData;
@@ -5183,6 +5183,9 @@ or knows how to retrieve data from some source.
         evtData = {};
         x = this._getValue(item, 'x');
         y = this._getValue(item, 'y');
+        color = this._getValue(item, 'color');
+        size = this._getValue(item, 'size');
+        opacity = this._getValue(item, 'opacity');
         xl = sf.lower(x);
         xu = sf.upper(x);
         xm = sf.middle(x);
@@ -5196,51 +5199,51 @@ or knows how to retrieve data from some source.
               type: 'rect',
               x: [xl, xu],
               y: [y.q2, y.q4],
-              stroke: this._getValue(item, 'color'),
+              stroke: color,
               color: sf.identity('white'),
-              size: this._getValue(item, 'size'),
-              opacity: this._getValue(item, 'opacity'),
+              size: size,
+              opacity: opacity,
               'stroke-width': '1px'
             },
             q1: {
               type: 'pline',
               x: [xl, xu],
               y: [y.q1, y.q1],
-              color: this._getValue(item, 'color'),
-              size: this._getValue(item, 'size'),
-              opacity: this._getValue(item, 'opacity')
+              color: color,
+              size: size,
+              opacity: opacity
             },
             lower: {
               type: 'pline',
               x: [xm, xm],
               y: [y.q1, y.q2],
-              color: this._getValue(item, 'color'),
-              size: this._getValue(item, 'size'),
-              opacity: this._getValue(item, 'opacity')
+              color: color,
+              size: size,
+              opacity: opacity
             },
             q5: {
               type: 'pline',
               x: [xl, xu],
               y: [y.q5, y.q5],
-              color: this._getValue(item, 'color'),
-              size: this._getValue(item, 'size'),
-              opacity: this._getValue(item, 'opacity')
+              color: color,
+              size: size,
+              opacity: opacity
             },
             upper: {
               type: 'pline',
               x: [xm, xm],
               y: [y.q4, y.q5],
-              color: this._getValue(item, 'color'),
-              size: this._getValue(item, 'size'),
-              opacity: this._getValue(item, 'opacity')
+              color: color,
+              size: size,
+              opacity: opacity
             },
             middle: {
               type: 'pline',
               x: [xl, xu],
               y: [y.q3, y.q3],
-              color: this._getValue(item, 'color'),
-              size: this._getValue(item, 'size'),
-              opacity: this._getValue(item, 'opacity')
+              color: color,
+              size: size,
+              opacity: opacity
             }
           };
         }
@@ -5251,9 +5254,9 @@ or knows how to retrieve data from some source.
             type: 'circle',
             x: xm,
             y: point,
-            color: this._getValue(item, 'color'),
-            size: this._getValue(item, 'size'),
-            opacity: this._getValue(item, 'opacity')
+            color: color,
+            size: sf.identity(3),
+            opacity: opacity
           };
         }
         _results.push(this.geoms[idfn(item)] = geom);

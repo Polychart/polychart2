@@ -384,6 +384,9 @@ class Box extends Layer
       evtData = {} # later
       x = @_getValue item, 'x'
       y = @_getValue item, 'y'
+      color = @_getValue item, 'color'
+      size = @_getValue item, 'size'
+      opacity = @_getValue item, 'opacity'
       xl = sf.lower(x)
       xu = sf.upper(x)
       xm = sf.middle(x)
@@ -394,52 +397,52 @@ class Box extends Layer
             type: 'rect'
             x: [xl, xu]
             y: [y.q2, y.q4]
-            stroke: @_getValue item, 'color'
+            stroke: color
             color: sf.identity 'white'
-            size: @_getValue item, 'size'
-            opacity: @_getValue item, 'opacity'
+            size: size
+            opacity: opacity
             'stroke-width': '1px'
           q1:
             type: 'pline'
             x: [xl, xu]
             y: [y.q1, y.q1]
-            color: @_getValue item, 'color'
-            size: @_getValue item, 'size'
-            opacity: @_getValue item, 'opacity'
+            color: color
+            size: size
+            opacity: opacity
           lower:
             type: 'pline'
             x: [xm, xm]
             y: [y.q1, y.q2]
-            color: @_getValue item, 'color'
-            size: @_getValue item, 'size'
-            opacity: @_getValue item, 'opacity'
+            color: color
+            size: size
+            opacity: opacity
           q5:
             type: 'pline'
             x: [xl, xu]
             y: [y.q5, y.q5]
-            color: @_getValue item, 'color'
-            size: @_getValue item, 'size'
-            opacity: @_getValue item, 'opacity'
+            color: color
+            size: size
+            opacity: opacity
           upper:
             type: 'pline'
             x: [xm, xm]
             y: [y.q4, y.q5]
-            color: @_getValue item, 'color'
-            size: @_getValue item, 'size'
-            opacity: @_getValue item, 'opacity'
+            color: color
+            size: size
+            opacity: opacity
           middle:
             type: 'pline'
             x: [xl, xu]
             y: [y.q3, y.q3]
-            color: @_getValue item, 'color'
-            size: @_getValue item, 'size'
-            opacity: @_getValue item, 'opacity'
+            color: color
+            size: size
+            opacity: opacity
       for point, index in y.outliers
         geom.marks[index] =
           type: 'circle'
           x: xm
           y: point
-          color: @_getValue item, 'color'
-          size: @_getValue item, 'size'
-          opacity: @_getValue item, 'opacity'
+          color: color
+          size: sf.identity 3
+          opacity: opacity
       @geoms[idfn item] = geom
