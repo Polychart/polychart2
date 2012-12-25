@@ -43,6 +43,7 @@ poly.layer.make = (layerSpec, strictmode) ->
     when 'bar' then return new Bar(layerSpec, strictmode)
     when 'tile' then return new Tile(layerSpec, strictmode)
     when 'box' then return new Box(layerSpec, strictmode)
+    else throw poly.error.defn "No such layer #{layerSpec.type}."
 
 ###########
 # CLASSES

@@ -76,3 +76,11 @@
   c.addHandler (type, data) ->
     if type in ['click', 'reset']
       console.log data; alert(type)
+
+
+@examples.errors = (dom) ->
+  data2 = {}
+  polyjs.chart
+    render: false
+    layer: {data:data2, type:'point', x:'a', y:'b'}
+

@@ -20,19 +20,34 @@ class Graph
       throw poly.error.defn "No graph specification is passed in!"
     @make @initial_spec
 
+  alias: (spec) =>
+    if not spec.layers? and spec.layer
+      spec.layers = [spec.layer]
+    if not spec.guides? and spec.guide
+      spec.guide = spec.guide
+    spec
+
+  check: (spec) ->
+    if not spec.layers? or spec.layers.length is 0
+      throw poly.error.defn "No layers are defined in the specification."
+    for layer, id in spec.layers
+      if not layer.data?
+        throw poly.error.defn "Layer #{id+1} does not have data to plot!"
+      if not layer.data.isData
+        throw poly.error.defn "Data must be a Polychart Data object."
+    if not (spec.render? and spec.render is false) and not spec.dom
+      throw poly.error.defn "No DOM element specified. Where to make plot?"
+
   make: (spec) ->
     spec ?= @initial_spec
+    spec = @check @alias spec
     @spec = spec
     # creation of layers
-    if not spec.layers?
-      throw poly.error.defn "No layers are defined in the specification."
     @layers ?= @_makeLayers @spec
     # subscribe to changes to data
     if not @dataSubscribed
       dataChange = @handleEvent 'data'
       for layerObj, id in @layers
-        if not spec.layers[id].data?
-          throw poly.error.defn "Layer #{id} does not have data to plot!"
         spec.layers[id].data.subscribe dataChange
       @dataSubscribed = true
     # callback after data processing
@@ -56,8 +71,6 @@ class Graph
     # render : (dom) =>
     if @spec.render? and @spec.render is false
       return # for debugging purposes
-    if not @spec.dom
-      throw poly.error.defn "No DOM element specified. Where to make plot?"
     dom = @spec.dom
     scales = @scaleSet.scales
     @coord.setScales scales

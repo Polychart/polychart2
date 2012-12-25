@@ -21,11 +21,11 @@ cat \
     compiled/src/graph.js > compiled/src/polychart2.bare.js
 cat make/header.js compiled/src/polychart2.bare.js make/footer.js > polychart2.js
 
-rm polychart2.min.js
-python make/uglify.py --source=polychart2.js --dest=polychart2.min.js
-rm polychart2.standalone.js
-awk 'FNR==1{print ";"}1' lib/underscore.js lib/moment.js lib/raphael.js polychart2.min.js > polychart2.standalone.js
-
+#rm polychart2.min.js
+#python make/uglify.py --source=polychart2.js --dest=polychart2.min.js
+#rm polychart2.standalone.js
+#awk 'FNR==1{print ";"}1' lib/underscore.js lib/moment.js lib/raphael.js polychart2.min.js > polychart2.standalone.js
+#
 # Unit Tests
 rm -r compiled/test/
 coffee --compile --output compiled/test/ test/

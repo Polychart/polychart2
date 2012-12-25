@@ -61,7 +61,6 @@ test "lines", ->
     layers: [
       data: data, type: 'line', x: 'x', y: 'y', color: 'z'
     ]
-  debugger
   {layers} = polyjs.chart spec
   layer = layers[0]
 

@@ -3680,6 +3680,8 @@ or knows how to retrieve data from some source.
 
   Data = (function() {
 
+    Data.prototype.isData = true;
+
     function Data(params) {
       var _ref;
       this.url = params.url, this.json = params.json, this.csv = params.csv, this.meta = params.meta;
@@ -3694,7 +3696,7 @@ or knows how to retrieve data from some source.
 
     Data.prototype.impute = function(json) {
       var first100, item, key, keys, _base, _i, _j, _k, _len, _len1, _len2, _ref;
-      keys = _.keys(json[0]);
+      keys = _.union(_.keys(this.meta), _.keys(json[0]));
       first100 = json.slice(0, 100);
       for (_i = 0, _len = keys.length; _i < _len; _i++) {
         key = keys[_i];
@@ -3718,10 +3720,10 @@ or knows how to retrieve data from some source.
       return this.raw = json;
     };
 
-    Data.prototype.getRaw = function(callback) {
+    Data.prototype.getData = function(callback) {
       var _this = this;
       if (this.raw) {
-        return callback(this.raw, this.meta);
+        return callback(this);
       }
       if (this.json) {
         this.raw = this.impute(this.json);
@@ -3730,12 +3732,12 @@ or knows how to retrieve data from some source.
         this.raw = this.impute(poly.csv.parse(this.csv));
       }
       if (this.raw) {
-        return callback(this.raw, this.meta);
+        return callback(this);
       }
       if (this.url) {
         return poly.csv(this.url, function(csv) {
           _this.raw = _this.impute(csv);
-          return callback(_this.raw, _this.meta);
+          return callback(_this);
         });
       }
     };
@@ -3744,7 +3746,7 @@ or knows how to retrieve data from some source.
       var _this = this;
       this.json = params.json, this.csv = params.csv;
       this.raw = null;
-      return this.getRaw(function() {
+      return this.getData(function() {
         var fn, _i, _len, _ref, _results;
         _ref = _this.subscribed;
         _results = [];
@@ -3866,8 +3868,8 @@ or knows how to retrieve data from some source.
       if (this.dataObj.computeBackend) {
         return backendProcess(dataSpec, this.dataObj, wrappedCallback);
       } else {
-        return this.dataObj.getRaw(function(data, meta) {
-          return frontendProcess(dataSpec, data, meta, wrappedCallback);
+        return this.dataObj.getData(function(data) {
+          return frontendProcess(dataSpec, data, wrappedCallback);
         });
       }
     };
@@ -4218,9 +4220,10 @@ or knows how to retrieve data from some source.
   */
 
 
-  frontendProcess = function(dataSpec, rawData, metaData, callback) {
-    var addMeta, additionalFilter, d, data, filter, key, meta, metaSpec, name, statSpec, trans, transSpec, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _ref4;
-    data = _.clone(rawData);
+  frontendProcess = function(dataSpec, data, callback) {
+    var addMeta, additionalFilter, d, filter, key, meta, metaData, metaSpec, name, statSpec, trans, transSpec, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
+    metaData = _.clone(data.meta);
+    data = _.clone(data.raw);
     if (metaData == null) {
       metaData = {};
     }
@@ -4264,6 +4267,13 @@ or knows how to retrieve data from some source.
         addMeta(name, {
           type: 'num'
         });
+      }
+    }
+    _ref6 = (_ref5 = dataSpec.select) != null ? _ref5 : [];
+    for (_l = 0, _len3 = _ref6.length; _l < _len3; _l++) {
+      key = _ref6[_l];
+      if (!(metaData[key] != null)) {
+        throw poly.error.defn("You referenced a data column " + key + " that doesn't exist.");
       }
     }
     return callback(data, metaData);
@@ -4352,6 +4362,8 @@ or knows how to retrieve data from some source.
         return new Tile(layerSpec, strictmode);
       case 'box':
         return new Box(layerSpec, strictmode);
+      default:
+        throw poly.error.defn("No such layer " + layerSpec.type + ".");
     }
   };
 
@@ -5230,6 +5242,15 @@ or knows how to retrieve data from some source.
     return {
       add: function(mark, evtData) {
         var pt;
+        if (!(coord.type != null)) {
+          throw poly.error.unknown("Coordinate don't have at type?");
+        }
+        if (!(renderer[coord.type] != null)) {
+          throw poly.error.input("Unknown coordinate type " + coord.type);
+        }
+        if (!(renderer[coord.type][mark.type] != null)) {
+          throw poly.error.input("Coord " + coord.type + " has no mark " + mark.type);
+        }
         pt = renderer[coord.type][mark.type].render(paper, scales, coord, mark, mayflip);
         if (clipping != null) {
           pt.attr('clip-rect', clipping);
@@ -5425,7 +5446,6 @@ or knows how to retrieve data from some source.
     PolarLine.prototype.attr = function(scales, coord, mark, mayflip) {
       var dir, i, large, path, r, stroke, t, x, y, _ref;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y, r = _ref.r, t = _ref.t;
-      debugger;
       path = (function() {
         var _i, _ref1;
         if (_.max(r) - _.min(r) < poly["const"].epsilon) {
@@ -5630,6 +5650,8 @@ or knows how to retrieve data from some source.
 
       this.merge = __bind(this.merge, this);
 
+      this.alias = __bind(this.alias, this);
+
       this.reset = __bind(this.reset, this);
 
       var _ref;
@@ -5656,15 +5678,43 @@ or knows how to retrieve data from some source.
       return this.make(this.initial_spec);
     };
 
+    Graph.prototype.alias = function(spec) {
+      if (!(spec.layers != null) && spec.layer) {
+        spec.layers = [spec.layer];
+      }
+      if (!(spec.guides != null) && spec.guide) {
+        spec.guide = spec.guide;
+      }
+      return spec;
+    };
+
+    Graph.prototype.check = function(spec) {
+      var id, layer, _i, _len, _ref;
+      if (!(spec.layers != null) || spec.layers.length === 0) {
+        throw poly.error.defn("No layers are defined in the specification.");
+      }
+      _ref = spec.layers;
+      for (id = _i = 0, _len = _ref.length; _i < _len; id = ++_i) {
+        layer = _ref[id];
+        if (!(layer.data != null)) {
+          throw poly.error.defn("Layer " + (id + 1) + " does not have data to plot!");
+        }
+        if (!layer.data.isData) {
+          throw poly.error.defn("Data must be a Polychart Data object.");
+        }
+      }
+      if (!((spec.render != null) && spec.render === false) && !spec.dom) {
+        throw poly.error.defn("No DOM element specified. Where to make plot?");
+      }
+    };
+
     Graph.prototype.make = function(spec) {
       var dataChange, id, layerObj, merge, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
       if (spec == null) {
         spec = this.initial_spec;
       }
+      spec = this.check(this.alias(spec));
       this.spec = spec;
-      if (!(spec.layers != null)) {
-        throw poly.error.defn("No layers are defined in the specification.");
-      }
       if ((_ref = this.layers) == null) {
         this.layers = this._makeLayers(this.spec);
       }
@@ -5673,9 +5723,6 @@ or knows how to retrieve data from some source.
         _ref1 = this.layers;
         for (id = _i = 0, _len = _ref1.length; _i < _len; id = ++_i) {
           layerObj = _ref1[id];
-          if (!(spec.layers[id].data != null)) {
-            throw poly.error.defn("Layer " + id + " does not have data to plot!");
-          }
           spec.layers[id].data.subscribe(dataChange);
         }
         this.dataSubscribed = true;
@@ -5706,9 +5753,6 @@ or knows how to retrieve data from some source.
       this._legacy(domains);
       if ((this.spec.render != null) && this.spec.render === false) {
         return;
-      }
-      if (!this.spec.dom) {
-        throw poly.error.defn("No DOM element specified. Where to make plot?");
       }
       dom = this.spec.dom;
       scales = this.scaleSet.scales;

@@ -2,8 +2,8 @@ module "Data"
 
 ## HELPER FUNCTIONS
 transformData = (data, spec) ->
-  data.getRaw (x)->(x)
-  polyjs.data.frontendProcess spec, data.raw, data.meta, (x) -> x
+  data.getData (x)->(x)
+  polyjs.data.frontendProcess spec, data, (x) -> x
 
 test "smoke test", ->
   jsondata= [

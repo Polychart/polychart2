@@ -7,6 +7,7 @@ Generalized data object that either contains JSON format of a dataset,
 or knows how to retrieve data from some source.
 ###
 class Data
+  isData: true
   constructor: (params) ->
     {@url, @json, @csv, @meta} = params
     @dataBackend = params.url?
@@ -15,7 +16,7 @@ class Data
     @meta ?= {}
     @subscribed = []
   impute: (json) ->
-    keys = _.keys json[0]
+    keys = _.union _.keys(@meta), _.keys(json[0])
     first100 = json[0..99]
     for key in keys
       @meta[key] ?= {}
@@ -27,20 +28,20 @@ class Data
           item[key] = poly.coerce item[key], @meta[key]
     @key = keys
     @raw = json
-  getRaw: (callback) ->
+  getData: (callback) ->
     # frontend
-    if @raw then return callback @raw, @meta
+    if @raw then return callback @
     if @json then @raw = @impute @json
     if @csv then @raw = @impute poly.csv.parse(@csv)
-    if @raw then return callback @raw, @meta
+    if @raw then return callback @
     # backend
     if @url then poly.csv @url, (csv) =>
       @raw = @impute csv
-      callback @raw, @meta
+      callback @
   update: (params) ->
     {@json, @csv} = params
     @raw = null
-    @getRaw () =>
+    @getData () =>
       for fn in @subscribed
         fn()
   subscribe: (h) ->
@@ -94,8 +95,8 @@ class DataProcess
     if @dataObj.computeBackend
       backendProcess(dataSpec, @dataObj, wrappedCallback)
     else
-      @dataObj.getRaw (data, meta) ->
-        frontendProcess(dataSpec, data, meta, wrappedCallback)
+      @dataObj.getData (data) ->
+        frontendProcess(dataSpec, data, wrappedCallback)
 
   _wrap : (callback) => (data, metaData) =>
     # save a copy of the data/meta before going to callback
@@ -284,8 +285,9 @@ Coordinating the actual work being done
 ###
 Perform the necessary computation in the front end
 ###
-frontendProcess = (dataSpec, rawData, metaData, callback) ->
-  data = _.clone(rawData)
+frontendProcess = (dataSpec, data, callback) ->
+  metaData = _.clone(data.meta)
+  data = _.clone(data.raw)
   # metaData and related f'ns
   metaData ?= {}
   addMeta = (key, meta) ->  metaData[key] = _.extend (metaData[key] ? {}), meta
@@ -314,6 +316,10 @@ frontendProcess = (dataSpec, rawData, metaData, callback) ->
     for statSpec in dataSpec.stats.stats
       {name} = statSpec
       addMeta name, {type: 'num'}
+  # select: make sure everything selected is there
+  for key in dataSpec.select ? []
+    if not metaData[key]?
+      throw poly.error.defn ("You referenced a data column #{key} that doesn't exist.")
   # done
   callback(data, metaData)
 

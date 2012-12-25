@@ -22,6 +22,13 @@ Helper function for rendering all the geoms of an object
 ###
 poly.render = (handleEvent, paper, scales, coord, mayflip, clipping) ->
   add: (mark, evtData) ->
+    if not coord.type?
+      throw poly.error.unknown "Coordinate don't have at type?"
+    if not renderer[coord.type]?
+      throw poly.error.input "Unknown coordinate type #{coord.type}"
+    if not renderer[coord.type][mark.type]?
+      throw poly.error.input "Coord #{coord.type} has no mark #{mark.type}"
+
     pt = renderer[coord.type][mark.type].render paper, scales, coord, mark, mayflip
     if clipping? then pt.attr('clip-rect', clipping)
     if evtData and _.keys(evtData).length > 0
@@ -114,7 +121,6 @@ class PolarLine extends Renderer
   _make: (paper) -> paper.path()
   attr: (scales, coord, mark, mayflip) ->
     {x, y, r, t} = coord.getXY mayflip, mark
-    debugger
     path =
       if _.max(r) - _.min(r) < poly.const.epsilon
         r = r[0]
