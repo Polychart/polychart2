@@ -332,16 +332,20 @@ These are constants that are referred to throughout the coebase
           t: 'scalefn'
         };
       },
-      upper: function(v) {
+      upper: function(v, n, m) {
         return {
           v: v,
+          n: n,
+          m: m,
           f: 'upper',
           t: 'scalefn'
         };
       },
-      lower: function(v) {
+      lower: function(v, n, m) {
         return {
           v: v,
+          n: n,
+          m: m,
           f: 'lower',
           t: 'scalefn'
         };
@@ -2987,7 +2991,7 @@ These are constants that are referred to throughout the coebase
     PositionScale.prototype._numWrapper = function(domain, y) {
       var _this = this;
       return function(value) {
-        var lower, space, upper;
+        var lower, space, upper, width, _ref;
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
             if (value.f === 'identity') {
@@ -3002,14 +3006,23 @@ These are constants that are referred to throughout the coebase
             if (value.f === 'min') {
               return _this.range.min + value.v;
             }
-            upper = y(value.v + domain.bw);
-            lower = y(value.v);
-            space = (upper - lower) * _this.space;
-            if (value.f === 'upper') {
-              return upper - space;
-            }
-            if (value.f === 'lower') {
-              return lower + space;
+            if ((_ref = value.f) === 'upper' || _ref === 'lower') {
+              upper = y(value.v + domain.bw);
+              lower = y(value.v);
+              space = (upper - lower) * _this.space;
+              if (value.f === 'upper' && !value.m) {
+                return upper - space;
+              }
+              if (value.f === 'lower' && !value.m) {
+                return lower + space;
+              }
+              width = (upper - lower - 2 * space) / value.m;
+              if (value.f === 'upper') {
+                return (lower + space) + (value.n + 1) * width;
+              }
+              if (value.f === 'lower') {
+                return (lower + space) + value.n * width;
+              }
             }
           }
           throw poly.error.input("Unknown object " + value + " is passed to a scale");
@@ -3021,7 +3034,7 @@ These are constants that are referred to throughout the coebase
     PositionScale.prototype._dateWrapper = function(domain, y) {
       var _this = this;
       return function(value) {
-        var lower, space, upper, v;
+        var lower, space, upper, v, width, _ref;
         space = 0.001 * (_this.range.max > _this.range.min ? 1 : -1);
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
@@ -3034,19 +3047,28 @@ These are constants that are referred to throughout the coebase
             if (value.f === 'min') {
               return _this.range.min + value.v;
             }
-            upper = domain.bw !== 'week' ? moment.unix(value.v).endOf(domain.bw).unix() : moment.unix(value.v).day(7).unix();
-            upper = y(upper);
-            lower = domain.bw !== 'week' ? v = moment.unix(value.v).startOf(domain.bw).unix() : v = moment.unix(value.v).day(0).unix();
-            lower = y(lower);
-            space = (upper - lower) * _this.space;
-            if (value.f === 'upper') {
-              return upper - space;
-            }
-            if (value.f === 'lower') {
-              return lower + space;
-            }
-            if (value.f === 'middle') {
-              return upper / 2 + lower / 2;
+            if ((_ref = value.f) === 'upper' || _ref === 'middle' || _ref === 'lower') {
+              upper = domain.bw !== 'week' ? moment.unix(value.v).endOf(domain.bw).unix() : moment.unix(value.v).day(7).unix();
+              upper = y(upper);
+              lower = domain.bw !== 'week' ? v = moment.unix(value.v).startOf(domain.bw).unix() : v = moment.unix(value.v).day(0).unix();
+              lower = y(lower);
+              space = (upper - lower) * _this.space;
+              if (value.f === 'middle') {
+                return upper / 2 + lower / 2;
+              }
+              if (value.f === 'upper' && !value.m) {
+                return upper - space;
+              }
+              if (value.f === 'lower' && !value.m) {
+                return lower + space;
+              }
+              width = (upper - lower - 2 * space) / value.m;
+              if (value.f === 'upper') {
+                return (lower + space) + (value.n + 1) * width;
+              }
+              if (value.f === 'lower') {
+                return (lower + space) + value.n * width;
+              }
             }
           }
           throw poly.error.input("Unknown object " + value + " is passed to a scale");
@@ -3058,27 +3080,38 @@ These are constants that are referred to throughout the coebase
     PositionScale.prototype._catWrapper = function(step, y) {
       var _this = this;
       return function(value) {
-        var space;
+        var lower, space, upper, width, _ref;
         space = step * _this.space;
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
             if (value.f === 'identity') {
               return value.v;
             }
-            if (value.f === 'upper') {
-              return y(value.v) + step - space;
-            }
-            if (value.f === 'lower') {
-              return y(value.v) + space;
-            }
-            if (value.f === 'middle') {
-              return y(value.v) + step / 2;
-            }
             if (value.f === 'max') {
               return _this.range.max + value.v;
             }
             if (value.f === 'min') {
               return _this.range.min + value.v;
+            }
+            if ((_ref = value.f) === 'upper' || _ref === 'middle' || _ref === 'lower') {
+              upper = y(value.v) + step;
+              lower = y(value.v);
+              if (value.f === 'middle') {
+                return upper / 2 + lower / 2;
+              }
+              if (value.f === 'upper' && !value.m) {
+                return upper - space;
+              }
+              if (value.f === 'lower' && !value.m) {
+                return lower + space;
+              }
+              width = (upper - lower - 2 * space) / value.m;
+              if (value.f === 'upper') {
+                return (lower + space) + (value.n + 1) * width;
+              }
+              if (value.f === 'lower') {
+                return (lower + space) + value.n * width;
+              }
             }
           }
           throw poly.error.input("Unknown object " + value + " is passed to a scale");
@@ -4604,6 +4637,67 @@ or knows how to retrieve data from some source.
       return _results;
     };
 
+    Layer.prototype._dodge = function(group) {
+      var aes, datas, groupAes, groupKey, item, key, numgroup, order, orderfn, tmp, yval, _i, _len, _ref, _results,
+        _this = this;
+      groupAes = _.without(_.keys(this.mapping), 'x', 'y', 'id');
+      groupKey = _.toArray(_.pick(this.mapping, groupAes));
+      yval = this.mapping.y != null ? (function(item) {
+        return item[_this.mapping.y];
+      }) : function(item) {
+        return 0;
+      };
+      _ref = poly.groupBy(this.statData, group);
+      _results = [];
+      for (key in _ref) {
+        datas = _ref[key];
+        order = {};
+        tmp = {};
+        numgroup = 1;
+        for (_i = 0, _len = groupAes.length; _i < _len; _i++) {
+          aes = groupAes[_i];
+          order[aes] = _.uniq((function() {
+            var _j, _len1, _results1;
+            _results1 = [];
+            for (_j = 0, _len1 = datas.length; _j < _len1; _j++) {
+              item = datas[_j];
+              _results1.push(this._getValue(item, aes));
+            }
+            return _results1;
+          }).call(this));
+          numgroup *= order[aes].length;
+        }
+        orderfn = function(item) {
+          var m, n, _j, _len1;
+          m = numgroup;
+          n = 0;
+          for (_j = 0, _len1 = groupAes.length; _j < _len1; _j++) {
+            aes = groupAes[_j];
+            m /= order[aes].length;
+            n += m * _.indexOf(order[aes], _this._getValue(item, aes));
+          }
+          return n;
+        };
+        _results.push((function() {
+          var _j, _len1, _name, _ref1, _results1;
+          _results1 = [];
+          for (_j = 0, _len1 = datas.length; _j < _len1; _j++) {
+            item = datas[_j];
+            item.$n = orderfn(item);
+            item.$m = numgroup;
+            if ((_ref1 = tmp[_name = item.$n]) == null) {
+              tmp[_name] = 0;
+            }
+            item.$lower = tmp[item.$n];
+            tmp[item.$n] += yval(item);
+            _results1.push(item.$upper = tmp[item.$n]);
+          }
+          return _results1;
+        })());
+      }
+      return _results;
+    };
+
     return Layer;
 
   })();
@@ -4796,6 +4890,54 @@ or knows how to retrieve data from some source.
     }
 
     Bar.prototype._calcGeoms = function() {
+      var _ref;
+      this.position = (_ref = this.spec.position) != null ? _ref : 'stack';
+      if (this.position === 'stack') {
+        return this._calcGeomsStack();
+      } else if (this.position === 'dodge') {
+        return this._calcGeomsDodge();
+      } else {
+        throw poly.error.defn("Bar chart position " + this.position + " is unknown.");
+      }
+    };
+
+    Bar.prototype._calcGeomsDodge = function() {
+      var evtData, idfn, item, k, lower, upper, v, _i, _len, _ref, _results;
+      this._dodge(this.mapping.x != null ? [this.mapping.x] : []);
+      this.geoms = {};
+      idfn = this._getIdFunc();
+      _ref = this.statData;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        item = _ref[_i];
+        evtData = {};
+        for (k in item) {
+          v = item[k];
+          if (k !== 'y') {
+            evtData[this.mapping[k]] = {
+              "in": [v]
+            };
+          }
+        }
+        lower = sf.lower(this._getValue(item, 'x'), item.$n, item.$m);
+        upper = sf.upper(this._getValue(item, 'x'), item.$n, item.$m);
+        _results.push(this.geoms[idfn(item)] = {
+          marks: {
+            0: {
+              type: 'rect',
+              x: [lower, upper],
+              y: [item.$lower, item.$upper],
+              color: this._getValue(item, 'color'),
+              opacity: this._getValue(item, 'opacity')
+            }
+          },
+          evtData: evtData
+        });
+      }
+      return _results;
+    };
+
+    Bar.prototype._calcGeomsStack = function() {
       var evtData, group, idfn, item, k, v, _i, _len, _ref, _results;
       group = this.mapping.x != null ? [this.mapping.x] : [];
       this._stack(group);

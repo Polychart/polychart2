@@ -150,6 +150,31 @@ class Layer
         item.$lower = tmp
         tmp += yval(item)
         item.$upper = tmp
+  _dodge: (group) ->
+    groupAes = _.without _.keys(@mapping), 'x', 'y', 'id'
+    groupKey = _.toArray(_.pick(@mapping, groupAes))
+    yval = if @mapping.y? then ((item) => item[@mapping.y]) else (item) -> 0
+    for key, datas of poly.groupBy @statData, group
+      order = {}
+      tmp = {}
+      numgroup = 1
+      for aes in groupAes
+        order[aes] = _.uniq (@_getValue item, aes for item in datas)
+        numgroup *= order[aes].length
+      orderfn = (item) =>
+        m = numgroup
+        n = 0
+        for aes in groupAes
+          m /= order[aes].length
+          n += m * _.indexOf order[aes], @_getValue(item, aes)
+        n
+      for item in datas
+        item.$n = orderfn(item)
+        item.$m = numgroup
+        tmp[item.$n] ?= 0
+        item.$lower = tmp[item.$n]
+        tmp[item.$n] += yval(item)
+        item.$upper = tmp[item.$n]
 
 class Point extends Layer
   _calcGeoms: () ->
@@ -222,7 +247,34 @@ class Line extends Layer
 
 class Bar extends Layer
   _calcGeoms: () ->
-    # first do stacking calculation (assuming position=stack)
+    @position = @spec.position ? 'stack'
+    if @position is 'stack'
+      @_calcGeomsStack()
+    else if @position is 'dodge'
+      @_calcGeomsDodge()
+    else
+      throw poly.error.defn "Bar chart position #{@position} is unknown."
+  _calcGeomsDodge: () ->
+    @_dodge(if @mapping.x? then [@mapping.x] else [])
+    @geoms = {}
+    idfn = @_getIdFunc()
+    for item in @statData
+      evtData = {}
+      for k, v of item
+        if k isnt 'y' then evtData[@mapping[k]] = { in: [v] }
+      lower = sf.lower @_getValue(item, 'x'), item.$n, item.$m
+      upper = sf.upper @_getValue(item, 'x'), item.$n, item.$m
+      @geoms[idfn item] =
+        marks:
+          0:
+            type: 'rect'
+            x: [lower, upper]
+            y: [item.$lower, item.$upper]
+            color: @_getValue item, 'color'
+            opacity: @_getValue item, 'opacity'
+        evtData: evtData
+
+  _calcGeomsStack: () ->
     group = if @mapping.x? then [@mapping.x] else []
     @_stack group
     # now actually render

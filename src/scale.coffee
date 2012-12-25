@@ -66,15 +66,22 @@ class PositionScale extends Scale
     if _.isObject(value)
       if value.t is 'scalefn'
         if value.f is 'identity' then return value.v
-        if value.f is 'middle' then return y(value.v+domain.bw/2)
+        if value.f is 'middle' then return y(value.v+domain.bw/2) #for log scale
         if value.f is 'max' then return @range.max + value.v
         if value.f is 'min' then return @range.min + value.v
 
-        upper = y(value.v+domain.bw)
-        lower = y(value.v)
-        space = (upper - lower) * @space # 5%. Sign matters!
-        if value.f is 'upper' then return upper - space
-        if value.f is 'lower' then return lower + space
+        if value.f in ['upper', 'lower']
+          upper = y(value.v+domain.bw)
+          lower = y(value.v)
+          space = (upper - lower) * @space # 5%. Sign matters!
+          if value.f is 'upper' and not value.m then return upper - space
+          if value.f is 'lower' and not value.m then return lower + space
+
+          # DODGING PURPOSES
+          #value.n < value.m
+          width = (upper-lower-2*space) / value.m
+          if value.f is 'upper' then return (lower+space) + (value.n+1)*width
+          if value.f is 'lower' then return (lower+space) + value.n*width
 
       throw poly.error.input "Unknown object #{value} is passed to a scale"
     y(value)
@@ -87,22 +94,29 @@ class PositionScale extends Scale
         if value.f is 'max' then return @range.max + value.v
         if value.f is 'min' then return @range.min + value.v
 
-        upper =
-          if domain.bw != 'week'
-            moment.unix(value.v).endOf(domain.bw).unix()
-          else
-            moment.unix(value.v).day(7).unix()
-        upper = y(upper)
-        lower =
-          if domain.bw != 'week'
-            v = moment.unix(value.v).startOf(domain.bw).unix()
-          else
-            v = moment.unix(value.v).day(0).unix()
-        lower = y(lower)
-        space = (upper - lower) * @space # 5%. Sign matters!
-        if value.f is 'upper' then return upper - space
-        if value.f is 'lower' then return lower + space
-        if value.f is 'middle' then return upper/2 + lower/2
+        if value.f in ['upper', 'middle', 'lower']
+          upper =
+            if domain.bw != 'week'
+              moment.unix(value.v).endOf(domain.bw).unix()
+            else
+              moment.unix(value.v).day(7).unix()
+          upper = y(upper)
+          lower =
+            if domain.bw != 'week'
+              v = moment.unix(value.v).startOf(domain.bw).unix()
+            else
+              v = moment.unix(value.v).day(0).unix()
+          lower = y(lower)
+          space = (upper - lower) * @space # 5%. Sign matters!
+          if value.f is 'middle' then return upper/2 + lower/2
+          if value.f is 'upper' and not value.m then return upper - space
+          if value.f is 'lower' and not value.m then return lower + space
+
+          # DODGING PURPOSES
+          #value.n < value.m
+          width = (upper-lower-2*space) / value.m
+          if value.f is 'upper' then return (lower+space) + (value.n+1)*width
+          if value.f is 'lower' then return (lower+space) + value.n*width
       throw poly.error.input "Unknown object #{value} is passed to a scale"
     y(value)
   _catWrapper: (step, y) => (value) =>
@@ -110,11 +124,22 @@ class PositionScale extends Scale
     if _.isObject(value)
       if value.t is 'scalefn'
         if value.f is 'identity' then return value.v
-        if value.f is 'upper' then return y(value.v) + step - space
-        if value.f is 'lower' then return y(value.v) + space
-        if value.f is 'middle' then return y(value.v) + step/2
         if value.f is 'max' then return @range.max + value.v
         if value.f is 'min' then return @range.min + value.v
+
+        if value.f in ['upper', 'middle', 'lower']
+          upper = y(value.v) + step
+          lower = y(value.v)
+          if value.f is 'middle' then return upper/2 + lower/2
+          if value.f is 'upper' and not value.m then return upper - space
+          if value.f is 'lower' and not value.m then return lower + space
+
+          # DODGING PURPOSES
+          #value.n < value.m
+          width = (upper-lower-2*space) / value.m
+          if value.f is 'upper' then return (lower+space) + (value.n+1)*width
+          if value.f is 'lower' then return (lower+space) + value.n*width
+
       throw poly.error.input "Unknown object #{value} is passed to a scale"
     y(value) + step/2
 

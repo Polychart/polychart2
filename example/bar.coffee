@@ -97,6 +97,20 @@
   }
   c = polyjs.chart spec
 
+@examples.bar_dodge = (dom) ->
+  o = (i) -> if i%2 is 0 then 'yay' else 'no'
+  jsondata = ({index:i%3, value:Math.random()*10, o: o(i)} for i in [0..10])
+  data = new polyjs.Data json:jsondata
+  spec = {
+    layers: [
+      data: data, type: 'bar',
+      x : 'bin(index,1)', y : 'value', color: 'o',
+      position:'dodge'
+    ]
+    dom: dom
+  }
+  c = polyjs.chart spec
+
 @examples.bar_sum= (dom) ->
   jsondata = (
     {index:i, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10} for i in [0..5]

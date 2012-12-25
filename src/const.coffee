@@ -14,8 +14,8 @@ poly.const =
     novalue : () -> {v: null, f: 'novalue', t: 'scalefn'}
     max: (v) -> {v: v, f: 'max', t: 'scalefn'}
     min: (v) -> {v: v, f: 'min', t: 'scalefn'}
-    upper: (v) -> {v: v, f: 'upper', t: 'scalefn'}
-    lower: (v) -> {v: v, f: 'lower', t: 'scalefn'}
+    upper: (v,n,m) -> {v: v, n:n, m:m, f: 'upper', t: 'scalefn'}
+    lower: (v,n,m) -> {v: v, n:n, m:m, f: 'lower', t: 'scalefn'}
     middle: (v) -> {v: v, f: 'middle', t: 'scalefn'}
     jitter: (v) -> {v: v, f: 'jitter', t: 'scalefn'}
     identity: (v) -> {v: v, f: 'identity', t: 'scalefn'}
