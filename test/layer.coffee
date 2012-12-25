@@ -6,6 +6,7 @@ test "point", ->
   ]
   data = new polyjs.Data (json: jsondata)
   spec =
+    render: false
     layers: [
       data: data, type: 'point', x: 'x', y: 'y'
     ]
@@ -34,6 +35,7 @@ test "lines", ->
   ]
   data = new polyjs.Data (json: jsondata)
   spec =
+    render: false
     layers: [
       data: data, type: 'line', x: 'x', y: 'y'
     ]
@@ -55,19 +57,21 @@ test "lines", ->
   ]
   data = new polyjs.Data (json: jsondata)
   spec =
+    render: false
     layers: [
       data: data, type: 'line', x: 'x', y: 'y', color: 'z'
     ]
+  debugger
   {layers} = polyjs.chart spec
   layer = layers[0]
 
   equal layer.geoms[0].marks[0].type, 'line'
-  deepEqual layer.geoms[0].marks[0].x, [2, 3]
-  deepEqual layer.geoms[0].marks[0].y, [4, 3]
+  deepEqual layer.geoms[0].marks[0].x, [2, 3, 1, 5]
+  deepEqual layer.geoms[0].marks[0].y, [4, 3, 0, 0]
   deepEqual layer.geoms[0].marks[0].color, 'A'
   deepEqual layer.geoms[0].evtData.z.in, ['A']
-  deepEqual layer.geoms[1].marks[0].x, [1, 5]
-  deepEqual layer.geoms[1].marks[0].y, [4, 3]
+  deepEqual layer.geoms[1].marks[0].x, [1, 5, 2, 3]
+  deepEqual layer.geoms[1].marks[0].y, [4, 3, 0, 0]
   deepEqual layer.geoms[1].marks[0].color, 2
   deepEqual layer.geoms[1].evtData.z.in, [2]
 
@@ -78,6 +82,7 @@ test "bars", ->
   ]
   data = new polyjs.Data (json: jsondata)
   spec =
+    render: false
     layers: [
       data: data, type: 'bar', x: 'x', y: 'y', id: 'z'
     ]

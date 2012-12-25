@@ -152,7 +152,7 @@ transforms =
 Helper function to figures out which transformation to create, then creates it
 ###
 transformFactory = (key, transSpec, meta) ->
-  transforms[transSpec.trans](key, transSpec, meta)
+  transforms[transSpec.trans](key, transSpec, meta ? {})
 
 ###
 FILTERS

@@ -26,19 +26,19 @@ test "expressions", ->
     polyjs.parser.parse('this(should, break').toString()
     ok false, 'this(should, break'
   catch e
-    equal e.message, 'unable to parse: Stream([])'
+    equal e.message, 'There is an error in your specification at Stream([])'
 
   try
     polyjs.parser.parse(')this(should, break').toString()
     ok false, ')this(should, break'
   catch e
-    equal e.message, 'unable to parse: Stream([<)>,<symbol,this>,<(>,<symbol,should>,<,>,<symbol,break>])'
+    equal e.message, 'There is an error in your specification at Stream([<)>,<symbol,this>,<(>,<symbol,should>,<,>,<symbol,break>])'
 
   try
     polyjs.parser.parse('this should break').toString()
     ok false, 'this should break'
   catch e
-    equal e.message, "expected end of stream, but found: Stream([<symbol,should>,<symbol,break>])"
+    equal e.message, "There is an error in your specification at Stream([<symbol,should>,<symbol,break>])"
 
 test "extraction: nothing (smoke test)", ->
   layerparser = {

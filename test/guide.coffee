@@ -9,6 +9,7 @@ sampleLayer = {data: data, type: 'point', x: 'x', y: 'y'}
 
 test "domain: strict mode num & cat", ->
   spec =
+    render: false
     layers: [ sampleLayer ]
     strict: true
     guides:
@@ -29,6 +30,7 @@ test "domain: strict mode num & cat", ->
 
 test "scale: x and v:", ->
   spec =
+    render: false
     layers: [ sampleLayer ]
     strict: true
     guides:

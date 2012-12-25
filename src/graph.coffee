@@ -54,6 +54,8 @@ class Graph
     @_legacy(domains)
 
     # render : (dom) =>
+    if @spec.render? and @spec.render is false
+      return # for debugging purposes
     if not @spec.dom
       throw poly.error.defn "No DOM element specified. Where to make plot?"
     dom = @spec.dom

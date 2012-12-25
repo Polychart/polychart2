@@ -3982,7 +3982,7 @@ or knows how to retrieve data from some source.
 
 
   transformFactory = function(key, transSpec, meta) {
-    return transforms[transSpec.trans](key, transSpec, meta);
+    return transforms[transSpec.trans](key, transSpec, meta != null ? meta : {});
   };
 
   /*
@@ -5704,6 +5704,9 @@ or knows how to retrieve data from some source.
       }
       this.scaleSet.setRanges(this.ranges);
       this._legacy(domains);
+      if ((this.spec.render != null) && this.spec.render === false) {
+        return;
+      }
       if (!this.spec.dom) {
         throw poly.error.defn("No DOM element specified. Where to make plot?");
       }
