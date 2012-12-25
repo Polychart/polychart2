@@ -5706,6 +5706,7 @@ or knows how to retrieve data from some source.
       if (!((spec.render != null) && spec.render === false) && !spec.dom) {
         throw poly.error.defn("No DOM element specified. Where to make plot?");
       }
+      return spec;
     };
 
     Graph.prototype.make = function(spec) {

@@ -37,6 +37,7 @@ class Graph
         throw poly.error.defn "Data must be a Polychart Data object."
     if not (spec.render? and spec.render is false) and not spec.dom
       throw poly.error.defn "No DOM element specified. Where to make plot?"
+    spec
 
   make: (spec) ->
     spec ?= @initial_spec
