@@ -4890,7 +4890,13 @@ or knows how to retrieve data from some source.
     }
 
     Bar.prototype._calcGeoms = function() {
-      var _ref;
+      var m, _ref;
+      if (this.mapping.x) {
+        m = this.meta[this.mapping.x];
+        if (m.type !== 'cat' && !m.binned) {
+          console.log("Bar chart x-values need to be binned. Use the bin() transform!");
+        }
+      }
       this.position = (_ref = this.spec.position) != null ? _ref : 'stack';
       if (this.position === 'stack') {
         return this._calcGeomsStack();

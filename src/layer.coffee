@@ -247,6 +247,12 @@ class Line extends Layer
 
 class Bar extends Layer
   _calcGeoms: () ->
+    if @mapping.x
+      m = @meta[@mapping.x]
+      if m.type isnt 'cat' and not m.binned
+        #TODO: this need to be an error; however it doesn't take care of the
+        #case that the binwidth is specified in the guidespec
+        console.log "Bar chart x-values need to be binned. Use the bin() transform!"
     @position = @spec.position ? 'stack'
     if @position is 'stack'
       @_calcGeomsStack()
