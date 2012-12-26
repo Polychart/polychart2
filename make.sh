@@ -6,6 +6,7 @@ cat \
     compiled/src/const.js \
     compiled/src/error.js \
     compiled/src/format.js \
+    compiled/src/spec.js \
     compiled/src/ajax.js \
     compiled/src/parser.js \
     compiled/src/coord.js \

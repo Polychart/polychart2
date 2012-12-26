@@ -19,21 +19,6 @@ defaults = {                # global default values for aesthetics
 poly.layer = {}
 
 ###
-Turns a 'non-strict' layer spec to a strict one. Specifically, the function
-(1) wraps aes mapping defined by a string in an object: "col" -> {var: "col"}
-(2) puts all the level/min/max filtering into the "filter" group
-See the layer spec definition for more information.
-###
-poly.layer.toStrictMode = (spec) ->
-  # wrap all aesthetic in object
-  for aes in aesthetics
-    if spec[aes] and _.isString spec[aes] then spec[aes] = { var: spec[aes] }
-  # provide a dfault "sample" value
-  if not spec.sample?
-    spec.sample = 500
-  spec
-
-###
 Public interface to making different layer types.
 ###
 poly.layer.make = (layerSpec, strictmode) ->
@@ -59,7 +44,7 @@ class Layer
   defaults : _.extend(defaults, {'size':7})
 
   constructor: (layerSpec, strict) ->
-    @initialSpec = poly.layer.toStrictMode layerSpec
+    @initialSpec = layerSpec
     @prevSpec = null
     @spec = null
     @pts = {}

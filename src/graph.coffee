@@ -20,28 +20,10 @@ class Graph
       throw poly.error.defn "No graph specification is passed in!"
     @make @initial_spec
 
-  alias: (spec) =>
-    if not spec.layers? and spec.layer
-      spec.layers = [spec.layer]
-    if not spec.guides? and spec.guide
-      spec.guide = spec.guide
-    spec
-
-  check: (spec) ->
-    if not spec.layers? or spec.layers.length is 0
-      throw poly.error.defn "No layers are defined in the specification."
-    for layer, id in spec.layers
-      if not layer.data?
-        throw poly.error.defn "Layer #{id+1} does not have data to plot!"
-      if not layer.data.isData
-        throw poly.error.defn "Data must be a Polychart Data object."
-    if not (spec.render? and spec.render is false) and not spec.dom
-      throw poly.error.defn "No DOM element specified. Where to make plot?"
-    spec
-
   make: (spec) ->
     spec ?= @initial_spec
-    spec = @check @alias spec
+    spec = poly.spec.toStrictMode spec
+    poly.spec.check spec
     @spec = spec
     # creation of layers
     @layers ?= @_makeLayers @spec
@@ -55,7 +37,7 @@ class Graph
     merge = _.after(@layers.length, @merge)
     @dataprocess = {}
     for layerObj, id in @layers
-      spec = poly.layer.toStrictMode @spec.layers[id] #repeated
+      spec = @spec.layers[id] #repeated
       @dataprocess[id] = new poly.DataProcess spec, spec.strict
       @dataprocess[id].make spec, (statData, metaData) =>
         layerObj.make spec, statData, metaData, merge
