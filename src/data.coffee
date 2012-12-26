@@ -16,23 +16,41 @@ class Data
     @meta ?= {}
     @subscribed = []
   impute: (json) ->
-    keys = _.union _.keys(@meta), _.keys(json[0])
-    first100 = json[0..99]
-    for key in keys
-      @meta[key] ?= {}
-      if not @meta[key].type
-        @meta[key].type = poly.varType _.pluck(first100, key)
-    for item in json
+    if _.isArray(json)
+      keys = _.union _.keys(@meta), _.keys(json[0])
+      first100 = json[0..99]
       for key in keys
-        if _.isString item[key]
-          item[key] = poly.coerce item[key], @meta[key]
-    @key = keys
-    @raw = json
+        @meta[key] ?= {}
+        if not @meta[key].type
+          @meta[key].type = poly.varType _.pluck(first100, key)
+      for item in json
+        for key in keys
+          if _.isString item[key]
+            item[key] = poly.coerce item[key], @meta[key]
+      @key = keys
+      @raw = json
+    else if _.isObject(json)
+      @key = _.keys(json)
+      @raw = []
+      for key in @key
+        @meta[key] ?= {}
+        if not @meta[key].type
+          @meta[key].type = poly.varType json[key][0..99]
+
+      if @key.length > 0
+        len = json[@key[0]].length
+        if len > 0
+          for i in [0..len-1]
+            obj = {}
+            for k in @key
+              obj[k] = poly.coerce json[k][i], @meta[key]
+            @raw.push(obj)
+      @raw
   getData: (callback) ->
     # frontend
     if @raw then return callback @
-    if @json then @raw = @impute @json
-    if @csv then @raw = @impute poly.csv.parse(@csv)
+    if @json then @impute @json
+    if @csv then @impute poly.csv.parse(@csv)
     if @raw then return callback @
     # backend
     if @url then poly.csv @url, (csv) =>
@@ -55,9 +73,9 @@ class Data
   checkRename: (from, to) ->
     if to is ''
       throw poly.err.defn "Column names cannot be an empty string"
-    if _.indexOf(@key, from) is '-1'
+    if _.indexOf(@key, from) is -1
       throw poly.err.defn "The key #{from} doesn't exist!"
-    if _.indexOf(@key, to) isnt '-1'
+    if _.indexOf(@key, to) isnt -1
       throw poly.err.defn "The key #{to} already exists!"
   rename: (from, to, checked=false) ->
     from = from.toString()
@@ -107,7 +125,6 @@ class Data
     sortfn = if type is 'cat' then poly.sortString else poly.sortNum
     newdata.sort (a,b) -> sortfn a[key], b[key]
     if desc then newdata.reverse()
-    debugger
     newobj = new Data json: newdata, meta: @meta
     newobj.getData ->
     newobj
@@ -132,11 +149,10 @@ class Data
 
     if not (key in @key)
       @key.push key
-    if not (key of @meta)
-      @meta[key] =
-        type : poly.varType _.pluck(@raw[0..100], key)
-        derived: true
-      if hasFnStr then @meta[key].formula = fnstr
+    @meta[key] =
+      type : poly.varType _.pluck(@raw[0..100], key)
+      derived: true
+    if hasFnStr then @meta[key].formula = fnstr
     key
   getMeta: (key) -> @meta[key]
   type: (key) ->

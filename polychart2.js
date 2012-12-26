@@ -352,7 +352,7 @@ These are constants that are referred to throughout the coebase
       'box': ['key'],
       'median': ['key']
     },
-    timerange: ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'],
+    timerange: ['second', 'minute', 'hour', 'day', 'week', 'month', 'year', 'decade'],
     metas: {
       sort: null,
       stat: null,
@@ -663,15 +663,21 @@ These are constants that are referred to throughout the coebase
         };
       } else if (level === 'month') {
         return function(date) {
-          return moment.unix(date).format('YY/MM');
+          return moment.unix(date).format('YYYY/MM');
         };
       } else if (level === 'year') {
         return function(date) {
           return moment.unix(date).format('YYYY');
         };
+      } else if (level === 'decade') {
+        return function(date) {
+          return moment.unix(date).format('YYYY');
+        };
       }
     } else {
-      return moment.unix(date).format(format);
+      return function(date) {
+        return moment.unix(date).format(format);
+      };
     }
   };
 
@@ -3786,29 +3792,59 @@ or knows how to retrieve data from some source.
     }
 
     Data.prototype.impute = function(json) {
-      var first100, item, key, keys, _base, _i, _j, _k, _len, _len1, _len2, _ref;
-      keys = _.union(_.keys(this.meta), _.keys(json[0]));
-      first100 = json.slice(0, 100);
-      for (_i = 0, _len = keys.length; _i < _len; _i++) {
-        key = keys[_i];
-        if ((_ref = (_base = this.meta)[key]) == null) {
-          _base[key] = {};
-        }
-        if (!this.meta[key].type) {
-          this.meta[key].type = poly.varType(_.pluck(first100, key));
-        }
-      }
-      for (_j = 0, _len1 = json.length; _j < _len1; _j++) {
-        item = json[_j];
-        for (_k = 0, _len2 = keys.length; _k < _len2; _k++) {
-          key = keys[_k];
-          if (_.isString(item[key])) {
-            item[key] = poly.coerce(item[key], this.meta[key]);
+      var first100, i, item, k, key, keys, len, obj, _base, _base1, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _n, _ref, _ref1, _ref2, _ref3, _ref4;
+      if (_.isArray(json)) {
+        keys = _.union(_.keys(this.meta), _.keys(json[0]));
+        first100 = json.slice(0, 100);
+        for (_i = 0, _len = keys.length; _i < _len; _i++) {
+          key = keys[_i];
+          if ((_ref = (_base = this.meta)[key]) == null) {
+            _base[key] = {};
+          }
+          if (!this.meta[key].type) {
+            this.meta[key].type = poly.varType(_.pluck(first100, key));
           }
         }
+        for (_j = 0, _len1 = json.length; _j < _len1; _j++) {
+          item = json[_j];
+          for (_k = 0, _len2 = keys.length; _k < _len2; _k++) {
+            key = keys[_k];
+            if (_.isString(item[key])) {
+              item[key] = poly.coerce(item[key], this.meta[key]);
+            }
+          }
+        }
+        this.key = keys;
+        return this.raw = json;
+      } else if (_.isObject(json)) {
+        this.key = _.keys(json);
+        this.raw = [];
+        _ref1 = this.key;
+        for (_l = 0, _len3 = _ref1.length; _l < _len3; _l++) {
+          key = _ref1[_l];
+          if ((_ref2 = (_base1 = this.meta)[key]) == null) {
+            _base1[key] = {};
+          }
+          if (!this.meta[key].type) {
+            this.meta[key].type = poly.varType(json[key].slice(0, 100));
+          }
+        }
+        if (this.key.length > 0) {
+          len = json[this.key[0]].length;
+          if (len > 0) {
+            for (i = _m = 0, _ref3 = len - 1; 0 <= _ref3 ? _m <= _ref3 : _m >= _ref3; i = 0 <= _ref3 ? ++_m : --_m) {
+              obj = {};
+              _ref4 = this.key;
+              for (_n = 0, _len4 = _ref4.length; _n < _len4; _n++) {
+                k = _ref4[_n];
+                obj[k] = poly.coerce(json[k][i], this.meta[key]);
+              }
+              this.raw.push(obj);
+            }
+          }
+        }
+        return this.raw;
       }
-      this.key = keys;
-      return this.raw = json;
     };
 
     Data.prototype.getData = function(callback) {
@@ -3817,10 +3853,10 @@ or knows how to retrieve data from some source.
         return callback(this);
       }
       if (this.json) {
-        this.raw = this.impute(this.json);
+        this.impute(this.json);
       }
       if (this.csv) {
-        this.raw = this.impute(poly.csv.parse(this.csv));
+        this.impute(poly.csv.parse(this.csv));
       }
       if (this.raw) {
         return callback(this);
@@ -3867,10 +3903,10 @@ or knows how to retrieve data from some source.
       if (to === '') {
         throw poly.err.defn("Column names cannot be an empty string");
       }
-      if (_.indexOf(this.key, from) === '-1') {
+      if (_.indexOf(this.key, from) === -1) {
         throw poly.err.defn("The key " + from + " doesn't exist!");
       }
-      if (_.indexOf(this.key, to) !== '-1') {
+      if (_.indexOf(this.key, to) !== -1) {
         throw poly.err.defn("The key " + to + " already exists!");
       }
     };
@@ -3959,7 +3995,6 @@ or knows how to retrieve data from some source.
       if (desc) {
         newdata.reverse();
       }
-      debugger;
       newobj = new Data({
         json: newdata,
         meta: this.meta
@@ -4005,14 +4040,12 @@ or knows how to retrieve data from some source.
       if (!(__indexOf.call(this.key, key) >= 0)) {
         this.key.push(key);
       }
-      if (!(key in this.meta)) {
-        this.meta[key] = {
-          type: poly.varType(_.pluck(this.raw.slice(0, 101), key)),
-          derived: true
-        };
-        if (hasFnStr) {
-          this.meta[key].formula = fnstr;
-        }
+      this.meta[key] = {
+        type: poly.varType(_.pluck(this.raw.slice(0, 101), key)),
+        derived: true
+      };
+      if (hasFnStr) {
+        this.meta[key].formula = fnstr;
       }
       return key;
     };
