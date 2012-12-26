@@ -53,8 +53,12 @@ class Graph
       @dataSubscribed = true
     # callback after data processing
     merge = _.after(@layers.length, @merge)
+    @dataprocess = {}
     for layerObj, id in @layers
-      layerObj.make spec.layers[id], merge
+      spec = poly.layer.toStrictMode @spec.layers[id] #repeated
+      @dataprocess[id] = new poly.DataProcess spec, spec.strict
+      @dataprocess[id].make spec, (statData, metaData) =>
+        layerObj.make spec, statData, metaData, merge
 
   merge: () =>
     # make the scales...?

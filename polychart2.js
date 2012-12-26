@@ -4665,7 +4665,6 @@ or knows how to retrieve data from some source.
       this.initialSpec = poly.layer.toStrictMode(layerSpec);
       this.prevSpec = null;
       this.spec = null;
-      this.dataprocess = new poly.DataProcess(this.initialSpec, strict);
       this.pts = {};
     }
 
@@ -4673,20 +4672,18 @@ or knows how to retrieve data from some source.
       return this.make(this.initialSpec);
     };
 
-    Layer.prototype.make = function(layerSpec, callback) {
-      var _this = this;
-      this.spec = poly.layer.toStrictMode(layerSpec);
+    Layer.prototype.make = function(spec, statData, metaData, callback) {
+      this.spec = spec;
       this._makeMappings(this.spec);
-      this.dataprocess.make(this.spec, function(statData, metaData) {
-        _this.statData = statData;
-        _this.meta = metaData;
-        if (!(_this.statData != null)) {
-          throw poly.error.data("No data is passed into the layer");
-        }
-        _this._calcGeoms();
-        return callback();
-      });
-      return this.prevSpec = this.spec;
+      this.prevSpec = this.spec;
+      this.statData = statData;
+      this.meta = metaData;
+      if (!(this.statData != null)) {
+        throw poly.error.data("No data is passed into the layer");
+      }
+      this._calcGeoms();
+      this.prevSpec = this.spec;
+      return callback();
     };
 
     Layer.prototype._calcGeoms = function() {
@@ -6116,7 +6113,8 @@ or knows how to retrieve data from some source.
     };
 
     Graph.prototype.make = function(spec) {
-      var dataChange, id, layerObj, merge, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
+      var dataChange, id, layerObj, merge, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results,
+        _this = this;
       if (spec == null) {
         spec = this.initial_spec;
       }
@@ -6135,11 +6133,16 @@ or knows how to retrieve data from some source.
         this.dataSubscribed = true;
       }
       merge = _.after(this.layers.length, this.merge);
+      this.dataprocess = {};
       _ref2 = this.layers;
       _results = [];
       for (id = _j = 0, _len1 = _ref2.length; _j < _len1; id = ++_j) {
         layerObj = _ref2[id];
-        _results.push(layerObj.make(spec.layers[id], merge));
+        spec = poly.layer.toStrictMode(this.spec.layers[id]);
+        this.dataprocess[id] = new poly.DataProcess(spec, spec.strict);
+        _results.push(this.dataprocess[id].make(spec, function(statData, metaData) {
+          return layerObj.make(spec, statData, metaData, merge);
+        }));
       }
       return _results;
     };

@@ -62,22 +62,21 @@ class Layer
     @initialSpec = poly.layer.toStrictMode layerSpec
     @prevSpec = null
     @spec = null
-    @dataprocess = new poly.DataProcess @initialSpec, strict
     @pts = {}
 
   reset : () => @make @initialSpec
 
-  make: (layerSpec, callback) -> # mostly just read and interpret the the spec
-    @spec = poly.layer.toStrictMode layerSpec
+  make: (spec, statData, metaData, callback) ->
+    @spec = spec
     @_makeMappings @spec
-    @dataprocess.make @spec, (statData, metaData) =>
-      @statData = statData
-      @meta = metaData
-      if not @statData?
-        throw poly.error.data "No data is passed into the layer"
-      @_calcGeoms()
-      callback()
     @prevSpec = @spec
+    @statData = statData
+    @meta = metaData
+    if not @statData?
+      throw poly.error.data "No data is passed into the layer"
+    @_calcGeoms()
+    @prevSpec = @spec
+    callback()
 
   _calcGeoms: () -> @geoms = {} # layer level geom calculation
 
