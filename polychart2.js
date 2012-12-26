@@ -3794,28 +3794,33 @@ or knows how to retrieve data from some source.
     Data.prototype.impute = function(json) {
       var first100, i, item, k, key, keys, len, obj, _base, _base1, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _n, _ref, _ref1, _ref2, _ref3, _ref4;
       if (_.isArray(json)) {
-        keys = _.union(_.keys(this.meta), _.keys(json[0]));
-        first100 = json.slice(0, 100);
-        for (_i = 0, _len = keys.length; _i < _len; _i++) {
-          key = keys[_i];
-          if ((_ref = (_base = this.meta)[key]) == null) {
-            _base[key] = {};
-          }
-          if (!this.meta[key].type) {
-            this.meta[key].type = poly.varType(_.pluck(first100, key));
-          }
-        }
-        for (_j = 0, _len1 = json.length; _j < _len1; _j++) {
-          item = json[_j];
-          for (_k = 0, _len2 = keys.length; _k < _len2; _k++) {
-            key = keys[_k];
-            if (_.isString(item[key])) {
-              item[key] = poly.coerce(item[key], this.meta[key]);
+        if (json.length > 0) {
+          keys = _.union(_.keys(this.meta), _.keys(json[0]));
+          first100 = json.slice(0, 100);
+          for (_i = 0, _len = keys.length; _i < _len; _i++) {
+            key = keys[_i];
+            if ((_ref = (_base = this.meta)[key]) == null) {
+              _base[key] = {};
+            }
+            if (!this.meta[key].type) {
+              this.meta[key].type = poly.varType(_.pluck(first100, key));
             }
           }
+          for (_j = 0, _len1 = json.length; _j < _len1; _j++) {
+            item = json[_j];
+            for (_k = 0, _len2 = keys.length; _k < _len2; _k++) {
+              key = keys[_k];
+              if (_.isString(item[key])) {
+                item[key] = poly.coerce(item[key], this.meta[key]);
+              }
+            }
+          }
+          this.key = keys;
+          return this.raw = json;
+        } else {
+          this.key = _.keys(this.meta);
+          return this.raw = [];
         }
-        this.key = keys;
-        return this.raw = json;
       } else if (_.isObject(json)) {
         this.key = _.keys(json);
         this.raw = [];
@@ -4056,11 +4061,15 @@ or knows how to retrieve data from some source.
 
     Data.prototype.type = function(key) {
       var t;
-      t = this.meta[key].type;
-      if (t === 'num') {
-        return 'number';
+      if (key in this.meta) {
+        t = this.meta[key].type;
+        if (t === 'num') {
+          return 'number';
+        } else {
+          return t;
+        }
       } else {
-        return t;
+        throw poly.error.defn("Data does not have column " + key + ".");
       }
     };
 

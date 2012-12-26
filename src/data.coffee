@@ -17,18 +17,22 @@ class Data
     @subscribed = []
   impute: (json) ->
     if _.isArray(json)
-      keys = _.union _.keys(@meta), _.keys(json[0])
-      first100 = json[0..99]
-      for key in keys
-        @meta[key] ?= {}
-        if not @meta[key].type
-          @meta[key].type = poly.varType _.pluck(first100, key)
-      for item in json
+      if json.length > 0
+        keys = _.union _.keys(@meta), _.keys(json[0])
+        first100 = json[0..99]
         for key in keys
-          if _.isString item[key]
-            item[key] = poly.coerce item[key], @meta[key]
-      @key = keys
-      @raw = json
+          @meta[key] ?= {}
+          if not @meta[key].type
+            @meta[key].type = poly.varType _.pluck(first100, key)
+        for item in json
+          for key in keys
+            if _.isString item[key]
+              item[key] = poly.coerce item[key], @meta[key]
+        @key = keys
+        @raw = json
+      else
+        @key = _.keys(@meta)
+        @raw = []
     else if _.isObject(json)
       @key = _.keys(json)
       @raw = []
@@ -156,8 +160,10 @@ class Data
     key
   getMeta: (key) -> @meta[key]
   type: (key) ->
-    t = @meta[key].type
-    if t is 'num' then 'number' else t
+    if key of @meta
+      t = @meta[key].type
+      return if t is 'num' then 'number' else t
+    throw poly.error.defn "Data does not have column #{key}."
   get: (key) -> _.pluck @raw, key
   len: () -> @raw.length
   getObject: (i) -> @raw[i]
