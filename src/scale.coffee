@@ -60,7 +60,13 @@ class PositionScale extends Scale
     @range = range
     @space = 0.05
     super(domain)
-  _numWrapper: (domain, y) => (value) =>
+  _NaNCheckWrap: (fn) -> (value) ->
+    out = fn(value)
+    if isNaN(out) or out is Infinity or out is -Infinity
+      throw poly.error.input "SCALE BEHAVING BADLY"
+    out
+
+  _numWrapper: (domain, y) => @_NaNCheckWrap (value) =>
     # NOTE: the below spacing makes sure that animation in polar coordinates
     # behave as expected. Test with polar bar charts to see...
     if _.isObject(value)
@@ -85,9 +91,7 @@ class PositionScale extends Scale
 
       throw poly.error.input "Unknown object #{value} is passed to a scale"
     y(value)
-  _dateWrapper: (domain, y) => (value) =>
-
-    space = 0.001 * (if @range.max > @range.min then 1 else -1)
+  _dateWrapper: (domain, y) => @_NaNCheckWrap (value) =>
     if _.isObject(value)
       if value.t is 'scalefn'
         if value.f is 'identity' then return value.v
@@ -96,16 +100,24 @@ class PositionScale extends Scale
 
         if value.f in ['upper', 'middle', 'lower']
           upper =
-            if domain.bw != 'week'
-              moment.unix(value.v).endOf(domain.bw).unix()
-            else
+            if domain.bw is 'week'
               moment.unix(value.v).day(7).unix()
+            else if domain.bw is 'decade'
+              m = moment.unix(value.v).startOf('year')
+              m.year 10 * Math.floor(m.year()/10)
+              m.unix()
+            else
+              moment.unix(value.v).endOf(domain.bw).unix()
           upper = y(upper)
           lower =
-            if domain.bw != 'week'
-              v = moment.unix(value.v).startOf(domain.bw).unix()
+            if domain.bw is 'week'
+              moment.unix(value.v).day(0).unix()
+            else if domain.bw is 'decade'
+              m = moment.unix(value.v).startOf('year')
+              m.year 10 * Math.floor(m.year()/10) + 10
+              m.unix()
             else
-              v = moment.unix(value.v).day(0).unix()
+              moment.unix(value.v).startOf(domain.bw).unix()
           lower = y(lower)
           space = (upper - lower) * @space # 5%. Sign matters!
           if value.f is 'middle' then return upper/2 + lower/2
@@ -119,7 +131,7 @@ class PositionScale extends Scale
           if value.f is 'lower' then return (lower+space) + value.n*width
       throw poly.error.input "Unknown object #{value} is passed to a scale"
     y(value)
-  _catWrapper: (step, y) => (value) =>
+  _catWrapper: (step, y) => @_NaNCheckWrap (value) =>
     space = step * @space
     if _.isObject(value)
       if value.t is 'scalefn'

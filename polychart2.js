@@ -1828,9 +1828,7 @@ These are constants that are referred to throughout the coebase
             max = fromspec('max');
             if (!(max != null)) {
               max = _.max(values);
-              if (bw) {
-                max = moment.unix(max).add(bw + 's', 1).unix();
-              }
+              max = bw === 'week' ? moment.unix(max).add('days', 7).unix() : bw === 'decade' ? moment.unix(max).add('years', 10).unix() : moment.unix(max).add(bw + 's', 1).unix();
             }
             domain[aes] = makeDomain({
               type: 'date',
@@ -3043,9 +3041,20 @@ These are constants that are referred to throughout the coebase
       return PositionScale.__super__.make.call(this, domain);
     };
 
+    PositionScale.prototype._NaNCheckWrap = function(fn) {
+      return function(value) {
+        var out;
+        out = fn(value);
+        if (isNaN(out) || out === Infinity || out === -Infinity) {
+          throw poly.error.input("SCALE BEHAVING BADLY");
+        }
+        return out;
+      };
+    };
+
     PositionScale.prototype._numWrapper = function(domain, y) {
       var _this = this;
-      return function(value) {
+      return this._NaNCheckWrap(function(value) {
         var lower, space, upper, width, _ref;
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
@@ -3083,14 +3092,13 @@ These are constants that are referred to throughout the coebase
           throw poly.error.input("Unknown object " + value + " is passed to a scale");
         }
         return y(value);
-      };
+      });
     };
 
     PositionScale.prototype._dateWrapper = function(domain, y) {
       var _this = this;
-      return function(value) {
-        var lower, space, upper, v, width, _ref;
-        space = 0.001 * (_this.range.max > _this.range.min ? 1 : -1);
+      return this._NaNCheckWrap(function(value) {
+        var lower, m, space, upper, width, _ref;
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
             if (value.f === 'identity') {
@@ -3103,9 +3111,9 @@ These are constants that are referred to throughout the coebase
               return _this.range.min + value.v;
             }
             if ((_ref = value.f) === 'upper' || _ref === 'middle' || _ref === 'lower') {
-              upper = domain.bw !== 'week' ? moment.unix(value.v).endOf(domain.bw).unix() : moment.unix(value.v).day(7).unix();
+              upper = domain.bw === 'week' ? moment.unix(value.v).day(7).unix() : domain.bw === 'decade' ? (m = moment.unix(value.v).startOf('year'), m.year(10 * Math.floor(m.year() / 10)), m.unix()) : moment.unix(value.v).endOf(domain.bw).unix();
               upper = y(upper);
-              lower = domain.bw !== 'week' ? v = moment.unix(value.v).startOf(domain.bw).unix() : v = moment.unix(value.v).day(0).unix();
+              lower = domain.bw === 'week' ? moment.unix(value.v).day(0).unix() : domain.bw === 'decade' ? (m = moment.unix(value.v).startOf('year'), m.year(10 * Math.floor(m.year() / 10) + 10), m.unix()) : moment.unix(value.v).startOf(domain.bw).unix();
               lower = y(lower);
               space = (upper - lower) * _this.space;
               if (value.f === 'middle') {
@@ -3129,12 +3137,12 @@ These are constants that are referred to throughout the coebase
           throw poly.error.input("Unknown object " + value + " is passed to a scale");
         }
         return y(value);
-      };
+      });
     };
 
     PositionScale.prototype._catWrapper = function(step, y) {
       var _this = this;
-      return function(value) {
+      return this._NaNCheckWrap(function(value) {
         var lower, space, upper, width, _ref;
         space = step * _this.space;
         if (_.isObject(value)) {
@@ -3172,7 +3180,7 @@ These are constants that are referred to throughout the coebase
           throw poly.error.input("Unknown object " + value + " is passed to a scale");
         }
         return y(value) + step / 2;
-      };
+      });
     };
 
     return PositionScale;

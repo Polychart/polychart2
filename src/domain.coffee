@@ -81,7 +81,13 @@ makeDomainSet = (layerObj, guideSpec, strictmode) ->
           max = fromspec('max')
           if not max?
             max = _.max(values)
-            if bw then max = moment.unix(max).add(bw+'s',1).unix()
+            max =
+              if bw is 'week'
+                moment.unix(max).add('days',7).unix()
+              else if bw is 'decade'
+                moment.unix(max).add('years',10).unix()
+              else
+                moment.unix(max).add(bw+'s',1).unix()
           domain[aes] = makeDomain {
             type: 'date'
             min: min
