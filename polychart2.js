@@ -4068,9 +4068,8 @@ or knows how to retrieve data from some source.
         } else {
           return t;
         }
-      } else {
-        throw poly.error.defn("Data does not have column " + key + ".");
       }
+      throw poly.error.defn("Data does not have column " + key + ".");
     };
 
     Data.prototype.get = function(key) {
@@ -4201,8 +4200,13 @@ or knows how to retrieve data from some source.
           throw poly.error.defn("The binwidth " + binwidth + " is invalid for a datetime varliable");
         }
         binFn = function(item) {
+          var m;
           if (binwidth === 'week') {
             return item[name] = moment.unix(item[key]).day(0).unix();
+          } else if (binwidth === 'decade') {
+            m = moment.unix(item[key]).startOf('year');
+            m.year(10 * Math.floor(m.year() / 10));
+            return item[name] = m.unix();
           } else {
             return item[name] = moment.unix(item[key]).startOf(binwidth).unix();
           }

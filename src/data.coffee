@@ -240,6 +240,10 @@ transforms =
       binFn = (item) ->
         if binwidth is 'week'
           item[name] = moment.unix(item[key]).day(0).unix()
+        else if binwidth is 'decade'
+          m = moment.unix(item[key]).startOf('year')
+          m.year 10 * Math.floor(m.year()/10)
+          item[name] = m.unix()
         else
           item[name] = moment.unix(item[key]).startOf(binwidth).unix()
       return trans: binFn, meta: {bw: binwidth, binned: true, type:'date'}
