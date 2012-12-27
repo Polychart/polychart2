@@ -10,7 +10,9 @@ poly.spec.toStrictMode = (spec) ->
     spec.layers = [spec.layer]
   # guide -> guides
   if not spec.guides? and spec.guide
-    spec.guide = spec.guide
+    spec.guides = spec.guide
+  if not spec.guides?
+    spec.guides = {}
   if spec.layers
     for layer, i in spec.layers
       # wrap aes mapping defined by a string in an object: "col" -> {var: "col"}

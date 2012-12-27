@@ -13,8 +13,10 @@ class Pane
     _.map spec.layers, (layerSpec) -> poly.layer.make(layerSpec, spec.strict)
   _makeDomains: (spec, layers) ->
     poly.domain.make layers, spec.guides, spec.strict
-  render: (paper, dims, renderer, rendererNoClip) ->
+  render: (params) ->
+    {dims, renderer, rendererGuide, coord, axes} = params
     for layer in @layers
       {sampled} = layer.render renderer
-    #@scaleSet.renderAxes dims, rendererNoClip
+    axes.x.render dims, coord, rendererGuide
+    axes.y.render dims, coord, rendererGuide
 

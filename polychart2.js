@@ -802,7 +802,10 @@ See the spec definition for more information.
       spec.layers = [spec.layer];
     }
     if (!(spec.guides != null) && spec.guide) {
-      spec.guide = spec.guide;
+      spec.guides = spec.guide;
+    }
+    if (!(spec.guides != null)) {
+      spec.guides = {};
     }
     if (spec.layers) {
       _ref = spec.layers;
@@ -5677,15 +5680,16 @@ or knows how to retrieve data from some source.
       return poly.domain.make(layers, spec.guides, spec.strict);
     };
 
-    Pane.prototype.render = function(paper, dims, renderer, rendererNoClip) {
-      var layer, sampled, _i, _len, _ref, _ref1, _results;
+    Pane.prototype.render = function(params) {
+      var axes, coord, dims, layer, renderer, rendererGuide, sampled, _i, _len, _ref;
+      dims = params.dims, renderer = params.renderer, rendererGuide = params.rendererGuide, coord = params.coord, axes = params.axes;
       _ref = this.layers;
-      _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         layer = _ref[_i];
-        _results.push((_ref1 = layer.render(renderer), sampled = _ref1.sampled, _ref1));
+        sampled = layer.render(renderer).sampled;
       }
-      return _results;
+      axes.x.render(dims, coord, rendererGuide);
+      return axes.y.render(dims, coord, rendererGuide);
     };
 
     return Pane;
@@ -6247,6 +6251,8 @@ or knows how to retrieve data from some source.
 
       this.handleEvent = __bind(this.handleEvent, this);
 
+      this.makePanes = __bind(this.makePanes, this);
+
       this.reset = __bind(this.reset, this);
 
       var _ref;
@@ -6305,15 +6311,16 @@ or knows how to retrieve data from some source.
             statData: statData,
             metaData: metaData
           };
-          return _this.makePanes(processedData);
+          return merge();
         }));
       }
       return _results;
     };
 
     Graph.prototype.makePanes = function(processedData) {
-      var clipping, data, datas, dom, domains, domainsets, groupedData, groups, index, indices, key, mindex, p, pane, pointer, renderer, rendererG, scales, str, stringify, uniqueValues, v, value, _i, _j, _len, _len1, _ref, _ref1, _ref2;
-      groups = [];
+      var axes, clipping, data, datas, dom, domains, domainsets, groupedData, groups, index, indices, key, mindex, pane, pointer, renderer, rendererG, scales, stringify, uniqueValues, v, value, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+      processedData = this.dataprocess;
+      groups = (_ref = this.spec.facet) != null ? _ref : [];
       uniqueValues = {};
       for (_i = 0, _len = groups.length; _i < _len; _i++) {
         key = groups[_i];
@@ -6328,6 +6335,9 @@ or knows how to retrieve data from some source.
       }
       indices = poly.cross(uniqueValues);
       stringify = poly.stringify(groups);
+      if ((_ref1 = this.panes) == null) {
+        this.panes = this._makePanes(this.spec, processedData, indices, stringify);
+      }
       datas = {};
       groupedData = poly.groupProcessedData(processedData, groups);
       for (mindex in indices) {
@@ -6338,19 +6348,16 @@ or knows how to retrieve data from some source.
         }
         datas[stringify(mindex)] = pointer;
       }
-      this.panes = {};
-      for (_j = 0, _len1 = indices.length; _j < _len1; _j++) {
-        mindex = indices[_j];
-        str = stringify(mindex);
-        p = poly.pane.make(this.spec, mindex);
-        p.make(this.spec, datas[str]);
-        this.panes[str] = p;
+      _ref2 = this.panes;
+      for (key in _ref2) {
+        pane = _ref2[key];
+        pane.make(this.spec, datas[key]);
       }
       domainsets = _.map(this.panes, function(p) {
         return p.domains;
       });
       domains = poly.domain.merge(domainsets);
-      if ((_ref = this.scaleSet) == null) {
+      if ((_ref3 = this.scaleSet) == null) {
         this.scaleSet = this._makeScaleSet(this.spec, domains);
       }
       this.scaleSet.make(this.spec.guides, domains, _.toArray(this.panes)[0].layers);
@@ -6368,20 +6375,25 @@ or knows how to retrieve data from some source.
       scales = this.scaleSet.scales;
       this.coord.setScales(scales);
       this.scaleSet.coord = this.coord;
-      this.scaleSet.makeAxes();
+      axes = this.scaleSet.makeAxes();
       this.scaleSet.makeLegends();
-      if ((_ref1 = this.paper) == null) {
+      if ((_ref4 = this.paper) == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
       }
       clipping = this.coord.clipping(this.dims);
       renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true, clipping);
       rendererG = poly.render(this.handleEvent, this.paper, scales, this.coord, false);
-      _ref2 = this.panes;
-      for (key in _ref2) {
-        pane = _ref2[key];
-        pane.render(this.paper, this.dims, renderer, rendererG);
+      _ref5 = this.panes;
+      for (key in _ref5) {
+        pane = _ref5[key];
+        pane.render({
+          dims: this.dims,
+          coord: this.coord,
+          axes: axes,
+          renderer: renderer,
+          rendererGuide: rendererG
+        });
       }
-      this.scaleSet.renderAxes(this.dims, rendererG);
       return this.scaleSet.renderLegends(this.dims, rendererG);
     };
 
@@ -6422,8 +6434,16 @@ or knows how to retrieve data from some source.
       return _.throttle(handler, 1000);
     };
 
-    Graph.prototype._makePanes = function(spec) {
-      return [poly.pane.make(spec)];
+    Graph.prototype._makePanes = function(spec, processedData, indices, stringify) {
+      var mindex, p, panes, str, _i, _len;
+      panes = {};
+      for (_i = 0, _len = indices.length; _i < _len; _i++) {
+        mindex = indices[_i];
+        str = stringify(mindex);
+        p = poly.pane.make(spec, mindex);
+        panes[str] = p;
+      }
+      return panes;
     };
 
     Graph.prototype._makeScaleSet = function(spec, domains) {

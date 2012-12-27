@@ -42,12 +42,12 @@ class Graph
         processedData[id] =
           statData: statData
           metaData: metaData
-        @makePanes(processedData)
+        merge()
 
-  makePanes: (processedData) ->
-    # GROUP DATA
-    groups = []
-    # values
+  makePanes: (processedData) =>
+    processedData = @dataprocess
+    # prep work to make indices
+    groups = @spec.facet ? []
     uniqueValues = {}
     for key in groups
       v = []
@@ -55,9 +55,10 @@ class Graph
         if currGrp of data.metaData
           v = _.union v, _.uniq(_.pluck(data.statData, currGrp))
       uniqueValues[key] = v
-    # cross
     indices = poly.cross uniqueValues
     stringify = poly.stringify(groups)
+    # make panes
+    @panes ?= @_makePanes @spec, processedData, indices, stringify
     # make data
     datas = {}
     groupedData = poly.groupProcessedData processedData, groups
@@ -67,13 +68,9 @@ class Graph
         value = mindex[pointer.key]
         pointer = pointer.values[value]
       datas[stringify mindex] = pointer
-    # make panes
-    @panes = {}
-    for mindex in indices
-      str = stringify mindex
-      p = poly.pane.make @spec, mindex
-      p.make(@spec, datas[str])
-      @panes[str] = p
+    # set data
+    for key, pane of @panes
+      pane.make @spec, datas[key]
 
     # make the scales...?
     domainsets = _.map @panes, (p) -> p.domains
@@ -95,19 +92,21 @@ class Graph
     scales = @scaleSet.scales
     @coord.setScales scales
     @scaleSet.coord = @coord
-    @scaleSet.makeAxes()
+    axes = @scaleSet.makeAxes()
     @scaleSet.makeLegends()
 
     @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent
     clipping = @coord.clipping @dims
-    # render each layer
     renderer = poly.render @handleEvent, @paper, scales, @coord, true, clipping
-    # render axes
     rendererG = poly.render @handleEvent, @paper, scales, @coord, false
 
     for key, pane of @panes
-      pane.render @paper, @dims, renderer, rendererG
-    @scaleSet.renderAxes @dims, rendererG
+      pane.render
+        dims:@dims
+        coord:@coord
+        axes:axes
+        renderer:renderer
+        rendererGuide:rendererG
     @scaleSet.renderLegends @dims, rendererG
 
   addHandler : (h) -> @handlers.push h
@@ -133,8 +132,16 @@ class Graph
         else
           h.handle(type, obj)
     _.throttle handler, 1000
-  _makePanes: (spec) ->
-    [poly.pane.make spec]
+  _makePanes: (spec, processedData, indices, stringify) ->
+    # make panes
+    panes = {}
+    for mindex in indices
+      str = stringify mindex
+      p = poly.pane.make spec, mindex
+      panes[str] = p
+    panes
+
+
   _makeScaleSet: (spec, domains) ->
     @coord.make poly.dim.guess(spec)
     tmpRanges = @coord.ranges()
