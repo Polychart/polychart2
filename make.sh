@@ -16,6 +16,7 @@ cat \
     compiled/src/scale.js \
     compiled/src/scaleset.js \
     compiled/src/data.js \
+    compiled/src/dataprocess.js \
     compiled/src/layer.js \
     compiled/src/pane.js \
     compiled/src/dim.js \
