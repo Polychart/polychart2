@@ -77,6 +77,7 @@ test "groupProcessedData", ->
 
   result = polyjs.groupProcessedData data, ['b']
   deepEqual result,
+    grouped: true
     key: 'b'
     values:
       A:
@@ -106,6 +107,7 @@ test "groupProcessedData", ->
 
   result = polyjs.groupProcessedData data, ['b']
   deepEqual result,
+    grouped: true
     key: 'b'
     values:
       A:
@@ -125,6 +127,7 @@ test "groupProcessedData", ->
 
   result = polyjs.groupProcessedData data, ['y']
   deepEqual result,
+    grouped: true
     key: 'y'
     values:
       1:
@@ -140,9 +143,11 @@ test "groupProcessedData", ->
 
   result = polyjs.groupProcessedData data, ['y', 'b']
   deepEqual result,
+    grouped: true
     key: 'y'
     values:
       1:
+        grouped: true
         key: 'b'
         values:
           A:
@@ -160,6 +165,7 @@ test "groupProcessedData", ->
               metaData: data[2].metaData
               statData: []
       2:
+        grouped: true
         key: 'b'
         values:
           A:
@@ -177,3 +183,20 @@ test "groupProcessedData", ->
               metaData: data[2].metaData
               statData: [{y:2,b:'B'}]
 
+test "utils.cross", ->
+  y = polyjs.cross {x:[1,2,3], y:[1,2]}
+  deepEqual y.length, 6
+  y = polyjs.cross {x:[1,2,3]}
+  deepEqual y.length, 3
+  y = polyjs.cross {x:[]}
+  deepEqual y.length, 0
+  y = polyjs.cross {}
+  deepEqual y.length, 1
+
+test "stingify", ->
+  y = polyjs.stringify(['a','b']) {x:2, a:2, b:3}
+  equal y, "a:2;b:3;"
+  y = polyjs.stringify(['a']) {x:2, a:2, b:3}
+  equal y, "a:2;"
+  y = polyjs.stringify([]) {x:2, a:2, b:3}
+  equal y, ""

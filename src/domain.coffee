@@ -18,7 +18,7 @@ poly.domain.make = (layers, guideSpec, strictmode) ->
   domainSets = []
   for layerObj in layers
     domainSets.push makeDomainSet layerObj, guideSpec, strictmode
-  mergeDomainSets domainSets
+  poly.domain.merge domainSets
 
 poly.domain.sortfn = (domain) ->
   switch domain.type
@@ -118,7 +118,7 @@ flattenGeoms = (geoms, aes) ->
 Merge an array of domain sets: i.e. merge all the domains that shares the
 same aesthetics.
 ###
-mergeDomainSets = (domainSets) ->
+poly.domain.merge = (domainSets) ->
   merged = {}
   for aes in aesthetics
     domains = _.without _.pluck(domainSets, aes), undefined
@@ -154,7 +154,7 @@ domainMerge =
       _.chain(domains).filter((d) -> d.sorted).map((d) -> d.levels).value()
     unsortedLevels =
       _.chain(domains).filter((d) -> !d.sorted).map((d) -> d.levels).value()
-    if sortedLevels.length > 0 and _.intersection.apply @, sortedLevels
+    if sortedLevels.length > 1 and _.intersection.apply @, sortedLevels
       throw poly.error.data "You are trying to combine incompatiabl sorted domains in the same axis."
     sortedLevels = [_.flatten(sortedLevels, true)]
     levels = _.union.apply @, sortedLevels.concat(unsortedLevels)

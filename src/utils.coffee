@@ -9,9 +9,25 @@ Output:
   the `key` is a string of format "columnKey:value;colunmKey2:value2;..."
 ###
 poly.groupBy = (data, group) ->
-  _.groupBy data, (item) ->
-    concat = (memo, g) -> "#{memo}#{g}:#{item[g]};"
-    _.reduce group, concat, ""
+  _.groupBy data, poly.stringify(group)
+
+poly.stringify = (group) -> (item) ->
+  concat = (memo, g) -> "#{memo}#{g}:#{item[g]};"
+  _.reduce group, concat, ""
+
+poly.cross = (keyVals,ignore=[]) ->
+  todo = _.difference(_.keys(keyVals), ignore)
+  if todo.length is 0
+    return [{}]
+  arrs = []
+  next = todo[0]
+  items = poly.cross(keyVals, ignore.concat(next))
+  for val in keyVals[next]
+    for item in items
+      i = _.clone(item)
+      i[next] = val
+      arrs.push(i)
+  arrs
 
 ###
 Take a processedData from the data processing step and group it for faceting
@@ -25,8 +41,9 @@ processData = {
 
 Output should be in one of the two format:
   groupedData = {
-    groupKey: group1
-    groupValues: {
+    grouped: true
+    key: group1
+    values: {
       value1: groupedData2 # note recursive def'n
       value2: groupedData3
       ...
@@ -49,9 +66,9 @@ poly.groupProcessedData = (processedData, groups) ->
       uniqueValues = _.union uniqueValues, _.uniq(_.pluck(data.statData, currGrp))
 
   result =
+    grouped: true
     key: currGrp
     values: {}
-  debugger
   for value in uniqueValues
     # construct new processedData
     newProcessedData = {}

@@ -17,6 +17,7 @@ cat \
     compiled/src/scaleset.js \
     compiled/src/data.js \
     compiled/src/layer.js \
+    compiled/src/pane.js \
     compiled/src/dim.js \
     compiled/src/render.js \
     compiled/src/graph.js > compiled/src/polychart2.bare.js

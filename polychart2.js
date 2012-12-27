@@ -24,13 +24,115 @@ Output:
   var THRESHOLD;
 
   poly.groupBy = function(data, group) {
-    return _.groupBy(data, function(item) {
+    return _.groupBy(data, poly.stringify(group));
+  };
+
+  poly.stringify = function(group) {
+    return function(item) {
       var concat;
       concat = function(memo, g) {
         return "" + memo + g + ":" + item[g] + ";";
       };
       return _.reduce(group, concat, "");
-    });
+    };
+  };
+
+  poly.cross = function(keyVals, ignore) {
+    var arrs, i, item, items, next, todo, val, _i, _j, _len, _len1, _ref;
+    if (ignore == null) {
+      ignore = [];
+    }
+    todo = _.difference(_.keys(keyVals), ignore);
+    if (todo.length === 0) {
+      return [{}];
+    }
+    arrs = [];
+    next = todo[0];
+    items = poly.cross(keyVals, ignore.concat(next));
+    _ref = keyVals[next];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      val = _ref[_i];
+      for (_j = 0, _len1 = items.length; _j < _len1; _j++) {
+        item = items[_j];
+        i = _.clone(item);
+        i[next] = val;
+        arrs.push(i);
+      }
+    }
+    return arrs;
+  };
+
+  /*
+  Take a processedData from the data processing step and group it for faceting
+  purposes.
+  
+  Input is in the format: 
+  processData = {
+    layer_id : { statData: [...], metaData: {...} }
+    ...
+  }
+  
+  Output should be in one of the two format:
+    groupedData = {
+      grouped: true
+      key: group1
+      values: {
+        value1: groupedData2 # note recursive def'n
+        value2: groupedData3
+        ...
+      }
+    }
+    OR
+    groupedData = {
+      layer_id : { statData: [...], metaData: {...} }
+      ...
+    }
+  */
+
+
+  poly.groupProcessedData = function(processedData, groups) {
+    var currGrp, data, index, newProcessedData, result, uniqueValues, value, _i, _len;
+    if (groups.length === 0) {
+      return processedData;
+    }
+    currGrp = groups.splice(0, 1)[0];
+    uniqueValues = [];
+    for (index in processedData) {
+      data = processedData[index];
+      if (currGrp in data.metaData) {
+        uniqueValues = _.union(uniqueValues, _.uniq(_.pluck(data.statData, currGrp)));
+      }
+    }
+    result = {
+      grouped: true,
+      key: currGrp,
+      values: {}
+    };
+    for (_i = 0, _len = uniqueValues.length; _i < _len; _i++) {
+      value = uniqueValues[_i];
+      newProcessedData = {};
+      for (index in processedData) {
+        data = processedData[index];
+        newProcessedData[index] = {
+          metaData: data.metaData
+        };
+        newProcessedData[index].statData = currGrp in data.metaData ? poly.filter(data.statData, currGrp, value) : _.clone(data.statData);
+      }
+      result.values[value] = poly.groupProcessedData(newProcessedData, _.clone(groups));
+    }
+    return result;
+  };
+
+  poly.filter = function(statData, key, val) {
+    var item, newData, _i, _len;
+    newData = [];
+    for (_i = 0, _len = statData.length; _i < _len; _i++) {
+      item = statData[_i];
+      if (item[key] === val) {
+        newData.push(item);
+      }
+    }
+    return newData;
   };
 
   /*
@@ -1746,7 +1848,7 @@ See the spec definition for more information.
 
 
 (function() {
-  var CategoricalDomain, DateDomain, NumericDomain, aesthetics, domainMerge, flattenGeoms, makeDomain, makeDomainSet, mergeDomainSets, mergeDomains;
+  var CategoricalDomain, DateDomain, NumericDomain, aesthetics, domainMerge, flattenGeoms, makeDomain, makeDomainSet, mergeDomains;
 
   aesthetics = poly["const"].aes;
 
@@ -1771,7 +1873,7 @@ See the spec definition for more information.
       layerObj = layers[_i];
       domainSets.push(makeDomainSet(layerObj, guideSpec, strictmode));
     }
-    return mergeDomainSets(domainSets);
+    return poly.domain.merge(domainSets);
   };
 
   poly.domain.sortfn = function(domain) {
@@ -1937,7 +2039,7 @@ See the spec definition for more information.
   */
 
 
-  mergeDomainSets = function(domainSets) {
+  poly.domain.merge = function(domainSets) {
     var aes, domains, merged, _i, _len;
     merged = {};
     for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
@@ -2015,7 +2117,7 @@ See the spec definition for more information.
       }).map(function(d) {
         return d.levels;
       }).value();
-      if (sortedLevels.length > 0 && _.intersection.apply(this, sortedLevels)) {
+      if (sortedLevels.length > 1 && _.intersection.apply(this, sortedLevels)) {
         throw poly.error.data("You are trying to combine incompatiabl sorted domains in the same axis.");
       }
       sortedLevels = [_.flatten(sortedLevels, true)];
@@ -4711,7 +4813,7 @@ or knows how to retrieve data from some source.
       return this.make(this.initialSpec);
     };
 
-    Layer.prototype.make = function(spec, statData, metaData, callback) {
+    Layer.prototype.make = function(spec, statData, metaData) {
       this.spec = spec;
       this._makeMappings(this.spec);
       this.prevSpec = this.spec;
@@ -4721,8 +4823,7 @@ or knows how to retrieve data from some source.
         throw poly.error.data("No data is passed into the layer");
       }
       this._calcGeoms();
-      this.prevSpec = this.spec;
-      return callback();
+      return this.prevSpec = this.spec;
     };
 
     Layer.prototype._calcGeoms = function() {
@@ -5537,6 +5638,62 @@ or knows how to retrieve data from some source.
 
 }).call(this);
 // Generated by CoffeeScript 1.4.0
+(function() {
+  var Pane;
+
+  poly.pane = {};
+
+  poly.pane.make = function(spec, grp) {
+    return new Pane(spec, grp);
+  };
+
+  Pane = (function() {
+
+    function Pane(spec, multiindex) {
+      this.spec = spec;
+      this.index = multiindex;
+    }
+
+    Pane.prototype.make = function(spec, data) {
+      var id, layer, _i, _len, _ref, _ref1;
+      if ((_ref = this.layers) == null) {
+        this.layers = this._makeLayers(spec);
+      }
+      _ref1 = this.layers;
+      for (id = _i = 0, _len = _ref1.length; _i < _len; id = ++_i) {
+        layer = _ref1[id];
+        layer.make(spec.layers[id], data[id].statData, data[id].metaData);
+      }
+      return this.domains = this._makeDomains(spec, this.layers);
+    };
+
+    Pane.prototype._makeLayers = function(spec) {
+      return _.map(spec.layers, function(layerSpec) {
+        return poly.layer.make(layerSpec, spec.strict);
+      });
+    };
+
+    Pane.prototype._makeDomains = function(spec, layers) {
+      return poly.domain.make(layers, spec.guides, spec.strict);
+    };
+
+    Pane.prototype.render = function(paper, dims, renderer, rendererNoClip) {
+      var layer, sampled, _i, _len, _ref, _ref1, _results;
+      _ref = this.layers;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        layer = _ref[_i];
+        _results.push((_ref1 = layer.render(renderer), sampled = _ref1.sampled, _ref1));
+      }
+      return _results;
+    };
+
+    return Pane;
+
+  })();
+
+}).call(this);
+// Generated by CoffeeScript 1.4.0
 
 /*
 # GLOBALS
@@ -6090,8 +6247,6 @@ or knows how to retrieve data from some source.
 
       this.handleEvent = __bind(this.handleEvent, this);
 
-      this.merge = __bind(this.merge, this);
-
       this.reset = __bind(this.reset, this);
 
       var _ref;
@@ -6099,7 +6254,7 @@ or knows how to retrieve data from some source.
         throw poly.error.defn("No graph specification is passed in!");
       }
       this.handlers = [];
-      this.layers = null;
+      this.panes = null;
       this.scaleSet = null;
       this.axes = null;
       this.legends = null;
@@ -6119,7 +6274,7 @@ or knows how to retrieve data from some source.
     };
 
     Graph.prototype.make = function(spec) {
-      var dataChange, id, layerObj, merge, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results,
+      var dataChange, id, layerSpec, merge, processedData, _i, _j, _len, _len1, _ref, _ref1, _results,
         _this = this;
       if (spec == null) {
         spec = this.initial_spec;
@@ -6127,40 +6282,78 @@ or knows how to retrieve data from some source.
       spec = poly.spec.toStrictMode(spec);
       poly.spec.check(spec);
       this.spec = spec;
-      if ((_ref = this.layers) == null) {
-        this.layers = this._makeLayers(this.spec);
-      }
       if (!this.dataSubscribed) {
         dataChange = this.handleEvent('data');
-        _ref1 = this.layers;
-        for (id = _i = 0, _len = _ref1.length; _i < _len; id = ++_i) {
-          layerObj = _ref1[id];
+        _ref = spec.layers;
+        for (id = _i = 0, _len = _ref.length; _i < _len; id = ++_i) {
+          layerSpec = _ref[id];
           spec.layers[id].data.subscribe(dataChange);
         }
         this.dataSubscribed = true;
       }
-      merge = _.after(this.layers.length, this.merge);
+      merge = _.after(spec.layers.length, this.makePanes);
       this.dataprocess = {};
-      _ref2 = this.layers;
+      processedData = {};
+      _ref1 = spec.layers;
       _results = [];
-      for (id = _j = 0, _len1 = _ref2.length; _j < _len1; id = ++_j) {
-        layerObj = _ref2[id];
+      for (id = _j = 0, _len1 = _ref1.length; _j < _len1; id = ++_j) {
+        layerSpec = _ref1[id];
         spec = this.spec.layers[id];
         this.dataprocess[id] = new poly.DataProcess(spec, spec.strict);
         _results.push(this.dataprocess[id].make(spec, function(statData, metaData) {
-          return layerObj.make(spec, statData, metaData, merge);
+          processedData[id] = {
+            statData: statData,
+            metaData: metaData
+          };
+          return _this.makePanes(processedData);
         }));
       }
       return _results;
     };
 
-    Graph.prototype.merge = function() {
-      var clipping, dom, domains, layer, renderer, sampled, scales, _i, _len, _ref, _ref1, _ref2;
-      domains = this._makeDomains(this.spec, this.layers);
+    Graph.prototype.makePanes = function(processedData) {
+      var clipping, data, datas, dom, domains, domainsets, groupedData, groups, index, indices, key, mindex, p, pane, pointer, renderer, rendererG, scales, str, stringify, uniqueValues, v, value, _i, _j, _len, _len1, _ref, _ref1, _ref2;
+      groups = [];
+      uniqueValues = {};
+      for (_i = 0, _len = groups.length; _i < _len; _i++) {
+        key = groups[_i];
+        v = [];
+        for (index in processedData) {
+          data = processedData[index];
+          if (currGrp in data.metaData) {
+            v = _.union(v, _.uniq(_.pluck(data.statData, currGrp)));
+          }
+        }
+        uniqueValues[key] = v;
+      }
+      indices = poly.cross(uniqueValues);
+      stringify = poly.stringify(groups);
+      datas = {};
+      groupedData = poly.groupProcessedData(processedData, groups);
+      for (mindex in indices) {
+        pointer = groupedData;
+        while (pointer.grouped === true) {
+          value = mindex[pointer.key];
+          pointer = pointer.values[value];
+        }
+        datas[stringify(mindex)] = pointer;
+      }
+      this.panes = {};
+      for (_j = 0, _len1 = indices.length; _j < _len1; _j++) {
+        mindex = indices[_j];
+        str = stringify(mindex);
+        p = poly.pane.make(this.spec, mindex);
+        p.make(this.spec, datas[str]);
+        this.panes[str] = p;
+      }
+      domainsets = _.map(this.panes, function(p) {
+        return p.domains;
+      });
+      domains = poly.domain.merge(domainsets);
       if ((_ref = this.scaleSet) == null) {
         this.scaleSet = this._makeScaleSet(this.spec, domains);
       }
-      this.scaleSet.make(this.spec.guides, domains, this.layers);
+      this.scaleSet.make(this.spec.guides, domains, _.toArray(this.panes)[0].layers);
       if (!this.dims) {
         this.dims = this._makeDimensions(this.spec, this.scaleSet);
         this.coord.make(this.dims);
@@ -6175,21 +6368,21 @@ or knows how to retrieve data from some source.
       scales = this.scaleSet.scales;
       this.coord.setScales(scales);
       this.scaleSet.coord = this.coord;
+      this.scaleSet.makeAxes();
+      this.scaleSet.makeLegends();
       if ((_ref1 = this.paper) == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
       }
       clipping = this.coord.clipping(this.dims);
       renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true, clipping);
-      _ref2 = this.layers;
-      for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-        layer = _ref2[_i];
-        sampled = layer.render(renderer).sampled;
+      rendererG = poly.render(this.handleEvent, this.paper, scales, this.coord, false);
+      _ref2 = this.panes;
+      for (key in _ref2) {
+        pane = _ref2[key];
+        pane.render(this.paper, this.dims, renderer, rendererG);
       }
-      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, false);
-      this.scaleSet.makeAxes();
-      this.scaleSet.renderAxes(this.dims, renderer);
-      this.scaleSet.makeLegends();
-      return this.scaleSet.renderLegends(this.dims, renderer);
+      this.scaleSet.renderAxes(this.dims, rendererG);
+      return this.scaleSet.renderLegends(this.dims, rendererG);
     };
 
     Graph.prototype.addHandler = function(h) {
@@ -6229,18 +6422,8 @@ or knows how to retrieve data from some source.
       return _.throttle(handler, 1000);
     };
 
-    Graph.prototype._makeLayers = function(spec) {
-      return _.map(spec.layers, function(layerSpec) {
-        return poly.layer.make(layerSpec, spec.strict);
-      });
-    };
-
-    Graph.prototype._makeDomains = function(spec, layers) {
-      var _ref;
-      if ((_ref = spec.guides) == null) {
-        spec.guides = {};
-      }
-      return poly.domain.make(layers, spec.guides, spec.strict);
+    Graph.prototype._makePanes = function(spec) {
+      return [poly.pane.make(spec)];
     };
 
     Graph.prototype._makeScaleSet = function(spec, domains) {

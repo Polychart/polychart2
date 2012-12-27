@@ -51,7 +51,7 @@ class Layer
 
   reset : () => @make @initialSpec
 
-  make: (spec, statData, metaData, callback) ->
+  make: (spec, statData, metaData) ->
     @spec = spec
     @_makeMappings @spec
     @prevSpec = @spec
@@ -61,7 +61,6 @@ class Layer
       throw poly.error.data "No data is passed into the layer"
     @_calcGeoms()
     @prevSpec = @spec
-    callback()
 
   _calcGeoms: () -> @geoms = {} # layer level geom calculation
 

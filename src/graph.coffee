@@ -4,7 +4,7 @@ class Graph
     if not spec?
       throw poly.error.defn "No graph specification is passed in!"
     @handlers = []
-    @layers = null
+    @panes = null
     @scaleSet = null
     @axes = null
     @legends = null
@@ -25,28 +25,61 @@ class Graph
     spec = poly.spec.toStrictMode spec
     poly.spec.check spec
     @spec = spec
-    # creation of layers
-    @layers ?= @_makeLayers @spec
     # subscribe to changes to data
     if not @dataSubscribed
       dataChange = @handleEvent 'data'
-      for layerObj, id in @layers
+      for layerSpec, id in spec.layers
         spec.layers[id].data.subscribe dataChange
       @dataSubscribed = true
     # callback after data processing
-    merge = _.after(@layers.length, @merge)
+    merge = _.after(spec.layers.length, @makePanes)
     @dataprocess = {}
-    for layerObj, id in @layers
+    processedData = {}
+    for layerSpec, id in spec.layers
       spec = @spec.layers[id] #repeated
       @dataprocess[id] = new poly.DataProcess spec, spec.strict
       @dataprocess[id].make spec, (statData, metaData) =>
-        layerObj.make spec, statData, metaData, merge
+        processedData[id] =
+          statData: statData
+          metaData: metaData
+        @makePanes(processedData)
 
-  merge: () =>
+  makePanes: (processedData) ->
+    # GROUP DATA
+    groups = []
+    # values
+    uniqueValues = {}
+    for key in groups
+      v = []
+      for index, data of processedData
+        if currGrp of data.metaData
+          v = _.union v, _.uniq(_.pluck(data.statData, currGrp))
+      uniqueValues[key] = v
+    # cross
+    indices = poly.cross uniqueValues
+    stringify = poly.stringify(groups)
+    # make data
+    datas = {}
+    groupedData = poly.groupProcessedData processedData, groups
+    for mindex of indices
+      pointer = groupedData
+      while pointer.grouped is true
+        value = mindex[pointer.key]
+        pointer = pointer.values[value]
+      datas[stringify mindex] = pointer
+    # make panes
+    @panes = {}
+    for mindex in indices
+      str = stringify mindex
+      p = poly.pane.make @spec, mindex
+      p.make(@spec, datas[str])
+      @panes[str] = p
+
     # make the scales...?
-    domains = @_makeDomains @spec, @layers
+    domainsets = _.map @panes, (p) -> p.domains
+    domains = poly.domain.merge domainsets
     @scaleSet ?= @_makeScaleSet @spec, domains
-    @scaleSet.make @spec.guides, domains, @layers
+    @scaleSet.make @spec.guides, domains, _.toArray(@panes)[0].layers
     # dimension calculation
     if not @dims
       @dims = @_makeDimensions @spec, @scaleSet
@@ -62,19 +95,20 @@ class Graph
     scales = @scaleSet.scales
     @coord.setScales scales
     @scaleSet.coord = @coord
+    @scaleSet.makeAxes()
+    @scaleSet.makeLegends()
+
     @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent
     clipping = @coord.clipping @dims
     # render each layer
     renderer = poly.render @handleEvent, @paper, scales, @coord, true, clipping
-    for layer in @layers
-      {sampled} = layer.render renderer
     # render axes
-    renderer = poly.render @handleEvent, @paper, scales, @coord, false
+    rendererG = poly.render @handleEvent, @paper, scales, @coord, false
 
-    @scaleSet.makeAxes()
-    @scaleSet.renderAxes @dims, renderer
-    @scaleSet.makeLegends()
-    @scaleSet.renderLegends @dims, renderer
+    for key, pane of @panes
+      pane.render @paper, @dims, renderer, rendererG
+    @scaleSet.renderAxes @dims, rendererG
+    @scaleSet.renderLegends @dims, rendererG
 
   addHandler : (h) -> @handlers.push h
   removeHandler: (h) ->
@@ -99,12 +133,8 @@ class Graph
         else
           h.handle(type, obj)
     _.throttle handler, 1000
-
-  _makeLayers: (spec) ->
-    _.map spec.layers, (layerSpec) -> poly.layer.make(layerSpec, spec.strict)
-  _makeDomains: (spec, layers) ->
-    spec.guides ?= {}
-    poly.domain.make layers, spec.guides, spec.strict
+  _makePanes: (spec) ->
+    [poly.pane.make spec]
   _makeScaleSet: (spec, domains) ->
     @coord.make poly.dim.guess(spec)
     tmpRanges = @coord.ranges()
