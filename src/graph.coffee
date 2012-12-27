@@ -32,7 +32,7 @@ class Graph
         spec.layers[id].data.subscribe dataChange
       @dataSubscribed = true
     # callback after data processing
-    merge = _.after(spec.layers.length, @makePanes)
+    merge = _.after(spec.layers.length, @merge)
     @dataprocess = {}
     processedData = {}
     for layerSpec, id in spec.layers
@@ -43,25 +43,27 @@ class Graph
           statData: statData
           metaData: metaData
         merge()
-
-  makePanes: (processedData) =>
-    processedData = @dataprocess
+  merge: (merge) =>
+    @makePanes()
+    @mergeDomains()
+    @render()
+  makePanes: () =>
     # prep work to make indices
     groups = @spec.facet ? []
     uniqueValues = {}
     for key in groups
       v = []
-      for index, data of processedData
+      for index, data of @dataprocess
         if currGrp of data.metaData
           v = _.union v, _.uniq(_.pluck(data.statData, currGrp))
       uniqueValues[key] = v
     indices = poly.cross uniqueValues
     stringify = poly.stringify(groups)
     # make panes
-    @panes ?= @_makePanes @spec, processedData, indices, stringify
+    @panes ?= @_makePanes @spec, @dataprocess, indices, stringify
     # make data
     datas = {}
-    groupedData = poly.groupProcessedData processedData, groups
+    groupedData = poly.groupProcessedData @dataprocess, groups
     for mindex of indices
       pointer = groupedData
       while pointer.grouped is true
@@ -71,8 +73,7 @@ class Graph
     # set data
     for key, pane of @panes
       pane.make @spec, datas[key]
-
-    # make the scales...?
+  mergeDomains: () =>
     domainsets = _.map @panes, (p) -> p.domains
     domains = poly.domain.merge domainsets
     @scaleSet ?= @_makeScaleSet @spec, domains
@@ -84,8 +85,7 @@ class Graph
       @ranges = @coord.ranges()
     @scaleSet.setRanges @ranges
     @_legacy(domains)
-
-    # render : (dom) =>
+  render: () =>
     if @spec.render? and @spec.render is false
       return # for debugging purposes
     dom = @spec.dom
