@@ -13,6 +13,66 @@ poly.groupBy = (data, group) ->
     concat = (memo, g) -> "#{memo}#{g}:#{item[g]};"
     _.reduce group, concat, ""
 
+###
+Take a processedData from the data processing step and group it for faceting
+purposes.
+
+Input is in the format: 
+processData = {
+  layer_id : { statData: [...], metaData: {...} }
+  ...
+}
+
+Output should be in one of the two format:
+  groupedData = {
+    groupKey: group1
+    groupValues: {
+      value1: groupedData2 # note recursive def'n
+      value2: groupedData3
+      ...
+    }
+  }
+  OR
+  groupedData = {
+    layer_id : { statData: [...], metaData: {...} }
+    ...
+  }
+###
+poly.groupProcessedData = (processedData, groups) ->
+  if groups.length is 0
+    return processedData
+  currGrp = groups.splice(0, 1)[0]
+
+  uniqueValues = []
+  for index, data of processedData
+    if currGrp of data.metaData
+      uniqueValues = _.union uniqueValues, _.uniq(_.pluck(data.statData, currGrp))
+
+  result =
+    key: currGrp
+    values: {}
+  debugger
+  for value in uniqueValues
+    # construct new processedData
+    newProcessedData = {}
+    for index, data of processedData
+      newProcessedData[index] = metaData : data.metaData
+      newProcessedData[index].statData =
+        if currGrp of data.metaData
+          poly.filter(data.statData, currGrp, value)
+        else
+          _.clone data.statData
+    # construct value
+    result.values[value] =
+      poly.groupProcessedData(newProcessedData, _.clone groups)
+  result
+
+poly.filter = (statData, key, val) ->
+  newData = []
+  for item in statData
+    if item[key] is val
+      newData.push item
+  newData
 
 ###
 Produces a linear function that passes through two points.

@@ -63,3 +63,117 @@ test "varType", ->
   deepEqual polyjs.varType(['1','$2', '3,125', '$2,000']), 'num'
   deepEqual polyjs.varType([0,1,2,3,4,5,6,'1900-01-03',7,8,9,0,1,2,3,4,5,6,7,8,9]), 'num'
   deepEqual polyjs.varType([0,1,2,3,4,5,'1900-01-03',6,7,8]), 'date' #???
+
+test "groupProcessedData", ->
+  data =
+    1:
+      statData:[{x:1,b:'A'},{x:1,b:'A'},{x:1,b:'B'}]
+      metaData : {
+        x: {type:'num'}
+        b: {type:'cat'}
+      }
+  result = polyjs.groupProcessedData data, []
+  deepEqual result, data
+
+  result = polyjs.groupProcessedData data, ['b']
+  deepEqual result,
+    key: 'b'
+    values:
+      A:
+        1:
+          metaData: data[1].metaData
+          statData: [{x:1,b:'A'},{x:1,b:'A'}]
+      B:
+        1:
+          metaData: data[1].metaData
+          statData: [{x:1,b:'B'}]
+
+  data =
+    1:
+      statData:[{x:1,b:'A'},{x:1,b:'A'},{x:1,b:'B'}]
+      metaData : {
+        x: {type:'num'}
+        b: {type:'cat'}
+      }
+    2:
+      statData:[{y:1,b:'A'},{y:1,b:'A'},{y:2,b:'B'}]
+      metaData : {
+        y: {type:'num'}
+        b: {type:'cat'}
+      }
+  result = polyjs.groupProcessedData data, []
+  deepEqual result, data
+
+  result = polyjs.groupProcessedData data, ['b']
+  deepEqual result,
+    key: 'b'
+    values:
+      A:
+        1:
+          metaData: data[1].metaData
+          statData: [{x:1,b:'A'},{x:1,b:'A'}]
+        2:
+          metaData: data[2].metaData
+          statData: [{y:1,b:'A'},{y:1,b:'A'}]
+      B:
+        1:
+          metaData: data[1].metaData
+          statData: [{x:1,b:'B'}]
+        2:
+          metaData: data[2].metaData
+          statData: [{y:2,b:'B'}]
+
+  result = polyjs.groupProcessedData data, ['y']
+  deepEqual result,
+    key: 'y'
+    values:
+      1:
+        1: data[1]
+        2:
+          metaData: data[2].metaData
+          statData: [{y:1,b:'A'},{y:1,b:'A'}]
+      2:
+        1: data[1]
+        2:
+          metaData: data[2].metaData
+          statData: [{y:2,b:'B'}]
+
+  result = polyjs.groupProcessedData data, ['y', 'b']
+  deepEqual result,
+    key: 'y'
+    values:
+      1:
+        key: 'b'
+        values:
+          A:
+            1:
+              metaData: data[1].metaData
+              statData: [{x:1,b:'A'},{x:1,b:'A'}]
+            2:
+              metaData: data[2].metaData
+              statData: [{y:1,b:'A'},{y:1,b:'A'}]
+          B:
+            1:
+              metaData: data[1].metaData
+              statData: [{x:1,b:'B'}]
+            2:
+              metaData: data[2].metaData
+              statData: []
+      2:
+        key: 'b'
+        values:
+          A:
+            1:
+              metaData: data[1].metaData
+              statData: [{x:1,b:'A'},{x:1,b:'A'}]
+            2:
+              metaData: data[2].metaData
+              statData: []
+          B:
+            1:
+              metaData: data[1].metaData
+              statData: [{x:1,b:'B'}]
+            2:
+              metaData: data[2].metaData
+              statData: [{y:2,b:'B'}]
+
