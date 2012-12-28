@@ -2406,17 +2406,9 @@ See the spec definition for more information.
       }));
     };
 
-    Axis.prototype.render = function(dim, coord, renderer) {
-      var added, axisDim, deleted, kept, newpts, t, _i, _j, _k, _len, _len1, _len2, _ref;
+    Axis.prototype.render = function(axisDim, coord, renderer) {
+      var added, deleted, kept, newpts, t, _i, _j, _k, _len, _len1, _len2, _ref;
       this.coord = coord;
-      axisDim = {
-        top: dim.paddingTop + dim.guideTop,
-        left: dim.paddingLeft + dim.guideLeft,
-        right: dim.paddingLeft + dim.guideLeft + dim.chartWidth,
-        bottom: dim.paddingTop + dim.guideTop + dim.chartHeight,
-        width: dim.chartWidth,
-        height: dim.chartHeight
-      };
       axisDim.centerx = axisDim.left + axisDim.width / 2;
       axisDim.centery = axisDim.top + axisDim.height / 2;
       axisDim.radius = Math.min(axisDim.width, axisDim.height) / 2 - 10;
@@ -5688,15 +5680,25 @@ data processing to be done.
     };
 
     Pane.prototype.render = function(params) {
-      var axes, coord, dims, layer, renderer, rendererGuide, sampled, _i, _len, _ref;
+      var axes, axisDim, coord, dims, layer, renderer, rendererGuide, sampled, _i, _len, _ref, _results;
       dims = params.dims, renderer = params.renderer, rendererGuide = params.rendererGuide, coord = params.coord, axes = params.axes;
       _ref = this.layers;
+      _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         layer = _ref[_i];
         sampled = layer.render(renderer).sampled;
+        axisDim = {
+          top: dims.paddingTop + dims.guideTop,
+          left: dims.paddingLeft + dims.guideLeft,
+          right: dims.paddingLeft + dims.guideLeft + dims.chartWidth,
+          bottom: dims.paddingTop + dims.guideTop + dims.chartHeight,
+          width: dims.chartWidth,
+          height: dims.chartHeight
+        };
+        axes.x.render(axisDim, coord, rendererGuide);
+        _results.push(axes.y.render(axisDim, coord, rendererGuide));
       }
-      axes.x.render(dims, coord, rendererGuide);
-      return axes.y.render(dims, coord, rendererGuide);
+      return _results;
     };
 
     return Pane;

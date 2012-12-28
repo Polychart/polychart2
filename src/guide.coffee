@@ -23,17 +23,10 @@ class Axis extends Guide
     # ticks
     @ticks = poly.tick.make domain, guideSpec, type
     @maxwidth =_.max _.map @ticks, (t) -> poly.strSize t.value
-  render: (dim, coord, renderer) =>
+  render: (axisDim, coord, renderer) =>
     # NOTE: coords are included for making guide rendering for polar coordinates
     # managable. Ideally it should NOT be here and is rather a hack.
     @coord = coord
-    axisDim =
-      top: dim.paddingTop + dim.guideTop
-      left : dim.paddingLeft + dim.guideLeft
-      right: dim.paddingLeft + dim.guideLeft + dim.chartWidth
-      bottom : dim.paddingTop + dim.guideTop + dim.chartHeight
-      width: dim.chartWidth
-      height: dim.chartHeight
     axisDim.centerx = axisDim.left + axisDim.width/2
     axisDim.centery = axisDim.top + axisDim.height/2
     axisDim.radius = Math.min(axisDim.width, axisDim.height)/2 -10

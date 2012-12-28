@@ -17,6 +17,13 @@ class Pane
     {dims, renderer, rendererGuide, coord, axes} = params
     for layer in @layers
       {sampled} = layer.render renderer
-    axes.x.render dims, coord, rendererGuide
-    axes.y.render dims, coord, rendererGuide
 
+      axisDim =
+        top: dims.paddingTop + dims.guideTop
+        left : dims.paddingLeft + dims.guideLeft
+        right: dims.paddingLeft + dims.guideLeft + dims.chartWidth
+        bottom : dims.paddingTop + dims.guideTop + dims.chartHeight
+        width: dims.chartWidth
+        height: dims.chartHeight
+      axes.x.render axisDim, coord, rendererGuide
+      axes.y.render axisDim, coord, rendererGuide
