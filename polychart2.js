@@ -1521,6 +1521,11 @@ See the spec definition for more information.
       return _results;
     })();
     aesthetics = _.pick(lspec, poly["const"].aes);
+    for (key in aesthetics) {
+      if (!('var' in aesthetics[key])) {
+        delete aesthetics[key];
+      }
+    }
     transstat = [];
     select = [];
     groups = [];
