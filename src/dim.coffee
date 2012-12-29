@@ -2,7 +2,7 @@
 # GLOBALS
 ###
 poly.dim = {}
-poly.dim.make = (spec, axes, legends) ->
+poly.dim.make = (spec, axes, legends, facetGrid) ->
   dim =
     width : spec.width ? 400
     height : spec.height ? 400
@@ -52,9 +52,18 @@ poly.dim.make = (spec, axes, legends) ->
     dim.height-dim.paddingTop-dim.paddingBottom-dim.guideTop-dim.guideBottom
   dim.chartWidth=
     dim.width-dim.paddingLeft-dim.paddingRight-dim.guideLeft-dim.guideRight
+
+  # Facet adjustment
+  if facetGrid.cols? and facetGrid.cols > 1
+    dim.chartWidth -= dim.horizontalSpacing * (facetGrid.cols - 1)
+    dim.chartWidth /= facetGrid.cols
+  if facetGrid.rows? and facetGrid.rows > 1
+    dim.chartHeight -= dim.verticalSpacing * (facetGrid.rows - 1)
+    dim.chartHeight /= facetGrid.rows
+
   dim
 
-poly.dim.guess = (spec) ->
+poly.dim.guess = (spec, facetGrid) ->
   dim =
     width : spec.width ? 400
     height : spec.height ? 400
@@ -73,6 +82,12 @@ poly.dim.guess = (spec) ->
     dim.height-dim.paddingTop-dim.paddingBottom-dim.guideTop-dim.guideBottom
   dim.chartWidth=
     dim.width-dim.paddingLeft-dim.paddingRight-dim.guideLeft-dim.guideRight
+
+  # Facet adjustment
+  if facetGrid.cols? and facetGrid.cols > 1
+    dim.chartWidth -= dim.horizontalSpacing * (facetGrid.cols - 1)
+  if facetGrid.rows? and facetGrid.rows > 1
+    dim.chartHeight -= dim.verticalSpacing * (facetGrid.rows - 1)
   dim
 
 ###

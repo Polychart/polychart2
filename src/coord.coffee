@@ -28,11 +28,11 @@ class Cartesian extends Coordinate
   ranges: () ->
     ranges = {}
     ranges[@x] =
-      min: @dims.paddingLeft + @dims.guideLeft
-      max: @dims.paddingLeft + @dims.guideLeft + @dims.chartWidth
+      min: 0
+      max: @dims.chartWidth
     ranges[@y] =
-      min: @dims.paddingTop + @dims.guideTop + @dims.chartHeight
-      max: @dims.paddingTop + @dims.guideTop
+      min: @dims.chartHeight
+      max: 0
     ranges
   axisType: (aes) -> @[aes]
   getXY: (mayflip, mark) ->
@@ -60,8 +60,8 @@ class Polar extends Coordinate
   type: 'polar'
   make: (dims) ->
     @dims = dims
-    @cx = @dims.paddingLeft + @dims.guideLeft + @dims.chartWidth/2
-    @cy = @dims.paddingTop + @dims.guideTop + @dims.chartHeight/2
+    @cx = @dims.chartWidth/2
+    @cy = @dims.chartHeight/2
   getScale: (aes) ->
     if aes is 'r'
       @scales[@x]

@@ -1645,12 +1645,12 @@ See the spec definition for more information.
       var ranges;
       ranges = {};
       ranges[this.x] = {
-        min: this.dims.paddingLeft + this.dims.guideLeft,
-        max: this.dims.paddingLeft + this.dims.guideLeft + this.dims.chartWidth
+        min: 0,
+        max: this.dims.chartWidth
       };
       ranges[this.y] = {
-        min: this.dims.paddingTop + this.dims.guideTop + this.dims.chartHeight,
-        max: this.dims.paddingTop + this.dims.guideTop
+        min: this.dims.chartHeight,
+        max: 0
       };
       return ranges;
     };
@@ -1704,8 +1704,8 @@ See the spec definition for more information.
 
     Polar.prototype.make = function(dims) {
       this.dims = dims;
-      this.cx = this.dims.paddingLeft + this.dims.guideLeft + this.dims.chartWidth / 2;
-      return this.cy = this.dims.paddingTop + this.dims.guideTop + this.dims.chartHeight / 2;
+      this.cx = this.dims.chartWidth / 2;
+      return this.cy = this.dims.chartHeight / 2;
     };
 
     Polar.prototype.getScale = function(aes) {
@@ -3797,8 +3797,8 @@ See the spec definition for more information.
       return this.axes;
     };
 
-    ScaleSet.prototype.renderAxes = function(dims, renderer) {
-      var axis, axisDim, key, _i, _len, _ref, _ref1, _results;
+    ScaleSet.prototype.renderAxes = function(dims, renderer, facet) {
+      var axis, axisDim, key, offset, _i, _len, _ref, _ref1, _results;
       _ref = this.deletedAxes;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         axis = _ref[_i];
@@ -3806,10 +3806,10 @@ See the spec definition for more information.
       }
       this.deletedAxes = [];
       axisDim = {
-        top: dims.paddingTop + dims.guideTop,
-        left: dims.paddingLeft + dims.guideLeft,
-        right: dims.paddingLeft + dims.guideLeft + dims.chartWidth,
-        bottom: dims.paddingTop + dims.guideTop + dims.chartHeight,
+        top: 0,
+        left: 0,
+        right: dims.chartWidth,
+        bottom: dims.chartHeight,
         width: dims.chartWidth,
         height: dims.chartHeight
       };
@@ -3817,8 +3817,9 @@ See the spec definition for more information.
       _results = [];
       for (key in _ref1) {
         axis = _ref1[key];
-        axis.x.render(axisDim, this.coord, renderer);
-        _results.push(axis.y.render(axisDim, this.coord, renderer));
+        offset = facet.getOffset(dims, key);
+        axis.x.render(axisDim, this.coord, renderer(offset));
+        _results.push(axis.y.render(axisDim, this.coord, renderer(offset)));
       }
       return _results;
     };
@@ -5748,7 +5749,7 @@ data processing to be done.
 
   poly.dim = {};
 
-  poly.dim.make = function(spec, axes, legends) {
+  poly.dim.make = function(spec, axes, legends, facetGrid) {
     var axis, d, dim, done, k2, key, legend, maxheight, maxwidth, obj, offset, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
     dim = {
       width: (_ref = spec.width) != null ? _ref : 400,
@@ -5807,10 +5808,18 @@ data processing to be done.
     dim.guideRight += offset.x + maxwidth;
     dim.chartHeight = dim.height - dim.paddingTop - dim.paddingBottom - dim.guideTop - dim.guideBottom;
     dim.chartWidth = dim.width - dim.paddingLeft - dim.paddingRight - dim.guideLeft - dim.guideRight;
+    if ((facetGrid.cols != null) && facetGrid.cols > 1) {
+      dim.chartWidth -= dim.horizontalSpacing * (facetGrid.cols - 1);
+      dim.chartWidth /= facetGrid.cols;
+    }
+    if ((facetGrid.rows != null) && facetGrid.rows > 1) {
+      dim.chartHeight -= dim.verticalSpacing * (facetGrid.rows - 1);
+      dim.chartHeight /= facetGrid.rows;
+    }
     return dim;
   };
 
-  poly.dim.guess = function(spec) {
+  poly.dim.guess = function(spec, facetGrid) {
     var dim, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
     dim = {
       width: (_ref = spec.width) != null ? _ref : 400,
@@ -5828,6 +5837,12 @@ data processing to be done.
     };
     dim.chartHeight = dim.height - dim.paddingTop - dim.paddingBottom - dim.guideTop - dim.guideBottom;
     dim.chartWidth = dim.width - dim.paddingLeft - dim.paddingRight - dim.guideLeft - dim.guideRight;
+    if ((facetGrid.cols != null) && facetGrid.cols > 1) {
+      dim.chartWidth -= dim.horizontalSpacing * (facetGrid.cols - 1);
+    }
+    if ((facetGrid.rows != null) && facetGrid.rows > 1) {
+      dim.chartHeight -= dim.verticalSpacing * (facetGrid.rows - 1);
+    }
     return dim;
   };
 
@@ -6347,7 +6362,7 @@ data processing to be done.
   poly.facet = {};
 
   poly.facet.make = function(spec) {
-    if (!(spec != null) || !(spec.facet != null)) {
+    if (!(spec != null) || !(spec.type != null)) {
       return new NoFacet();
     }
     switch (spec.type) {
@@ -6411,11 +6426,14 @@ data processing to be done.
       return datas;
     };
 
-    Facet.prototype.getGrid = function() {
-      throw poly.error.impl();
+    Facet.prototype.getOffset = function(dims, col, row) {
+      return {
+        x: dims.paddingLeft + dims.guideLeft + (dims.chartWidth + dims.horizontalSpacing) * col,
+        y: dims.paddingTop + dims.guideTop + (dims.chartHeight + dims.verticalSpacing) * row
+      };
     };
 
-    Facet.prototype.getOffset = function(data) {
+    Facet.prototype.getGrid = function() {
       throw poly.error.impl();
     };
 
@@ -6439,17 +6457,14 @@ data processing to be done.
       return NoFacet.__super__.getIndices.call(this, datas, []);
     };
 
-    NoFacet.prototype.getOffset = function() {
-      return {
-        x: 0,
-        y: 0
-      };
+    NoFacet.prototype.getOffset = function(dims) {
+      return NoFacet.__super__.getOffset.call(this, dims, 0, 0);
     };
 
     NoFacet.prototype.getGrid = function() {
       return {
-        x: 1,
-        y: 1
+        cols: 1,
+        rows: 1
       };
     };
 
@@ -6487,7 +6502,7 @@ data processing to be done.
       this.rows = this.spec.rows;
       numFacets = this.values[this["var"]].length;
       if (!this.cols && !this.rows) {
-        this.cols = 3;
+        this.cols = Math.min(3, numFacets);
       }
       if (this.cols) {
         this.rows = Math.ceil(numFacets / this.cols);
@@ -6495,19 +6510,16 @@ data processing to be done.
         this.cols = Math.ceil(numFacets / this.rows);
       }
       return {
-        x: this.cols,
-        y: this.rows
+        cols: this.cols,
+        rows: this.rows
       };
     };
 
-    Wrap.prototype.getOffset = function(identifier) {
+    Wrap.prototype.getOffset = function(dims, identifier) {
       var id, value;
       value = this.indices[identifier][this["var"]];
       id = _.indexOf(this.values[this["var"]], value);
-      return {
-        y: Math.ceil(id / this.cols),
-        x: id % this.rows
-      };
+      return Wrap.__super__.getOffset.call(this, dims, Math.ceil(id / this.cols), id % this.rows);
     };
 
     return Wrap;
@@ -6545,19 +6557,19 @@ data processing to be done.
         throw poly.error.input("Need to run getIndices first!");
       }
       return {
-        x: this.x ? this.values[this.x].length : 1,
-        y: this.y ? this.values[this.y].length : 1
+        cols: this.x ? this.values[this.x].length : 1,
+        rows: this.y ? this.values[this.y].length : 1
       };
     };
 
-    Grid.prototype.getOffset = function(identifier) {
+    Grid.prototype.getOffset = function(dims, identifier) {
+      var col, row;
       if (!this.values || !this.indices) {
         throw poly.error.input("Need to run getIndices first!");
       }
-      return {
-        y: _.indexOf(this.values[this.y], this.indices[identifier][this.y]),
-        x: _.indexOf(this.values[this.x], this.indices[identifier][this.x])
-      };
+      col = _.indexOf(this.values[this.y], this.indices[identifier][this.y]);
+      row = _.indexOf(this.values[this.x], this.indices[identifier][this.x]);
+      return Grid.__super__.getOffset.call(this, dims, col, row);
     };
 
     return Grid;
@@ -6654,13 +6666,13 @@ data processing to be done.
     };
 
     Graph.prototype.makePanes = function() {
-      var datas, facet, indices, key, pane, _ref, _ref1, _results;
-      facet = poly.facet.make(this.spec.facet);
-      indices = facet.getIndices(this.dataprocess);
+      var datas, indices, key, pane, _ref, _ref1, _results;
+      this.facet = poly.facet.make(this.spec.facet);
+      indices = this.facet.getIndices(this.dataprocess);
       if ((_ref = this.panes) == null) {
         this.panes = this._makePanes(this.spec, this.dataprocess, indices);
       }
-      datas = facet.groupData(this.dataprocess);
+      datas = this.facet.groupData(this.dataprocess);
       _ref1 = this.panes;
       _results = [];
       for (key in _ref1) {
@@ -6677,11 +6689,11 @@ data processing to be done.
       });
       domains = poly.domain.merge(domainsets);
       if ((_ref = this.scaleSet) == null) {
-        this.scaleSet = this._makeScaleSet(this.spec, domains);
+        this.scaleSet = this._makeScaleSet(this.spec, domains, this.facet);
       }
       this.scaleSet.make(this.spec.guides, domains, _.toArray(this.panes)[0].layers);
       if (!this.dims) {
-        this.dims = this._makeDimensions(this.spec, this.scaleSet);
+        this.dims = this._makeDimensions(this.spec, this.scaleSet, this.facet);
         this.coord.make(this.dims);
         this.ranges = this.coord.ranges();
       }
@@ -6708,9 +6720,9 @@ data processing to be done.
       _ref1 = this.panes;
       for (key in _ref1) {
         pane = _ref1[key];
-        pane.render(renderer({}));
+        pane.render(renderer(this.facet.getOffset(this.dims, key)));
       }
-      this.scaleSet.renderAxes(this.dims, rendererG({}));
+      this.scaleSet.renderAxes(this.dims, rendererG, this.facet);
       return this.scaleSet.renderLegends(this.dims, rendererG({}));
     };
 
@@ -6761,15 +6773,18 @@ data processing to be done.
       return panes;
     };
 
-    Graph.prototype._makeScaleSet = function(spec, domains) {
+    Graph.prototype._makeScaleSet = function(spec, domains, facet) {
       var tmpRanges;
-      this.coord.make(poly.dim.guess(spec));
+      this.coord.make(poly.dim.guess(spec, facet.getGrid()));
       tmpRanges = this.coord.ranges();
       return poly.scaleset(tmpRanges, this.coord);
     };
 
-    Graph.prototype._makeDimensions = function(spec, scaleSet) {
-      return poly.dim.make(spec, scaleSet.makeAxes(_.keys(this.panes)), scaleSet.makeLegends());
+    Graph.prototype._makeDimensions = function(spec, scaleSet, facet) {
+      var axis, legend;
+      axis = scaleSet.makeAxes(_.keys(this.panes));
+      legend = scaleSet.makeLegends();
+      return poly.dim.make(spec, axis, legend, facet.getGrid());
     };
 
     Graph.prototype._makePaper = function(dom, width, height, handleEvent) {

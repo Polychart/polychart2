@@ -49,23 +49,23 @@ class Graph
     @render()
   makePanes: () =>
     # prep work to make indices
-    facet = poly.facet.make @spec.facet
-    indices = facet.getIndices @dataprocess
+    @facet = poly.facet.make @spec.facet
+    indices = @facet.getIndices @dataprocess
     # make panes
     @panes ?= @_makePanes @spec, @dataprocess, indices
     # make data
-    datas = facet.groupData @dataprocess
+    datas = @facet.groupData @dataprocess
     # set data
     for key, pane of @panes
       pane.make @spec, datas[key]
   mergeDomains: () =>
     domainsets = _.map @panes, (p) -> p.domains
     domains = poly.domain.merge domainsets
-    @scaleSet ?= @_makeScaleSet @spec, domains
+    @scaleSet ?= @_makeScaleSet @spec, domains, @facet
     @scaleSet.make @spec.guides, domains, _.toArray(@panes)[0].layers
     # dimension calculation
     if not @dims
-      @dims = @_makeDimensions @spec, @scaleSet
+      @dims = @_makeDimensions @spec, @scaleSet, @facet
       @coord.make @dims
       @ranges = @coord.ranges()
     @scaleSet.setRanges @ranges
@@ -85,9 +85,9 @@ class Graph
     rendererG = poly.render @handleEvent, @paper, scales, @coord, false
 
     for key, pane of @panes
-      pane.render renderer({})
+      pane.render renderer @facet.getOffset(@dims, key)
 
-    @scaleSet.renderAxes @dims, rendererG({})
+    @scaleSet.renderAxes @dims, rendererG, @facet
     @scaleSet.renderLegends @dims, rendererG({})
 
   addHandler : (h) -> @handlers.push h
@@ -121,12 +121,14 @@ class Graph
     panes
 
 
-  _makeScaleSet: (spec, domains) ->
-    @coord.make poly.dim.guess(spec)
+  _makeScaleSet: (spec, domains, facet) ->
+    @coord.make poly.dim.guess(spec, facet.getGrid())
     tmpRanges = @coord.ranges()
     poly.scaleset tmpRanges, @coord
-  _makeDimensions: (spec, scaleSet) ->
-    poly.dim.make spec, scaleSet.makeAxes(_.keys(@panes)), scaleSet.makeLegends()
+  _makeDimensions: (spec, scaleSet, facet) ->
+    axis = scaleSet.makeAxes(_.keys(@panes))
+    legend = scaleSet.makeLegends()
+    poly.dim.make spec, axis, legend, facet.getGrid()
   _makePaper: (dom, width, height, handleEvent) ->
     if _.isString dom then dom = document.getElementById(dom)
     paper = poly.paper dom, width, height, handleEvent

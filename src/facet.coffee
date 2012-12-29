@@ -8,13 +8,12 @@
 poly.facet = {}
 
 poly.facet.make = (spec) ->
-  if not spec? or not spec.facet?
+  if not spec? or not spec.type?
     return new NoFacet()
   switch spec.type
     when 'wrap' then return new Wrap spec
     when 'grid' then return new Grid spec
     else throw poly.error.defn "No such facet type #{spec.type}."
-
 
 class Facet
   constructor: (@spec) ->
@@ -45,16 +44,18 @@ class Facet
         pointer = pointer.values[value]
       datas[id] = pointer
     datas
+  getOffset: (dims, col, row) ->
+    x : dims.paddingLeft + dims.guideLeft + (dims.chartWidth + dims.horizontalSpacing) * col
+    y : dims.paddingTop + dims.guideTop + (dims.chartHeight + dims.verticalSpacing) * row
   getGrid: () -> throw poly.error.impl()
-  getOffset: (data) -> throw poly.error.impl()
 
 class NoFacet extends Facet
   groupData: (datas) ->
     super(datas, [])
   getIndices: (datas) ->
     super(datas, [])
-  getOffset: () -> {x: 0, y: 0}
-  getGrid: () -> {x: 1, y: 1}
+  getOffset: (dims) -> super(dims, 0, 0)
+  getGrid: () -> {cols: 1, rows: 1}
 
 class Wrap extends Facet
   constructor: (@spec) ->
@@ -73,18 +74,17 @@ class Wrap extends Facet
     @rows = @spec.rows
     numFacets = @values[@var].length
     if not @cols and not @rows
-      @cols = 3
+      @cols = Math.min(3, numFacets)
     if @cols
       @rows = Math.ceil(numFacets/@cols)
     else if @rows
       @cols = Math.ceil(numFacets/@rows)
-    x: @cols
-    y: @rows
-  getOffset: (identifier) ->
+    cols: @cols
+    rows: @rows
+  getOffset: (dims, identifier) ->
     value = @indices[identifier][@var]
     id = _.indexOf(@values[@var], value)
-    y: Math.ceil id/@cols
-    x: id % @rows
+    super(dims,Math.ceil(id/@cols),id % @rows)
 
 class Grid extends Facet
   constructor: (@spec) ->
@@ -102,10 +102,11 @@ class Grid extends Facet
   getGrid: () ->
     if not @values or not @indices
       throw poly.error.input "Need to run getIndices first!"
-    x: if @x then @values[@x].length else 1
-    y: if @y then @values[@y].length else 1
-  getOffset: (identifier) ->
+    cols: if @x then @values[@x].length else 1
+    rows: if @y then @values[@y].length else 1
+  getOffset: (dims, identifier) ->
     if not @values or not @indices
       throw poly.error.input "Need to run getIndices first!"
-    y: _.indexOf @values[@y], @indices[identifier][@y]
-    x: _.indexOf @values[@x], @indices[identifier][@x]
+    col = _.indexOf @values[@y], @indices[identifier][@y]
+    row = _.indexOf @values[@x], @indices[identifier][@x]
+    super(dims, col, row)

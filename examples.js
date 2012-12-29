@@ -872,7 +872,9 @@
       facet: {
         type: 'wrap',
         "var": 'o'
-      }
+      },
+      width: 600,
+      height: 200
     };
     return c = polyjs.chart(spec);
   };

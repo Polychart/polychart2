@@ -110,19 +110,20 @@ class ScaleSet
         guideSpec: @getSpec 'y'
         key: poly.getLabel @layers, 'y'
     @axes
-  renderAxes: (dims, renderer) ->
+  renderAxes: (dims, renderer, facet) ->
     axis.remove(renderer) for axis in @deletedAxes
     @deletedAxes = []
     axisDim =
-      top: dims.paddingTop + dims.guideTop
-      left : dims.paddingLeft + dims.guideLeft
-      right: dims.paddingLeft + dims.guideLeft + dims.chartWidth
-      bottom : dims.paddingTop + dims.guideTop + dims.chartHeight
+      top: 0
+      left : 0
+      right: dims.chartWidth
+      bottom : dims.chartHeight
       width: dims.chartWidth
       height: dims.chartHeight
     for key, axis of @axes
-      axis.x.render axisDim, @coord, renderer
-      axis.y.render axisDim, @coord, renderer
+      offset = facet.getOffset(dims, key)
+      axis.x.render axisDim, @coord, renderer(offset)
+      axis.y.render axisDim, @coord, renderer(offset)
 
   _mapLayers: (layers) ->
     obj = {}
