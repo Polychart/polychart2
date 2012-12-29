@@ -83,3 +83,49 @@
   }
   c = polyjs.chart spec
 
+@examples.facet_polar = (dom) ->
+  o = (i) -> ""+i%3
+  p = (i) -> ""+i%2
+  jsondata = ({index:i%6, value:Math.random()*10, o: o(i), p:p(i)} for i in [0..50])
+  data = new polyjs.Data json:jsondata
+  spec = {
+    layers: [
+      data: data, type: 'bar',
+      x : 'bin(index,1)', y : 'value'
+      position:'dodge'
+    ]
+    coord: polyjs.coord.polar()
+    dom: dom
+    facet:
+      type: 'grid'
+      x: 'o'
+      y: 'p'
+    width: 600
+    height: 500
+
+  }
+  c = polyjs.chart spec
+
+@examples.facet_polar_wrap = (dom) ->
+  o = (i) -> ""+i%6
+  jsondata = ({index:i%7, value:Math.random()*10, o: o(i)} for i in [0..50])
+  data = new polyjs.Data json:jsondata
+  spec = {
+    layers: [
+      data: data, type: 'bar',
+      x : 'bin(index,1)', y : 'value'
+      color: 'o'
+      position:'dodge'
+    ]
+    coord: polyjs.coord.polar(flip:true)
+    dom: dom
+    facet:
+      type: 'wrap'
+      var: 'o'
+    width: 600
+    height: 500
+
+  }
+  c = polyjs.chart spec
+
+

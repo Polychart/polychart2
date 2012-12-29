@@ -70,6 +70,7 @@ class Facet
 class NoFacet extends Facet
   getOffset: (dims) -> super(dims, 0, 0)
   getGrid: () -> {cols: 1, rows: 1}
+  edge: (dir) -> () -> true
 
 class Wrap extends Facet
   constructor: (@spec) ->

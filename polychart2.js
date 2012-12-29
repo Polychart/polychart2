@@ -6521,6 +6521,12 @@ data processing to be done.
       };
     };
 
+    NoFacet.prototype.edge = function(dir) {
+      return function() {
+        return true;
+      };
+    };
+
     return NoFacet;
 
   })(Facet);
