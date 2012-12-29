@@ -15,8 +15,8 @@ class DataProcess
   reset : (callback) -> @make @initialSpec, callback
 
   ## calculate things...
-  make : (spec, callback) ->
-    dataSpec = poly.parser.layerToData spec
+  make : (spec, grouping, callback) ->
+    dataSpec = poly.parser.layerToData spec, grouping
     wrappedCallback = @_wrap callback
     if @strictmode
       wrappedCallback @dataObj.json, {}

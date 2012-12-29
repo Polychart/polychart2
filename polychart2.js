@@ -1503,7 +1503,7 @@ See the spec definition for more information.
     return results;
   };
 
-  layerToDataSpec = function(lspec) {
+  layerToDataSpec = function(lspec, grouping) {
     var aesthetics, dedupByName, desc, expr, filters, groups, key, metas, name, result, sdesc, select, sexpr, stats, transstat, transstats, ts, val, _ref1, _ref2;
     filters = {};
     _ref2 = (_ref1 = lspec.filter) != null ? _ref1 : {};
@@ -4338,9 +4338,9 @@ data processing to be done.
       return this.make(this.initialSpec, callback);
     };
 
-    DataProcess.prototype.make = function(spec, callback) {
+    DataProcess.prototype.make = function(spec, grouping, callback) {
       var dataSpec, wrappedCallback;
-      dataSpec = poly.parser.layerToData(spec);
+      dataSpec = poly.parser.layerToData(spec, grouping);
       wrappedCallback = this._wrap(callback);
       if (this.strictmode) {
         wrappedCallback(this.dataObj.json, {});
@@ -6380,13 +6380,15 @@ data processing to be done.
     function Facet(spec) {
       this.spec = spec;
       this.values = {};
+      this.groups = [];
     }
 
-    Facet.prototype.getIndices = function(datas, groups) {
-      var data, index, indexValues, key, stringify, v, val, _i, _j, _len, _len1;
+    Facet.prototype.getIndices = function(datas) {
+      var data, index, indexValues, key, stringify, v, val, _i, _j, _len, _len1, _ref;
       this.values = {};
-      for (_i = 0, _len = groups.length; _i < _len; _i++) {
-        key = groups[_i];
+      _ref = this.groups;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        key = _ref[_i];
         v = [];
         for (index in datas) {
           data = datas[index];
@@ -6398,7 +6400,7 @@ data processing to be done.
       }
       indexValues = poly.cross(this.values);
       this.indices = {};
-      stringify = poly.stringify(groups);
+      stringify = poly.stringify(this.groups);
       for (_j = 0, _len1 = indexValues.length; _j < _len1; _j++) {
         val = indexValues[_j];
         this.indices[stringify(val)] = val;
@@ -6406,13 +6408,13 @@ data processing to be done.
       return this.indices;
     };
 
-    Facet.prototype.groupData = function(unfaceted, groups) {
+    Facet.prototype.groupData = function(unfaceted) {
       var datas, groupedData, id, mindex, pointer, value, _ref;
       if (!this.indices) {
-        this.getIndices(unfacted, groups);
+        this.getIndices(unfacted, this.groups);
       }
       datas = {};
-      groupedData = poly.groupProcessedData(unfaceted, groups);
+      groupedData = poly.groupProcessedData(unfaceted, this.groups);
       _ref = this.indices;
       for (id in _ref) {
         mindex = _ref[id];
@@ -6449,14 +6451,6 @@ data processing to be done.
       return NoFacet.__super__.constructor.apply(this, arguments);
     }
 
-    NoFacet.prototype.groupData = function(datas) {
-      return NoFacet.__super__.groupData.call(this, datas, []);
-    };
-
-    NoFacet.prototype.getIndices = function(datas) {
-      return NoFacet.__super__.getIndices.call(this, datas, []);
-    };
-
     NoFacet.prototype.getOffset = function(dims) {
       return NoFacet.__super__.getOffset.call(this, dims, 0, 0);
     };
@@ -6483,15 +6477,8 @@ data processing to be done.
       }
       this["var"] = this.spec["var"];
       Wrap.__super__.constructor.call(this, this.spec);
+      this.groups = [this["var"]];
     }
-
-    Wrap.prototype.groupData = function(datas) {
-      return Wrap.__super__.groupData.call(this, datas, [this["var"]]);
-    };
-
-    Wrap.prototype.getIndices = function(datas) {
-      return Wrap.__super__.getIndices.call(this, datas, [this["var"]]);
-    };
 
     Wrap.prototype.getGrid = function() {
       var numFacets;
@@ -6538,19 +6525,8 @@ data processing to be done.
       this.x = this.spec.x;
       this.y = this.spec.y;
       Grid.__super__.constructor.call(this, this.spec);
+      this.groups = _.compact([this.x, this.y]);
     }
-
-    Grid.prototype.groupData = function(datas) {
-      var groups;
-      groups = _.compact([this.x, this.y]);
-      return Grid.__super__.groupData.call(this, datas, groups);
-    };
-
-    Grid.prototype.getIndices = function(datas) {
-      var groups;
-      groups = _.compact([this.x, this.y]);
-      return Grid.__super__.getIndices.call(this, datas, groups);
-    };
 
     Grid.prototype.getGrid = function() {
       if (!this.values || !this.indices) {
@@ -6630,6 +6606,7 @@ data processing to be done.
       spec = poly.spec.toStrictMode(spec);
       poly.spec.check(spec);
       this.spec = spec;
+      this.facet = poly.facet.make(this.spec.facet);
       if (!this.dataSubscribed) {
         dataChange = this.handleEvent('data');
         _ref = spec.layers;
@@ -6648,7 +6625,7 @@ data processing to be done.
         layerSpec = _ref1[id];
         spec = this.spec.layers[id];
         this.dataprocess[id] = new poly.DataProcess(spec, spec.strict);
-        _results.push(this.dataprocess[id].make(spec, function(statData, metaData) {
+        _results.push(this.dataprocess[id].make(spec, this.facet.groups, function(statData, metaData) {
           processedData[id] = {
             statData: statData,
             metaData: metaData
@@ -6667,7 +6644,6 @@ data processing to be done.
 
     Graph.prototype.makePanes = function() {
       var datas, indices, key, pane, _ref, _ref1, _results;
-      this.facet = poly.facet.make(this.spec.facet);
       indices = this.facet.getIndices(this.dataprocess);
       if ((_ref = this.panes) == null) {
         this.panes = this._makePanes(this.spec, this.dataprocess, indices);

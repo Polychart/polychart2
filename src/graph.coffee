@@ -25,6 +25,8 @@ class Graph
     spec = poly.spec.toStrictMode spec
     poly.spec.check spec
     @spec = spec
+    # facet?
+    @facet = poly.facet.make @spec.facet
     # subscribe to changes to data
     if not @dataSubscribed
       dataChange = @handleEvent 'data'
@@ -38,7 +40,7 @@ class Graph
     for layerSpec, id in spec.layers
       spec = @spec.layers[id] #repeated
       @dataprocess[id] = new poly.DataProcess spec, spec.strict
-      @dataprocess[id].make spec, (statData, metaData) =>
+      @dataprocess[id].make spec, @facet.groups, (statData, metaData) =>
         processedData[id] =
           statData: statData
           metaData: metaData
@@ -49,7 +51,6 @@ class Graph
     @render()
   makePanes: () =>
     # prep work to make indices
-    @facet = poly.facet.make @spec.facet
     indices = @facet.getIndices @dataprocess
     # make panes
     @panes ?= @_makePanes @spec, @dataprocess, indices

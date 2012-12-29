@@ -18,9 +18,10 @@ poly.facet.make = (spec) ->
 class Facet
   constructor: (@spec) ->
     @values = {}
-  getIndices: (datas, groups) ->
+    @groups = []
+  getIndices: (datas) ->
     @values = {}
-    for key in groups
+    for key in @groups
       v = []
       for index, data of datas
         if key of data.metaData
@@ -29,14 +30,14 @@ class Facet
     indexValues = poly.cross @values
     # format
     @indices = {}
-    stringify = poly.stringify groups
+    stringify = poly.stringify @groups
     for val in indexValues
       @indices[stringify val] = val
     @indices
-  groupData: (unfaceted, groups) ->
-    if not @indices then @getIndices(unfacted, groups)
+  groupData: (unfaceted) ->
+    if not @indices then @getIndices(unfacted, @groups)
     datas = {}
-    groupedData = poly.groupProcessedData unfaceted, groups
+    groupedData = poly.groupProcessedData unfaceted, @groups
     for id, mindex of @indices
       pointer = groupedData
       while pointer.grouped is true
@@ -50,10 +51,6 @@ class Facet
   getGrid: () -> throw poly.error.impl()
 
 class NoFacet extends Facet
-  groupData: (datas) ->
-    super(datas, [])
-  getIndices: (datas) ->
-    super(datas, [])
   getOffset: (dims) -> super(dims, 0, 0)
   getGrid: () -> {cols: 1, rows: 1}
 
@@ -63,10 +60,7 @@ class Wrap extends Facet
       throw poly.error.defn "You didn't specify a variable to facet on."
     @var = @spec.var
     super @spec
-  groupData: (datas) ->
-    super(datas, [@var])
-  getIndices: (datas) ->
-    super(datas, [@var])
+    @groups = [@var]
   getGrid: () ->
     if not @values or not @indices
       throw poly.error.input "Need to run getIndices first!"
@@ -93,12 +87,7 @@ class Grid extends Facet
     @x = @spec.x
     @y = @spec.y
     super @spec
-  groupData: (datas) ->
-    groups = _.compact [@x, @y]
-    super(datas, groups)
-  getIndices: (datas) ->
-    groups = _.compact [@x, @y]
-    super(datas, groups)
+    @groups = _.compact [@x, @y]
   getGrid: () ->
     if not @values or not @indices
       throw poly.error.input "Need to run getIndices first!"
