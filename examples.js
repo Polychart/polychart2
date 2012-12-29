@@ -916,11 +916,99 @@
       ],
       dom: dom,
       facet: {
+        type: 'grid',
+        x: 'o',
+        y: 'o'
+      },
+      width: 600,
+      height: 500
+    };
+    return c = polyjs.chart(spec);
+  };
+
+  this.examples.facet3 = function(dom) {
+    var c, data, i, jsondata, o, spec;
+    o = function(i) {
+      return "" + i % 6;
+    };
+    jsondata = (function() {
+      var _i, _results;
+      _results = [];
+      for (i = _i = 0; _i <= 50; i = ++_i) {
+        _results.push({
+          index: i % 7,
+          value: Math.random() * 10,
+          o: o(i)
+        });
+      }
+      return _results;
+    })();
+    data = new polyjs.Data({
+      json: jsondata
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: 'bin(index,1)',
+          y: 'value',
+          position: 'dodge'
+        }
+      ],
+      dom: dom,
+      facet: {
         type: 'wrap',
         "var": 'o'
       },
       width: 600,
-      height: 200
+      height: 500
+    };
+    return c = polyjs.chart(spec);
+  };
+
+  this.examples.facet4 = function(dom) {
+    var c, data, i, jsondata, o, p, spec;
+    o = function(i) {
+      return "" + i % 3;
+    };
+    p = function(i) {
+      return "" + i % 2;
+    };
+    jsondata = (function() {
+      var _i, _results;
+      _results = [];
+      for (i = _i = 0; _i <= 50; i = ++_i) {
+        _results.push({
+          index: i % 6,
+          value: Math.random() * 10,
+          o: o(i),
+          p: p(i)
+        });
+      }
+      return _results;
+    })();
+    data = new polyjs.Data({
+      json: jsondata
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: 'bin(index,1)',
+          y: 'value',
+          position: 'dodge'
+        }
+      ],
+      dom: dom,
+      facet: {
+        type: 'grid',
+        x: 'o',
+        y: 'p'
+      },
+      width: 600,
+      height: 500
     };
     return c = polyjs.chart(spec);
   };

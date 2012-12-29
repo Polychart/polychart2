@@ -98,6 +98,7 @@ class ScaleSet
       @axes[key] =
         x: poly.guide.axis @coord.axisType('x')
         y: poly.guide.axis @coord.axisType('y')
+
     for key, axis of @axes
       axis.x.make
         domain: @domainx
@@ -120,10 +121,18 @@ class ScaleSet
       bottom : dims.chartHeight
       width: dims.chartWidth
       height: dims.chartHeight
+    xpos= @getSpec('x').position ? 'bottom'
+    drawx = facet.edge(xpos)
+    xoverride = renderLabel : false, renderTick : false
+    ypos= @getSpec('y').position ? 'left'
+    drawy = facet.edge(ypos)
+    yoverride = renderLabel : false, renderTick : false
     for key, axis of @axes
       offset = facet.getOffset(dims, key)
-      axis.x.render axisDim, @coord, renderer(offset)
-      axis.y.render axisDim, @coord, renderer(offset)
+      override = if drawx(key) then {} else xoverride
+      axis.x.render axisDim, @coord, renderer(offset), override
+      override = if drawy(key) then {} else yoverride
+      axis.y.render axisDim, @coord, renderer(offset), override
 
   _mapLayers: (layers) ->
     obj = {}

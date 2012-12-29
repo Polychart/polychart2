@@ -14,16 +14,18 @@ class Axis extends Guide
     @pts = {}
   make: (params) =>
     {domain, type, guideSpec, key} = params
+    option = (item, def) => guideSpec[item] ? def
     # options
-    @titletext = guideSpec.title ? key
-    @renderTick = guideSpec.renderTick ? true
-    @renderGrid = guideSpec.renderGrid ? true
-    @renderLabel = guideSpec.renderLabel ? true
-    @renderLine = guideSpec.renderLine ? true
+    @titletext = option('title', key)
+    @renderTick = option('renderTick', true)
+    @renderGrid = option('renderGrid', true)
+    @renderLabel = option('renderLabel', true)
+    @renderLine = option('renderLine', true)
     # ticks
     @ticks = poly.tick.make domain, guideSpec, type
     @maxwidth =_.max _.map @ticks, (t) -> poly.strSize t.value
-  render: (axisDim, coord, renderer) =>
+  render: (axisDim, coord, renderer, override) =>
+    override ?= {}
     # NOTE: coords are included for making guide rendering for polar coordinates
     # managable. Ideally it should NOT be here and is rather a hack.
     @coord = coord
@@ -32,49 +34,61 @@ class Axis extends Guide
     axisDim.radius = Math.min(axisDim.width, axisDim.height)/2 -10
     if @renderLine
       if @line? then renderer.remove @line
-      @line = @_renderline renderer, axisDim
+      if not override.renderLine
+        @line = @_renderline renderer, axisDim
 
+    """
     if @title?
       @title = renderer.animate @title, @_makeTitle(axisDim, @titletext)
     else
       @title = renderer.add @_makeTitle(axisDim, @titletext)
+    """
 
     {deleted, kept, added} = poly.compare _.keys(@pts), _.keys(@ticks)
     newpts = {}
     for t in kept
-      newpts[t] = @_modify renderer, @pts[t], @ticks[t], axisDim
+      newpts[t] = @_modify renderer, @pts[t], @ticks[t], axisDim, override
     for t in added
-      newpts[t] = @_add renderer, @ticks[t], axisDim
+      newpts[t] = @_add renderer, @ticks[t], axisDim, override
     for t in deleted
-      @_delete renderer, @pts[t]
+      @_delete renderer, @pts[t], override
     @pts = newpts
     @rendered = true
-  _add: (renderer, tick, axisDim) =>
+  _add: (renderer, tick, axisDim, override) =>
     obj = {}
-    if @renderTick
+    if @renderTick and (override.renderTick ? true)
       obj.tick = renderer.add @_makeTick(axisDim, tick)
-    if @renderLabel
+    if @renderLabel and (override.renderLabel ? true)
       obj.text = renderer.add @_makeLabel(axisDim, tick)
-    if @renderGrid
+    if @renderGrid and (override.renderGrid ? true)
       obj.grid = renderer.add @_makeGrid(axisDim, tick)
       obj.grid.toBack()
     obj
   _delete: (renderer, pt) ->
-    if @renderTick
+    if pt.tick?
       renderer.remove pt.tick
-    if @renderLabel
+    if pt.text?
       renderer.remove pt.text
-    if @renderGrid
+    if pt.grid?
       renderer.remove pt.grid
   _modify: (renderer, pt, tick, axisDim) =>
     obj = {}
     if @renderTick
-      obj.tick = renderer.animate pt.tick, @_makeTick(axisDim, tick)
+      if not (override.renderTick ? true)
+        renderer.remove pt.tick
+      else
+        obj.tick = renderer.animate pt.tick, @_makeTick(axisDim, tick)
     if @renderLabel
-      obj.text = renderer.animate pt.text, @_makeLabel(axisDim, tick)
+      if not (override.renderLabel ? true)
+        renderer.remove pt.text
+      else
+        obj.text = renderer.animate pt.text, @_makeLabel(axisDim, tick)
     if @renderGrid
-      obj.grid = renderer.animate pt.grid, @_makeGrid(axisDim, tick)
-      obj.grid.toBack()
+      if not (override.renderGrid ? true)
+        renderer.remove pt.grid
+      else
+        obj.grid = renderer.animate pt.grid, @_makeGrid(axisDim, tick)
+        obj.grid.toBack()
     obj
   _renderline : () -> throw poly.error.impl()
   _makeTitle: () -> throw poly.error.impl()

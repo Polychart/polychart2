@@ -49,6 +49,23 @@ class Facet
     x : dims.paddingLeft + dims.guideLeft + (dims.chartWidth + dims.horizontalSpacing) * col
     y : dims.paddingTop + dims.guideTop + (dims.chartHeight + dims.verticalSpacing) * row
   getGrid: () -> throw poly.error.impl()
+  edge: (dir, col, row) ->
+    grp = if dir in ['top', 'bottom'] then col else row
+    optimize =
+      if dir is 'top' then row
+      else if dir is 'bottom' then (k) -> -row(k)
+      else if dir is 'left' then col
+      else if dir is 'right' then (k) -> -col(k)
+    acc = {}
+    for key of @indices
+      n = grp(key)
+      m = optimize(key)
+      if not acc[n] or m <acc[n].v
+        acc[n] =
+          v: m
+          k: key
+    edge = _.pluck(acc, 'k')
+    (identifier) -> identifier in edge
 
 class NoFacet extends Facet
   getOffset: (dims) -> super(dims, 0, 0)
@@ -75,10 +92,15 @@ class Wrap extends Facet
       @cols = Math.ceil(numFacets/@rows)
     cols: @cols
     rows: @rows
+  edge: (dir) ->
+    col = (id) => _.indexOf(@values[@var], @indices[id][@var]) % @cols
+    row = (id) => Math.floor(_.indexOf(@values[@var], @indices[id][@var]) / @cols)
+    super(dir, col, row)
   getOffset: (dims, identifier) ->
+    # buggy?
     value = @indices[identifier][@var]
     id = _.indexOf(@values[@var], value)
-    super(dims,Math.ceil(id/@cols),id % @rows)
+    super(dims,id % @cols, Math.floor(id/@cols))
 
 class Grid extends Facet
   constructor: (@spec) ->
@@ -93,9 +115,13 @@ class Grid extends Facet
       throw poly.error.input "Need to run getIndices first!"
     cols: if @x then @values[@x].length else 1
     rows: if @y then @values[@y].length else 1
+  edge: (dir) ->
+    row = (id) => _.indexOf @values[@y], @indices[id][@y]
+    col = (id) => _.indexOf @values[@x], @indices[id][@x]
+    super(dir, col, row)
   getOffset: (dims, identifier) ->
     if not @values or not @indices
       throw poly.error.input "Need to run getIndices first!"
-    col = _.indexOf @values[@y], @indices[identifier][@y]
-    row = _.indexOf @values[@x], @indices[identifier][@x]
+    row = _.indexOf @values[@y], @indices[identifier][@y]
+    col = _.indexOf @values[@x], @indices[identifier][@x]
     super(dims, col, row)

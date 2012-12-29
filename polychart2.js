@@ -2393,21 +2393,29 @@ See the spec definition for more information.
     }
 
     Axis.prototype.make = function(params) {
-      var domain, guideSpec, key, type, _ref, _ref1, _ref2, _ref3, _ref4;
+      var domain, guideSpec, key, option, type,
+        _this = this;
       domain = params.domain, type = params.type, guideSpec = params.guideSpec, key = params.key;
-      this.titletext = (_ref = guideSpec.title) != null ? _ref : key;
-      this.renderTick = (_ref1 = guideSpec.renderTick) != null ? _ref1 : true;
-      this.renderGrid = (_ref2 = guideSpec.renderGrid) != null ? _ref2 : true;
-      this.renderLabel = (_ref3 = guideSpec.renderLabel) != null ? _ref3 : true;
-      this.renderLine = (_ref4 = guideSpec.renderLine) != null ? _ref4 : true;
+      option = function(item, def) {
+        var _ref;
+        return (_ref = guideSpec[item]) != null ? _ref : def;
+      };
+      this.titletext = option('title', key);
+      this.renderTick = option('renderTick', true);
+      this.renderGrid = option('renderGrid', true);
+      this.renderLabel = option('renderLabel', true);
+      this.renderLine = option('renderLine', true);
       this.ticks = poly.tick.make(domain, guideSpec, type);
       return this.maxwidth = _.max(_.map(this.ticks, function(t) {
         return poly.strSize(t.value);
       }));
     };
 
-    Axis.prototype.render = function(axisDim, coord, renderer) {
+    Axis.prototype.render = function(axisDim, coord, renderer, override) {
       var added, deleted, kept, newpts, t, _i, _j, _k, _len, _len1, _len2, _ref;
+      if (override == null) {
+        override = {};
+      }
       this.coord = coord;
       axisDim.centerx = axisDim.left + axisDim.width / 2;
       axisDim.centery = axisDim.top + axisDim.height / 2;
@@ -2416,41 +2424,40 @@ See the spec definition for more information.
         if (this.line != null) {
           renderer.remove(this.line);
         }
-        this.line = this._renderline(renderer, axisDim);
+        if (!override.renderLine) {
+          this.line = this._renderline(renderer, axisDim);
+        }
       }
-      if (this.title != null) {
-        this.title = renderer.animate(this.title, this._makeTitle(axisDim, this.titletext));
-      } else {
-        this.title = renderer.add(this._makeTitle(axisDim, this.titletext));
-      }
+      "if @title?\n  @title = renderer.animate @title, @_makeTitle(axisDim, @titletext)\nelse\n  @title = renderer.add @_makeTitle(axisDim, @titletext)";
+
       _ref = poly.compare(_.keys(this.pts), _.keys(this.ticks)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
       newpts = {};
       for (_i = 0, _len = kept.length; _i < _len; _i++) {
         t = kept[_i];
-        newpts[t] = this._modify(renderer, this.pts[t], this.ticks[t], axisDim);
+        newpts[t] = this._modify(renderer, this.pts[t], this.ticks[t], axisDim, override);
       }
       for (_j = 0, _len1 = added.length; _j < _len1; _j++) {
         t = added[_j];
-        newpts[t] = this._add(renderer, this.ticks[t], axisDim);
+        newpts[t] = this._add(renderer, this.ticks[t], axisDim, override);
       }
       for (_k = 0, _len2 = deleted.length; _k < _len2; _k++) {
         t = deleted[_k];
-        this._delete(renderer, this.pts[t]);
+        this._delete(renderer, this.pts[t], override);
       }
       this.pts = newpts;
       return this.rendered = true;
     };
 
-    Axis.prototype._add = function(renderer, tick, axisDim) {
-      var obj;
+    Axis.prototype._add = function(renderer, tick, axisDim, override) {
+      var obj, _ref, _ref1, _ref2;
       obj = {};
-      if (this.renderTick) {
+      if (this.renderTick && ((_ref = override.renderTick) != null ? _ref : true)) {
         obj.tick = renderer.add(this._makeTick(axisDim, tick));
       }
-      if (this.renderLabel) {
+      if (this.renderLabel && ((_ref1 = override.renderLabel) != null ? _ref1 : true)) {
         obj.text = renderer.add(this._makeLabel(axisDim, tick));
       }
-      if (this.renderGrid) {
+      if (this.renderGrid && ((_ref2 = override.renderGrid) != null ? _ref2 : true)) {
         obj.grid = renderer.add(this._makeGrid(axisDim, tick));
         obj.grid.toBack();
       }
@@ -2458,29 +2465,41 @@ See the spec definition for more information.
     };
 
     Axis.prototype._delete = function(renderer, pt) {
-      if (this.renderTick) {
+      if (pt.tick != null) {
         renderer.remove(pt.tick);
       }
-      if (this.renderLabel) {
+      if (pt.text != null) {
         renderer.remove(pt.text);
       }
-      if (this.renderGrid) {
+      if (pt.grid != null) {
         return renderer.remove(pt.grid);
       }
     };
 
     Axis.prototype._modify = function(renderer, pt, tick, axisDim) {
-      var obj;
+      var obj, _ref, _ref1, _ref2;
       obj = {};
       if (this.renderTick) {
-        obj.tick = renderer.animate(pt.tick, this._makeTick(axisDim, tick));
+        if (!((_ref = override.renderTick) != null ? _ref : true)) {
+          renderer.remove(pt.tick);
+        } else {
+          obj.tick = renderer.animate(pt.tick, this._makeTick(axisDim, tick));
+        }
       }
       if (this.renderLabel) {
-        obj.text = renderer.animate(pt.text, this._makeLabel(axisDim, tick));
+        if (!((_ref1 = override.renderLabel) != null ? _ref1 : true)) {
+          renderer.remove(pt.text);
+        } else {
+          obj.text = renderer.animate(pt.text, this._makeLabel(axisDim, tick));
+        }
       }
       if (this.renderGrid) {
-        obj.grid = renderer.animate(pt.grid, this._makeGrid(axisDim, tick));
-        obj.grid.toBack();
+        if (!((_ref2 = override.renderGrid) != null ? _ref2 : true)) {
+          renderer.remove(pt.grid);
+        } else {
+          obj.grid = renderer.animate(pt.grid, this._makeGrid(axisDim, tick));
+          obj.grid.toBack();
+        }
       }
       return obj;
     };
@@ -3798,7 +3817,7 @@ See the spec definition for more information.
     };
 
     ScaleSet.prototype.renderAxes = function(dims, renderer, facet) {
-      var axis, axisDim, key, offset, _i, _len, _ref, _ref1, _results;
+      var axis, axisDim, drawx, drawy, key, offset, override, xoverride, xpos, yoverride, ypos, _i, _len, _ref, _ref1, _ref2, _ref3, _results;
       _ref = this.deletedAxes;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         axis = _ref[_i];
@@ -3813,13 +3832,27 @@ See the spec definition for more information.
         width: dims.chartWidth,
         height: dims.chartHeight
       };
-      _ref1 = this.axes;
+      xpos = (_ref1 = this.getSpec('x').position) != null ? _ref1 : 'bottom';
+      drawx = facet.edge(xpos);
+      xoverride = {
+        renderLabel: false,
+        renderTick: false
+      };
+      ypos = (_ref2 = this.getSpec('y').position) != null ? _ref2 : 'left';
+      drawy = facet.edge(ypos);
+      yoverride = {
+        renderLabel: false,
+        renderTick: false
+      };
+      _ref3 = this.axes;
       _results = [];
-      for (key in _ref1) {
-        axis = _ref1[key];
+      for (key in _ref3) {
+        axis = _ref3[key];
         offset = facet.getOffset(dims, key);
-        axis.x.render(axisDim, this.coord, renderer(offset));
-        _results.push(axis.y.render(axisDim, this.coord, renderer(offset)));
+        override = drawx(key) ? {} : xoverride;
+        axis.x.render(axisDim, this.coord, renderer(offset), override);
+        override = drawy(key) ? {} : yoverride;
+        _results.push(axis.y.render(axisDim, this.coord, renderer(offset), override));
       }
       return _results;
     };
@@ -5758,8 +5791,8 @@ data processing to be done.
       paddingRight: (_ref3 = spec.paddingRight) != null ? _ref3 : 10,
       paddingTop: (_ref4 = spec.paddingTop) != null ? _ref4 : 10,
       paddingBottom: (_ref5 = spec.paddingBottom) != null ? _ref5 : 10,
-      horizontalSpacing: (_ref6 = spec.horizontalSpacing) != null ? _ref6 : 5,
-      verticalSpacing: (_ref7 = spec.verticalSpacing) != null ? _ref7 : 5,
+      horizontalSpacing: (_ref6 = spec.horizontalSpacing) != null ? _ref6 : 10,
+      verticalSpacing: (_ref7 = spec.verticalSpacing) != null ? _ref7 : 10,
       guideTop: 10,
       guideRight: 0,
       guideLeft: 5,
@@ -5832,8 +5865,8 @@ data processing to be done.
       guideRight: 40,
       guideTop: 10,
       guideBottom: 30,
-      horizontalSpacing: (_ref6 = spec.horizontalSpacing) != null ? _ref6 : 5,
-      verticalSpacing: (_ref7 = spec.verticalSpacing) != null ? _ref7 : 5
+      horizontalSpacing: (_ref6 = spec.horizontalSpacing) != null ? _ref6 : 10,
+      verticalSpacing: (_ref7 = spec.verticalSpacing) != null ? _ref7 : 10
     };
     dim.chartHeight = dim.height - dim.paddingTop - dim.paddingBottom - dim.guideTop - dim.guideBottom;
     dim.chartWidth = dim.width - dim.paddingLeft - dim.paddingRight - dim.guideLeft - dim.guideRight;
@@ -6356,6 +6389,7 @@ data processing to be done.
 // Generated by CoffeeScript 1.4.0
 (function() {
   var Facet, Grid, NoFacet, Wrap,
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -6439,6 +6473,31 @@ data processing to be done.
       throw poly.error.impl();
     };
 
+    Facet.prototype.edge = function(dir, col, row) {
+      var acc, edge, grp, key, m, n, optimize;
+      grp = dir === 'top' || dir === 'bottom' ? col : row;
+      optimize = dir === 'top' ? row : dir === 'bottom' ? function(k) {
+        return -row(k);
+      } : dir === 'left' ? col : dir === 'right' ? function(k) {
+        return -col(k);
+      } : void 0;
+      acc = {};
+      for (key in this.indices) {
+        n = grp(key);
+        m = optimize(key);
+        if (!acc[n] || m < acc[n].v) {
+          acc[n] = {
+            v: m,
+            k: key
+          };
+        }
+      }
+      edge = _.pluck(acc, 'k');
+      return function(identifier) {
+        return __indexOf.call(edge, identifier) >= 0;
+      };
+    };
+
     return Facet;
 
   })();
@@ -6502,11 +6561,23 @@ data processing to be done.
       };
     };
 
+    Wrap.prototype.edge = function(dir) {
+      var col, row,
+        _this = this;
+      col = function(id) {
+        return _.indexOf(_this.values[_this["var"]], _this.indices[id][_this["var"]]) % _this.cols;
+      };
+      row = function(id) {
+        return Math.floor(_.indexOf(_this.values[_this["var"]], _this.indices[id][_this["var"]]) / _this.cols);
+      };
+      return Wrap.__super__.edge.call(this, dir, col, row);
+    };
+
     Wrap.prototype.getOffset = function(dims, identifier) {
       var id, value;
       value = this.indices[identifier][this["var"]];
       id = _.indexOf(this.values[this["var"]], value);
-      return Wrap.__super__.getOffset.call(this, dims, Math.ceil(id / this.cols), id % this.rows);
+      return Wrap.__super__.getOffset.call(this, dims, id % this.cols, Math.floor(id / this.cols));
     };
 
     return Wrap;
@@ -6538,13 +6609,25 @@ data processing to be done.
       };
     };
 
+    Grid.prototype.edge = function(dir) {
+      var col, row,
+        _this = this;
+      row = function(id) {
+        return _.indexOf(_this.values[_this.y], _this.indices[id][_this.y]);
+      };
+      col = function(id) {
+        return _.indexOf(_this.values[_this.x], _this.indices[id][_this.x]);
+      };
+      return Grid.__super__.edge.call(this, dir, col, row);
+    };
+
     Grid.prototype.getOffset = function(dims, identifier) {
       var col, row;
       if (!this.values || !this.indices) {
         throw poly.error.input("Need to run getIndices first!");
       }
-      col = _.indexOf(this.values[this.y], this.indices[identifier][this.y]);
-      row = _.indexOf(this.values[this.x], this.indices[identifier][this.x]);
+      row = _.indexOf(this.values[this.y], this.indices[identifier][this.y]);
+      col = _.indexOf(this.values[this.x], this.indices[identifier][this.x]);
       return Grid.__super__.getOffset.call(this, dims, col, row);
     };
 

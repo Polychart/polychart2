@@ -10,8 +10,8 @@ poly.dim.make = (spec, axes, legends, facetGrid) ->
     paddingRight : spec.paddingRight ? 10
     paddingTop : spec.paddingTop ? 10
     paddingBottom : spec.paddingBottom ? 10
-    horizontalSpacing : spec.horizontalSpacing ? 5
-    verticalSpacing : spec.verticalSpacing ? 5
+    horizontalSpacing : spec.horizontalSpacing ? 10
+    verticalSpacing : spec.verticalSpacing ? 10
     guideTop : 10
     guideRight : 0
     guideLeft : 5
@@ -75,8 +75,8 @@ poly.dim.guess = (spec, facetGrid) ->
     guideRight: 40
     guideTop: 10
     guideBottom: 30
-    horizontalSpacing : spec.horizontalSpacing ? 5
-    verticalSpacing : spec.verticalSpacing ? 5
+    horizontalSpacing : spec.horizontalSpacing ? 10
+    verticalSpacing : spec.verticalSpacing ? 10
 
   dim.chartHeight =
     dim.height-dim.paddingTop-dim.paddingBottom-dim.guideTop-dim.guideBottom
