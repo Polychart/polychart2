@@ -71,7 +71,7 @@ class Axis extends Guide
       renderer.remove pt.text
     if pt.grid?
       renderer.remove pt.grid
-  _modify: (renderer, pt, tick, axisDim) =>
+  _modify: (renderer, pt, tick, axisDim, override) =>
     obj = {}
     if @renderTick
       if not (override.renderTick ? true)

@@ -2476,7 +2476,7 @@ See the spec definition for more information.
       }
     };
 
-    Axis.prototype._modify = function(renderer, pt, tick, axisDim) {
+    Axis.prototype._modify = function(renderer, pt, tick, axisDim, override) {
       var obj, _ref, _ref1, _ref2;
       obj = {};
       if (this.renderTick) {
