@@ -2914,8 +2914,8 @@ See the spec definition for more information.
     Legend.prototype.render = function(dim, renderer, offset) {
       var added, deleted, kept, legendDim, newpts, t, _i, _j, _k, _len, _len1, _len2, _ref;
       legendDim = {
-        top: dim.paddingTop + dim.guideTop,
-        right: dim.width - dim.guideRight - dim.paddingRight,
+        top: dim.paddingTop + dim.guideTop + offset.y,
+        right: dim.width - dim.guideRight - dim.paddingRight + offset.x,
         width: dim.guideRight,
         height: dim.chartHeight
       };
