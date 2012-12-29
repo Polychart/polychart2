@@ -100,10 +100,10 @@ class Graph
     rendererG = poly.render @handleEvent, @paper, scales, @coord, false
 
     for key, pane of @panes
-      pane.render renderer
+      pane.render renderer({})
 
-    @scaleSet.renderAxes @dims, rendererG
-    @scaleSet.renderLegends @dims, rendererG
+    @scaleSet.renderAxes @dims, rendererG({})
+    @scaleSet.renderLegends @dims, rendererG({})
 
   addHandler : (h) -> @handlers.push h
   removeHandler: (h) ->

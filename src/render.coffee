@@ -20,7 +20,7 @@ poly.paper = (dom, w, h, handleEvent) ->
 ###
 Helper function for rendering all the geoms of an object
 ###
-poly.render = (handleEvent, paper, scales, coord, mayflip, clipping) ->
+poly.render = (handleEvent, paper, scales, coord, mayflip, clipping) -> (offset) ->
   add: (mark, evtData) ->
     if not coord.type?
       throw poly.error.unknown "Coordinate don't have at type?"
@@ -29,7 +29,7 @@ poly.render = (handleEvent, paper, scales, coord, mayflip, clipping) ->
     if not renderer[coord.type][mark.type]?
       throw poly.error.input "Coord #{coord.type} has no mark #{mark.type}"
 
-    pt = renderer[coord.type][mark.type].render paper, scales, coord, mark, mayflip
+    pt = renderer[coord.type][mark.type].render paper, scales, coord, offset, mark, mayflip
     if clipping? then pt.attr('clip-rect', clipping)
     if evtData and _.keys(evtData).length > 0
       pt.data 'e', evtData
@@ -39,22 +39,22 @@ poly.render = (handleEvent, paper, scales, coord, mayflip, clipping) ->
   remove: (pt) ->
     pt.remove()
   animate: (pt, mark, evtData) ->
-    renderer[coord.type][mark.type].animate pt, scales, coord, mark, mayflip
+    renderer[coord.type][mark.type].animate pt, scales, coord, offset, mark, mayflip
     if evtData and _.keys(evtData).length > 0
       pt.data 'e', evtData
     pt
 
 class Renderer
   constructor : ->
-  render: (paper, scales, coord, mark, mayflip) ->
+  render: (paper, scales, coord, offset, mark, mayflip) ->
     pt = @_make(paper)
-    for k, v of @attr(scales, coord, mark, mayflip)
+    for k, v of @attr(scales, coord, offset, mark, mayflip)
       pt.attr(k, v)
     pt
   _make : () -> throw poly.error.impl()
-  animate: (pt, scales, coord, mark, mayflip) ->
-    pt.animate @attr(scales, coord, mark, mayflip), 300
-  attr: (scales, coord, mark, mayflip) -> throw poly.error.impl()
+  animate: (pt, scales, coord, offset, mark, mayflip) ->
+    pt.animate @attr(scales, coord, offset, mark, mayflip), 300
+  attr: (scales, coord, offset, mark, mayflip) -> throw poly.error.impl()
   _makePath : (xs, ys, type='L') ->
     path = _.map xs, (x, i) -> (if i == 0 then 'M' else type) + x+' '+ys[i]
     path.join(' ')
@@ -66,6 +66,12 @@ class Renderer
       scales[key].f(val)
     else
       val
+  _applyOffset: (x, y, offset) ->
+    if not offset then return {x: x, y: y}
+    offset.x ?= 0
+    offset.y ?= 0
+    x : if _.isArray(x) then (i+offset.x for i in x) else x+offset.x
+    y : if _.isArray(y) then (i+offset.y for i in y) else y+offset.y
   _shared : (scales, mark, attr) ->
     maybeAdd = (aes) =>
       if mark[aes]? and not attr[aes]?
@@ -80,8 +86,9 @@ class Renderer
 
 class Circle extends Renderer # for both cartesian & polar
   _make: (paper) -> paper.circle()
-  attr: (scales, coord, mark, mayflip) ->
+  attr: (scales, coord, offset, mark, mayflip) ->
     {x, y} = coord.getXY mayflip, mark
+    {x, y} = @_applyOffset(x, y, offset)
     stroke = @_maybeApply scales, mark,
       if mark.stroke then 'stroke' else 'color'
     attr =
@@ -97,8 +104,9 @@ class Circle extends Renderer # for both cartesian & polar
 
 class Path extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
-  attr: (scales, coord, mark, mayflip) ->
+  attr: (scales, coord, offset, mark, mayflip) ->
     {x, y} = coord.getXY mayflip, mark
+    {x, y} = @_applyOffset(x, y, offset)
     stroke = @_maybeApply scales, mark,
       if mark.stroke then 'stroke' else 'color'
     @_shared scales, mark,
@@ -107,9 +115,10 @@ class Path extends Renderer # for both cartesian & polar?
 
 class Line extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
-  attr: (scales, coord, mark, mayflip) ->
+  attr: (scales, coord, offset, mark, mayflip) ->
     [mark.x,mark.y] = poly.sortArrays scales.x.sortfn, [mark.x,mark.y]
     {x, y} = coord.getXY mayflip, mark
+    {x, y} = @_applyOffset(x, y, offset)
     stroke = @_maybeApply scales, mark,
       if mark.stroke then 'stroke' else 'color'
     @_shared scales, mark,
@@ -119,8 +128,9 @@ class Line extends Renderer # for both cartesian & polar?
 # The difference between Line and PolarLine is that Polar Line MAY plot a circle
 class PolarLine extends Renderer
   _make: (paper) -> paper.path()
-  attr: (scales, coord, mark, mayflip) ->
+  attr: (scales, coord, offset, mark, mayflip) ->
     {x, y, r, t} = coord.getXY mayflip, mark
+    {x, y} = @_applyOffset(x, y, offset)
     path =
       if _.max(r) - _.min(r) < poly.const.epsilon
         r = r[0]
@@ -140,11 +150,13 @@ class PolarLine extends Renderer
 
 class Area extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
-  attr: (scales, coord, mark, mayflip) ->
+  attr: (scales, coord, offset, mark, mayflip) ->
     [x, y] = poly.sortArrays scales.x.sortfn, [mark.x,mark.y.top]
     top = coord.getXY mayflip, {x:x, y:y}
+    top = @_applyOffset(top.x, top.y, offset)
     [x, y] = poly.sortArrays ((a) -> -scales.x.sortfn(a)), [mark.x,mark.y.bottom]
     bottom = coord.getXY mayflip, {x:x, y:y}
+    bottom = @_applyOffset(bottom.x, bottom.y, offset)
     x = top.x.concat bottom.x
     y = top.y.concat bottom.y
     @_shared scales, mark,
@@ -155,8 +167,9 @@ class Area extends Renderer # for both cartesian & polar?
 
 class Rect extends Renderer # for CARTESIAN only
   _make: (paper) -> paper.rect()
-  attr: (scales, coord, mark, mayflip) ->
+  attr: (scales, coord, offset, mark, mayflip) ->
     {x, y} = coord.getXY mayflip, mark
+    {x, y} = @_applyOffset(x, y, offset)
     stroke = @_maybeApply scales, mark,
       if mark.stroke then 'stroke' else 'color'
     @_shared scales, mark,
@@ -170,12 +183,13 @@ class Rect extends Renderer # for CARTESIAN only
 
 class CircleRect extends Renderer # FOR POLAR ONLY
   _make: (paper) -> paper.path()
-  attr: (scales, coord, mark, mayflip) ->
+  attr: (scales, coord, offset, mark, mayflip) ->
     [x0, x1] = mark.x
     [y0, y1] = mark.y
     mark.x = [x0, x0, x1, x1]
     mark.y = [y0, y1, y1, y0]
     {x, y, r, t} = coord.getXY mayflip, mark
+    {x, y} = @_applyOffset(x, y, offset)
     if coord.flip
       x.push x.splice(0,1)[0]
       y.push y.splice(0,1)[0]
@@ -196,8 +210,9 @@ class CircleRect extends Renderer # FOR POLAR ONLY
 
 class Text extends Renderer # for both cartesian & polar
   _make: (paper) -> paper.text()
-  attr: (scales, coord, mark, mayflip) ->
+  attr: (scales, coord, offset, mark, mayflip) ->
     {x, y} = coord.getXY mayflip, mark
+    {x, y} = @_applyOffset(x, y, offset)
 
     @_shared scales, mark,
       x: x

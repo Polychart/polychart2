@@ -5749,20 +5749,21 @@ data processing to be done.
   poly.dim = {};
 
   poly.dim.make = function(spec, axes, legends) {
-    var axis, d, dim, done, k2, key, legend, maxheight, maxwidth, obj, offset, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    var axis, d, dim, done, k2, key, legend, maxheight, maxwidth, obj, offset, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
     dim = {
       width: (_ref = spec.width) != null ? _ref : 400,
       height: (_ref1 = spec.height) != null ? _ref1 : 400,
       paddingLeft: (_ref2 = spec.paddingLeft) != null ? _ref2 : 10,
       paddingRight: (_ref3 = spec.paddingRight) != null ? _ref3 : 10,
       paddingTop: (_ref4 = spec.paddingTop) != null ? _ref4 : 10,
-      paddingBottom: (_ref5 = spec.paddingBottom) != null ? _ref5 : 10
+      paddingBottom: (_ref5 = spec.paddingBottom) != null ? _ref5 : 10,
+      horizontalSpacing: (_ref6 = spec.horizontalSpacing) != null ? _ref6 : 5,
+      verticalSpacing: (_ref7 = spec.verticalSpacing) != null ? _ref7 : 5,
+      guideTop: 10,
+      guideRight: 0,
+      guideLeft: 5,
+      guideBottom: 5
     };
-    dim.guideTop = 10;
-    dim.guideRight = 0;
-    dim.guideLeft = 5;
-    dim.guideBottom = 5;
-    debugger;
     done = {};
     for (key in axes) {
       axis = axes[key];
@@ -5810,7 +5811,7 @@ data processing to be done.
   };
 
   poly.dim.guess = function(spec) {
-    var dim, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    var dim, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
     dim = {
       width: (_ref = spec.width) != null ? _ref : 400,
       height: (_ref1 = spec.height) != null ? _ref1 : 400,
@@ -5821,7 +5822,9 @@ data processing to be done.
       guideLeft: 30,
       guideRight: 40,
       guideTop: 10,
-      guideBottom: 30
+      guideBottom: 30,
+      horizontalSpacing: (_ref6 = spec.horizontalSpacing) != null ? _ref6 : 5,
+      verticalSpacing: (_ref7 = spec.verticalSpacing) != null ? _ref7 : 5
     };
     dim.chartHeight = dim.height - dim.paddingTop - dim.paddingBottom - dim.guideTop - dim.guideBottom;
     dim.chartWidth = dim.width - dim.paddingLeft - dim.paddingRight - dim.guideLeft - dim.guideRight;
@@ -5891,39 +5894,41 @@ data processing to be done.
 
 
   poly.render = function(handleEvent, paper, scales, coord, mayflip, clipping) {
-    return {
-      add: function(mark, evtData) {
-        var pt;
-        if (!(coord.type != null)) {
-          throw poly.error.unknown("Coordinate don't have at type?");
+    return function(offset) {
+      return {
+        add: function(mark, evtData) {
+          var pt;
+          if (!(coord.type != null)) {
+            throw poly.error.unknown("Coordinate don't have at type?");
+          }
+          if (!(renderer[coord.type] != null)) {
+            throw poly.error.input("Unknown coordinate type " + coord.type);
+          }
+          if (!(renderer[coord.type][mark.type] != null)) {
+            throw poly.error.input("Coord " + coord.type + " has no mark " + mark.type);
+          }
+          pt = renderer[coord.type][mark.type].render(paper, scales, coord, offset, mark, mayflip);
+          if (clipping != null) {
+            pt.attr('clip-rect', clipping);
+          }
+          if (evtData && _.keys(evtData).length > 0) {
+            pt.data('e', evtData);
+            pt.click(handleEvent('click'));
+            pt.hover(handleEvent('mover'), handleEvent('mout'));
+          }
+          return pt;
+        },
+        remove: function(pt) {
+          return pt.remove();
+        },
+        animate: function(pt, mark, evtData) {
+          renderer[coord.type][mark.type].animate(pt, scales, coord, offset, mark, mayflip);
+          if (evtData && _.keys(evtData).length > 0) {
+            pt.data('e', evtData);
+          }
+          return pt;
         }
-        if (!(renderer[coord.type] != null)) {
-          throw poly.error.input("Unknown coordinate type " + coord.type);
-        }
-        if (!(renderer[coord.type][mark.type] != null)) {
-          throw poly.error.input("Coord " + coord.type + " has no mark " + mark.type);
-        }
-        pt = renderer[coord.type][mark.type].render(paper, scales, coord, mark, mayflip);
-        if (clipping != null) {
-          pt.attr('clip-rect', clipping);
-        }
-        if (evtData && _.keys(evtData).length > 0) {
-          pt.data('e', evtData);
-          pt.click(handleEvent('click'));
-          pt.hover(handleEvent('mover'), handleEvent('mout'));
-        }
-        return pt;
-      },
-      remove: function(pt) {
-        return pt.remove();
-      },
-      animate: function(pt, mark, evtData) {
-        renderer[coord.type][mark.type].animate(pt, scales, coord, mark, mayflip);
-        if (evtData && _.keys(evtData).length > 0) {
-          pt.data('e', evtData);
-        }
-        return pt;
-      }
+      };
     };
   };
 
@@ -5931,10 +5936,10 @@ data processing to be done.
 
     function Renderer() {}
 
-    Renderer.prototype.render = function(paper, scales, coord, mark, mayflip) {
+    Renderer.prototype.render = function(paper, scales, coord, offset, mark, mayflip) {
       var k, pt, v, _ref;
       pt = this._make(paper);
-      _ref = this.attr(scales, coord, mark, mayflip);
+      _ref = this.attr(scales, coord, offset, mark, mayflip);
       for (k in _ref) {
         v = _ref[k];
         pt.attr(k, v);
@@ -5946,11 +5951,11 @@ data processing to be done.
       throw poly.error.impl();
     };
 
-    Renderer.prototype.animate = function(pt, scales, coord, mark, mayflip) {
-      return pt.animate(this.attr(scales, coord, mark, mayflip), 300);
+    Renderer.prototype.animate = function(pt, scales, coord, offset, mark, mayflip) {
+      return pt.animate(this.attr(scales, coord, offset, mark, mayflip), 300);
     };
 
-    Renderer.prototype.attr = function(scales, coord, mark, mayflip) {
+    Renderer.prototype.attr = function(scales, coord, offset, mark, mayflip) {
       throw poly.error.impl();
     };
 
@@ -5975,6 +5980,42 @@ data processing to be done.
       } else {
         return val;
       }
+    };
+
+    Renderer.prototype._applyOffset = function(x, y, offset) {
+      var i, _ref, _ref1;
+      if (!offset) {
+        return {
+          x: x,
+          y: y
+        };
+      }
+      if ((_ref = offset.x) == null) {
+        offset.x = 0;
+      }
+      if ((_ref1 = offset.y) == null) {
+        offset.y = 0;
+      }
+      return {
+        x: _.isArray(x) ? (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = x.length; _i < _len; _i++) {
+            i = x[_i];
+            _results.push(i + offset.x);
+          }
+          return _results;
+        })() : x + offset.x,
+        y: _.isArray(y) ? (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = y.length; _i < _len; _i++) {
+            i = y[_i];
+            _results.push(i + offset.y);
+          }
+          return _results;
+        })() : y + offset.y
+      };
     };
 
     Renderer.prototype._shared = function(scales, mark, attr) {
@@ -6009,9 +6050,10 @@ data processing to be done.
       return paper.circle();
     };
 
-    Circle.prototype.attr = function(scales, coord, mark, mayflip) {
-      var attr, fill, stroke, x, y, _ref;
+    Circle.prototype.attr = function(scales, coord, offset, mark, mayflip) {
+      var attr, fill, stroke, x, y, _ref, _ref1;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
+      _ref1 = this._applyOffset(x, y, offset), x = _ref1.x, y = _ref1.y;
       stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
       attr = {
         cx: x,
@@ -6042,9 +6084,10 @@ data processing to be done.
       return paper.path();
     };
 
-    Path.prototype.attr = function(scales, coord, mark, mayflip) {
-      var stroke, x, y, _ref;
+    Path.prototype.attr = function(scales, coord, offset, mark, mayflip) {
+      var stroke, x, y, _ref, _ref1;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
+      _ref1 = this._applyOffset(x, y, offset), x = _ref1.x, y = _ref1.y;
       stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
       return this._shared(scales, mark, {
         path: this._makePath(x, y),
@@ -6068,10 +6111,11 @@ data processing to be done.
       return paper.path();
     };
 
-    Line.prototype.attr = function(scales, coord, mark, mayflip) {
-      var stroke, x, y, _ref, _ref1;
+    Line.prototype.attr = function(scales, coord, offset, mark, mayflip) {
+      var stroke, x, y, _ref, _ref1, _ref2;
       _ref = poly.sortArrays(scales.x.sortfn, [mark.x, mark.y]), mark.x = _ref[0], mark.y = _ref[1];
       _ref1 = coord.getXY(mayflip, mark), x = _ref1.x, y = _ref1.y;
+      _ref2 = this._applyOffset(x, y, offset), x = _ref2.x, y = _ref2.y;
       stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
       return this._shared(scales, mark, {
         path: this._makePath(x, y),
@@ -6095,15 +6139,16 @@ data processing to be done.
       return paper.path();
     };
 
-    PolarLine.prototype.attr = function(scales, coord, mark, mayflip) {
-      var dir, i, large, path, r, stroke, t, x, y, _ref;
+    PolarLine.prototype.attr = function(scales, coord, offset, mark, mayflip) {
+      var dir, i, large, path, r, stroke, t, x, y, _ref, _ref1;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y, r = _ref.r, t = _ref.t;
+      _ref1 = this._applyOffset(x, y, offset), x = _ref1.x, y = _ref1.y;
       path = (function() {
-        var _i, _ref1;
+        var _i, _ref2;
         if (_.max(r) - _.min(r) < poly["const"].epsilon) {
           r = r[0];
           path = "M " + x[0] + " " + y[0];
-          for (i = _i = 1, _ref1 = x.length - 1; 1 <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = 1 <= _ref1 ? ++_i : --_i) {
+          for (i = _i = 1, _ref2 = x.length - 1; 1 <= _ref2 ? _i <= _ref2 : _i >= _ref2; i = 1 <= _ref2 ? ++_i : --_i) {
             large = Math.abs(t[i] - t[i - 1]) > Math.PI ? 1 : 0;
             dir = t[i] - t[i - 1] > 0 ? 1 : 0;
             path += "A " + r + " " + r + " 0 " + large + " " + dir + " " + x[i] + " " + y[i];
@@ -6136,13 +6181,14 @@ data processing to be done.
       return paper.path();
     };
 
-    Area.prototype.attr = function(scales, coord, mark, mayflip) {
+    Area.prototype.attr = function(scales, coord, offset, mark, mayflip) {
       var bottom, top, x, y, _ref, _ref1;
       _ref = poly.sortArrays(scales.x.sortfn, [mark.x, mark.y.top]), x = _ref[0], y = _ref[1];
       top = coord.getXY(mayflip, {
         x: x,
         y: y
       });
+      top = this._applyOffset(top.x, top.y, offset);
       _ref1 = poly.sortArrays((function(a) {
         return -scales.x.sortfn(a);
       }), [mark.x, mark.y.bottom]), x = _ref1[0], y = _ref1[1];
@@ -6150,6 +6196,7 @@ data processing to be done.
         x: x,
         y: y
       });
+      bottom = this._applyOffset(bottom.x, bottom.y, offset);
       x = top.x.concat(bottom.x);
       y = top.y.concat(bottom.y);
       return this._shared(scales, mark, {
@@ -6176,9 +6223,10 @@ data processing to be done.
       return paper.rect();
     };
 
-    Rect.prototype.attr = function(scales, coord, mark, mayflip) {
-      var stroke, x, y, _ref;
+    Rect.prototype.attr = function(scales, coord, offset, mark, mayflip) {
+      var stroke, x, y, _ref, _ref1;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
+      _ref1 = this._applyOffset(x, y, offset), x = _ref1.x, y = _ref1.y;
       stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
       return this._shared(scales, mark, {
         x: _.min(x),
@@ -6207,13 +6255,14 @@ data processing to be done.
       return paper.path();
     };
 
-    CircleRect.prototype.attr = function(scales, coord, mark, mayflip) {
-      var large, path, r, stroke, t, x, x0, x1, y, y0, y1, _ref, _ref1, _ref2;
+    CircleRect.prototype.attr = function(scales, coord, offset, mark, mayflip) {
+      var large, path, r, stroke, t, x, x0, x1, y, y0, y1, _ref, _ref1, _ref2, _ref3;
       _ref = mark.x, x0 = _ref[0], x1 = _ref[1];
       _ref1 = mark.y, y0 = _ref1[0], y1 = _ref1[1];
       mark.x = [x0, x0, x1, x1];
       mark.y = [y0, y1, y1, y0];
       _ref2 = coord.getXY(mayflip, mark), x = _ref2.x, y = _ref2.y, r = _ref2.r, t = _ref2.t;
+      _ref3 = this._applyOffset(x, y, offset), x = _ref3.x, y = _ref3.y;
       if (coord.flip) {
         x.push(x.splice(0, 1)[0]);
         y.push(y.splice(0, 1)[0]);
@@ -6249,15 +6298,16 @@ data processing to be done.
       return paper.text();
     };
 
-    Text.prototype.attr = function(scales, coord, mark, mayflip) {
-      var x, y, _ref, _ref1;
+    Text.prototype.attr = function(scales, coord, offset, mark, mayflip) {
+      var x, y, _ref, _ref1, _ref2;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
+      _ref1 = this._applyOffset(x, y, offset), x = _ref1.x, y = _ref1.y;
       return this._shared(scales, mark, {
         x: x,
         y: y,
         r: 10,
         text: this._maybeApply(scales, mark, 'text'),
-        'text-anchor': (_ref1 = mark['text-anchor']) != null ? _ref1 : 'left',
+        'text-anchor': (_ref2 = mark['text-anchor']) != null ? _ref2 : 'left',
         fill: this._maybeApply(scales, mark, 'color') || 'black'
       });
     };
@@ -6454,10 +6504,10 @@ data processing to be done.
       _ref1 = this.panes;
       for (key in _ref1) {
         pane = _ref1[key];
-        pane.render(renderer);
+        pane.render(renderer({}));
       }
-      this.scaleSet.renderAxes(this.dims, rendererG);
-      return this.scaleSet.renderLegends(this.dims, rendererG);
+      this.scaleSet.renderAxes(this.dims, rendererG({}));
+      return this.scaleSet.renderLegends(this.dims, rendererG({}));
     };
 
     Graph.prototype.addHandler = function(h) {

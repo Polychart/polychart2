@@ -10,11 +10,12 @@ poly.dim.make = (spec, axes, legends) ->
     paddingRight : spec.paddingRight ? 10
     paddingTop : spec.paddingTop ? 10
     paddingBottom : spec.paddingBottom ? 10
-
-  dim.guideTop = 10
-  dim.guideRight = 0
-  dim.guideLeft = 5
-  dim.guideBottom = 5
+    horizontalSpacing : spec.horizontalSpacing ? 5
+    verticalSpacing : spec.verticalSpacing ? 5
+    guideTop : 10
+    guideRight : 0
+    guideLeft : 5
+    guideBottom : 5
 
   # axes
   done = {}
@@ -65,6 +66,9 @@ poly.dim.guess = (spec) ->
     guideRight: 40
     guideTop: 10
     guideBottom: 30
+    horizontalSpacing : spec.horizontalSpacing ? 5
+    verticalSpacing : spec.verticalSpacing ? 5
+
   dim.chartHeight =
     dim.height-dim.paddingTop-dim.paddingBottom-dim.guideTop-dim.guideBottom
   dim.chartWidth=
