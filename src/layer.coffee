@@ -248,7 +248,7 @@ class Bar extends Layer
     for item in @statData
       evtData = {}
       for k, v of item
-        if k isnt 'y' then evtData[@mapping[k]] = { in: [v] }
+        if k isnt 'y' then evtData[k] = { in: [v] }
       lower = sf.lower @_getValue(item, 'x'), item.$n, item.$m
       upper = sf.upper @_getValue(item, 'x'), item.$n, item.$m
       @geoms[idfn item] =
@@ -269,7 +269,7 @@ class Bar extends Layer
     for item in @statData
       evtData = {}
       for k, v of item
-        if k isnt 'y' then evtData[@mapping[k]] = { in: [v] }
+        if k isnt 'y' then evtData[k] = { in: [v] }
       @geoms[idfn item] =
         marks:
           0:
@@ -343,6 +343,8 @@ class Tile extends Layer
       evtData = {}
       x = @_getValue item, 'x'
       y = @_getValue item, 'y'
+      for k, v of item
+        if k isnt 'y' and k isnt 'x' then evtData[k] = { in: [v] }
       @geoms[idfn item] =
         marks:
           0:
@@ -362,6 +364,8 @@ class Box extends Layer
     @geoms = {}
     for item in @statData
       evtData = {} # later
+      for k, v of item
+        if k isnt 'y' then evtData[k] = { in: [v] }
       x = @_getValue item, 'x'
       y = @_getValue item, 'y'
       color = @_getValue item, 'color'

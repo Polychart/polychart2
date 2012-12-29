@@ -25,6 +25,7 @@
     if type == 'data'
       c.make spec
     if type == 'click'
+      debugger
       alert("You clicked on index: " + data.index.in[0])
     #if type == 'select' then console.log data
 

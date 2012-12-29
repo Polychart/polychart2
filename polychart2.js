@@ -5374,7 +5374,7 @@ data processing to be done.
         for (k in item) {
           v = item[k];
           if (k !== 'y') {
-            evtData[this.mapping[k]] = {
+            evtData[k] = {
               "in": [v]
             };
           }
@@ -5411,7 +5411,7 @@ data processing to be done.
         for (k in item) {
           v = item[k];
           if (k !== 'y') {
-            evtData[this.mapping[k]] = {
+            evtData[k] = {
               "in": [v]
             };
           }
@@ -5587,7 +5587,7 @@ data processing to be done.
     }
 
     Tile.prototype._calcGeoms = function() {
-      var evtData, idfn, item, x, y, _i, _len, _ref, _results;
+      var evtData, idfn, item, k, v, x, y, _i, _len, _ref, _results;
       idfn = this._getIdFunc();
       this.geoms = {};
       _ref = this.statData;
@@ -5597,6 +5597,14 @@ data processing to be done.
         evtData = {};
         x = this._getValue(item, 'x');
         y = this._getValue(item, 'y');
+        for (k in item) {
+          v = item[k];
+          if (k !== 'y' && k !== 'x') {
+            evtData[k] = {
+              "in": [v]
+            };
+          }
+        }
         _results.push(this.geoms[idfn(item)] = {
           marks: {
             0: {
@@ -5627,7 +5635,7 @@ data processing to be done.
     }
 
     Box.prototype._calcGeoms = function() {
-      var color, evtData, geom, idfn, index, item, opacity, point, size, x, xl, xm, xu, y, _i, _j, _len, _len1, _ref, _ref1, _results;
+      var color, evtData, geom, idfn, index, item, k, opacity, point, size, v, x, xl, xm, xu, y, _i, _j, _len, _len1, _ref, _ref1, _results;
       idfn = this._getIdFunc();
       this.geoms = {};
       _ref = this.statData;
@@ -5635,6 +5643,14 @@ data processing to be done.
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         item = _ref[_i];
         evtData = {};
+        for (k in item) {
+          v = item[k];
+          if (k !== 'y') {
+            evtData[k] = {
+              "in": [v]
+            };
+          }
+        }
         x = this._getValue(item, 'x');
         y = this._getValue(item, 'y');
         color = this._getValue(item, 'color');
