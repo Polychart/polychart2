@@ -36,26 +36,26 @@ class Graph
     # callback after data processing
     merge = _.after(spec.layers.length, @merge)
     @dataprocess = {}
-    processedData = {}
+    @processedData = {}
     for layerSpec, id in spec.layers
       spec = @spec.layers[id] #repeated
-      @dataprocess[id] = new poly.DataProcess spec, spec.strict
+      @dataprocess[id] = new poly.DataProcess spec, @facet.groups, spec.strict
       @dataprocess[id].make spec, @facet.groups, (statData, metaData) =>
-        processedData[id] =
+        @processedData[id] =
           statData: statData
           metaData: metaData
         merge()
-  merge: (merge) =>
+  merge: () =>
     @makePanes()
     @mergeDomains()
     @render()
   makePanes: () =>
     # prep work to make indices
-    indices = @facet.getIndices @dataprocess
+    indices = @facet.getIndices @processedData
+    datas = @facet.groupData @processedData
     # make panes
-    @panes ?= @_makePanes @spec, @dataprocess, indices
+    @panes ?= @_makePanes @spec, indices
     # make data
-    datas = @facet.groupData @dataprocess
     # set data
     for key, pane of @panes
       pane.make @spec, datas[key]
@@ -81,12 +81,13 @@ class Graph
     @scaleSet.makeLegends()
 
     @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent
-    clipping = @coord.clipping @dims
-    renderer = poly.render @handleEvent, @paper, scales, @coord, true, clipping
+    renderer = poly.render @handleEvent, @paper, scales, @coord, true
     rendererG = poly.render @handleEvent, @paper, scales, @coord, false
 
     for key, pane of @panes
-      pane.render renderer @facet.getOffset(@dims, key)
+      offset = @facet.getOffset(@dims, key)
+      clipping = @coord.clipping offset
+      pane.render renderer offset, clipping
 
     @scaleSet.renderAxes @dims, rendererG, @facet
     @scaleSet.renderLegends @dims, rendererG({})
@@ -114,7 +115,7 @@ class Graph
         else
           h.handle(type, obj)
     _.throttle handler, 1000
-  _makePanes: (spec, processedData, indices) ->
+  _makePanes: (spec, indices) ->
     # make panes
     panes = {}
     for identifier, mindex of indices

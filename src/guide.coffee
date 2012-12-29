@@ -315,8 +315,8 @@ class Legend extends Guide
     @maxwidth = Math.max titleWidth, tickWidth
   render: (dim, renderer, offset) -> # assume position = RIGHT
     legendDim =
-      top: dim.paddingTop + dim.guideTop + offset.y
-      right : dim.paddingLeft + dim.guideLeft + dim.chartWidth + offset.x
+      top: dim.paddingTop + dim.guideTop
+      right: dim.width - dim.guideRight - dim.paddingRight
       width: dim.guideRight
       height: dim.chartHeight
     if @title?

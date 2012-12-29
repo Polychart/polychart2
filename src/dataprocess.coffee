@@ -4,9 +4,9 @@ data processing to be done.
 ###
 class DataProcess
   ## save the specs
-  constructor: (layerSpec, strictmode) ->
+  constructor: (layerSpec, grouping, strictmode) ->
     @dataObj = layerSpec.data
-    @initialSpec = poly.parser.layerToData layerSpec
+    @initialSpec = poly.parser.layerToData layerSpec, grouping
     @prevSpec = null
     @strictmode = strictmode
     @statData = null

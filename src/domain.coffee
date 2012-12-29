@@ -155,12 +155,12 @@ domainMerge =
     unsortedLevels =
       _.chain(domains).filter((d) -> !d.sorted).map((d) -> d.levels).value()
     if sortedLevels.length > 1 and _.intersection.apply @, sortedLevels
-      throw poly.error.data "You are trying to combine incompatiabl sorted domains in the same axis."
+      throw poly.error.data "You are trying to combine incompatible sorted domains in the same axis."
     sortedLevels = [_.flatten(sortedLevels, true)]
     levels = _.union.apply @, sortedLevels.concat(unsortedLevels)
     if sortedLevels[0].length is 0
       levels = levels.sort()
-    return makeDomain type: 'cat', levels: levels, sorted: true
+    return makeDomain type: 'cat', levels: levels, sorted: sortedLevels[0].length isnt 0
 
 ###
 Merge an array of domains: Two domains can be merged if they are of the

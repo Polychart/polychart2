@@ -6,15 +6,8 @@ class Coordinate
     [@x, @y] = if @flip then ['y', 'x'] else ['x', 'y']
   make: (dims) -> @dims = dims
   setScales: (scales) -> @scales = x: scales.x.f, y: scales.y.f
-  clipping: () ->
-    pl = @dims.paddingLeft
-    gl = @dims.guideLeft
-    pt = @dims.paddingTop
-    gt = @dims.guideTop
-    gb = @dims.guideBottom
-    w = @dims.chartWidth
-    h = @dims.chartHeight
-    [pl+gl, pt+gt, w, h]
+  clipping: (offset) ->
+    [offset.x, offset.y, offset.x+@dims.chartWidth, offset.y+@dims.chartHeight]
   getScale: (aes) ->
   ranges: () ->
 

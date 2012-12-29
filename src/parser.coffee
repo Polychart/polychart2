@@ -176,15 +176,12 @@ extractOps = (expr) ->
   expr.visit(extractor)
   results
 
-layerToDataSpec = (lspec) ->
+layerToDataSpec = (lspec, grouping) ->
   filters = {}
   for key, val of lspec.filter ? {}
     filters[(parse key).pretty()] = val # normalize name
-  aesthetics = dictGets(lspec,
-                        assocsToObj([name, null] for name in poly.const.aes))
-  for key of aesthetics
-    if 'var' not of aesthetics[key]
-      delete aesthetics[key]
+  grouping = ((parse key).pretty() for key in grouping) # normalize name
+  aesthetics = _.pick lspec, poly.const.aes
   transstat = []; select = []; groups = []; metas = {}
   for key, desc of aesthetics
     expr = parse desc.var
@@ -202,6 +199,17 @@ layerToDataSpec = (lspec) ->
       if result.stat.length isnt 0
         sdesc.stat = result.stat
       metas[desc.var] = sdesc
+  for grpvar in grouping
+    expr = parse grpvar
+    grpvar = expr.pretty() # normalize name
+    ts = extractOps expr
+    transstat.push ts
+    select.push grpvar
+    if ts.stat.length is 0
+      groups.push grpvar
+    else
+      throw poly.error.defn "Facet variable should not contain statistics!"
+
   transstats = mergeObjLists transstat
   dedupByName = dedupOnKey 'name'
   stats = {stats: dedupByName(transstats.stat), groups: (dedup groups)}

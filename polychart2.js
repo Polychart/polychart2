@@ -1504,28 +1504,23 @@ See the spec definition for more information.
   };
 
   layerToDataSpec = function(lspec, grouping) {
-    var aesthetics, dedupByName, desc, expr, filters, groups, key, metas, name, result, sdesc, select, sexpr, stats, transstat, transstats, ts, val, _ref1, _ref2;
+    var aesthetics, dedupByName, desc, expr, filters, groups, grpvar, key, metas, result, sdesc, select, sexpr, stats, transstat, transstats, ts, val, _i, _len, _ref1, _ref2;
     filters = {};
     _ref2 = (_ref1 = lspec.filter) != null ? _ref1 : {};
     for (key in _ref2) {
       val = _ref2[key];
       filters[(parse(key)).pretty()] = val;
     }
-    aesthetics = dictGets(lspec, assocsToObj((function() {
-      var _i, _len, _ref3, _results;
-      _ref3 = poly["const"].aes;
+    grouping = (function() {
+      var _i, _len, _results;
       _results = [];
-      for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
-        name = _ref3[_i];
-        _results.push([name, null]);
+      for (_i = 0, _len = grouping.length; _i < _len; _i++) {
+        key = grouping[_i];
+        _results.push((parse(key)).pretty());
       }
       return _results;
-    })()));
-    for (key in aesthetics) {
-      if (!('var' in aesthetics[key])) {
-        delete aesthetics[key];
-      }
-    }
+    })();
+    aesthetics = _.pick(lspec, poly["const"].aes);
     transstat = [];
     select = [];
     groups = [];
@@ -1549,6 +1544,19 @@ See the spec definition for more information.
           sdesc.stat = result.stat;
         }
         metas[desc["var"]] = sdesc;
+      }
+    }
+    for (_i = 0, _len = grouping.length; _i < _len; _i++) {
+      grpvar = grouping[_i];
+      expr = parse(grpvar);
+      grpvar = expr.pretty();
+      ts = extractOps(expr);
+      transstat.push(ts);
+      select.push(grpvar);
+      if (ts.stat.length === 0) {
+        groups.push(grpvar);
+      } else {
+        throw poly.error.defn("Facet variable should not contain statistics!");
       }
     }
     transstats = mergeObjLists(transstat);
@@ -1603,16 +1611,8 @@ See the spec definition for more information.
       };
     };
 
-    Coordinate.prototype.clipping = function() {
-      var gb, gl, gt, h, pl, pt, w;
-      pl = this.dims.paddingLeft;
-      gl = this.dims.guideLeft;
-      pt = this.dims.paddingTop;
-      gt = this.dims.guideTop;
-      gb = this.dims.guideBottom;
-      w = this.dims.chartWidth;
-      h = this.dims.chartHeight;
-      return [pl + gl, pt + gt, w, h];
+    Coordinate.prototype.clipping = function(offset) {
+      return [offset.x, offset.y, offset.x + this.dims.chartWidth, offset.y + this.dims.chartHeight];
     };
 
     Coordinate.prototype.getScale = function(aes) {};
@@ -2121,7 +2121,7 @@ See the spec definition for more information.
         return d.levels;
       }).value();
       if (sortedLevels.length > 1 && _.intersection.apply(this, sortedLevels)) {
-        throw poly.error.data("You are trying to combine incompatiabl sorted domains in the same axis.");
+        throw poly.error.data("You are trying to combine incompatible sorted domains in the same axis.");
       }
       sortedLevels = [_.flatten(sortedLevels, true)];
       levels = _.union.apply(this, sortedLevels.concat(unsortedLevels));
@@ -2131,7 +2131,7 @@ See the spec definition for more information.
       return makeDomain({
         type: 'cat',
         levels: levels,
-        sorted: true
+        sorted: sortedLevels[0].length !== 0
       });
     }
   };
@@ -2914,8 +2914,8 @@ See the spec definition for more information.
     Legend.prototype.render = function(dim, renderer, offset) {
       var added, deleted, kept, legendDim, newpts, t, _i, _j, _k, _len, _len1, _len2, _ref;
       legendDim = {
-        top: dim.paddingTop + dim.guideTop + offset.y,
-        right: dim.paddingLeft + dim.guideLeft + dim.chartWidth + offset.x,
+        top: dim.paddingTop + dim.guideTop,
+        right: dim.width - dim.guideRight - dim.paddingRight,
         width: dim.guideRight,
         height: dim.chartHeight
       };
@@ -4324,10 +4324,10 @@ data processing to be done.
 
   DataProcess = (function() {
 
-    function DataProcess(layerSpec, strictmode) {
+    function DataProcess(layerSpec, grouping, strictmode) {
       this._wrap = __bind(this._wrap, this);
       this.dataObj = layerSpec.data;
-      this.initialSpec = poly.parser.layerToData(layerSpec);
+      this.initialSpec = poly.parser.layerToData(layerSpec, grouping);
       this.prevSpec = null;
       this.strictmode = strictmode;
       this.statData = null;
@@ -5908,8 +5908,8 @@ data processing to be done.
   */
 
 
-  poly.render = function(handleEvent, paper, scales, coord, mayflip, clipping) {
-    return function(offset) {
+  poly.render = function(handleEvent, paper, scales, coord, mayflip) {
+    return function(offset, clipping) {
       return {
         add: function(mark, evtData) {
           var pt;
@@ -6598,7 +6598,7 @@ data processing to be done.
     };
 
     Graph.prototype.make = function(spec) {
-      var dataChange, id, layerSpec, merge, processedData, _i, _j, _len, _len1, _ref, _ref1, _results,
+      var dataChange, id, layerSpec, merge, _i, _j, _len, _len1, _ref, _ref1, _results,
         _this = this;
       if (spec == null) {
         spec = this.initial_spec;
@@ -6618,15 +6618,15 @@ data processing to be done.
       }
       merge = _.after(spec.layers.length, this.merge);
       this.dataprocess = {};
-      processedData = {};
+      this.processedData = {};
       _ref1 = spec.layers;
       _results = [];
       for (id = _j = 0, _len1 = _ref1.length; _j < _len1; id = ++_j) {
         layerSpec = _ref1[id];
         spec = this.spec.layers[id];
-        this.dataprocess[id] = new poly.DataProcess(spec, spec.strict);
+        this.dataprocess[id] = new poly.DataProcess(spec, this.facet.groups, spec.strict);
         _results.push(this.dataprocess[id].make(spec, this.facet.groups, function(statData, metaData) {
-          processedData[id] = {
+          _this.processedData[id] = {
             statData: statData,
             metaData: metaData
           };
@@ -6636,7 +6636,7 @@ data processing to be done.
       return _results;
     };
 
-    Graph.prototype.merge = function(merge) {
+    Graph.prototype.merge = function() {
       this.makePanes();
       this.mergeDomains();
       return this.render();
@@ -6644,11 +6644,11 @@ data processing to be done.
 
     Graph.prototype.makePanes = function() {
       var datas, indices, key, pane, _ref, _ref1, _results;
-      indices = this.facet.getIndices(this.dataprocess);
+      indices = this.facet.getIndices(this.processedData);
+      datas = this.facet.groupData(this.processedData);
       if ((_ref = this.panes) == null) {
-        this.panes = this._makePanes(this.spec, this.dataprocess, indices);
+        this.panes = this._makePanes(this.spec, indices);
       }
-      datas = this.facet.groupData(this.dataprocess);
       _ref1 = this.panes;
       _results = [];
       for (key in _ref1) {
@@ -6677,7 +6677,7 @@ data processing to be done.
     };
 
     Graph.prototype.render = function() {
-      var clipping, dom, key, pane, renderer, rendererG, scales, _ref, _ref1;
+      var clipping, dom, key, offset, pane, renderer, rendererG, scales, _ref, _ref1;
       if ((this.spec.render != null) && this.spec.render === false) {
         return;
       }
@@ -6690,13 +6690,14 @@ data processing to be done.
       if ((_ref = this.paper) == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
       }
-      clipping = this.coord.clipping(this.dims);
-      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true, clipping);
+      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true);
       rendererG = poly.render(this.handleEvent, this.paper, scales, this.coord, false);
       _ref1 = this.panes;
       for (key in _ref1) {
         pane = _ref1[key];
-        pane.render(renderer(this.facet.getOffset(this.dims, key)));
+        offset = this.facet.getOffset(this.dims, key);
+        clipping = this.coord.clipping(offset);
+        pane.render(renderer(offset, clipping));
       }
       this.scaleSet.renderAxes(this.dims, rendererG, this.facet);
       return this.scaleSet.renderLegends(this.dims, rendererG({}));
@@ -6739,7 +6740,7 @@ data processing to be done.
       return _.throttle(handler, 1000);
     };
 
-    Graph.prototype._makePanes = function(spec, processedData, indices) {
+    Graph.prototype._makePanes = function(spec, indices) {
       var identifier, mindex, panes;
       panes = {};
       for (identifier in indices) {
