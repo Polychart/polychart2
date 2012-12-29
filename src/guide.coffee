@@ -14,8 +14,12 @@ class Axis extends Guide
     @pts = {}
   make: (params) =>
     {domain, type, guideSpec, key} = params
-    option = (item, def) => guideSpec[item] ? def
     # options
+    option = (item, def) => guideSpec[item] ? def
+    # position
+    @position = option('position', @defaultPosition)
+    if @position not in @validPositions
+      throw poly.error.defn "X-axis position can't be #{@position}."
     @titletext = option('title', key)
     @renderTick = option('renderTick', true)
     @renderGrid = option('renderGrid', true)
@@ -34,8 +38,10 @@ class Axis extends Guide
     axisDim.radius = Math.min(axisDim.width, axisDim.height)/2 -10
     if @renderLine
       if @line? then renderer.remove @line
-      if not override.renderLine
+      if not (override.renderLine is false)
         @line = @_renderline renderer, axisDim
+      else
+        @line = null
 
     """
     if @title?
@@ -109,12 +115,11 @@ class Axis extends Guide
     obj
 
 class XAxis extends Axis # assumes position = bottom
-  make: (params) =>
-    {guideSpec} = params
-    @position = guideSpec.position ? 'bottom'
-    if @position not in ['top', 'bottom', 'none']
-      throw poly.error.defn "X-axis position can't be #{@position}."
-    super(params)
+  constructor: () ->
+    super()
+    @type = 'x'
+    @defaultPosition = 'bottom'
+    @validPositions = ['top', 'bottom', 'none']
   _renderline : (renderer, axisDim) ->
     if @position is 'top'
       y = sf.identity axisDim.top
@@ -170,12 +175,11 @@ class XAxis extends Axis # assumes position = bottom
     width: 'all'
 
 class YAxis extends Axis # assumes position = left
-  make: (params) =>
-    {guideSpec} = params
-    @position = guideSpec.position ? 'left'
-    if @position not in ['left', 'right', 'none']
-      throw poly.error.defn "X-axis position can't be #{@position}."
-    super(params)
+  constructor: () ->
+    super()
+    @type = 'y'
+    @defaultPosition = 'left'
+    @validPositions = ['left', 'right', 'none']
   _renderline : (renderer, axisDim) ->
     if @position is 'left'
       x = sf.identity axisDim.left
@@ -232,6 +236,11 @@ class YAxis extends Axis # assumes position = left
     width: 20+@maxwidth
 
 class RAxis extends Axis # assumes position = left
+  constructor: () ->
+    super()
+    @type = 'r'
+    @defaultPosition = 'left'
+    @validPositions = ['left', 'right', 'none']
   _renderline : (renderer, axisDim) ->
     x = sf.identity axisDim.left
     y1 = sf.identity axisDim.top
@@ -272,6 +281,11 @@ class RAxis extends Axis # assumes position = left
     width: 20+@maxwidth
 
 class TAxis extends Axis # assumes position = ... um, what is it supposed to be?
+  constructor: () ->
+    super()
+    @type = 't'
+    @defaultPosition = 'out'
+    @validPositions = ['out', 'none']
   _renderline : (renderer, axisDim) ->
     renderer.add {
       type: 'circle',
@@ -401,7 +415,7 @@ class Legend extends Guide
     text: text
     'text-anchor' : 'start'
   getDimension: () ->
-    position: 'right'
+    position: 'left'
     height: @height
     width: 15+@maxwidth
 

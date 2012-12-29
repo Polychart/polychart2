@@ -2398,13 +2398,17 @@ See the spec definition for more information.
     }
 
     Axis.prototype.make = function(params) {
-      var domain, guideSpec, key, option, type,
+      var domain, guideSpec, key, option, type, _ref,
         _this = this;
       domain = params.domain, type = params.type, guideSpec = params.guideSpec, key = params.key;
       option = function(item, def) {
         var _ref;
         return (_ref = guideSpec[item]) != null ? _ref : def;
       };
+      this.position = option('position', this.defaultPosition);
+      if (_ref = this.position, __indexOf.call(this.validPositions, _ref) < 0) {
+        throw poly.error.defn("X-axis position can't be " + this.position + ".");
+      }
       this.titletext = option('title', key);
       this.renderTick = option('renderTick', true);
       this.renderGrid = option('renderGrid', true);
@@ -2429,8 +2433,10 @@ See the spec definition for more information.
         if (this.line != null) {
           renderer.remove(this.line);
         }
-        if (!override.renderLine) {
+        if (!(override.renderLine === false)) {
           this.line = this._renderline(renderer, axisDim);
+        } else {
+          this.line = null;
         }
       }
       "if @title?\n  @title = renderer.animate @title, @_makeTitle(axisDim, @titletext)\nelse\n  @title = renderer.add @_makeTitle(axisDim, @titletext)";
@@ -2553,19 +2559,11 @@ See the spec definition for more information.
     __extends(XAxis, _super);
 
     function XAxis() {
-      this.make = __bind(this.make, this);
-      return XAxis.__super__.constructor.apply(this, arguments);
+      XAxis.__super__.constructor.call(this);
+      this.type = 'x';
+      this.defaultPosition = 'bottom';
+      this.validPositions = ['top', 'bottom', 'none'];
     }
-
-    XAxis.prototype.make = function(params) {
-      var guideSpec, _ref, _ref1;
-      guideSpec = params.guideSpec;
-      this.position = (_ref = guideSpec.position) != null ? _ref : 'bottom';
-      if ((_ref1 = this.position) !== 'top' && _ref1 !== 'bottom' && _ref1 !== 'none') {
-        throw poly.error.defn("X-axis position can't be " + this.position + ".");
-      }
-      return XAxis.__super__.make.call(this, params);
-    };
 
     XAxis.prototype._renderline = function(renderer, axisDim) {
       var x1, x2, y;
@@ -2659,19 +2657,11 @@ See the spec definition for more information.
     __extends(YAxis, _super);
 
     function YAxis() {
-      this.make = __bind(this.make, this);
-      return YAxis.__super__.constructor.apply(this, arguments);
+      YAxis.__super__.constructor.call(this);
+      this.type = 'y';
+      this.defaultPosition = 'left';
+      this.validPositions = ['left', 'right', 'none'];
     }
-
-    YAxis.prototype.make = function(params) {
-      var guideSpec, _ref, _ref1;
-      guideSpec = params.guideSpec;
-      this.position = (_ref = guideSpec.position) != null ? _ref : 'left';
-      if ((_ref1 = this.position) !== 'left' && _ref1 !== 'right' && _ref1 !== 'none') {
-        throw poly.error.defn("X-axis position can't be " + this.position + ".");
-      }
-      return YAxis.__super__.make.call(this, params);
-    };
 
     YAxis.prototype._renderline = function(renderer, axisDim) {
       var x, y1, y2;
@@ -2766,7 +2756,10 @@ See the spec definition for more information.
     __extends(RAxis, _super);
 
     function RAxis() {
-      return RAxis.__super__.constructor.apply(this, arguments);
+      RAxis.__super__.constructor.call(this);
+      this.type = 'r';
+      this.defaultPosition = 'left';
+      this.validPositions = ['left', 'right', 'none'];
     }
 
     RAxis.prototype._renderline = function(renderer, axisDim) {
@@ -2837,7 +2830,10 @@ See the spec definition for more information.
     __extends(TAxis, _super);
 
     function TAxis() {
-      return TAxis.__super__.constructor.apply(this, arguments);
+      TAxis.__super__.constructor.call(this);
+      this.type = 't';
+      this.defaultPosition = 'out';
+      this.validPositions = ['out', 'none'];
     }
 
     TAxis.prototype._renderline = function(renderer, axisDim) {
@@ -3051,7 +3047,7 @@ See the spec definition for more information.
 
     Legend.prototype.getDimension = function() {
       return {
-        position: 'right',
+        position: 'left',
         height: this.height,
         width: 15 + this.maxwidth
       };
@@ -3822,7 +3818,7 @@ See the spec definition for more information.
     };
 
     ScaleSet.prototype.renderAxes = function(dims, renderer, facet) {
-      var axis, axisDim, drawx, drawy, key, offset, override, xoverride, xpos, yoverride, ypos, _i, _len, _ref, _ref1, _ref2, _ref3, _results;
+      var axis, axisDim, drawx, drawy, key, offset, override, xoverride, yoverride, _i, _len, _ref, _ref1, _results;
       _ref = this.deletedAxes;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         axis = _ref[_i];
@@ -3837,23 +3833,30 @@ See the spec definition for more information.
         width: dims.chartWidth,
         height: dims.chartHeight
       };
-      xpos = (_ref1 = this.getSpec('x').position) != null ? _ref1 : 'bottom';
-      drawx = facet.edge(xpos);
+      drawx = drawy = null;
       xoverride = {
         renderLabel: false,
         renderTick: false
       };
-      ypos = (_ref2 = this.getSpec('y').position) != null ? _ref2 : 'left';
-      drawy = facet.edge(ypos);
       yoverride = {
         renderLabel: false,
         renderTick: false
       };
-      _ref3 = this.axes;
+      _ref1 = this.axes;
       _results = [];
-      for (key in _ref3) {
-        axis = _ref3[key];
+      for (key in _ref1) {
+        axis = _ref1[key];
         offset = facet.getOffset(dims, key);
+        if (!drawx) {
+          drawx = facet.edge(axis.x.position);
+          drawy = facet.edge(axis.y.position);
+          if (axis.x.type === 'r') {
+            xoverride.renderLine = false;
+          }
+          if (axis.y.type === 'r') {
+            yoverride.renderLine = false;
+          }
+        }
         override = drawx(key) ? {} : xoverride;
         axis.x.render(axisDim, this.coord, renderer(offset), override);
         override = drawy(key) ? {} : yoverride;
@@ -6480,6 +6483,16 @@ data processing to be done.
 
     Facet.prototype.edge = function(dir, col, row) {
       var acc, edge, grp, key, m, n, optimize;
+      if (dir === 'none') {
+        return function() {
+          return false;
+        };
+      }
+      if (dir === 'out') {
+        return function() {
+          return true;
+        };
+      }
       grp = dir === 'top' || dir === 'bottom' ? col : row;
       optimize = dir === 'top' ? row : dir === 'bottom' ? function(k) {
         return -row(k);

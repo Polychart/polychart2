@@ -121,14 +121,18 @@ class ScaleSet
       bottom : dims.chartHeight
       width: dims.chartWidth
       height: dims.chartHeight
-    xpos= @getSpec('x').position ? 'bottom'
-    drawx = facet.edge(xpos)
+    drawx = drawy = null
     xoverride = renderLabel : false, renderTick : false
-    ypos= @getSpec('y').position ? 'left'
-    drawy = facet.edge(ypos)
     yoverride = renderLabel : false, renderTick : false
     for key, axis of @axes
       offset = facet.getOffset(dims, key)
+      if not drawx
+        drawx = facet.edge(axis.x.position)
+        drawy = facet.edge(axis.y.position)
+        if axis.x.type is 'r'
+          xoverride.renderLine = false
+        if axis.y.type is 'r'
+          yoverride.renderLine = false
       override = if drawx(key) then {} else xoverride
       axis.x.render axisDim, @coord, renderer(offset), override
       override = if drawy(key) then {} else yoverride

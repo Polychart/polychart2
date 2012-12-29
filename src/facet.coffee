@@ -50,6 +50,8 @@ class Facet
     y : dims.paddingTop + dims.guideTop + (dims.chartHeight + dims.verticalSpacing) * row
   getGrid: () -> throw poly.error.impl()
   edge: (dir, col, row) ->
+    if dir is 'none' then return -> false
+    if dir is 'out' then return -> true
     grp = if dir in ['top', 'bottom'] then col else row
     optimize =
       if dir is 'top' then row
