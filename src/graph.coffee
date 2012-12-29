@@ -84,7 +84,6 @@ class Graph
       @coord.make @dims
       @ranges = @coord.ranges()
     @scaleSet.setRanges @ranges
-    @_legacy(domains)
   render: () =>
     if @spec.render? and @spec.render is false
       return # for debugging purposes
@@ -92,7 +91,7 @@ class Graph
     scales = @scaleSet.scales
     @coord.setScales scales
     @scaleSet.coord = @coord
-    axes = @scaleSet.makeAxes()
+    @scaleSet.makeAxes _.keys @panes
     @scaleSet.makeLegends()
 
     @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent
@@ -101,12 +100,9 @@ class Graph
     rendererG = poly.render @handleEvent, @paper, scales, @coord, false
 
     for key, pane of @panes
-      pane.render
-        dims:@dims
-        coord:@coord
-        axes:axes
-        renderer:renderer
-        rendererGuide:rendererG
+      pane.render renderer
+
+    @scaleSet.renderAxes @dims, rendererG
     @scaleSet.renderLegends @dims, rendererG
 
   addHandler : (h) -> @handlers.push h
@@ -147,18 +143,9 @@ class Graph
     tmpRanges = @coord.ranges()
     poly.scaleset tmpRanges, @coord
   _makeDimensions: (spec, scaleSet) ->
-    poly.dim.make spec, scaleSet.makeAxes(), scaleSet.makeLegends()
+    poly.dim.make spec, scaleSet.makeAxes(_.keys(@panes)), scaleSet.makeLegends()
   _makePaper: (dom, width, height, handleEvent) ->
     if _.isString dom then dom = document.getElementById(dom)
     paper = poly.paper dom, width, height, handleEvent
-
-  _legacy: (domains) =>
-    # LEGACY: tick calculation
-    @domains = domains
-    @scales = @scaleSet.scales
-    axes = @scaleSet.makeAxes()
-    @ticks = {}
-    for k, v of axes
-      @ticks[k] = v.ticks
 
 poly.chart = (spec) -> new Graph(spec)

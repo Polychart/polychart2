@@ -5,12 +5,11 @@ class ScaleSet
   constructor: (tmpRanges, coord) ->
     # note that axes.x is the axis for the x-aesthetic. it may or ma NOT be
     # the x-axis displayed on the screen.
-    @axes =
-      x: poly.guide.axis coord.axisType('x') # polar?
-      y: poly.guide.axis coord.axisType('y') # polar?
     @coord = coord
     @ranges = tmpRanges
+    @axes = {}
     @legends = []
+    @deletedAxes = []
     @deletedLegends = []
 
   make: (guideSpec, domains, layers) ->
@@ -90,21 +89,40 @@ class ScaleSet
     obj
 
   getSpec : (a) -> if @guideSpec? and @guideSpec[a]? then @guideSpec[a] else {}
-  makeAxes: () ->
-    @axes.x.make
-      domain: @domainx
-      type: @scales.x.tickType()
-      guideSpec: @getSpec 'x'
-      key: poly.getLabel @layers, 'x'
-    @axes.y.make
-      domain: @domainy
-      type: @scales.y.tickType()
-      guideSpec: @getSpec 'y'
-      key: poly.getLabel @layers, 'y'
+  makeAxes: (groups) ->
+    {deleted, kept, added} = poly.compare(_.keys(@axes), groups)
+    for key in deleted
+      @deletedAxes.push @axes[key]
+      delete @axes[key]
+    for key in added
+      @axes[key] =
+        x: poly.guide.axis @coord.axisType('x')
+        y: poly.guide.axis @coord.axisType('y')
+    for key, axis of @axes
+      axis.x.make
+        domain: @domainx
+        type: @scales.x.tickType()
+        guideSpec: @getSpec 'x'
+        key: poly.getLabel @layers, 'x'
+      axis.y.make
+        domain: @domainy
+        type: @scales.y.tickType()
+        guideSpec: @getSpec 'y'
+        key: poly.getLabel @layers, 'y'
     @axes
   renderAxes: (dims, renderer) ->
-    @axes.x.render dims, @coord, renderer
-    @axes.y.render dims, @coord, renderer
+    axis.remove(renderer) for axis in @deletedAxes
+    @deletedAxes = []
+    axisDim =
+      top: dims.paddingTop + dims.guideTop
+      left : dims.paddingLeft + dims.guideLeft
+      right: dims.paddingLeft + dims.guideLeft + dims.chartWidth
+      bottom : dims.paddingTop + dims.guideTop + dims.chartHeight
+      width: dims.chartWidth
+      height: dims.chartHeight
+    for key, axis of @axes
+      axis.x.render axisDim, @coord, renderer
+      axis.y.render axisDim, @coord, renderer
 
   _mapLayers: (layers) ->
     obj = {}
@@ -180,9 +198,11 @@ class ScaleSet
     offset = { x: 0, y : 0 }
 
     # axis offset
-    y = @axes.y.getDimension()
-    if y.position == 'right'
-      offset.x += y.width
+    y = 0
+    for key, axis of @axes #this loop is dumb
+      y = axis.y.getDimension()
+      if y.position == 'right' and y.width > 0
+        offset.x += y.width
 
     maxwidth = 0
     maxheight = dims.height - dims.guideTop - dims.paddingTop

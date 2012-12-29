@@ -17,16 +17,20 @@ poly.dim.make = (spec, axes, legends) ->
   dim.guideBottom = 5
 
   # axes
-  for key, obj of axes
-    d = obj.getDimension()
-    if d.position == 'left'
-      dim.guideLeft += d.width
-    else if d.position == 'right'
-      dim.guideRight += d.width
-    else if d.position == 'bottom'
-      dim.guideBottom+= d.height
-    else if d.position == 'top'
-      dim.guideTop += d.height
+  done = {}
+  for key, axis of axes # loop over everything? pretty inefficient
+    for k2, obj of axis
+      if done[k2]? then continue
+      d = obj.getDimension()
+      if d.position == 'left'
+        dim.guideLeft += d.width
+      else if d.position == 'right'
+        dim.guideRight += d.width
+      else if d.position == 'bottom'
+        dim.guideBottom+= d.height
+      else if d.position == 'top'
+        dim.guideTop += d.height
+      done[k2] = true
 
   # NOTE: if this is changed, change scale.coffee's legend render
   maxheight =  dim.height - dim.guideTop - dim.paddingTop

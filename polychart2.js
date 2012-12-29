@@ -3644,13 +3644,11 @@ See the spec definition for more information.
   ScaleSet = (function() {
 
     function ScaleSet(tmpRanges, coord) {
-      this.axes = {
-        x: poly.guide.axis(coord.axisType('x')),
-        y: poly.guide.axis(coord.axisType('y'))
-      };
       this.coord = coord;
       this.ranges = tmpRanges;
+      this.axes = {};
       this.legends = [];
+      this.deletedAxes = [];
       this.deletedLegends = [];
     }
 
@@ -3765,25 +3763,64 @@ See the spec definition for more information.
       }
     };
 
-    ScaleSet.prototype.makeAxes = function() {
-      this.axes.x.make({
-        domain: this.domainx,
-        type: this.scales.x.tickType(),
-        guideSpec: this.getSpec('x'),
-        key: poly.getLabel(this.layers, 'x')
-      });
-      this.axes.y.make({
-        domain: this.domainy,
-        type: this.scales.y.tickType(),
-        guideSpec: this.getSpec('y'),
-        key: poly.getLabel(this.layers, 'y')
-      });
+    ScaleSet.prototype.makeAxes = function(groups) {
+      var added, axis, deleted, kept, key, _i, _j, _len, _len1, _ref, _ref1;
+      _ref = poly.compare(_.keys(this.axes), groups), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
+      for (_i = 0, _len = deleted.length; _i < _len; _i++) {
+        key = deleted[_i];
+        this.deletedAxes.push(this.axes[key]);
+        delete this.axes[key];
+      }
+      for (_j = 0, _len1 = added.length; _j < _len1; _j++) {
+        key = added[_j];
+        this.axes[key] = {
+          x: poly.guide.axis(this.coord.axisType('x')),
+          y: poly.guide.axis(this.coord.axisType('y'))
+        };
+      }
+      _ref1 = this.axes;
+      for (key in _ref1) {
+        axis = _ref1[key];
+        axis.x.make({
+          domain: this.domainx,
+          type: this.scales.x.tickType(),
+          guideSpec: this.getSpec('x'),
+          key: poly.getLabel(this.layers, 'x')
+        });
+        axis.y.make({
+          domain: this.domainy,
+          type: this.scales.y.tickType(),
+          guideSpec: this.getSpec('y'),
+          key: poly.getLabel(this.layers, 'y')
+        });
+      }
       return this.axes;
     };
 
     ScaleSet.prototype.renderAxes = function(dims, renderer) {
-      this.axes.x.render(dims, this.coord, renderer);
-      return this.axes.y.render(dims, this.coord, renderer);
+      var axis, axisDim, key, _i, _len, _ref, _ref1, _results;
+      _ref = this.deletedAxes;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        axis = _ref[_i];
+        axis.remove(renderer);
+      }
+      this.deletedAxes = [];
+      axisDim = {
+        top: dims.paddingTop + dims.guideTop,
+        left: dims.paddingLeft + dims.guideLeft,
+        right: dims.paddingLeft + dims.guideLeft + dims.chartWidth,
+        bottom: dims.paddingTop + dims.guideTop + dims.chartHeight,
+        width: dims.chartWidth,
+        height: dims.chartHeight
+      };
+      _ref1 = this.axes;
+      _results = [];
+      for (key in _ref1) {
+        axis = _ref1[key];
+        axis.x.render(axisDim, this.coord, renderer);
+        _results.push(axis.y.render(axisDim, this.coord, renderer));
+      }
+      return _results;
     };
 
     ScaleSet.prototype._mapLayers = function(layers) {
@@ -3884,7 +3921,7 @@ See the spec definition for more information.
     };
 
     ScaleSet.prototype.renderLegends = function(dims, renderer) {
-      var legend, maxheight, maxwidth, newdim, offset, y, _i, _j, _len, _len1, _ref, _ref1, _results;
+      var axis, key, legend, maxheight, maxwidth, newdim, offset, y, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
       _ref = this.deletedLegends;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         legend = _ref[_i];
@@ -3895,16 +3932,21 @@ See the spec definition for more information.
         x: 0,
         y: 0
       };
-      y = this.axes.y.getDimension();
-      if (y.position === 'right') {
-        offset.x += y.width;
+      y = 0;
+      _ref1 = this.axes;
+      for (key in _ref1) {
+        axis = _ref1[key];
+        y = axis.y.getDimension();
+        if (y.position === 'right' && y.width > 0) {
+          offset.x += y.width;
+        }
       }
       maxwidth = 0;
       maxheight = dims.height - dims.guideTop - dims.paddingTop;
-      _ref1 = this.legends;
+      _ref2 = this.legends;
       _results = [];
-      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-        legend = _ref1[_j];
+      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+        legend = _ref2[_j];
         newdim = legend.getDimension();
         if (newdim.height + offset.y > maxheight) {
           offset.x += maxwidth + 5;
@@ -5679,24 +5721,13 @@ data processing to be done.
       return poly.domain.make(layers, spec.guides, spec.strict);
     };
 
-    Pane.prototype.render = function(params) {
-      var axes, axisDim, coord, dims, layer, renderer, rendererGuide, sampled, _i, _len, _ref, _results;
-      dims = params.dims, renderer = params.renderer, rendererGuide = params.rendererGuide, coord = params.coord, axes = params.axes;
+    Pane.prototype.render = function(renderer) {
+      var layer, sampled, _i, _len, _ref, _ref1, _results;
       _ref = this.layers;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         layer = _ref[_i];
-        sampled = layer.render(renderer).sampled;
-        axisDim = {
-          top: dims.paddingTop + dims.guideTop,
-          left: dims.paddingLeft + dims.guideLeft,
-          right: dims.paddingLeft + dims.guideLeft + dims.chartWidth,
-          bottom: dims.paddingTop + dims.guideTop + dims.chartHeight,
-          width: dims.chartWidth,
-          height: dims.chartHeight
-        };
-        axes.x.render(axisDim, coord, rendererGuide);
-        _results.push(axes.y.render(axisDim, coord, rendererGuide));
+        _results.push((_ref1 = layer.render(renderer), sampled = _ref1.sampled, _ref1));
       }
       return _results;
     };
@@ -5718,7 +5749,7 @@ data processing to be done.
   poly.dim = {};
 
   poly.dim.make = function(spec, axes, legends) {
-    var d, dim, key, legend, maxheight, maxwidth, obj, offset, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    var axis, d, dim, done, k2, key, legend, maxheight, maxwidth, obj, offset, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
     dim = {
       width: (_ref = spec.width) != null ? _ref : 400,
       height: (_ref1 = spec.height) != null ? _ref1 : 400,
@@ -5731,17 +5762,26 @@ data processing to be done.
     dim.guideRight = 0;
     dim.guideLeft = 5;
     dim.guideBottom = 5;
+    debugger;
+    done = {};
     for (key in axes) {
-      obj = axes[key];
-      d = obj.getDimension();
-      if (d.position === 'left') {
-        dim.guideLeft += d.width;
-      } else if (d.position === 'right') {
-        dim.guideRight += d.width;
-      } else if (d.position === 'bottom') {
-        dim.guideBottom += d.height;
-      } else if (d.position === 'top') {
-        dim.guideTop += d.height;
+      axis = axes[key];
+      for (k2 in axis) {
+        obj = axis[k2];
+        if (done[k2] != null) {
+          continue;
+        }
+        d = obj.getDimension();
+        if (d.position === 'left') {
+          dim.guideLeft += d.width;
+        } else if (d.position === 'right') {
+          dim.guideRight += d.width;
+        } else if (d.position === 'bottom') {
+          dim.guideBottom += d.height;
+        } else if (d.position === 'top') {
+          dim.guideTop += d.height;
+        }
+        done[k2] = true;
       }
     }
     maxheight = dim.height - dim.guideTop - dim.paddingTop;
@@ -6256,8 +6296,6 @@ data processing to be done.
   Graph = (function() {
 
     function Graph(spec) {
-      this._legacy = __bind(this._legacy, this);
-
       this.handleEvent = __bind(this.handleEvent, this);
 
       this.render = __bind(this.render, this);
@@ -6393,12 +6431,11 @@ data processing to be done.
         this.coord.make(this.dims);
         this.ranges = this.coord.ranges();
       }
-      this.scaleSet.setRanges(this.ranges);
-      return this._legacy(domains);
+      return this.scaleSet.setRanges(this.ranges);
     };
 
     Graph.prototype.render = function() {
-      var axes, clipping, dom, key, pane, renderer, rendererG, scales, _ref, _ref1;
+      var clipping, dom, key, pane, renderer, rendererG, scales, _ref, _ref1;
       if ((this.spec.render != null) && this.spec.render === false) {
         return;
       }
@@ -6406,7 +6443,7 @@ data processing to be done.
       scales = this.scaleSet.scales;
       this.coord.setScales(scales);
       this.scaleSet.coord = this.coord;
-      axes = this.scaleSet.makeAxes();
+      this.scaleSet.makeAxes(_.keys(this.panes));
       this.scaleSet.makeLegends();
       if ((_ref = this.paper) == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
@@ -6417,14 +6454,9 @@ data processing to be done.
       _ref1 = this.panes;
       for (key in _ref1) {
         pane = _ref1[key];
-        pane.render({
-          dims: this.dims,
-          coord: this.coord,
-          axes: axes,
-          renderer: renderer,
-          rendererGuide: rendererG
-        });
+        pane.render(renderer);
       }
+      this.scaleSet.renderAxes(this.dims, rendererG);
       return this.scaleSet.renderLegends(this.dims, rendererG);
     };
 
@@ -6485,7 +6517,7 @@ data processing to be done.
     };
 
     Graph.prototype._makeDimensions = function(spec, scaleSet) {
-      return poly.dim.make(spec, scaleSet.makeAxes(), scaleSet.makeLegends());
+      return poly.dim.make(spec, scaleSet.makeAxes(_.keys(this.panes)), scaleSet.makeLegends());
     };
 
     Graph.prototype._makePaper = function(dom, width, height, handleEvent) {
@@ -6494,20 +6526,6 @@ data processing to be done.
         dom = document.getElementById(dom);
       }
       return paper = poly.paper(dom, width, height, handleEvent);
-    };
-
-    Graph.prototype._legacy = function(domains) {
-      var axes, k, v, _results;
-      this.domains = domains;
-      this.scales = this.scaleSet.scales;
-      axes = this.scaleSet.makeAxes();
-      this.ticks = {};
-      _results = [];
-      for (k in axes) {
-        v = axes[k];
-        _results.push(this.ticks[k] = v.ticks);
-      }
-      return _results;
     };
 
     return Graph;
