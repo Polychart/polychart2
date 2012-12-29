@@ -1617,7 +1617,7 @@ See the spec definition for more information.
     };
 
     Coordinate.prototype.clipping = function(offset) {
-      return [offset.x, offset.y, offset.x + this.dims.chartWidth, offset.y + this.dims.chartHeight];
+      return [offset.x, offset.y, this.dims.chartWidth, this.dims.chartHeight];
     };
 
     Coordinate.prototype.getScale = function(aes) {};

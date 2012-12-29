@@ -7,7 +7,7 @@ class Coordinate
   make: (dims) -> @dims = dims
   setScales: (scales) -> @scales = x: scales.x.f, y: scales.y.f
   clipping: (offset) ->
-    [offset.x, offset.y, offset.x+@dims.chartWidth, offset.y+@dims.chartHeight]
+    [offset.x, offset.y, @dims.chartWidth, @dims.chartHeight]
   getScale: (aes) ->
   ranges: () ->
 
