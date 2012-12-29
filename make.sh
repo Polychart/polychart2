@@ -21,6 +21,7 @@ cat \
     compiled/src/pane.js \
     compiled/src/dim.js \
     compiled/src/render.js \
+    compiled/src/facet.js \
     compiled/src/graph.js > compiled/src/polychart2.bare.js
 cat make/header.js compiled/src/polychart2.bare.js make/footer.js > polychart2.js
 

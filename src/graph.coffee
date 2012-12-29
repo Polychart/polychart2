@@ -49,27 +49,12 @@ class Graph
     @render()
   makePanes: () =>
     # prep work to make indices
-    groups = @spec.facet ? []
-    uniqueValues = {}
-    for key in groups
-      v = []
-      for index, data of @dataprocess
-        if currGrp of data.metaData
-          v = _.union v, _.uniq(_.pluck(data.statData, currGrp))
-      uniqueValues[key] = v
-    indices = poly.cross uniqueValues
-    stringify = poly.stringify(groups)
+    facet = poly.facet.make @spec.facet
+    indices = facet.getIndices @dataprocess
     # make panes
-    @panes ?= @_makePanes @spec, @dataprocess, indices, stringify
+    @panes ?= @_makePanes @spec, @dataprocess, indices
     # make data
-    datas = {}
-    groupedData = poly.groupProcessedData @dataprocess, groups
-    for mindex of indices
-      pointer = groupedData
-      while pointer.grouped is true
-        value = mindex[pointer.key]
-        pointer = pointer.values[value]
-      datas[stringify mindex] = pointer
+    datas = facet.groupData @dataprocess
     # set data
     for key, pane of @panes
       pane.make @spec, datas[key]
@@ -91,7 +76,7 @@ class Graph
     scales = @scaleSet.scales
     @coord.setScales scales
     @scaleSet.coord = @coord
-    @scaleSet.makeAxes _.keys @panes
+    @scaleSet.makeAxes _.keys @panes # TODO: use indices here? pass in Facet?
     @scaleSet.makeLegends()
 
     @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent
@@ -128,13 +113,11 @@ class Graph
         else
           h.handle(type, obj)
     _.throttle handler, 1000
-  _makePanes: (spec, processedData, indices, stringify) ->
+  _makePanes: (spec, processedData, indices) ->
     # make panes
     panes = {}
-    for mindex in indices
-      str = stringify mindex
-      p = poly.pane.make spec, mindex
-      panes[str] = p
+    for identifier, mindex of indices
+      panes[identifier] = poly.pane.make spec, mindex
     panes
 
 
