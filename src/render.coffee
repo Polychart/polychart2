@@ -21,7 +21,7 @@ poly.paper = (dom, w, h, handleEvent) ->
 Helper function for rendering all the geoms of an object
 ###
 poly.render = (handleEvent, paper, scales, coord, mayflip) -> (offset, clipping) ->
-  add: (mark, evtData) ->
+  add: (mark, evtData, tooltip="hello\nbye") ->
     if not coord.type?
       throw poly.error.unknown "Coordinate don't have at type?"
     if not renderer[coord.type]?
@@ -33,15 +33,19 @@ poly.render = (handleEvent, paper, scales, coord, mayflip) -> (offset, clipping)
     if clipping? then pt.attr('clip-rect', clipping)
     if evtData and _.keys(evtData).length > 0
       pt.data 'e', evtData
-      pt.click handleEvent('click')
-      pt.hover handleEvent('mover'), handleEvent('mout')
+    if tooltip
+      pt.data 't', tooltip
+    pt.click handleEvent('click')
+    pt.hover handleEvent('mover'), handleEvent('mout')
     pt
   remove: (pt) ->
     pt.remove()
-  animate: (pt, mark, evtData) ->
+  animate: (pt, mark, evtData, tooltip) ->
     renderer[coord.type][mark.type].animate pt, scales, coord, offset, mark, mayflip
     if evtData and _.keys(evtData).length > 0
       pt.data 'e', evtData
+    if tooltip
+      pt.data 't', tooltip
     pt
 
 class Renderer

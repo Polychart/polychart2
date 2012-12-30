@@ -1163,12 +1163,13 @@
       dom: dom
     };
     c = polyjs.chart(spec);
-    return c.addHandler(function(type, e) {
+    c.addHandler(function(type, e) {
       data = e.evtData;
       if (type === 'click') {
         return alert("You clicked on index: " + data.index["in"][0]);
       }
     });
+    return c.addHandler(polyjs.handler.tooltip());
   };
 
   this.examples.interact_point = function(dom) {
@@ -1199,6 +1200,7 @@
       dom: dom
     };
     c = polyjs.chart(spec);
+    c.addHandler(polyjs.handler.tooltip());
     return c.addHandler(function(type, e) {
       data = e.evtData;
       if (type === 'click') {
@@ -1237,6 +1239,7 @@
       dom: dom
     };
     c = polyjs.chart(spec);
+    c.addHandler(polyjs.handler.tooltip());
     return c.addHandler(function(type, e) {
       data = e.evtData;
       if (type === 'click') {

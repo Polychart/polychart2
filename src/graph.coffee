@@ -99,21 +99,23 @@ class Graph
   handleEvent : (type) =>
     # POSSIBLE EVENTS: select, click, mover, mout, data
     graph = @
-    handler = (params) ->
+    handler = (event) ->
       obj = @
       if type == 'select'
-        {start, end} = params
+        {start, end} = event
         obj.evtData = graph.scaleSet.fromPixels start, end
       else if type == 'data'
         obj.evtData = {}
       else
         obj.evtData = obj.data('e')
 
+      obj.tooltip = obj.data('t')
+
       for h in graph.handlers
         if _.isFunction(h)
-          h(type, obj)
+          h(type, obj, event)
         else
-          h.handle(type, obj)
+          h.handle(type, obj, event)
     _.throttle handler, 1000
   _makePanes: (spec, indices) ->
     # make panes
