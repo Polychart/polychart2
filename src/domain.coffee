@@ -97,8 +97,9 @@ makeDomainSet = (layerObj, guideSpec, strictmode) ->
         when 'cat'
           domain[aes] = makeDomain {
             type: 'cat'
-            levels: fromspec('levels') ? _.uniq(values)
-            sorted : fromspec('levels')? #sorted = true <=> user specified
+            levels: fromspec('levels') ? meta.levels ? _.uniq(values)
+            sorted : fromspec('levels') ? meta.sorted ? false
+            #sorted = true <=> user specified
           }
 
   domain
@@ -150,8 +151,13 @@ domainMerge =
     max = _.max _.map(domains, (d) -> d.max)
     return makeDomain type: 'date', min: min, max:max, bw: bw
   'cat' : (domains) ->
-    sortedLevels =
-      _.chain(domains).filter((d) -> d.sorted).map((d) -> d.levels).value()
+    sortedLevels = []
+    for d in domains
+      if d.sorted
+        add = true
+        for l in sortedLevels
+          if _.isEqual l, d.levels then add = false
+        if add then sortedLevels.push d.levels
     unsortedLevels =
       _.chain(domains).filter((d) -> !d.sorted).map((d) -> d.levels).value()
     if sortedLevels.length > 1 and _.intersection.apply @, sortedLevels
