@@ -47,7 +47,7 @@ class Data
           for i in [0..len-1]
             obj = {}
             for k in @key
-              obj[k] = poly.coerce json[k][i], @meta[key]
+              obj[k] = poly.coerce json[k][i], @meta[k]
             @raw.push(obj)
       @raw
   getData: (callback) ->
