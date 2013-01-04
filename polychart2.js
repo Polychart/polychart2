@@ -1505,6 +1505,9 @@ See the spec definition for more information.
 
   layerToDataSpec = function(lspec, grouping) {
     var aesthetics, dedupByName, desc, expr, filters, groups, grpvar, key, metas, result, sdesc, select, sexpr, stats, transstat, transstats, ts, val, _i, _len, _ref1, _ref2;
+    if (grouping == null) {
+      grouping = [];
+    }
     filters = {};
     _ref2 = (_ref1 = lspec.filter) != null ? _ref1 : {};
     for (key in _ref2) {
@@ -1546,7 +1549,7 @@ See the spec definition for more information.
         sdesc.sort = sexpr.pretty();
         result = extractOps(sexpr);
         if (result.stat.length !== 0) {
-          sdesc.stat = result.stat;
+          sdesc.stat = result.stat[0];
         }
         metas[desc["var"]] = sdesc;
       }
@@ -1968,7 +1971,7 @@ See the spec definition for more information.
 
 
   makeDomainSet = function(layerObj, guideSpec, strictmode) {
-    var aes, bw, domain, fromspec, max, meta, min, values, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
+    var aes, bw, domain, fromspec, max, meta, min, values, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
     domain = {};
     for (aes in layerObj.mapping) {
       if (strictmode) {
@@ -2013,8 +2016,8 @@ See the spec definition for more information.
           case 'cat':
             domain[aes] = makeDomain({
               type: 'cat',
-              levels: (_ref6 = fromspec('levels')) != null ? _ref6 : _.uniq(values),
-              sorted: fromspec('levels') != null
+              levels: (_ref6 = (_ref7 = fromspec('levels')) != null ? _ref7 : meta.levels) != null ? _ref6 : _.uniq(values),
+              sorted: (_ref8 = (_ref9 = fromspec('levels')) != null ? _ref9 : meta.sorted) != null ? _ref8 : false
             });
         }
       }
@@ -2114,12 +2117,23 @@ See the spec definition for more information.
       });
     },
     'cat': function(domains) {
-      var levels, sortedLevels, unsortedLevels;
-      sortedLevels = _.chain(domains).filter(function(d) {
-        return d.sorted;
-      }).map(function(d) {
-        return d.levels;
-      }).value();
+      var add, d, l, levels, sortedLevels, unsortedLevels, _i, _j, _len, _len1;
+      sortedLevels = [];
+      for (_i = 0, _len = domains.length; _i < _len; _i++) {
+        d = domains[_i];
+        if (d.sorted) {
+          add = true;
+          for (_j = 0, _len1 = sortedLevels.length; _j < _len1; _j++) {
+            l = sortedLevels[_j];
+            if (_.isEqual(l, d.levels)) {
+              add = false;
+            }
+          }
+          if (add) {
+            sortedLevels.push(d.levels);
+          }
+        }
+      }
       unsortedLevels = _.chain(domains).filter(function(d) {
         return !d.sorted;
       }).map(function(d) {
@@ -2422,6 +2436,9 @@ See the spec definition for more information.
 
     Axis.prototype.render = function(axisDim, coord, renderer, override) {
       var added, deleted, kept, newpts, t, _i, _j, _k, _len, _len1, _len2, _ref;
+      if (this.position === "none") {
+        return;
+      }
       if (override == null) {
         override = {};
       }
@@ -4093,7 +4110,7 @@ or knows how to retrieve data from some source.
               _ref4 = this.key;
               for (_n = 0, _len4 = _ref4.length; _n < _len4; _n++) {
                 k = _ref4[_n];
-                obj[k] = poly.coerce(json[k][i], this.meta[key]);
+                obj[k] = poly.coerce(json[k][i], this.meta[k]);
               }
               this.raw.push(obj);
             }

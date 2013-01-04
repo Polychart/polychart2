@@ -15,18 +15,21 @@ test "domain: strict mode num & cat", ->
     guides:
       x: { type: 'num', min: 2, max: 4, bw : 3 }
       y: { type: 'cat', levels: [1,2,3], labels: {1: 'One', 2: 'Five'} }
-  {domains, ticks} = polyjs.chart spec
+  graph = polyjs.chart spec
+  domains = graph.panes[""].domains
   equal domains.x.type, 'num'
   equal domains.x.min , 2
   equal domains.x.max, 4
   equal domains.x.bw, 3
   equal domains.y.type, 'cat'
   deepEqual domains.y.levels, [1,2,3]
-  equal domains.y.sorted, true
+  equal domains.y.sorted, false
 
-  deepEqual _.pluck(ticks.x, 'location'), [2, 3, 2.5, 3.5]
-  deepEqual _.pluck(ticks.y, 'location'), [1, 2, 3]
-  deepEqual _.pluck(ticks.y, 'value'), ['One', 'Five', 3]
+  xticks = graph.scaleSet.axes[""].x.ticks
+  yticks = graph.scaleSet.axes[""].y.ticks
+  deepEqual _.pluck(xticks, 'location'), [2, 3, 2.5, 3.5]
+  deepEqual _.pluck(yticks, 'location'), [1, 2, 3]
+  deepEqual _.pluck(yticks, 'value'), ['One', 'Five', 3]
 
 test "scale: x and v:", ->
   spec =
@@ -36,7 +39,9 @@ test "scale: x and v:", ->
     guides:
       x: { type: 'num', min: 2, max: 4, bw : 3 }
       y: { type: 'num', min: 1, max: 3 }
-  {domains, scales, layers} = polyjs.chart spec
+  graph = polyjs.chart spec
+  domains = graph.panes[""].domains
+
   equal domains.x.type, 'num'
   equal domains.x.min , 2
   equal domains.x.max, 4

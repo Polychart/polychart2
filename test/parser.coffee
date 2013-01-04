@@ -56,6 +56,7 @@ test "extraction: nothing (smoke test)", ->
   deepEqual parser.trans, []
 
 test "extraction: simple, one stat (smoke test)", ->
+  debugger
   layerparser = {
     type: "point",
     x: {var: "a"},

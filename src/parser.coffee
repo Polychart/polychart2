@@ -176,7 +176,7 @@ extractOps = (expr) ->
   expr.visit(extractor)
   results
 
-layerToDataSpec = (lspec, grouping) ->
+layerToDataSpec = (lspec, grouping=[]) ->
   filters = {}
   for key, val of lspec.filter ? {}
     filters[(parse key).pretty()] = val # normalize name
@@ -200,7 +200,7 @@ layerToDataSpec = (lspec, grouping) ->
       sdesc.sort = sexpr.pretty() # normalize name
       result = extractOps sexpr
       if result.stat.length isnt 0
-        sdesc.stat = result.stat
+        sdesc.stat = result.stat[0]
       metas[desc.var] = sdesc
   for grpvar in grouping
     expr = parse grpvar
