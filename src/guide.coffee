@@ -29,6 +29,7 @@ class Axis extends Guide
     @ticks = poly.tick.make domain, guideSpec, type
     @maxwidth =_.max _.map @ticks, (t) -> poly.strSize t.value
   render: (axisDim, coord, renderer, override) =>
+    if @position is "none" then return
     override ?= {}
     # NOTE: coords are included for making guide rendering for polar coordinates
     # managable. Ideally it should NOT be here and is rather a hack.
