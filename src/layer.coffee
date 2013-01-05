@@ -64,6 +64,14 @@ class Layer
 
   _calcGeoms: () -> @geoms = {} # layer level geom calculation
 
+  _format: (n) ->
+    if _.isNumber(n)
+      if not @_formatnum?
+        @_formatnum = poly.format.number()
+      @_formatnum(n)
+    else
+      n
+
   getMeta: (key) ->
     if @mapping[key] then @meta[@mapping[key]] else {}
  
@@ -93,12 +101,12 @@ class Layer
   _modify: (render, points, geom) ->
     objs = {}
     for id2, mark of geom.marks
-      objs[id2] = render.animate points[id2], mark, geom.evtData
+      objs[id2] = render.animate points[id2], mark, geom.evtData, geom.tooltip
     objs
   _add: (render, geom) ->
     objs = {}
     for id2, mark of geom.marks
-      objs[id2] = render.add mark, geom.evtData
+      objs[id2] = render.add mark, geom.evtData, geom.tooltip
     objs
 
   # helper function to get @mapping and @consts
@@ -173,6 +181,9 @@ class Point extends Layer
             size: @_getValue item, 'size'
             opacity: @_getValue item, 'opacity'
         evtData: evtData
+        tooltip:
+          "#{@mapping.x}: #{@_format @_getValue item, 'x'}\n"+
+          "#{@mapping.y}: #{@_format @_getValue item, 'y'}"
 
 class Path extends Layer
   _calcGeoms: () ->
@@ -260,6 +271,10 @@ class Bar extends Layer
             color: @_getValue item, 'color'
             opacity: @_getValue item, 'opacity'
         evtData: evtData
+        tooltip:
+          "#{@mapping.x}: #{@_format @_getValue item, 'x'}\n"+
+          "#{@mapping.y}: #{@_format @_getValue item, 'y'}"
+
   _calcGeomsStack: () ->
     group = if @mapping.x? then [@mapping.x] else []
     @_stack group
@@ -279,6 +294,9 @@ class Bar extends Layer
             color: @_getValue item, 'color'
             opacity: @_getValue item, 'opacity'
         evtData: evtData
+        tooltip:
+          "#{@mapping.x}: #{@_format @_getValue item, 'x'}\n"+
+          "#{@mapping.y}: #{@_format @_getValue item, 'y'}"
 
 class Area extends Layer
   _calcGeoms: () ->
@@ -345,6 +363,14 @@ class Tile extends Layer
       y = @_getValue item, 'y'
       for k, v of item
         if k isnt 'y' and k isnt 'x' then evtData[k] = { in: [v] }
+
+      tooltip =
+        "#{@mapping.x}: #{@_format @_getValue item, 'x'}\n"+
+        "#{@mapping.y}: #{@_format @_getValue item, 'y'}"
+      for a in ['color', 'size', 'opacity']
+        if @mapping[a]?
+          tooltip += "\n#{@mapping[a]}: #{@_format @_getValue item, a}"
+
       @geoms[idfn item] =
         marks:
           0:
@@ -355,6 +381,7 @@ class Tile extends Layer
             size: @_getValue item, 'size'
             opacity: @_getValue item, 'opacity'
         evtData: evtData
+        tooltip: tooltip
 
 class Box extends Layer
   _calcGeoms: () ->

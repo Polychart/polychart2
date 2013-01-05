@@ -45,6 +45,8 @@ class Graph
           statData: statData
           metaData: metaData
         merge()
+    # default handlers
+    @addHandler polyjs.handler.tooltip()
   merge: () =>
     @makePanes()
     @mergeDomains()
@@ -107,9 +109,8 @@ class Graph
       else if type == 'data'
         obj.evtData = {}
       else
+        obj.tooltip = obj.data('t')
         obj.evtData = obj.data('e')
-
-      obj.tooltip = obj.data('t')
 
       for h in graph.handlers
         if _.isFunction(h)

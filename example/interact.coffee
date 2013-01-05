@@ -39,6 +39,7 @@
     data = e.evtData
     if type == 'click'
       alert("You clicked on index: " + data.index.in[0])
+  c.addHandler polyjs.handler.tooltip()
     #if type == 'select' then console.log data
 
 @examples.interact_line = (dom) ->
@@ -76,4 +77,27 @@
       alert("You clicked on index: " + data.k.in[0])
     #if type == 'select' then console.log data
 
+@examples.interact_tiles = (dom) ->
+  datafn = () ->
+    a = (i) -> i % 5
+    b = (i) -> Math.floor(i / 5)
+    value = () -> Math.random()*5
+    item = (i) ->
+      mod5: a(i)
+      floor5: b(i)
+      value: value()
+    (item(i) for i in [0..24])
 
+  data = new polyjs.Data json:datafn()
+  spec = {
+    layers: [
+      data: data
+      type: 'tile'
+      x : 'bin(mod5, 1)'
+      y : 'bin(floor5,1)'
+      color: 'value'
+    ]
+    dom: dom
+  }
+  c = polyjs.chart spec
+  c.addHandler polyjs.handler.tooltip()

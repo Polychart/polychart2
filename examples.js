@@ -1163,7 +1163,9 @@
       coord: polyjs.coord.cartesian({
         flip: true
       }),
-      dom: dom
+      dom: dom,
+      paddingTop: 50,
+      height: 300
     });
     return c.addHandler(polyjs.handler.tooltip());
   };
@@ -1263,12 +1265,13 @@
     };
     c = polyjs.chart(spec);
     c.addHandler(polyjs.handler.tooltip());
-    return c.addHandler(function(type, e) {
+    c.addHandler(function(type, e) {
       data = e.evtData;
       if (type === 'click') {
         return alert("You clicked on index: " + data.index["in"][0]);
       }
     });
+    return c.addHandler(polyjs.handler.tooltip());
   };
 
   this.examples.interact_line = function(dom) {
@@ -1346,6 +1349,51 @@
         return alert("You clicked on index: " + data.k["in"][0]);
       }
     });
+  };
+
+  this.examples.interact_tiles = function(dom) {
+    var c, data, datafn, spec;
+    datafn = function() {
+      var a, b, i, item, value, _i, _results;
+      a = function(i) {
+        return i % 5;
+      };
+      b = function(i) {
+        return Math.floor(i / 5);
+      };
+      value = function() {
+        return Math.random() * 5;
+      };
+      item = function(i) {
+        return {
+          mod5: a(i),
+          floor5: b(i),
+          value: value()
+        };
+      };
+      _results = [];
+      for (i = _i = 0; _i <= 24; i = ++_i) {
+        _results.push(item(i));
+      }
+      return _results;
+    };
+    data = new polyjs.Data({
+      json: datafn()
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'tile',
+          x: 'bin(mod5, 1)',
+          y: 'bin(floor5,1)',
+          color: 'value'
+        }
+      ],
+      dom: dom
+    };
+    c = polyjs.chart(spec);
+    return c.addHandler(polyjs.handler.tooltip());
   };
 
 }).call(this);
