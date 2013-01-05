@@ -234,7 +234,7 @@ class YAxis extends Axis # assumes position = left
   getDimension: () ->
     position: @position ? 'right'
     height: 'all'
-    width: 20+@maxwidth
+    width: 5+@maxwidth
 
 class RAxis extends Axis # assumes position = left
   constructor: () ->
@@ -279,7 +279,7 @@ class RAxis extends Axis # assumes position = left
   getDimension: () ->
     position: 'left'
     height: 'all'
-    width: 20+@maxwidth
+    width: 5+@maxwidth
 
 class TAxis extends Axis # assumes position = ... um, what is it supposed to be?
   constructor: () ->
