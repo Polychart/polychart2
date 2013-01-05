@@ -4,6 +4,7 @@ coffee --compile --output compiled/src/ src/
 cat \
     compiled/src/utils.js \
     compiled/src/const.js \
+    compiled/src/colorbrewer.js \
     compiled/src/error.js \
     compiled/src/format.js \
     compiled/src/spec.js \

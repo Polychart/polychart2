@@ -215,8 +215,15 @@ class Opacity extends Scale
 class Color extends Scale
   _makeCat: () => #TEMPORARY
     n = @domain.levels.length
-    h = (v) => _.indexOf(@domain.levels, v) / n + 1/(2*n)
-    @f = (value) => Raphael.hsl(h(value),0.5,0.5)
+    if n <= 9
+      colors = ["#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",
+        "#FFFF33", "#A65628", "#F781BF", "#999999"]
+      @f = (value) =>
+        i = _.indexOf(@domain.levels, value)
+        colors[i]
+    else
+      h = (v) => _.indexOf(@domain.levels, v) / n + 1/(2*n)
+      @f = (value) => Raphael.hsl(h(value),0.5,0.5)
   _makeNum: () =>
     h = poly.linear @domain.min, 0, @domain.max, 1
     @f = (value) -> Raphael.hsl(0.5,h(value),0.5)
