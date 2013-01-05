@@ -3997,7 +3997,7 @@ See the spec definition for more information.
       }
       this.deletedLegends = [];
       offset = {
-        x: 0,
+        x: 10,
         y: 0
       };
       y = 0;
@@ -4953,6 +4953,19 @@ data processing to be done.
       }
     };
 
+    Layer.prototype._tooltip = function(item) {
+      var a, tooltip, _i, _len, _ref;
+      tooltip = ("" + this.mapping.x + ": " + (this._format(this._getValue(item, 'x'))) + "\n") + ("" + this.mapping.y + ": " + (this._format(this._getValue(item, 'y'))));
+      _ref = ['color', 'size', 'opacity'];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        a = _ref[_i];
+        if (this.mapping[a] != null) {
+          tooltip += "\n" + this.mapping[a] + ": " + (this._format(this._getValue(item, a)));
+        }
+      }
+      return tooltip;
+    };
+
     Layer.prototype.getMeta = function(key) {
       if (this.mapping[key]) {
         return this.meta[this.mapping[key]];
@@ -5226,7 +5239,7 @@ data processing to be done.
             }
           },
           evtData: evtData,
-          tooltip: ("" + this.mapping.x + ": " + (this._format(this._getValue(item, 'x'))) + "\n") + ("" + this.mapping.y + ": " + (this._format(this._getValue(item, 'y'))))
+          tooltip: this._tooltip(item)
         });
       }
       return _results;
@@ -5430,7 +5443,7 @@ data processing to be done.
             }
           },
           evtData: evtData,
-          tooltip: ("" + this.mapping.x + ": " + (this._format(this._getValue(item, 'x'))) + "\n") + ("" + this.mapping.y + ": " + (this._format(this._getValue(item, 'y'))))
+          tooltip: this._tooltip(item)
         });
       }
       return _results;
@@ -5466,7 +5479,7 @@ data processing to be done.
             }
           },
           evtData: evtData,
-          tooltip: ("" + this.mapping.x + ": " + (this._format(this._getValue(item, 'x'))) + "\n") + ("" + this.mapping.y + ": " + (this._format(this._getValue(item, 'y'))))
+          tooltip: this._tooltip(item)
         });
       }
       return _results;
@@ -5627,7 +5640,7 @@ data processing to be done.
     }
 
     Tile.prototype._calcGeoms = function() {
-      var a, evtData, idfn, item, k, tooltip, v, x, y, _i, _j, _len, _len1, _ref, _ref1, _results;
+      var evtData, idfn, item, k, v, x, y, _i, _len, _ref, _results;
       idfn = this._getIdFunc();
       this.geoms = {};
       _ref = this.statData;
@@ -5645,14 +5658,6 @@ data processing to be done.
             };
           }
         }
-        tooltip = ("" + this.mapping.x + ": " + (this._format(this._getValue(item, 'x'))) + "\n") + ("" + this.mapping.y + ": " + (this._format(this._getValue(item, 'y'))));
-        _ref1 = ['color', 'size', 'opacity'];
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          a = _ref1[_j];
-          if (this.mapping[a] != null) {
-            tooltip += "\n" + this.mapping[a] + ": " + (this._format(this._getValue(item, a)));
-          }
-        }
         _results.push(this.geoms[idfn(item)] = {
           marks: {
             0: {
@@ -5665,7 +5670,7 @@ data processing to be done.
             }
           },
           evtData: evtData,
-          tooltip: tooltip
+          tooltip: this._tooltip(item)
         });
       }
       return _results;
@@ -5895,7 +5900,7 @@ data processing to be done.
     maxheight = dim.height - dim.guideTop - dim.paddingTop;
     maxwidth = 0;
     offset = {
-      x: 0,
+      x: 10,
       y: 0
     };
     for (_i = 0, _len = legends.length; _i < _len; _i++) {

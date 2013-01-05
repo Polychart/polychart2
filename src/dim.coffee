@@ -36,7 +36,7 @@ poly.dim.make = (spec, axes, legends, facetGrid) ->
   # NOTE: if this is changed, change scale.coffee's legend render
   maxheight =  dim.height - dim.guideTop - dim.paddingTop
   maxwidth = 0
-  offset = { x : 0, y : 0}
+  offset = { x: 10, y : 0 } # initial spacing
   for legend in legends
     d = legend.getDimension()
     if d.height + offset.y > maxheight

@@ -72,6 +72,15 @@ class Layer
     else
       n
 
+  _tooltip: (item) ->
+    tooltip =
+      "#{@mapping.x}: #{@_format @_getValue item, 'x'}\n"+
+      "#{@mapping.y}: #{@_format @_getValue item, 'y'}"
+    for a in ['color', 'size', 'opacity']
+      if @mapping[a]?
+        tooltip += "\n#{@mapping[a]}: #{@_format @_getValue item, a}"
+    tooltip
+
   getMeta: (key) ->
     if @mapping[key] then @meta[@mapping[key]] else {}
  
@@ -181,9 +190,7 @@ class Point extends Layer
             size: @_getValue item, 'size'
             opacity: @_getValue item, 'opacity'
         evtData: evtData
-        tooltip:
-          "#{@mapping.x}: #{@_format @_getValue item, 'x'}\n"+
-          "#{@mapping.y}: #{@_format @_getValue item, 'y'}"
+        tooltip: @_tooltip(item)
 
 class Path extends Layer
   _calcGeoms: () ->
@@ -271,9 +278,7 @@ class Bar extends Layer
             color: @_getValue item, 'color'
             opacity: @_getValue item, 'opacity'
         evtData: evtData
-        tooltip:
-          "#{@mapping.x}: #{@_format @_getValue item, 'x'}\n"+
-          "#{@mapping.y}: #{@_format @_getValue item, 'y'}"
+        tooltip: @_tooltip(item)
 
   _calcGeomsStack: () ->
     group = if @mapping.x? then [@mapping.x] else []
@@ -294,9 +299,7 @@ class Bar extends Layer
             color: @_getValue item, 'color'
             opacity: @_getValue item, 'opacity'
         evtData: evtData
-        tooltip:
-          "#{@mapping.x}: #{@_format @_getValue item, 'x'}\n"+
-          "#{@mapping.y}: #{@_format @_getValue item, 'y'}"
+        tooltip: @_tooltip(item)
 
 class Area extends Layer
   _calcGeoms: () ->
@@ -364,13 +367,6 @@ class Tile extends Layer
       for k, v of item
         if k isnt 'y' and k isnt 'x' then evtData[k] = { in: [v] }
 
-      tooltip =
-        "#{@mapping.x}: #{@_format @_getValue item, 'x'}\n"+
-        "#{@mapping.y}: #{@_format @_getValue item, 'y'}"
-      for a in ['color', 'size', 'opacity']
-        if @mapping[a]?
-          tooltip += "\n#{@mapping[a]}: #{@_format @_getValue item, a}"
-
       @geoms[idfn item] =
         marks:
           0:
@@ -381,7 +377,7 @@ class Tile extends Layer
             size: @_getValue item, 'size'
             opacity: @_getValue item, 'opacity'
         evtData: evtData
-        tooltip: tooltip
+        tooltip: @_tooltip(item)
 
 class Box extends Layer
   _calcGeoms: () ->

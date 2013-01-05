@@ -209,7 +209,7 @@ class ScaleSet
     # NOTE: if this is changed, change dim.coffee dimension calculation
     legend.remove(renderer) for legend in @deletedLegends
     @deletedLegends = []
-    offset = { x: 0, y : 0 }
+    offset = { x: 10, y : 0 } # initial spacing
 
     # axis offset
     y = 0
