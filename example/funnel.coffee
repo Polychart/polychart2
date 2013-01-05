@@ -32,5 +32,4 @@
     dom: dom
     paddingTop: 50
     height: 300
-  c.addHandler polyjs.handler.tooltip()
 

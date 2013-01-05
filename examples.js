@@ -1135,7 +1135,7 @@
         }
       }
     });
-    c = polyjs.chart({
+    return c = polyjs.chart({
       layers: [
         {
           data: data,
@@ -1167,7 +1167,6 @@
       paddingTop: 50,
       height: 300
     });
-    return c.addHandler(polyjs.handler.tooltip());
   };
 
 }).call(this);
