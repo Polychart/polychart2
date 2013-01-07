@@ -369,7 +369,8 @@ class Legend extends Guide
     @pts = {}
   _add: (renderer, tick, legendDim) ->
     obj = {}
-    obj.tick = renderer.add @_makeTick(legendDim, tick)
+    {tickObj, evtData} = @_makeTick(legendDim, tick)
+    obj.tick = renderer.add tickObj, evtData
     obj.text = renderer.add @_makeLabel(legendDim, tick)
     obj
   _delete: (renderer, pt) ->
@@ -377,7 +378,8 @@ class Legend extends Guide
     renderer.remove pt.text
   _modify: (renderer, pt, tick, legendDim) ->
     obj = []
-    obj.tick = renderer.animate pt.tick, @_makeTick(legendDim, tick)
+    {tickObj, evtData} = @_makeTick(legendDim, tick)
+    obj.tick = renderer.animate pt.tick, tickObj, evtData
     obj.text = renderer.animate pt.text, @_makeLabel(legendDim, tick)
     obj
   _makeLabel: (legendDim, tick) ->
@@ -392,11 +394,14 @@ class Legend extends Guide
       x : sf.identity legendDim.right + 7
       y : sf.identity legendDim.top + (15+tick.index*12)
       color: sf.identity 'steelblue' # can be overwritten
+    evtData = {}
     for aes, value of @mapping
       if aes in poly.const.noLegend then continue
       value = value[0] # just use the first for now?
       if aes in @aes
         obj[aes] = tick.location
+        if value.type is 'map'
+          evtData[value.value] = tick.evtData
       else if value.type? and value.type == 'const'
         # take assigned const value of first layer
         obj[aes] = sf.identity value.value
@@ -408,7 +413,8 @@ class Legend extends Guide
         obj[aes] = sf.identity poly.const.defaults[aes]
     if not ('size' in @aes) # override size so we can see!
       obj.size = sf.identity 5
-    obj
+    tickObj: obj
+    evtData: evtData
   _makeTitle: (legendDim, text) ->
     type: 'text'
     x : sf.identity legendDim.right + 5

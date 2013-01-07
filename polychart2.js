@@ -2191,7 +2191,7 @@ See the spec definition for more information.
 
 
   poly.tick.make = function(domain, guideSpec, type) {
-    var formatter, numticks, step, t, tickfn, tickobjs, ticks, _i, _len, _ref, _ref1;
+    var formatter, i, next, numticks, prev, step, t, tickfn, tickobjs, ticks, _i, _ref, _ref1, _ref2;
     step = null;
     if (guideSpec.ticks != null) {
       ticks = guideSpec.ticks;
@@ -2210,10 +2210,14 @@ See the spec definition for more information.
       formatter = poly.format(type, step);
     }
     tickobjs = {};
-    tickfn = tickFactory(formatter);
-    for (_i = 0, _len = ticks.length; _i < _len; _i++) {
-      t = ticks[_i];
-      tickobjs[t] = tickfn(t);
+    tickfn = tickFactory(domain.type, formatter);
+    if (ticks) {
+      for (i = _i = 0, _ref2 = ticks.length - 1; 0 <= _ref2 ? _i <= _ref2 : _i >= _ref2; i = 0 <= _ref2 ? ++_i : --_i) {
+        prev = i === 0 ? null : ticks[i - 1];
+        next = i === ticks.length - 1 ? null : ticks[i + 1];
+        t = ticks[i];
+        tickobjs[t] = tickfn(t, prev, next);
+      }
     }
     return tickobjs;
   };
@@ -2231,7 +2235,7 @@ See the spec definition for more information.
   Tick = (function() {
 
     function Tick(params) {
-      this.location = params.location, this.value = params.value, this.index = params.index;
+      this.location = params.location, this.value = params.value, this.index = params.index, this.evtData = params.evtData;
     }
 
     return Tick;
@@ -2243,14 +2247,29 @@ See the spec definition for more information.
   */
 
 
-  tickFactory = function(formatter) {
+  tickFactory = function(type, formatter) {
     var i;
     i = 0;
-    return function(value) {
+    return function(value, prev, next) {
+      var evtData;
+      if (type === 'cat') {
+        evtData = {
+          "in": value
+        };
+      } else {
+        evtData = {};
+        if (prev != null) {
+          evtData.ge = prev;
+        }
+        if (next != null) {
+          evtData.le = next;
+        }
+      }
       return new Tick({
         location: value,
         value: formatter(value),
-        index: i++
+        index: i++,
+        evtData: evtData
       });
     };
   };
@@ -2991,9 +3010,10 @@ See the spec definition for more information.
     };
 
     Legend.prototype._add = function(renderer, tick, legendDim) {
-      var obj;
+      var evtData, obj, tickObj, _ref;
       obj = {};
-      obj.tick = renderer.add(this._makeTick(legendDim, tick));
+      _ref = this._makeTick(legendDim, tick), tickObj = _ref.tickObj, evtData = _ref.evtData;
+      obj.tick = renderer.add(tickObj, evtData);
       obj.text = renderer.add(this._makeLabel(legendDim, tick));
       return obj;
     };
@@ -3004,9 +3024,10 @@ See the spec definition for more information.
     };
 
     Legend.prototype._modify = function(renderer, pt, tick, legendDim) {
-      var obj;
+      var evtData, obj, tickObj, _ref;
       obj = [];
-      obj.tick = renderer.animate(pt.tick, this._makeTick(legendDim, tick));
+      _ref = this._makeTick(legendDim, tick), tickObj = _ref.tickObj, evtData = _ref.evtData;
+      obj.tick = renderer.animate(pt.tick, tickObj, evtData);
       obj.text = renderer.animate(pt.text, this._makeLabel(legendDim, tick));
       return obj;
     };
@@ -3022,13 +3043,14 @@ See the spec definition for more information.
     };
 
     Legend.prototype._makeTick = function(legendDim, tick) {
-      var aes, obj, value, _ref;
+      var aes, evtData, obj, value, _ref;
       obj = {
         type: 'circle',
         x: sf.identity(legendDim.right + 7),
         y: sf.identity(legendDim.top + (15 + tick.index * 12)),
         color: sf.identity('steelblue')
       };
+      evtData = {};
       _ref = this.mapping;
       for (aes in _ref) {
         value = _ref[aes];
@@ -3038,6 +3060,9 @@ See the spec definition for more information.
         value = value[0];
         if (__indexOf.call(this.aes, aes) >= 0) {
           obj[aes] = tick.location;
+          if (value.type === 'map') {
+            evtData[value.value] = tick.evtData;
+          }
         } else if ((value.type != null) && value.type === 'const') {
           obj[aes] = sf.identity(value.value);
         } else if (!_.isObject(value)) {
@@ -3049,7 +3074,10 @@ See the spec definition for more information.
       if (!(__indexOf.call(this.aes, 'size') >= 0)) {
         obj.size = sf.identity(5);
       }
-      return obj;
+      return {
+        tickObj: obj,
+        evtData: evtData
+      };
     };
 
     Legend.prototype._makeTitle = function(legendDim, text) {

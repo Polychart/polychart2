@@ -21,9 +21,14 @@ poly.tick.make = (domain, guideSpec, type) ->
   else
     formatter = poly.format(type, step)
   tickobjs = {}
-  tickfn = tickFactory(formatter)
-  for t in ticks
-    tickobjs[t] = tickfn t
+  tickfn = tickFactory(domain.type, formatter)
+
+  if ticks
+    for i in [0..ticks.length-1]
+      prev = if i is 0 then null else ticks[i-1]
+      next = if i is ticks.length-1 then null else ticks[i+1]
+      t = ticks[i]
+      tickobjs[t] = tickfn t, prev, next
   tickobjs
 
 ###
@@ -34,14 +39,25 @@ poly.tick.make = (domain, guideSpec, type) ->
 Tick Object.
 ###
 class Tick
-  constructor: (params) -> {@location, @value, @index} = params
+  constructor: (params) -> {@location, @value, @index, @evtData} = params
 
 ###
 Helper function for creating a function that creates ticks
 ###
-tickFactory = (formatter) ->
+tickFactory = (type, formatter) ->
   i = 0
-  (value) -> new Tick(location:value, value:formatter(value), index:i++)
+  (value, prev, next) ->
+    if type is 'cat'
+      evtData = {in : value}
+    else
+      evtData = {}
+      if prev? then evtData.ge = prev
+      if next? then evtData.le = next
+    new Tick
+      location:value
+      value:formatter(value)
+      index:i++
+      evtData:evtData
 
 ###
 Helper function for determining the size of each "step" (distance between
