@@ -4070,146 +4070,154 @@ See the spec definition for more information.
 */
 
 
-/*
-Generalized data object that either contains JSON format of a dataset,
-or knows how to retrieve data from some source.
-*/
-
-
 (function() {
-  var Data,
+  var AbstractData, BackendData, FrontendData, _getArray, _getCSV, _getObject,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  Data = (function() {
-
-    Data.prototype.isData = true;
-
-    function Data(params) {
-      var _ref;
-      this.url = params.url, this.json = params.json, this.csv = params.csv, this.meta = params.meta;
-      this.dataBackend = params.url != null;
-      this.computeBackend = false;
-      this.raw = null;
-      if ((_ref = this.meta) == null) {
-        this.meta = {};
+  _getArray = function(json, meta) {
+    var first100, item, key, keys, raw, _i, _j, _k, _len, _len1, _len2, _ref;
+    if (json.length > 0) {
+      keys = _.union(_.keys(meta), _.keys(json[0]));
+      first100 = json.slice(0, 100);
+      for (_i = 0, _len = keys.length; _i < _len; _i++) {
+        key = keys[_i];
+        if ((_ref = meta[key]) == null) {
+          meta[key] = {};
+        }
+        if (!meta[key].type) {
+          meta[key].type = poly.varType(_.pluck(first100, key));
+        }
       }
+      for (_j = 0, _len1 = json.length; _j < _len1; _j++) {
+        item = json[_j];
+        for (_k = 0, _len2 = keys.length; _k < _len2; _k++) {
+          key = keys[_k];
+          if (_.isString(item[key])) {
+            item[key] = poly.coerce(item[key], meta[key]);
+          }
+        }
+      }
+      key = keys;
+      raw = json;
+    } else {
+      key = _.keys(meta);
+      raw = [];
+    }
+    return {
+      key: key,
+      raw: raw,
+      meta: meta
+    };
+  };
+
+  _getObject = function(json, meta) {
+    var i, k, key, keys, len, obj, raw, _i, _j, _k, _len, _len1, _ref, _ref1;
+    keys = _.keys(json);
+    raw = [];
+    for (_i = 0, _len = keys.length; _i < _len; _i++) {
+      key = keys[_i];
+      if ((_ref = meta[key]) == null) {
+        meta[key] = {};
+      }
+      if (!meta[key].type) {
+        meta[key].type = poly.varType(json[key].slice(0, 100));
+      }
+    }
+    if (keys.length > 0) {
+      len = json[keys[0]].length;
+      if (len > 0) {
+        for (i = _j = 0, _ref1 = len - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
+          obj = {};
+          for (_k = 0, _len1 = keys.length; _k < _len1; _k++) {
+            k = keys[_k];
+            obj[k] = poly.coerce(json[k][i], meta[k]);
+          }
+          raw.push(obj);
+        }
+      }
+    }
+    key = keys;
+    return {
+      key: key,
+      raw: raw,
+      meta: meta
+    };
+  };
+
+  _getCSV = function(str, meta) {
+    return _getObject(poly.csv.parse(str));
+  };
+
+  AbstractData = (function() {
+
+    AbstractData.prototype.isData = true;
+
+    function AbstractData() {
+      this.raw = {};
+      this.meta = {};
+      this.key = [];
       this.subscribed = [];
     }
 
-    Data.prototype.impute = function(json) {
-      var first100, i, item, k, key, keys, len, obj, _base, _base1, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _n, _ref, _ref1, _ref2, _ref3, _ref4;
-      if (_.isArray(json)) {
-        if (json.length > 0) {
-          keys = _.union(_.keys(this.meta), _.keys(json[0]));
-          first100 = json.slice(0, 100);
-          for (_i = 0, _len = keys.length; _i < _len; _i++) {
-            key = keys[_i];
-            if ((_ref = (_base = this.meta)[key]) == null) {
-              _base[key] = {};
-            }
-            if (!this.meta[key].type) {
-              this.meta[key].type = poly.varType(_.pluck(first100, key));
-            }
-          }
-          for (_j = 0, _len1 = json.length; _j < _len1; _j++) {
-            item = json[_j];
-            for (_k = 0, _len2 = keys.length; _k < _len2; _k++) {
-              key = keys[_k];
-              if (_.isString(item[key])) {
-                item[key] = poly.coerce(item[key], this.meta[key]);
-              }
-            }
-          }
-          this.key = keys;
-          return this.raw = json;
-        } else {
-          this.key = _.keys(this.meta);
-          return this.raw = [];
-        }
-      } else if (_.isObject(json)) {
-        this.key = _.keys(json);
-        this.raw = [];
-        _ref1 = this.key;
-        for (_l = 0, _len3 = _ref1.length; _l < _len3; _l++) {
-          key = _ref1[_l];
-          if ((_ref2 = (_base1 = this.meta)[key]) == null) {
-            _base1[key] = {};
-          }
-          if (!this.meta[key].type) {
-            this.meta[key].type = poly.varType(json[key].slice(0, 100));
-          }
-        }
-        if (this.key.length > 0) {
-          len = json[this.key[0]].length;
-          if (len > 0) {
-            for (i = _m = 0, _ref3 = len - 1; 0 <= _ref3 ? _m <= _ref3 : _m >= _ref3; i = 0 <= _ref3 ? ++_m : --_m) {
-              obj = {};
-              _ref4 = this.key;
-              for (_n = 0, _len4 = _ref4.length; _n < _len4; _n++) {
-                k = _ref4[_n];
-                obj[k] = poly.coerce(json[k][i], this.meta[k]);
-              }
-              this.raw.push(obj);
-            }
-          }
-        }
-        return this.raw;
+    AbstractData.prototype.update = function() {
+      var fn, _i, _len, _ref, _results;
+      _ref = this.subscribed;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        fn = _ref[_i];
+        _results.push(fn());
       }
+      return _results;
     };
 
-    Data.prototype.getData = function(callback) {
-      var _this = this;
-      if (this.raw) {
-        return callback(this);
-      }
-      if (this.json) {
-        this.impute(this.json);
-      }
-      if (this.csv) {
-        this.impute(poly.csv.parse(this.csv));
-      }
-      if (this.raw) {
-        return callback(this);
-      }
-      if (this.url) {
-        return poly.csv(this.url, function(csv) {
-          _this.raw = _this.impute(csv);
-          return callback(_this);
-        });
-      }
-    };
-
-    Data.prototype.update = function(params) {
-      var _this = this;
-      this.json = params.json, this.csv = params.csv;
-      this.raw = null;
-      return this.getData(function() {
-        var fn, _i, _len, _ref, _results;
-        _ref = _this.subscribed;
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          fn = _ref[_i];
-          _results.push(fn());
-        }
-        return _results;
-      });
-    };
-
-    Data.prototype.subscribe = function(h) {
+    AbstractData.prototype.subscribe = function(h) {
       if (_.indexOf(this.subscribed, h) === -1) {
         return this.subscribed.push(h);
       }
     };
 
-    Data.prototype.unsubscribe = function(h) {
+    AbstractData.prototype.unsubscribe = function(h) {
       return this.subscribed.splice(_.indexOf(this.subscribed, h), 1);
     };
 
-    Data.prototype.keys = function() {
+    AbstractData.prototype.keys = function() {
       return this.key;
     };
 
-    Data.prototype.checkRename = function(from, to) {
+    return AbstractData;
+
+  })();
+
+  FrontendData = (function(_super) {
+
+    __extends(FrontendData, _super);
+
+    function FrontendData(params) {
+      FrontendData.__super__.constructor.call(this);
+      this._setData(params);
+    }
+
+    FrontendData.prototype.getData = function(callback) {
+      return callback(this);
+    };
+
+    FrontendData.prototype.update = function(params) {
+      this._setData(params);
+      return FrontendData.__super__.update.call(this);
+    };
+
+    FrontendData.prototype._setData = function(params) {
+      var csv, json, meta, _ref;
+      csv = params.csv, json = params.json, meta = params.meta;
+      if (meta == null) {
+        meta = {};
+      }
+      return _ref = csv ? _getCSV(csv, meta) : _.isArray(json) ? _getArray(json, meta) : _.isObject(json) ? _getObject(json, meta) : void 0, this.key = _ref.key, this.raw = _ref.raw, this.meta = _ref.meta, _ref;
+    };
+
+    FrontendData.prototype.checkRename = function(from, to) {
       if (to === '') {
         throw poly.err.defn("Column names cannot be an empty string");
       }
@@ -4221,7 +4229,7 @@ or knows how to retrieve data from some source.
       }
     };
 
-    Data.prototype.rename = function(from, to, checked) {
+    FrontendData.prototype.rename = function(from, to, checked) {
       var item, k, _i, _len, _ref;
       if (checked == null) {
         checked = false;
@@ -4244,7 +4252,7 @@ or knows how to retrieve data from some source.
       return true;
     };
 
-    Data.prototype.renameMany = function(map) {
+    FrontendData.prototype.renameMany = function(map) {
       var from, to;
       for (from in map) {
         to = map[from];
@@ -4257,7 +4265,7 @@ or knows how to retrieve data from some source.
       return true;
     };
 
-    Data.prototype.remove = function(key) {
+    FrontendData.prototype.remove = function(key) {
       var index, item, _i, _len, _ref;
       index = _.indexOf(this.key, key);
       if (index === '-1') {
@@ -4273,7 +4281,7 @@ or knows how to retrieve data from some source.
       return true;
     };
 
-    Data.prototype.filter = function(strfn) {
+    FrontendData.prototype.filter = function(strfn) {
       var fn, item, newdata, newobj, _i, _len, _ref;
       fn = _.isFunction(strfn) ? strfn : _.isString(strfn) ? new Function('d', "with(d) { return " + strfn + ";}") : function() {
         return true;
@@ -4286,15 +4294,14 @@ or knows how to retrieve data from some source.
           newdata.push(item);
         }
       }
-      newobj = new Data({
+      newobj = poly.data({
         json: newdata,
         meta: this.meta
       });
-      newobj.getData(function() {});
       return newobj;
     };
 
-    Data.prototype.sort = function(key, desc) {
+    FrontendData.prototype.sort = function(key, desc) {
       var newdata, newobj, sortfn, type;
       type = this.type(key);
       newdata = _.clone(this.raw);
@@ -4305,15 +4312,14 @@ or knows how to retrieve data from some source.
       if (desc) {
         newdata.reverse();
       }
-      newobj = new Data({
+      newobj = poly.data({
         json: newdata,
         meta: this.meta
       });
-      newobj.getData(function() {});
       return newobj;
     };
 
-    Data.prototype.derive = function(fnstr, key, opts) {
+    FrontendData.prototype.derive = function(fnstr, key, opts) {
       var compute, context, dryrun, hasFnStr, item, value, _i, _len, _ref;
       if (opts == null) {
         opts = {};
@@ -4360,11 +4366,11 @@ or knows how to retrieve data from some source.
       return key;
     };
 
-    Data.prototype.getMeta = function(key) {
+    FrontendData.prototype.getMeta = function(key) {
       return this.meta[key];
     };
 
-    Data.prototype.type = function(key) {
+    FrontendData.prototype.type = function(key) {
       var t;
       if (key in this.meta) {
         t = this.meta[key].type;
@@ -4377,31 +4383,72 @@ or knows how to retrieve data from some source.
       throw poly.error.defn("Data does not have column " + key + ".");
     };
 
-    Data.prototype.get = function(key) {
+    FrontendData.prototype.get = function(key) {
       return _.pluck(this.raw, key);
     };
 
-    Data.prototype.len = function() {
+    FrontendData.prototype.len = function() {
       return this.raw.length;
     };
 
-    Data.prototype.getObject = function(i) {
+    FrontendData.prototype.getObject = function(i) {
       return this.raw[i];
     };
 
-    Data.prototype.max = function(key) {
+    FrontendData.prototype.max = function(key) {
       return _.max(this.get(key));
     };
 
-    Data.prototype.min = function(key) {
+    FrontendData.prototype.min = function(key) {
       return _.min(this.get(key));
     };
 
-    return Data;
+    return FrontendData;
 
-  })();
+  })(AbstractData);
 
-  poly.Data = Data;
+  BackendData = (function(_super) {
+
+    __extends(BackendData, _super);
+
+    function BackendData(params) {
+      BackendData.__super__.constructor.call(this);
+      this.url = params.url;
+    }
+
+    BackendData.prototype.getData = function(callback) {
+      if (this.raw != null) {
+        return callback(this);
+      }
+      return poly.csv(this.url, function(csv) {
+        var _ref;
+        _ref = _getCSV(csv), this.key = _ref.key, this.raw = _ref.raw, this.meta = _ref.meta;
+        return callback(this);
+      });
+    };
+
+    BackendData.prototype.update = function(params) {
+      this.raw = null;
+      return BackendData.__super__.update.call(this);
+    };
+
+    return BackendData;
+
+  })(AbstractData);
+
+  /*
+  Generalized data object that either contains JSON format of a dataset,
+  or knows how to retrieve data from some source.
+  */
+
+
+  poly.data = function(params) {
+    if (params.url) {
+      return new BackendData(params);
+    } else {
+      return new FrontendData(params);
+    }
+  };
 
 }).call(this);
 // Generated by CoffeeScript 1.4.0
@@ -4468,8 +4515,6 @@ data processing to be done.
   Temporary
   */
 
-
-  poly.data = {};
 
   poly.data.process = function(dataObj, layerSpec, strictmode, callback) {
     var d;

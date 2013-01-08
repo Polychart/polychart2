@@ -4,7 +4,7 @@ test "point", ->
     {x: 2, y: 4},
     {x: 3, y: 3}
   ]
-  data = new polyjs.Data (json: jsondata)
+  data = polyjs.data (json: jsondata)
   spec =
     render: false
     layers: [
@@ -33,7 +33,7 @@ test "lines", ->
     {x: 2, y: 4},
     {x: 3, y: 3}
   ]
-  data = new polyjs.Data (json: jsondata)
+  data = polyjs.data (json: jsondata)
   spec =
     render: false
     layers: [
@@ -55,7 +55,7 @@ test "lines", ->
     {x: 1, y: 4, z: 2}
     {x: 5, y: 3, z: 2}
   ]
-  data = new polyjs.Data (json: jsondata)
+  data = polyjs.data (json: jsondata)
   spec =
     render: false
     layers: [
@@ -79,7 +79,7 @@ test "bars", ->
     {x: 'A', y: 4, z: 'foo'},
     {x: 'A', y: 3, z: 'bar'}
   ]
-  data = new polyjs.Data (json: jsondata)
+  data = polyjs.data (json: jsondata)
   spec =
     render: false
     layers: [

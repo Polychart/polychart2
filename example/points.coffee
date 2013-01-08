@@ -5,7 +5,7 @@ one = () -> Math.random()*10
 @examples.point = (dom) ->
   spec = () ->
     jsondata = ({x:one(), y:one(), c:one()} for i in [0..10])
-    data = new polyjs.Data json:jsondata
+    data = polyjs.data json:jsondata
     sampleLayer =
       data: data
       type: 'point'
@@ -47,7 +47,7 @@ one = () -> Math.random()*10
 
 @examples.point_sampled = (dom) ->
   jsondata = ({x:one(), y:one(), c:one()} for i in [0..1000])
-  data = new polyjs.Data json:jsondata
+  data = polyjs.data json:jsondata
   c = polyjs.chart
     layer:
       data:data, type:'point', x:'x', y:'y', sample:50
@@ -61,7 +61,7 @@ one = () -> Math.random()*10
 
 @examples.point2 = (dom) ->
   jsondata = [{x:'A',y:2},{x:'B',y:3},{x:'C',y:1}]
-  data = new polyjs.Data({ json: jsondata })
+  data = polyjs.data({ json: jsondata })
   sampleLayer = {
     dom: dom
     data: data,
@@ -76,14 +76,14 @@ one = () -> Math.random()*10
 
 @examples.point3 = (dom) ->
   jsondata = [{x:'A',y:'X'},{x:'B',y:'Y'},{x:'C',y:'Z'}]
-  data = new polyjs.Data({ json: jsondata })
+  data = polyjs.data({ json: jsondata })
   sampleLayer = { data: data, type: 'point', x: 'x', y: 'y', color: {const:'#E01B6A'} }
   spec =  { layers: [sampleLayer], dom:dom }
   c = polyjs.chart(spec)
 
 @examples.point3_flip = (dom) ->
   jsondata = [{x:'A',y:'X'},{x:'B',y:'Y'},{x:'C',y:'Z'}]
-  data = new polyjs.Data({ json: jsondata })
+  data = polyjs.data({ json: jsondata })
   sampleLayer = { data: data, type: 'point', x: 'x', y: 'y', color: {const:'#E01B6A'} }
   spec =  { layers: [sampleLayer], coord: polyjs.coord.polar(flip:true) , dom:dom}
   c = polyjs.chart(spec)

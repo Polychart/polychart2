@@ -39,7 +39,7 @@
         c: 'B'
       }
     ];
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -83,7 +83,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -158,7 +158,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -232,7 +232,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -302,7 +302,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -372,7 +372,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -437,7 +437,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -494,7 +494,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -527,7 +527,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -593,7 +593,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -641,7 +641,7 @@
 
   this.examples.bar_ajax_csv = function(dom) {
     var c, data, spec;
-    data = new polyjs.Data({
+    data = polyjs.data({
       url: "data/test.csv"
     });
     spec = {
@@ -671,7 +671,7 @@
         value: Math.random() * 2
       };
     };
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: (function() {
         var _i, _results;
         _results = [];
@@ -709,7 +709,7 @@
         value: Math.random()
       };
     };
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: (function() {
         var _i, _results;
         _results = [];
@@ -773,7 +773,7 @@
 
   this.examples.box = function(dom) {
     var data;
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: datafn2(100)
     });
     return polyjs.chart({
@@ -791,7 +791,7 @@
 
   this.examples.box_polar = function(dom) {
     var data;
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: datafn2(100)
     });
     return polyjs.chart({
@@ -810,7 +810,7 @@
 
   this.examples.box_small = function(dom) {
     var data;
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: datafn2(8)
     });
     return polyjs.chart({
@@ -856,7 +856,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -902,7 +902,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -944,7 +944,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -989,7 +989,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -1035,7 +1035,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -1078,7 +1078,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -1115,77 +1115,9 @@
     this.examples = {};
   }
 
-  this.examples.popy = function(dom) {
-    var c, data;
-    data = new polyjs.Data({
-      json: [
-        {
-          gr: "Grade 9",
-          p: 10
-        }, {
-          gr: "Grade 10",
-          p: 40
-        }, {
-          gr: "Grade 11",
-          p: 50
-        }
-      ],
-      meta: {
-        gr: {
-          type: "cat"
-        },
-        p: {
-          type: "num"
-        }
-      }
-    });
-    data.getRaw(function() {});
-    data.derive((function(p) {
-      return p + 10;
-    }), 'p+10');
-    data.derive((function(p) {
-      return "" + p + "%";
-    }), 'p%');
-    return c = polyjs.chart({
-      layers: [
-        {
-          data: data,
-          type: 'bar',
-          x: 'gr',
-          y: 'p'
-        }, {
-          data: data,
-          type: 'text',
-          x: 'gr',
-          y: 'p',
-          text: 'p'
-        }
-      ],
-      guides: {
-        y: {
-          min: 0,
-          max: 100
-        },
-        x: {
-          levels: ["Grade 9", "Grade 10", "Grade 11"]
-        }
-      },
-      dom: dom
-    });
-  };
-
-}).call(this);
-// Generated by CoffeeScript 1.4.0
-(function() {
-  var _ref;
-
-  if ((_ref = this.examples) == null) {
-    this.examples = {};
-  }
-
   this.examples.funnel = function(dom) {
     var c, data;
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: {
         segment: ["FirstTime", "FirstTime", "FirstTime", "Return", "Return", "Return", "4+", "4+", "4+"],
         source: ["Referral", "LinkedIn", "Cold Call", "Referral", "LinkedIn", "Cold Call", "Referral", "LinkedIn", "Cold Call"],
@@ -1259,7 +1191,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -1316,7 +1248,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -1355,7 +1287,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -1394,7 +1326,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -1444,7 +1376,7 @@
       }
       return _results;
     };
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: datafn()
     });
     spec = {
@@ -1485,7 +1417,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -1557,7 +1489,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -1608,7 +1540,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -1674,7 +1606,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -1738,7 +1670,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -1824,7 +1756,7 @@
         c: 'B'
       }
     ];
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -1875,7 +1807,7 @@
         c: 'B'
       }
     ];
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -1925,7 +1857,7 @@
         c: 'B'
       }
     ];
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     spec = {
@@ -1978,7 +1910,7 @@
         }
         return _results;
       })();
-      data = new polyjs.Data({
+      data = polyjs.data({
         json: jsondata
       });
       sampleLayer = {
@@ -2079,7 +2011,7 @@
       }
       return _results;
     })();
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     c = polyjs.chart({
@@ -2113,7 +2045,7 @@
         y: 1
       }
     ];
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     sampleLayer = {
@@ -2148,7 +2080,7 @@
         y: 'Z'
       }
     ];
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     sampleLayer = {
@@ -2181,7 +2113,7 @@
         y: 'Z'
       }
     ];
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     sampleLayer = {
@@ -2232,6 +2164,74 @@
     this.examples = {};
   }
 
+  this.examples.popy = function(dom) {
+    var c, data;
+    data = polyjs.data({
+      json: [
+        {
+          gr: "Grade 9",
+          p: 10
+        }, {
+          gr: "Grade 10",
+          p: 40
+        }, {
+          gr: "Grade 11",
+          p: 50
+        }
+      ],
+      meta: {
+        gr: {
+          type: "cat"
+        },
+        p: {
+          type: "num"
+        }
+      }
+    });
+    data.getRaw(function() {});
+    data.derive((function(p) {
+      return p + 10;
+    }), 'p+10');
+    data.derive((function(p) {
+      return "" + p + "%";
+    }), 'p%');
+    return c = polyjs.chart({
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: 'gr',
+          y: 'p'
+        }, {
+          data: data,
+          type: 'text',
+          x: 'gr',
+          y: 'p',
+          text: 'p'
+        }
+      ],
+      guides: {
+        y: {
+          min: 0,
+          max: 100
+        },
+        x: {
+          levels: ["Grade 9", "Grade 10", "Grade 11"]
+        }
+      },
+      dom: dom
+    });
+  };
+
+}).call(this);
+// Generated by CoffeeScript 1.4.0
+(function() {
+  var _ref;
+
+  if ((_ref = this.examples) == null) {
+    this.examples = {};
+  }
+
   this.examples.text = function(dom) {
     var c, data, jsondata, sampleLayer, spec;
     jsondata = [
@@ -2246,7 +2246,7 @@
         y: 'Z'
       }
     ];
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: jsondata
     });
     sampleLayer = {
@@ -2308,7 +2308,7 @@
 
   this.examples.tiles = function(dom) {
     var c, data, spec;
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: datafn()
     });
     spec = {
@@ -2328,7 +2328,7 @@
 
   this.examples.tiles_bw = function(dom) {
     var c, data, spec;
-    data = new polyjs.Data({
+    data = polyjs.data({
       json: datafn()
     });
     spec = {

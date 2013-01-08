@@ -1,7 +1,7 @@
 @examples ?= {}
 
 @examples.popy = (dom) ->
-  data = new polyjs.Data
+  data = polyjs.data
     json:
       [
         {gr: "Grade 9", p: 10},

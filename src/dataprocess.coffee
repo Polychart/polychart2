@@ -37,7 +37,6 @@ poly.DataProcess = DataProcess
 ###
 Temporary
 ###
-poly.data = {}
 poly.data.process = (dataObj, layerSpec, strictmode, callback) ->
   d = new DataProcess layerSpec, strictmode
   d.process callback

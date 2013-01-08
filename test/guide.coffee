@@ -4,7 +4,7 @@ jsondata= [
   {x: 2, y: 1},
   {x: 3, y: 3}
 ]
-data = new polyjs.Data (json: jsondata)
+data = polyjs.data (json: jsondata)
 sampleLayer = {data: data, type: 'point', x: 'x', y: 'y'}
 
 test "domain: strict mode num & cat", ->

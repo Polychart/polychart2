@@ -1,7 +1,7 @@
 @examples ?= {}
 
 @examples.funnel = (dom) ->
-  data = new polyjs.Data
+  data = polyjs.data
     json:
       segment: ["FirstTime", "FirstTime", "FirstTime", "Return", "Return", "Return", "4+", "4+", "4+"],
       source: ["Referral", "LinkedIn", "Cold Call","Referral", "LinkedIn", "Cold Call","Referral", "LinkedIn", "Cold Call"],

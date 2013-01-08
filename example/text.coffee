@@ -2,7 +2,7 @@
 
 @examples.text = (dom) ->
   jsondata = [{x:'A',y:'X'},{x:'B',y:'Y'},{x:'C',y:'Z'}]
-  data = new polyjs.Data({ json: jsondata })
+  data = polyjs.data({ json: jsondata })
   sampleLayer =
     data: data, type: 'text', x: 'x', y: 'y', text: 'y'
   spec =  { layers: [sampleLayer], coord: polyjs.coord.polar(flip:true) , dom:dom}

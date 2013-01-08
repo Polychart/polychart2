@@ -3,7 +3,7 @@
 @examples.facet = (dom) ->
   o = (i) -> if i%2 is 0 then 'yay' else 'no'
   jsondata = ({index:i%3, value:Math.random()*10, o: o(i)} for i in [0..10])
-  data = new polyjs.Data json:jsondata
+  data = polyjs.data json:jsondata
   spec = {
     layers: [
       data: data, type: 'bar',
@@ -23,7 +23,7 @@
 @examples.facet_grid = (dom) ->
   o = (i) -> if i%2 is 0 then 'yay' else 'no'
   jsondata = ({index:i%3, value:Math.random()*10, o: o(i)} for i in [0..10])
-  data = new polyjs.Data json:jsondata
+  data = polyjs.data json:jsondata
   spec = {
     layers: [
       data: data, type: 'bar',
@@ -44,7 +44,7 @@
 @examples.facet3 = (dom) ->
   o = (i) -> ""+i%6
   jsondata = ({index:i%7, value:Math.random()*10, o: o(i)} for i in [0..50])
-  data = new polyjs.Data json:jsondata
+  data = polyjs.data json:jsondata
   spec = {
     layers: [
       data: data, type: 'bar',
@@ -65,7 +65,7 @@
   o = (i) -> ""+i%3
   p = (i) -> ""+i%2
   jsondata = ({index:i%6, value:Math.random()*10, o: o(i), p:p(i)} for i in [0..50])
-  data = new polyjs.Data json:jsondata
+  data = polyjs.data json:jsondata
   spec = {
     layers: [
       data: data, type: 'bar',
@@ -87,7 +87,7 @@
   o = (i) -> ""+i%3
   p = (i) -> ""+i%2
   jsondata = ({index:i%6, value:Math.random()*10, o: o(i), p:p(i)} for i in [0..50])
-  data = new polyjs.Data json:jsondata
+  data = polyjs.data json:jsondata
   spec = {
     layers: [
       data: data, type: 'bar',
@@ -109,7 +109,7 @@
 @examples.facet_polar_wrap = (dom) ->
   o = (i) -> ""+i%6
   jsondata = ({index:i%7, value:Math.random()*10, o: o(i)} for i in [0..50])
-  data = new polyjs.Data json:jsondata
+  data = polyjs.data json:jsondata
   spec = {
     layers: [
       data: data, type: 'bar',

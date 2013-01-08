@@ -2,7 +2,7 @@
 
 @examples.interact_bar = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = new polyjs.Data json:jsondata
+  data = polyjs.data json:jsondata
   spec = {
     layers: [
       { data: data, type: 'bar', x : 'index', y : 'value', id: 'index', opacity:'value'}
@@ -25,7 +25,7 @@
 
 @examples.interact_point = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = new polyjs.Data json:jsondata
+  data = polyjs.data json:jsondata
   spec = {
     layers: [
       data: data, type: 'point', x : 'index', y : 'value'
@@ -44,7 +44,7 @@
 
 @examples.interact_line = (dom) ->
   jsondata = ({index:i, k:""+i%2, value:Math.random()*10} for i in [0..10])
-  data = new polyjs.Data json:jsondata
+  data = polyjs.data json:jsondata
   spec = {
     layers: [
       data: data, type: 'line', x : 'index', y : 'value', color:'k'
@@ -62,7 +62,7 @@
 
 @examples.interact_path = (dom) ->
   jsondata = ({index:i, k:""+i%2, value:Math.random()*10} for i in [0..10])
-  data = new polyjs.Data json:jsondata
+  data = polyjs.data json:jsondata
   spec = {
     layers: [
       data: data, type: 'path', x : 'index', y : 'value', color:'k'
@@ -88,7 +88,7 @@
       value: value()
     (item(i) for i in [0..24])
 
-  data = new polyjs.Data json:datafn()
+  data = polyjs.data json:datafn()
   spec = {
     layers: [
       data: data

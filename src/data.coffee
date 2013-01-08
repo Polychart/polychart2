@@ -2,78 +2,82 @@
 # GLOBALS
 ###
 
-###
-Generalized data object that either contains JSON format of a dataset,
-or knows how to retrieve data from some source.
-###
-class Data
-  isData: true
-  constructor: (params) ->
-    {@url, @json, @csv, @meta} = params
-    @dataBackend = params.url?
-    @computeBackend = false
-    @raw = null
-    @meta ?= {}
-    @subscribed = []
-  impute: (json) ->
-    if _.isArray(json)
-      if json.length > 0
-        keys = _.union _.keys(@meta), _.keys(json[0])
-        first100 = json[0..99]
-        for key in keys
-          @meta[key] ?= {}
-          if not @meta[key].type
-            @meta[key].type = poly.varType _.pluck(first100, key)
-        for item in json
-          for key in keys
-            if _.isString item[key]
-              item[key] = poly.coerce item[key], @meta[key]
-        @key = keys
-        @raw = json
-      else
-        @key = _.keys(@meta)
-        @raw = []
-    else if _.isObject(json)
-      @key = _.keys(json)
-      @raw = []
-      for key in @key
-        @meta[key] ?= {}
-        if not @meta[key].type
-          @meta[key].type = poly.varType json[key][0..99]
+_getArray = (json, meta) ->
+  if json.length > 0
+    keys = _.union _.keys(meta), _.keys(json[0])
+    first100 = json[0..99]
+    for key in keys
+      meta[key] ?= {}
+      if not meta[key].type
+        meta[key].type = poly.varType _.pluck(first100, key)
+    for item in json
+      for key in keys
+        if _.isString item[key]
+          item[key] = poly.coerce item[key], meta[key]
+    key = keys
+    raw = json
+  else
+    key = _.keys(meta)
+    raw = []
+  {key, raw, meta}
 
-      if @key.length > 0
-        len = json[@key[0]].length
-        if len > 0
-          for i in [0..len-1]
-            obj = {}
-            for k in @key
-              obj[k] = poly.coerce json[k][i], @meta[k]
-            @raw.push(obj)
-      @raw
-  getData: (callback) ->
-    # frontend
-    if @raw then return callback @
-    if @json then @impute @json
-    if @csv then @impute poly.csv.parse(@csv)
-    if @raw then return callback @
-    # backend
-    if @url then poly.csv @url, (csv) =>
-      @raw = @impute csv
-      callback @
-  update: (params) ->
-    {@json, @csv} = params
-    @raw = null
-    @getData () =>
-      for fn in @subscribed
-        fn()
+
+_getObject = (json, meta) ->
+  keys = _.keys(json)
+  raw = []
+  for key in keys
+    meta[key] ?= {}
+    if not meta[key].type
+      meta[key].type = poly.varType json[key][0..99]
+  if keys.length > 0
+    len = json[keys[0]].length
+    if len > 0
+      for i in [0..len-1]
+        obj = {}
+        for k in keys
+          obj[k] = poly.coerce json[k][i], meta[k]
+        raw.push(obj)
+  key = keys
+  {key, raw, meta}
+
+_getCSV = (str, meta) ->
+  _getObject poly.csv.parse str
+
+class AbstractData
+  isData: true
+  constructor: () ->
+    @raw = {}
+    @meta = {}
+    @key = []
+    @subscribed = []
+  update: () ->
+    fn() for fn in @subscribed
   subscribe: (h) ->
     if _.indexOf(@subscribed, h) is -1
       @subscribed.push h
   unsubscribe: (h) ->
     @subscribed.splice _.indexOf(@subscribed, h), 1
-
-  # functions for backwards compatibility: DO NOT USE!
   keys: () -> @key
+
+
+class FrontendData extends AbstractData
+  constructor: (params) ->
+    super()
+    @_setData params
+  getData: (callback) -> callback @
+  update: (params) ->
+    @_setData params
+    super()
+  _setData: (params) ->
+    {csv, json, meta} = params
+    meta ?= {}
+    {@key, @raw, @meta} =
+      if csv
+        _getCSV csv, meta
+      else if _.isArray json
+        _getArray json, meta
+      else if _.isObject json
+        _getObject json, meta
   checkRename: (from, to) ->
     if to is ''
       throw poly.err.defn "Column names cannot be an empty string"
@@ -120,8 +124,7 @@ class Data
     for item in @raw
       if fn item
         newdata.push item
-    newobj = new Data json: newdata, meta: @meta
-    newobj.getData ->
+    newobj = poly.data json: newdata, meta: @meta
     newobj
   sort: (key, desc) ->
     type = @type key
@@ -129,8 +132,7 @@ class Data
     sortfn = if type is 'cat' then poly.sortString else poly.sortNum
     newdata.sort (a,b) -> sortfn a[key], b[key]
     if desc then newdata.reverse()
-    newobj = new Data json: newdata, meta: @meta
-    newobj.getData ->
+    newobj = poly.data json: newdata, meta: @meta
     newobj
   derive: (fnstr, key, opts) ->
     opts ?= {}
@@ -170,4 +172,26 @@ class Data
   max: (key) -> _.max @get(key)
   min: (key) -> _.min @get(key)
 
-poly.Data = Data
+class BackendData extends AbstractData
+  constructor: (params) ->
+    super()
+    {@url} = params
+  getData: (callback) ->
+    if @raw? then return callback @
+    poly.csv @url, (csv) ->
+      {@key, @raw, @meta} = _getCSV csv
+      callback @
+  update: (params) ->
+    @raw = null
+    super()
+
+###
+Generalized data object that either contains JSON format of a dataset,
+or knows how to retrieve data from some source.
+###
+
+poly.data = (params) ->
+  if params.url
+    new BackendData params
+  else
+    new FrontendData params
