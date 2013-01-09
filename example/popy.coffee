@@ -7,21 +7,74 @@
         {gr: "Grade 9", p: 10},
         {gr: "Grade 10", p: 40},
         {gr: "Grade 11", p: 50},
+        {gr: "Grade 12", p: 70},
       ]
     meta:
       gr: type: "cat"
       p: type: "num"
 
-  data.getRaw ->
-  data.derive ((p) -> p + 10), 'p+10'
-  data.derive ((p) -> "#{p}%"), 'p%'
+  data.derive ((x) -> x.p + 5), 'p_10'
+  data.derive ((x) -> "#{x.p}%"), 'percent'
   
   c = polyjs.chart
     layers: [
       { data: data, type: 'bar', x:'gr', y:'p' }
-      { data: data, type: 'text', x:'gr', y:'p', text: 'p' }
+      { data: data, type: 'text', x:'gr', y:'p_10', text: 'percent', color: {const:'black'} }
     ]
     guides:
       y: { min: 0, max:100 }
-      x: { levels : ["Grade 9", "Grade 10", "Grade 11"] }
+      x: { levels : ["Grade 9", "Grade 10", "Grade 11", "Grade 12"] }
     dom: dom
+
+@examples.volexp = (dom) ->
+  data = polyjs.data
+    json:
+      [
+        {gr: "Health Care", num: 500}
+        {gr: "Events", num: 400}
+        {gr: "Recreation", num: 370}
+        {gr: "Technology", num: 370}
+        {gr: "Animal/Pets", num: 70}
+        {gr: "Senior Services", num: 30}
+      ]
+    meta:
+      gr: type: "cat"
+      num: type: "num"
+
+  data.derive ((x) -> x.num+40), 'p_50'
+  data.derive ((x) -> "#{Math.round(x.num/800*100)}%"), 'percent'
+  
+  c = polyjs.chart
+    layers: [
+      { data: data, type: 'bar', x: {var: 'gr', sort:'num'}, y:'num' }
+      { data: data, type: 'text', x:'gr', y:'p_50', text:'percent' }
+    ]
+    dom: dom
+    guide:
+      y: { min: 0, max:700 }
+    coord: polyjs.coord.cartesian(flip: true)
+
+@examples.rating = (dom) ->
+  data = polyjs.data
+    json:
+      [
+        {gr: "Excellent", num: 500}
+        {gr: "Very Good", num: 400}
+        {gr: "Average", num: 370}
+        {gr: "Poor", num: 370}
+        {gr: "Terrible", num: 70}
+      ]
+    meta:
+      gr: type: "cat"
+      num: type: "num"
+  
+  c = polyjs.chart
+    layers: [
+      { data: data, type: 'bar', x: {var: 'gr', sort:'num'}, y:'num' }
+    ]
+    dom: dom
+    guide:
+      y: { min: 0, max:700 }
+    coord: polyjs.coord.cartesian(flip: true)
+
+
