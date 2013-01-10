@@ -27,7 +27,7 @@ datafn2 = (lim) ->
       y: 'box(value)'
     ]
     dom: dom
-    coord: polyjs.coord.polar()
+    coord: { type: 'polar' }
 
 @examples.box_small = (dom) ->
   data = polyjs.data json:datafn2(8)

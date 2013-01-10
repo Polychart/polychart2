@@ -5,7 +5,7 @@
   data = polyjs.data({ json: jsondata })
   sampleLayer =
     data: data, type: 'text', x: 'x', y: 'y', text: 'y'
-  spec =  { layers: [sampleLayer], coord: polyjs.coord.polar(flip:true) , dom:dom}
+  spec =  { layers: [sampleLayer], coord: { type:'polar', flip:true } , dom:dom}
   c = polyjs.chart(spec)
 
   c.addHandler (type, data) ->

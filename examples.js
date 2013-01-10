@@ -334,9 +334,10 @@
           }
         }
       },
-      coord: polyjs.coord.cartesian({
+      coord: {
+        type: 'cartesian',
         flip: true
-      }),
+      },
       dom: dom
     };
     c = polyjs.chart(spec);
@@ -403,9 +404,10 @@
           }
         }
       },
-      coord: polyjs.coord.polar({
+      coord: {
+        type: 'polar',
         flip: true
-      }),
+      },
       dom: dom
     };
     c = polyjs.chart(spec);
@@ -804,7 +806,9 @@
         }
       ],
       dom: dom,
-      coord: polyjs.coord.polar()
+      coord: {
+        type: 'polar'
+      }
     });
   };
 
@@ -1048,7 +1052,9 @@
           position: 'dodge'
         }
       ],
-      coord: polyjs.coord.polar(),
+      coord: {
+        type: 'polar'
+      },
       dom: dom,
       facet: {
         type: 'grid',
@@ -1092,9 +1098,10 @@
           position: 'dodge'
         }
       ],
-      coord: polyjs.coord.polar({
+      coord: {
+        type: 'polar',
         flip: true
-      }),
+      },
       dom: dom,
       facet: {
         type: 'wrap',
@@ -1638,7 +1645,9 @@
           }
         }
       },
-      coord: polyjs.coord.polar(),
+      coord: {
+        type: 'polar'
+      },
       dom: dom
     };
     c = polyjs.chart(spec);
@@ -1702,9 +1711,10 @@
           }
         }
       },
-      coord: polyjs.coord.polar({
+      coord: {
+        type: 'polar',
         flip: true
-      }),
+      },
       dom: dom
     };
     c = polyjs.chart(spec);
@@ -2127,9 +2137,10 @@
     };
     spec = {
       layers: [sampleLayer],
-      coord: polyjs.coord.polar({
+      coord: {
+        type: 'polar',
         flip: true
-      }),
+      },
       dom: dom
     };
     c = polyjs.chart(spec);
@@ -2282,7 +2293,10 @@
           type: 'text',
           x: 'gr',
           y: 'p_50',
-          text: 'percent'
+          text: 'percent',
+          color: {
+            "const": 'black'
+          }
         }
       ],
       dom: dom,
@@ -2292,9 +2306,66 @@
           max: 700
         }
       },
-      coord: polyjs.coord.cartesian({
+      coord: {
+        type: 'cartesian',
         flip: true
-      })
+      }
+    });
+  };
+
+  this.examples.rating = function(dom) {
+    var c, data;
+    data = polyjs.data({
+      json: [
+        {
+          gr: "Excellent",
+          num: 500
+        }, {
+          gr: "Very Good",
+          num: 400
+        }, {
+          gr: "Average",
+          num: 370
+        }, {
+          gr: "Poor",
+          num: 370
+        }, {
+          gr: "Terrible",
+          num: 70
+        }
+      ],
+      meta: {
+        gr: {
+          type: "cat"
+        },
+        num: {
+          type: "num"
+        }
+      }
+    });
+    return c = polyjs.chart({
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: {
+            "var": 'gr',
+            sort: 'num'
+          },
+          y: 'num'
+        }
+      ],
+      dom: dom,
+      guide: {
+        y: {
+          min: 0,
+          max: 700
+        }
+      },
+      coord: {
+        type: 'cartesian',
+        flip: true
+      }
     });
   };
 
@@ -2333,9 +2404,10 @@
     };
     spec = {
       layers: [sampleLayer],
-      coord: polyjs.coord.polar({
+      coord: {
+        type: 'polar',
         flip: true
-      }),
+      },
       dom: dom
     };
     c = polyjs.chart(spec);

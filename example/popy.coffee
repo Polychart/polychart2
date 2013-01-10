@@ -47,12 +47,12 @@
   c = polyjs.chart
     layers: [
       { data: data, type: 'bar', x: {var: 'gr', sort:'num'}, y:'num' }
-      { data: data, type: 'text', x:'gr', y:'p_50', text:'percent' }
+      { data: data, type: 'text', x:'gr', y:'p_50', text:'percent', color: {const:'black'}}
     ]
     dom: dom
     guide:
       y: { min: 0, max:700 }
-    coord: polyjs.coord.cartesian(flip: true)
+    coord: { type:'cartesian', flip: true }
 
 @examples.rating = (dom) ->
   data = polyjs.data
@@ -75,6 +75,6 @@
     dom: dom
     guide:
       y: { min: 0, max:700 }
-    coord: polyjs.coord.cartesian(flip: true)
+    coord: { type:'cartesian', flip: true }
 
 

@@ -85,7 +85,7 @@ one = () -> Math.random()*10
   jsondata = [{x:'A',y:'X'},{x:'B',y:'Y'},{x:'C',y:'Z'}]
   data = polyjs.data({ json: jsondata })
   sampleLayer = { data: data, type: 'point', x: 'x', y: 'y', color: {const:'#E01B6A'} }
-  spec =  { layers: [sampleLayer], coord: polyjs.coord.polar(flip:true) , dom:dom}
+  spec =  { layers: [sampleLayer], coord: { type:'polar', flip:true } , dom:dom}
   c = polyjs.chart(spec)
 
   c.addHandler (type, data) ->

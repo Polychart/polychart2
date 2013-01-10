@@ -94,7 +94,7 @@
       x : 'bin(index,1)', y : 'value'
       position:'dodge'
     ]
-    coord: polyjs.coord.polar()
+    coord: { type: 'polar' }
     dom: dom
     facet:
       type: 'grid'
@@ -117,7 +117,7 @@
       color: 'o'
       position:'dodge'
     ]
-    coord: polyjs.coord.polar(flip:true)
+    coord: { type: 'polar', flip:true }
     dom: dom
     facet:
       type: 'wrap'

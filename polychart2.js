@@ -1594,7 +1594,8 @@ See the spec definition for more information.
   var Cartesian, Coordinate, Polar,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+    _this = this;
 
   Coordinate = (function() {
 
@@ -1847,6 +1848,20 @@ See the spec definition for more information.
     },
     polar: function(params) {
       return new Polar(params);
+    }
+  };
+
+  poly.coord.make = function(spec) {
+    if (!(spec != null) || !(spec.type != null)) {
+      return poly.coord.cartesian();
+    }
+    switch (spec.type) {
+      case 'cartesian':
+        return poly.coord.cartesian(spec);
+      case 'polar':
+        return poly.coord.polar(spec);
+      default:
+        throw poly.error.defn("No such coordinate type " + spec.type + ".");
     }
   };
 
@@ -6870,8 +6885,6 @@ data processing to be done.
       this.merge = __bind(this.merge, this);
 
       this.reset = __bind(this.reset, this);
-
-      var _ref;
       if (!(spec != null)) {
         throw poly.error.defn("No graph specification is passed in!");
       }
@@ -6882,7 +6895,7 @@ data processing to be done.
       this.legends = null;
       this.dims = null;
       this.paper = null;
-      this.coord = (_ref = spec.coord) != null ? _ref : poly.coord.cartesian();
+      this.coord = poly.coord.make(spec.coord);
       this.initial_spec = spec;
       this.dataSubscribed = false;
       this.make(spec);

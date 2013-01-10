@@ -126,3 +126,11 @@ class Polar extends Coordinate
 poly.coord =
   cartesian : (params) -> new Cartesian(params)
   polar : (params) -> new Polar(params)
+
+poly.coord.make = (spec) =>
+  if not spec? or not spec.type?
+    return poly.coord.cartesian()
+  switch spec.type
+    when 'cartesian' then return poly.coord.cartesian spec
+    when 'polar' then return poly.coord.polar spec
+    else throw poly.error.defn "No such coordinate type #{spec.type}."

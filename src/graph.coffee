@@ -10,7 +10,7 @@ class Graph
     @legends = null
     @dims = null
     @paper = null
-    @coord = spec.coord ? poly.coord.cartesian()
+    @coord = poly.coord.make spec.coord
     @initial_spec = spec
     @dataSubscribed = false
     @make spec
