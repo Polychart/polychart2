@@ -64,21 +64,13 @@ class Layer
 
   _calcGeoms: () -> @geoms = {} # layer level geom calculation
 
-  _format: (n) ->
-    if _.isNumber(n)
-      if not @_formatnum?
-        @_formatnum = poly.format.number()
-      @_formatnum(n)
-    else
-      n
-
   _tooltip: (item) ->
     tooltip = null
     for v in _.uniq _.values @mapping
       if not tooltip
-        tooltip = "#{v}: #{@_format item[v]}"
+        tooltip = "#{v}: #{poly.format.value item[v]}"
       else
-        tooltip += "\n#{v}: #{@_format item[v]}"
+        tooltip += "\n#{v}: #{poly.format.value item[v]}"
     tooltip
 
   getMeta: (key) ->

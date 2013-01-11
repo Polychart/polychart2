@@ -74,3 +74,12 @@ poly.format.date = (format) ->
       (date) -> moment.unix(date).format('YYYY')
   else
     (date) -> moment.unix(date).format(format)
+
+poly.format._number_instance  = poly.format.number()
+poly.format.value = (v) ->
+  if _.isNumber v
+    poly.format._number_instance(v)
+  else
+    v
+
+

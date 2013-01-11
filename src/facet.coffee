@@ -19,6 +19,7 @@ class Facet
   constructor: (@spec) ->
     @values = {}
     @groups = []
+    @indices = {}
   getIndices: (datas) ->
     @values = {}
     for key in @groups
@@ -35,13 +36,20 @@ class Facet
       @indices[stringify val] = val
     @indices
   getFormatter: () ->
-    (multiindex) ->
-      debugger
-      str = ''
-      for k, v of multiindex
-        if str then str += ", "
-        str += "#{k}: #{v}"
-      str
+    if not @formatter
+      @formatter =
+        if @spec.labels and @groups.length == 1
+          (x) -> @spec.labels[x[@groups[0]]] ? x[@groups[0]]
+        else if @spec.formatter
+          @spec.formattter
+        else
+          (multiindex) ->
+            str = ''
+            for k, v of multiindex
+              if str then str += ", "
+              str += "#{k}: #{poly.format.value v}"
+            str
+    @formatter
   groupData: (unfaceted) ->
     if not @indices then @getIndices(unfacted, @groups)
     datas = {}
