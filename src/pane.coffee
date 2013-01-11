@@ -1,13 +1,10 @@
 poly.pane = {}
-poly.pane.make = (spec, grp) -> new Pane spec, grp
+poly.pane.make = (spec, grp, formatter) -> new Pane spec, grp, formatter
 class Pane
-  constructor: (spec, multiindex) ->
+  constructor: (spec, multiindex, formatter) ->
     @spec = spec
     @index = multiindex
-    @str = ''
-    for k, v of multiindex
-      if @str then @str += ","
-      @str += "#{k}: #{v}"
+    @str = formatter multiindex
   make: (spec, data) ->
     @layers ?= @_makeLayers spec
     @title ?= @_makeTitle spec

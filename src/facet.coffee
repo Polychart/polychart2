@@ -34,6 +34,14 @@ class Facet
     for val in indexValues
       @indices[stringify val] = val
     @indices
+  getFormatter: () ->
+    (multiindex) ->
+      debugger
+      str = ''
+      for k, v of multiindex
+        if str then str += ", "
+        str += "#{k}: #{v}"
+      str
   groupData: (unfaceted) ->
     if not @indices then @getIndices(unfacted, @groups)
     datas = {}

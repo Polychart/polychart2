@@ -55,8 +55,9 @@ class Graph
     # prep work to make indices
     indices = @facet.getIndices @processedData
     datas = @facet.groupData @processedData
+    formatter = @facet.getFormatter()
     # make panes
-    @panes ?= @_makePanes @spec, indices
+    @panes ?= @_makePanes @spec, indices, formatter
     # make data
     # set data
     for key, pane of @panes
@@ -126,14 +127,12 @@ class Graph
         else
           h.handle(type, obj, event)
     _.throttle handler, 1000
-  _makePanes: (spec, indices) ->
+  _makePanes: (spec, indices, formatter) ->
     # make panes
     panes = {}
     for identifier, mindex of indices
-      panes[identifier] = poly.pane.make spec, mindex
+      panes[identifier] = poly.pane.make spec, mindex, formatter
     panes
-
-
   _makeScaleSet: (spec, domains, facet) ->
     @coord.make poly.dim.guess(spec, facet.getGrid())
     tmpRanges = @coord.ranges()

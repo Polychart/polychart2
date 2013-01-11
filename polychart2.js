@@ -6239,24 +6239,16 @@ data processing to be done.
 
   poly.pane = {};
 
-  poly.pane.make = function(spec, grp) {
-    return new Pane(spec, grp);
+  poly.pane.make = function(spec, grp, formatter) {
+    return new Pane(spec, grp, formatter);
   };
 
   Pane = (function() {
 
-    function Pane(spec, multiindex) {
-      var k, v;
+    function Pane(spec, multiindex, formatter) {
       this.spec = spec;
       this.index = multiindex;
-      this.str = '';
-      for (k in multiindex) {
-        v = multiindex[k];
-        if (this.str) {
-          this.str += ",";
-        }
-        this.str += "" + k + ": " + v;
-      }
+      this.str = formatter(multiindex);
     }
 
     Pane.prototype.make = function(spec, data) {
@@ -6292,7 +6284,7 @@ data processing to be done.
       return poly.domain.make(layers, spec.guides, spec.strict);
     };
 
-    Pane.prototype.render = function(renderer, offset, clipping, title, dims) {
+    Pane.prototype.render = function(renderer, offset, clipping, dims) {
       var layer, sampled, _i, _len, _ref, _ref1, _results;
       this.title.render(renderer(offset, false), dims, {});
       _ref = this.layers;
@@ -7002,6 +6994,22 @@ data processing to be done.
       return this.indices;
     };
 
+    Facet.prototype.getFormatter = function() {
+      return function(multiindex) {
+        debugger;
+        var k, str, v;
+        str = '';
+        for (k in multiindex) {
+          v = multiindex[k];
+          if (str) {
+            str += ", ";
+          }
+          str += "" + k + ": " + v;
+        }
+        return str;
+      };
+    };
+
     Facet.prototype.groupData = function(unfaceted) {
       var datas, groupedData, id, mindex, pointer, value, _ref;
       if (!this.indices) {
@@ -7299,11 +7307,12 @@ data processing to be done.
     };
 
     Graph.prototype.makePanes = function() {
-      var datas, indices, key, pane, _ref, _ref1, _results;
+      var datas, formatter, indices, key, pane, _ref, _ref1, _results;
       indices = this.facet.getIndices(this.processedData);
       datas = this.facet.groupData(this.processedData);
+      formatter = this.facet.getFormatter();
       if ((_ref = this.panes) == null) {
-        this.panes = this._makePanes(this.spec, indices);
+        this.panes = this._makePanes(this.spec, indices, formatter);
       }
       _ref1 = this.panes;
       _results = [];
@@ -7353,7 +7362,7 @@ data processing to be done.
         pane = _ref1[key];
         offset = this.facet.getOffset(this.dims, key);
         clipping = this.coord.clipping(offset);
-        pane.render(renderer, offset, clipping, 'hello', this.dims);
+        pane.render(renderer, offset, clipping, this.dims);
       }
       this.scaleSet.renderAxes(this.dims, rendererG, this.facet);
       this.scaleSet.renderTitles(this.dims, rendererG);
@@ -7403,12 +7412,12 @@ data processing to be done.
       return _.throttle(handler, 1000);
     };
 
-    Graph.prototype._makePanes = function(spec, indices) {
+    Graph.prototype._makePanes = function(spec, indices, formatter) {
       var identifier, mindex, panes;
       panes = {};
       for (identifier in indices) {
         mindex = indices[identifier];
-        panes[identifier] = poly.pane.make(spec, mindex);
+        panes[identifier] = poly.pane.make(spec, mindex, formatter);
       }
       return panes;
     };
