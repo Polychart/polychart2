@@ -89,7 +89,7 @@ class Graph
     for key, pane of @panes
       offset = @facet.getOffset(@dims, key)
       clipping = @coord.clipping offset
-      pane.render renderer offset, clipping
+      pane.render renderer, offset, clipping, @dims
 
     # axes
     @scaleSet.renderAxes @dims, rendererG, @facet

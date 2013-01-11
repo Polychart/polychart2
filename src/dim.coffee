@@ -11,7 +11,7 @@ poly.dim.make = (spec, scaleSet, facetGrid) ->
     paddingTop : spec.paddingTop ? 10
     paddingBottom : spec.paddingBottom ? 10
     horizontalSpacing : spec.horizontalSpacing ? 10
-    verticalSpacing : spec.verticalSpacing ? 10
+    verticalSpacing : spec.verticalSpacing ? 20
     guideTop : 10
     guideRight : 0
     guideLeft : 5
@@ -48,7 +48,7 @@ poly.dim.make = (spec, scaleSet, facetGrid) ->
     dim.chartWidth -= dim.horizontalSpacing * (facetGrid.cols - 1)
     dim.chartWidth /= facetGrid.cols
   if facetGrid.rows? and facetGrid.rows > 1
-    dim.chartHeight -= dim.verticalSpacing * (facetGrid.rows - 1)
+    dim.chartHeight -= dim.verticalSpacing * (facetGrid.rows)
     dim.chartHeight /= facetGrid.rows
   dim
 

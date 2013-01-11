@@ -496,6 +496,22 @@ class TitleMain extends Title
     'font-weight' : 'bold'
     'text-anchor' : 'middle'
 
+class TitleFacet extends Title
+  make: (params) =>
+    {title} = params
+    @titletext = title
+  render: (renderer, dim, offset) =>
+    if @title?
+      @title = renderer.animate @title, @_makeTitle(dim, offset)
+    else
+      @title = renderer.add @_makeTitle(dim, offset)
+  _makeTitle: (dim) ->
+    type: 'text'
+    x : sf.identity dim.chartWidth/2
+    y : sf.identity -7
+    text: @titletext
+    'text-anchor' : 'middle'
+
 poly.guide = {}
 poly.guide.axis = (type) ->
   if type == 'x'
@@ -511,6 +527,8 @@ poly.guide.title = (type) ->
     new TitleV()
   else if type is 'main'
     new TitleMain()
+  else if type is 'facet'
+    new TitleFacet()
   else # ['x', 't']
     new TitleH()
 

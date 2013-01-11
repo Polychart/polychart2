@@ -2,7 +2,7 @@
 # Faceting related functions
 #
 # Note that even though Facet is a class, it does not do any rendering and can
-# be # created every time a graph is re-drawn. This is okay.
+# be created every time a graph is re-drawn. This is okay.
 ##
 
 poly.facet = {}
@@ -47,7 +47,7 @@ class Facet
     datas
   getOffset: (dims, col, row) ->
     x : dims.paddingLeft + dims.guideLeft + (dims.chartWidth + dims.horizontalSpacing) * col
-    y : dims.paddingTop + dims.guideTop + (dims.chartHeight + dims.verticalSpacing) * row
+    y : dims.paddingTop + dims.guideTop + (dims.chartHeight + dims.verticalSpacing) * row + dims.verticalSpacing
   getGrid: () -> throw poly.error.impl()
   edge: (dir, col, row) ->
     if dir is 'none' then return -> false
