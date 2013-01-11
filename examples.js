@@ -2170,6 +2170,7 @@
               }
             },
             x: {
+              position: 'top',
               type: 'num',
               min: 0,
               max: 10,

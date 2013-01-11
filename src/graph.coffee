@@ -93,10 +93,10 @@ class Graph
 
     # axes
     @scaleSet.renderAxes @dims, rendererG, @facet
+    @scaleSet.renderTitles @dims, rendererG
     # legend
     @scaleSet.renderLegends @dims, rendererG({})
     ### labels
-    @scaleSet.renderAxesLabels @dims, rendererG, @facet
     @scaleSet.renderFacetLabels @dims, rendererG, @facet
     @scaleSet.renderTitle @dims, rendererG, @facet
     ###
@@ -139,8 +139,9 @@ class Graph
     tmpRanges = @coord.ranges()
     poly.scaleset tmpRanges, @coord
   _makeDimensions: (spec, scaleSet, facet) ->
-    axis = scaleSet.makeAxes(_.keys(@panes))
-    legend = scaleSet.makeLegends()
+    scaleSet.makeAxes(_.keys(@panes))
+    scaleSet.makeTitles()
+    scaleSet.makeLegends()
     poly.dim.make spec, scaleSet, facet.getGrid()
   _makePaper: (dom, width, height, handleEvent) ->
     if _.isString dom then dom = document.getElementById(dom)

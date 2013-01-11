@@ -89,6 +89,30 @@ class ScaleSet
   getSpec : (a) -> if @guideSpec? and @guideSpec[a]? then @guideSpec[a] else {}
 
   makeTitles: () ->
+    @titles ?=
+      x: poly.guide.title @coord.axisType('x')
+      y: poly.guide.title @coord.axisType('y')
+      #main: poly.guide.title 'top'
+    @titles.x.make
+      guideSpec: @getSpec 'x'
+      title: poly.getLabel @layers, 'x'
+    @titles.y.make
+      guideSpec: @getSpec 'y'
+      title: poly.getLabel @layers, 'y'
+  titleOffset: (dim) ->
+    offset = {}
+    for key, title of @titles
+      o = title.getDimension()
+      for dir in ['left', 'right', 'top',' bottom']
+        if o[dir]
+          offset[dir] ?= 0
+          offset[dir] += o[dir]
+    offset
+  renderTitles: (dims, renderer) ->
+    renderer = renderer({})
+    o = @axesOffset(dims)
+    @titles.x.render renderer, dims, o
+    @titles.y.render renderer, dims, o
 
   makeAxes: (groups) -> # groups = keys of panes
     {deleted, kept, added} = poly.compare(_.keys(@axes), groups)
@@ -242,8 +266,8 @@ class ScaleSet
     @deletedLegends = []
     offset = { x: 10, y : 0 } # initial spacing
     # axis offset
-    o = @axesOffset(dims)
-    offset.x += o.right ? 0
+    offset.x += @axesOffset(dims).right ? 0
+    offset.x += @titleOffset(dims).right ? 0
 
     maxwidth = 0
     maxheight = dims.height - dims.guideTop - dims.paddingTop

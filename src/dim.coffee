@@ -24,6 +24,13 @@ poly.dim.make = (spec, scaleSet, facetGrid) ->
   dim.guideBottom += bottom ? 0
   dim.guideTop += top ? 0
 
+  # axes
+  {left, right, top, bottom}  = scaleSet.titleOffset(dim)
+  dim.guideLeft += left ? 0
+  dim.guideRight += right ? 0
+  dim.guideBottom += bottom ? 0
+  dim.guideTop += top ? 0
+
   # legends
   {left, right, top, bottom}  = scaleSet.legendOffset(dim)
   dim.guideLeft += left ? 0

@@ -433,28 +433,56 @@ class Title extends Guide
     @titletext = null
     @title = null
   make: (params) =>
-    {guideSpec, defaultTitle} = params
+    {guideSpec, title, position} = params
     option = (item, def) => guideSpec[item] ? def
-    @titletext = option('title', defaultTitle)
-  render: (dim, coord, renderer, offset) =>
+    @titletext = option('title', title)
+    @position = option('position', position) ? @defaultPosition
+    if @position is 'out' then @position = 'bottom'
+  render: (renderer, dim, offset) =>
     if @position isnt 'none'
       if @title?
-        @title = renderer.animate @title, @_makeTitle(dim)
+        @title = renderer.animate @title, @_makeTitle(dim, offset)
       else
-        @title = renderer.add @_makeTitle(dim)
-    else
-      if @title?
-        renderer.remove @title
+        @title = renderer.add @_makeTitle(dim, offset)
+    else if @title?
+      renderer.remove @title
   _makeTitle: () -> throw poly.error.impl()
+  getDimension: () ->
+    offset = {}
+    if @position isnt 'none'
+      offset[@position] = 10
+    offset
 
 class TitleH extends Title
-  _makeTitle: (params) ->
+  defaultPosition: 'bottom'
+  _makeTitle: (dim, offset) ->
+    y =
+      if @position is 'top'
+        dim.paddingTop + dim.guideTop - (offset.top ? 0) - 2
+      else
+        dim.height - dim.paddingBottom - dim.guideBottom + (offset.bottom ? 0) + 2
+    x = dim.paddingLeft + dim.guideLeft + (dim.width - dim.paddingLeft - dim.guideLeft - dim.paddingRight - dim.guideRight) / 2
     type: 'text'
-    x : sf.identity params.x
-    y : sf.identity params.y
+    x : sf.identity x
+    y : sf.identity y
     text: @titletext
     'text-anchor' : 'middle'
 
+class TitleV extends Title
+  defaultPosition: 'left'
+  _makeTitle: (dim, offset) ->
+    x =
+      if @position is 'left'
+        dim.paddingLeft + dim.guideLeft - (offset.left ? 0) - 2
+      else
+        dim.width - dim.paddingRight - dim.guideRight + (offset.right ? 0)
+    y = dim.paddingTop + dim.guideTop + (dim.height - dim.paddingTop - dim.guideTop - dim.paddingBottom - dim.guideBottom) / 2
+    type: 'text'
+    x : sf.identity x
+    y : sf.identity y
+    text: @titletext
+    'text-anchor' : 'middle'
+    transform : 'r270'
 
 poly.guide = {}
 poly.guide.axis = (type) ->
@@ -466,4 +494,10 @@ poly.guide.axis = (type) ->
     new RAxis()
   else if type == 't'
     new TAxis()
+poly.guide.title = (type) ->
+  if type in ['y', 'r']
+    new TitleV()
+  else # ['x', 't', default...]
+    new TitleH()
+
 poly.guide.legend = (aes) -> return new Legend(aes)
