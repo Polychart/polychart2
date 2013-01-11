@@ -21,7 +21,7 @@ poly.tick.make = (domain, guideSpec, type) ->
   else
     formatter = poly.format(type, step)
   tickobjs = {}
-  tickfn = tickFactory(domain.type, formatter)
+  tickfn = tickFactory(type, formatter)
 
   if ticks
     for i in [0..ticks.length-1]
@@ -75,6 +75,7 @@ getStep = (span, numticks) ->
 Function for calculating the location of ticks.
 ###
 tickValues =
+  'none' : -> {}
   'cat' : (domain, numticks) ->
     len = domain.levels.length
     step = Math.max 1, Math.round(len/numticks)

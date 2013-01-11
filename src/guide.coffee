@@ -27,7 +27,8 @@ class Axis extends Guide
     @renderLine = option('renderLine', true)
     # ticks
     @ticks = poly.tick.make domain, guideSpec, type
-    @maxwidth =_.max _.map @ticks, (t) -> poly.strSize t.value
+    @maxwidth = _.max _.map @ticks, (t) -> poly.strSize t.value
+    @maxwidth = Math.max @maxwidth, 0
   render: (axisDim, coord, renderer, override) =>
     if @position is "none" then return
     override ?= {}

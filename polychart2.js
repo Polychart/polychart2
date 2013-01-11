@@ -1903,23 +1903,18 @@ See the spec definition for more information.
   };
 
   poly.domain.sortfn = function(domain) {
-    switch (domain.type) {
-      case 'num':
-        return function(x) {
-          return x;
-        };
-      case 'date':
-        return function(x) {
-          return x;
-        };
-      case 'cat':
-        return function(x) {
-          var idx;
-          idx = _.indexOf(domain.levels, x);
-          if (idx === -1) {
-            return idx = Infinity;
-          }
-        };
+    if (domain && domain.type === 'cat') {
+      return function(x) {
+        var idx;
+        idx = _.indexOf(domain.levels, x);
+        if (idx === -1) {
+          return idx = Infinity;
+        }
+      };
+    } else {
+      return function(x) {
+        return x;
+      };
     }
   };
 
@@ -2225,7 +2220,7 @@ See the spec definition for more information.
       formatter = poly.format(type, step);
     }
     tickobjs = {};
-    tickfn = tickFactory(domain.type, formatter);
+    tickfn = tickFactory(type, formatter);
     if (ticks) {
       for (i = _i = 0, _ref2 = ticks.length - 1; 0 <= _ref2 ? _i <= _ref2 : _i >= _ref2; i = 0 <= _ref2 ? ++_i : --_i) {
         prev = i === 0 ? null : ticks[i - 1];
@@ -2315,6 +2310,9 @@ See the spec definition for more information.
 
 
   tickValues = {
+    'none': function() {
+      return {};
+    },
     'cat': function(domain, numticks) {
       var i, item, len, step, ticks, _i, _len, _ref;
       len = domain.levels.length;
@@ -2463,9 +2461,10 @@ See the spec definition for more information.
       this.renderLabel = option('renderLabel', true);
       this.renderLine = option('renderLine', true);
       this.ticks = poly.tick.make(domain, guideSpec, type);
-      return this.maxwidth = _.max(_.map(this.ticks, function(t) {
+      this.maxwidth = _.max(_.map(this.ticks, function(t) {
         return poly.strSize(t.value);
       }));
+      return this.maxwidth = Math.max(this.maxwidth, 0);
     };
 
     Axis.prototype.render = function(axisDim, coord, renderer, override) {
@@ -3196,6 +3195,9 @@ See the spec definition for more information.
     Scale.prototype.make = function(domain) {
       this.domain = domain;
       this.sortfn = poly.domain.sortfn(domain);
+      if (!domain) {
+        return this._makeNone();
+      }
       switch (domain.type) {
         case 'num':
           return this._makeNum();
@@ -3204,6 +3206,10 @@ See the spec definition for more information.
         case 'cat':
           return this._makeCat();
       }
+    };
+
+    Scale.prototype._makeNone = function() {
+      throw poly.error.impl("You are using a scale that does not support null values");
     };
 
     Scale.prototype._makeNum = function() {
@@ -3219,14 +3225,21 @@ See the spec definition for more information.
     };
 
     Scale.prototype.tickType = function() {
+      if (!this.domain) {
+        return this._tickNone();
+      }
       switch (this.domain.type) {
         case 'num':
-          return this._tickNum(this.domain);
+          return this._tickNum();
         case 'date':
-          return this._tickDate(this.domain);
+          return this._tickDate();
         case 'cat':
-          return this._tickCat(this.domain);
+          return this._tickCat();
       }
+    };
+
+    Scale.prototype._tickNone = function() {
+      return 'none';
     };
 
     Scale.prototype._tickNum = function() {
@@ -3279,6 +3292,46 @@ See the spec definition for more information.
       this.range = range;
       this.space = 0.05;
       return PositionScale.__super__.make.call(this, domain);
+    };
+
+    PositionScale.prototype._makeNone = function() {
+      var space,
+        _this = this;
+      space = (this.range.max - this.range.min) * this.space;
+      this.f = this._NaNCheckWrap(function(value) {
+        var width;
+        if (_.isObject(value)) {
+          if (value.f === 'identity') {
+            return value.v;
+          }
+          if (value.f === 'middle') {
+            return _this.range.max / 2 + _this.range.min / 2;
+          }
+          if (value.f === 'max') {
+            return _this.range.max;
+          }
+          if (value.f === 'min') {
+            return _this.range.min;
+          }
+          if (value.f === 'upper' && !value.m) {
+            return _this.range.max - space;
+          }
+          if (value.f === 'lower' && !value.m) {
+            return _this.range.min + space;
+          }
+          width = (_this.range.max - _this.range.min - 2 * space) / value.m;
+          if (value.f === 'upper') {
+            return (_this.range.min + space) + (value.n + 1) * width;
+          }
+          if (value.f === 'lower') {
+            return (_this.range.min + space) + value.n * width;
+          }
+        }
+        return _this.range.max / 2 + _this.range.min / 2;
+      });
+      return this.finv = function() {
+        return {};
+      };
     };
 
     PositionScale.prototype._NaNCheckWrap = function(fn) {
@@ -5151,11 +5204,13 @@ data processing to be done.
     Layer.prototype._getValue = function(item, aes) {
       if (this.mapping[aes]) {
         return item[this.mapping[aes]];
-      }
-      if (this.consts[aes]) {
+      } else if (this.consts[aes]) {
         return sf.identity(this.consts[aes]);
+      } else if (aes === 'x' || aes === 'y') {
+        return this.defaults[aes];
+      } else {
+        return sf.identity(this.defaults[aes]);
       }
-      return sf.identity(this.defaults[aes]);
     };
 
     Layer.prototype._getIdFunc = function() {

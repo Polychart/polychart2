@@ -26,10 +26,14 @@ class Scale
   make: (domain) ->
     @domain = domain
     @sortfn = poly.domain.sortfn(domain)
+    if not domain
+      return @_makeNone()
     switch domain.type
       when 'num' then return @_makeNum()
       when 'date' then return @_makeDate()
       when 'cat' then return @_makeCat()
+  _makeNone: () ->
+    throw poly.error.impl "You are using a scale that does not support null values" #bad msg?
   _makeNum: () ->
     throw poly.error.impl "You are using a scale that does not support numbers"
   _makeDate: () ->
@@ -37,10 +41,13 @@ class Scale
   _makeCat: () ->
     throw poly.error.impl "You are using a scale that does not support categoies"
   tickType: () ->
+    if not @domain
+      return @_tickNone()
     switch @domain.type
-      when 'num' then return @_tickNum @domain
-      when 'date' then return @_tickDate @domain
-      when 'cat' then return @_tickCat @domain
+      when 'num' then return @_tickNum()
+      when 'date' then return @_tickDate()
+      when 'cat' then return @_tickCat()
+  _tickNone: () -> 'none'
   _tickNum: () -> 'num'
   _tickDate: () -> 'date'
   _tickCat: () -> 'cat'
@@ -60,12 +67,27 @@ class PositionScale extends Scale
     @range = range
     @space = 0.05
     super(domain)
+  _makeNone: () ->
+    space = (@range.max - @range.min) * @space
+    @f = @_NaNCheckWrap (value) =>
+      if _.isObject(value)
+        if value.f is 'identity' then return value.v
+        if value.f is 'middle' then return @range.max/2 + @range.min/2
+        if value.f is 'max' then return @range.max
+        if value.f is 'min' then return @range.min
+        if value.f is 'upper' and not value.m then return @range.max - space
+        if value.f is 'lower' and not value.m then return @range.min + space
+        width = (@range.max-@range.min-2*space) / value.m
+        if value.f is 'upper' then return (@range.min+space) + (value.n+1)*width
+        if value.f is 'lower' then return (@range.min+space) + value.n*width
+      return @range.max/2 + @range.min/2
+    @finv = () -> {}
+
   _NaNCheckWrap: (fn) -> (value) ->
     out = fn(value)
     if isNaN(out) or out is Infinity or out is -Infinity
       throw poly.error.input "SCALE BEHAVING BADLY"
     out
-
   _numWrapper: (domain, y) => @_NaNCheckWrap (value) =>
     # NOTE: the below spacing makes sure that animation in polar coordinates
     # behave as expected. Test with polar bar charts to see...

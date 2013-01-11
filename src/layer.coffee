@@ -128,9 +128,10 @@ class Layer
         if spec[aes].const then @consts[aes] = spec[aes].const
   # helper for getting the value of a particular aesthetic from an item
   _getValue: (item, aes) ->
-    if @mapping[aes] then return item[@mapping[aes]]
-    if @consts[aes] then return sf.identity(@consts[aes])
-    return sf.identity(@defaults[aes])
+    if @mapping[aes]          then item[@mapping[aes]]
+    else if @consts[aes]      then sf.identity @consts[aes]
+    else if aes in ['x', 'y'] then @defaults[aes]
+    else                           sf.identity @defaults[aes]
   # helper function to get an element's "id"
   _getIdFunc: () ->
     if @mapping['id']? then (item) => @_getValue item, 'id' else poly.counter()
