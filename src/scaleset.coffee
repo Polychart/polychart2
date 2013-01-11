@@ -40,9 +40,9 @@ class ScaleSet
     @_makeXScale()
     @_makeYScale()
   _makeXScale: () ->
-    @scales.x.make(@domainx, @ranges.x)
+    @scales.x.make @domainx, @ranges.x, @getSpec('x').padding
   _makeYScale: () ->
-    @scales.y.make(@domainy, @ranges.y)
+    @scales.y.make @domainy, @ranges.y, @getSpec('y').padding
   _makeScales : (guideSpec, domains, ranges) ->
     # this function contains information about default scales!
     specScale = (a) ->
@@ -52,10 +52,10 @@ class ScaleSet
     scales = {}
     # x 
     scales.x = specScale('x') ? poly.scale.linear()
-    scales.x.make(domains.x, ranges.x)
+    scales.x.make(domains.x, ranges.x, @getSpec('x').padding)
     # y
     scales.y = specScale('y') ? poly.scale.linear()
-    scales.y.make(domains.y, ranges.y)
+    scales.y.make(domains.y, ranges.y, @getSpec('y').padding)
     # color
     if domains.color?
       if domains.color.type == 'cat'

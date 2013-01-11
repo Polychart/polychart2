@@ -2045,6 +2045,16 @@
       coord: {
         type: 'polar'
       },
+      guides: {
+        y: {
+          padding: 0,
+          position: 'none'
+        },
+        x: {
+          padding: 0,
+          position: 'none'
+        }
+      },
       dom: dom
     });
   };

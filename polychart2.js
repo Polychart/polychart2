@@ -3288,9 +3288,12 @@ See the spec definition for more information.
       this.finv = null;
     }
 
-    PositionScale.prototype.make = function(domain, range) {
+    PositionScale.prototype.make = function(domain, range, space) {
       this.range = range;
-      this.space = 0.05;
+      this.space = space;
+      if (!_.isNumber(this.space)) {
+        this.space = 0.05;
+      }
       return PositionScale.__super__.make.call(this, domain);
     };
 
@@ -3832,11 +3835,11 @@ See the spec definition for more information.
     };
 
     ScaleSet.prototype._makeXScale = function() {
-      return this.scales.x.make(this.domainx, this.ranges.x);
+      return this.scales.x.make(this.domainx, this.ranges.x, this.getSpec('x').padding);
     };
 
     ScaleSet.prototype._makeYScale = function() {
-      return this.scales.y.make(this.domainy, this.ranges.y);
+      return this.scales.y.make(this.domainy, this.ranges.y, this.getSpec('y').padding);
     };
 
     ScaleSet.prototype._makeScales = function(guideSpec, domains, ranges) {
@@ -3849,9 +3852,9 @@ See the spec definition for more information.
       };
       scales = {};
       scales.x = (_ref = specScale('x')) != null ? _ref : poly.scale.linear();
-      scales.x.make(domains.x, ranges.x);
+      scales.x.make(domains.x, ranges.x, this.getSpec('x').padding);
       scales.y = (_ref1 = specScale('y')) != null ? _ref1 : poly.scale.linear();
-      scales.y.make(domains.y, ranges.y);
+      scales.y.make(domains.y, ranges.y, this.getSpec('y').padding);
       if (domains.color != null) {
         if (domains.color.type === 'cat') {
           scales.color = (_ref2 = specScale('color')) != null ? _ref2 : poly.scale.color();

@@ -63,9 +63,9 @@ class PositionScale extends Scale
   constructor: (params) ->
     @f = null
     @finv = null
-  make: (domain, range) ->
-    @range = range
-    @space = 0.05
+  make: (domain, @range, @space) ->
+    if not _.isNumber @space
+      @space = 0.05
     super(domain)
   _makeNone: () ->
     space = (@range.max - @range.min) * @space
