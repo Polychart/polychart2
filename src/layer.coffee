@@ -73,12 +73,12 @@ class Layer
       n
 
   _tooltip: (item) ->
-    tooltip =
-      "#{@mapping.x}: #{@_format @_getValue item, 'x'}\n"+
-      "#{@mapping.y}: #{@_format @_getValue item, 'y'}"
-    for a in ['color', 'size', 'opacity']
-      if @mapping[a]?
-        tooltip += "\n#{@mapping[a]}: #{@_format @_getValue item, a}"
+    tooltip = null
+    for v in _.uniq _.values @mapping
+      if not tooltip
+        tooltip = "#{v}: #{@_format item[v]}"
+      else
+        tooltip += "\n#{v}: #{@_format item[v]}"
     tooltip
 
   getMeta: (key) ->

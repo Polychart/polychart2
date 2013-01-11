@@ -5098,13 +5098,15 @@ data processing to be done.
     };
 
     Layer.prototype._tooltip = function(item) {
-      var a, tooltip, _i, _len, _ref;
-      tooltip = ("" + this.mapping.x + ": " + (this._format(this._getValue(item, 'x'))) + "\n") + ("" + this.mapping.y + ": " + (this._format(this._getValue(item, 'y'))));
-      _ref = ['color', 'size', 'opacity'];
+      var tooltip, v, _i, _len, _ref;
+      tooltip = null;
+      _ref = _.uniq(_.values(this.mapping));
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        a = _ref[_i];
-        if (this.mapping[a] != null) {
-          tooltip += "\n" + this.mapping[a] + ": " + (this._format(this._getValue(item, a)));
+        v = _ref[_i];
+        if (!tooltip) {
+          tooltip = "" + v + ": " + (this._format(item[v]));
+        } else {
+          tooltip += "\n" + v + ": " + (this._format(item[v]));
         }
       }
       return tooltip;
