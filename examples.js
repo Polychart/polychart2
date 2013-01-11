@@ -2157,6 +2157,7 @@
           layers: [sampleLayer],
           guides: {
             y: {
+              position: 'right',
               type: 'num',
               min: 0,
               max: 10,
@@ -2390,6 +2391,64 @@
   if ((_ref = this.examples) == null) {
     this.examples = {};
   }
+
+  this.examples.popy_polar = function(dom) {
+    var c, data;
+    data = polyjs.data({
+      json: [
+        {
+          gr: "Grade 9",
+          p: 10
+        }, {
+          gr: "Grade 10",
+          p: 40
+        }, {
+          gr: "Grade 11",
+          p: 50
+        }, {
+          gr: "Grade 12",
+          p: 70
+        }
+      ],
+      meta: {
+        gr: {
+          type: "cat"
+        },
+        p: {
+          type: "num"
+        }
+      }
+    });
+    return c = polyjs.chart({
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          y: 'p'
+        }
+      ],
+      facet: {
+        type: 'wrap',
+        "var": 'gr'
+      },
+      coord: {
+        type: 'polar'
+      },
+      guides: {
+        y: {
+          min: 0,
+          max: 100,
+          position: 'none',
+          padding: 0
+        },
+        x: {
+          position: 'none',
+          padding: 0
+        }
+      },
+      dom: dom
+    });
+  };
 
   this.examples.popy = function(dom) {
     var c, data;

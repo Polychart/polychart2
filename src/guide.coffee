@@ -427,6 +427,34 @@ class Legend extends Guide
     height: @height
     width: 15+@maxwidth
 
+class Title extends Guide
+  constructor: () ->
+    @position = 'none'
+    @titletext = null
+    @title = null
+  make: (params) =>
+    {guideSpec, defaultTitle} = params
+    option = (item, def) => guideSpec[item] ? def
+    @titletext = option('title', defaultTitle)
+  render: (dim, coord, renderer, offset) =>
+    if @position isnt 'none'
+      if @title?
+        @title = renderer.animate @title, @_makeTitle(dim)
+      else
+        @title = renderer.add @_makeTitle(dim)
+    else
+      if @title?
+        renderer.remove @title
+  _makeTitle: () -> throw poly.error.impl()
+
+class TitleH extends Title
+  _makeTitle: (params) ->
+    type: 'text'
+    x : sf.identity params.x
+    y : sf.identity params.y
+    text: @titletext
+    'text-anchor' : 'middle'
+
 
 poly.guide = {}
 poly.guide.axis = (type) ->

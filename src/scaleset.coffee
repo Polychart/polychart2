@@ -39,10 +39,8 @@ class ScaleSet
     @domainy = @domains.y
     @_makeXScale()
     @_makeYScale()
-  _makeXScale: () ->
-    @scales.x.make @domainx, @ranges.x, @getSpec('x').padding
-  _makeYScale: () ->
-    @scales.y.make @domainy, @ranges.y, @getSpec('y').padding
+  _makeXScale: () -> @scales.x.make @domainx, @ranges.x, @getSpec('x').padding
+  _makeYScale: () -> @scales.y.make @domainy, @ranges.y, @getSpec('y').padding
   _makeScales : (guideSpec, domains, ranges) ->
     # this function contains information about default scales!
     specScale = (a) ->
@@ -89,7 +87,10 @@ class ScaleSet
     obj
 
   getSpec : (a) -> if @guideSpec? and @guideSpec[a]? then @guideSpec[a] else {}
-  makeAxes: (groups) ->
+
+  makeTitles: () ->
+
+  makeAxes: (groups) -> # groups = keys of panes
     {deleted, kept, added} = poly.compare(_.keys(@axes), groups)
     for key in deleted
       @deletedAxes.push @axes[key]
@@ -98,7 +99,6 @@ class ScaleSet
       @axes[key] =
         x: poly.guide.axis @coord.axisType('x')
         y: poly.guide.axis @coord.axisType('y')
-
     for key, axis of @axes
       axis.x.make
         domain: @domainx
@@ -111,6 +111,23 @@ class ScaleSet
         guideSpec: @getSpec 'y'
         key: poly.getLabel @layers, 'y'
     @axes
+  axesOffset: (dim) ->
+    offset = {}
+    done = {}
+    for key, axis of @axes # loop over everything? pretty inefficient
+      for k2, obj of axis
+        if done[k2]? then continue
+        d = obj.getDimension()
+        if d.position == 'left'
+          offset.left = d.width
+        else if d.position == 'right'
+          offset.right = d.width
+        else if d.position == 'bottom'
+          offset.bottom = d.height
+        else if d.position == 'top'
+          offset.top = d.height
+        done[k2] = true
+    offset
   renderAxes: (dims, renderer, facet) ->
     axis.remove(renderer) for axis in @deletedAxes
     @deletedAxes = []
@@ -205,18 +222,28 @@ class ScaleSet
         mapping: @layerMapping
         keys: poly.getLabel(@layers, aes)
     @legends
+  legendOffset: (dim) ->
+    maxheight =  dim.height - dim.guideTop - dim.paddingTop
+    maxwidth = 0
+    offset = { x: 10, y : 0 } # initial spacing
+    for legend in @legends
+      d = legend.getDimension()
+      if d.height + offset.y > maxheight
+        offset.x += maxwidth + 5
+        offset.y = 0
+        maxwidth = 0
+      if d.width > maxwidth
+        maxwidth = d.width
+      offset.y += d.height
+    right: offset.x + maxwidth # no height
   renderLegends: (dims, renderer) ->
     # NOTE: if this is changed, change dim.coffee dimension calculation
     legend.remove(renderer) for legend in @deletedLegends
     @deletedLegends = []
     offset = { x: 10, y : 0 } # initial spacing
-
     # axis offset
-    y = 0
-    for key, axis of @axes #this loop is dumb
-      y = axis.y.getDimension()
-      if y.position == 'right' and y.width > 0
-        offset.x += y.width
+    o = @axesOffset(dims)
+    offset.x += o.right ? 0
 
     maxwidth = 0
     maxheight = dims.height - dims.guideTop - dims.paddingTop

@@ -91,8 +91,16 @@ class Graph
       clipping = @coord.clipping offset
       pane.render renderer offset, clipping
 
+    # axes
     @scaleSet.renderAxes @dims, rendererG, @facet
+    # legend
     @scaleSet.renderLegends @dims, rendererG({})
+    ### labels
+    @scaleSet.renderAxesLabels @dims, rendererG, @facet
+    @scaleSet.renderFacetLabels @dims, rendererG, @facet
+    @scaleSet.renderTitle @dims, rendererG, @facet
+    ###
+
 
   addHandler : (h) -> @handlers.push h
   removeHandler: (h) ->
@@ -133,7 +141,7 @@ class Graph
   _makeDimensions: (spec, scaleSet, facet) ->
     axis = scaleSet.makeAxes(_.keys(@panes))
     legend = scaleSet.makeLegends()
-    poly.dim.make spec, axis, legend, facet.getGrid()
+    poly.dim.make spec, scaleSet, facet.getGrid()
   _makePaper: (dom, width, height, handleEvent) ->
     if _.isString dom then dom = document.getElementById(dom)
     paper = poly.paper dom, width, height, handleEvent

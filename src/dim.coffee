@@ -2,7 +2,7 @@
 # GLOBALS
 ###
 poly.dim = {}
-poly.dim.make = (spec, axes, legends, facetGrid) ->
+poly.dim.make = (spec, scaleSet, facetGrid) ->
   dim =
     width : spec.width ? 400
     height : spec.height ? 400
@@ -18,35 +18,18 @@ poly.dim.make = (spec, axes, legends, facetGrid) ->
     guideBottom : 5
 
   # axes
-  done = {}
-  for key, axis of axes # loop over everything? pretty inefficient
-    for k2, obj of axis
-      if done[k2]? then continue
-      d = obj.getDimension()
-      if d.position == 'left'
-        dim.guideLeft += d.width
-      else if d.position == 'right'
-        dim.guideRight += d.width
-      else if d.position == 'bottom'
-        dim.guideBottom+= d.height
-      else if d.position == 'top'
-        dim.guideTop += d.height
-      done[k2] = true
+  {left, right, top, bottom}  = scaleSet.axesOffset(dim)
+  dim.guideLeft += left ? 0
+  dim.guideRight += right ? 0
+  dim.guideBottom += bottom ? 0
+  dim.guideTop += top ? 0
 
-  # NOTE: if this is changed, change scale.coffee's legend render
-  maxheight =  dim.height - dim.guideTop - dim.paddingTop
-  maxwidth = 0
-  offset = { x: 10, y : 0 } # initial spacing
-  for legend in legends
-    d = legend.getDimension()
-    if d.height + offset.y > maxheight
-      offset.x += maxwidth + 5
-      offset.y = 0
-      maxwidth = 0
-    if d.width > maxwidth
-      maxwidth = d.width
-    offset.y += d.height
-  dim.guideRight += offset.x + maxwidth
+  # legends
+  {left, right, top, bottom}  = scaleSet.legendOffset(dim)
+  dim.guideLeft += left ? 0
+  dim.guideRight += right ? 0
+  dim.guideBottom += bottom ? 0
+  dim.guideTop += top ? 0
 
   dim.chartHeight =
     dim.height-dim.paddingTop-dim.paddingBottom-dim.guideTop-dim.guideBottom
@@ -60,7 +43,6 @@ poly.dim.make = (spec, axes, legends, facetGrid) ->
   if facetGrid.rows? and facetGrid.rows > 1
     dim.chartHeight -= dim.verticalSpacing * (facetGrid.rows - 1)
     dim.chartHeight /= facetGrid.rows
-
   dim
 
 poly.dim.guess = (spec, facetGrid) ->

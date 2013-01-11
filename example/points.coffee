@@ -22,6 +22,7 @@ one = () -> Math.random()*10
       layers: [sampleLayer]
       guides:
         y :
+          position: 'right'
           type:'num', min:0, max:10, ticks:[2,4,6,8],
           labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
         x :
