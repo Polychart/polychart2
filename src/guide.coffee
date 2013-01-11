@@ -484,6 +484,18 @@ class TitleV extends Title
     'text-anchor' : 'middle'
     transform : 'r270'
 
+class TitleMain extends Title
+  _makeTitle: (dim, offset) ->
+    x = dim.width / 2
+    y = 20
+    type: 'text'
+    x : sf.identity x
+    y : sf.identity y
+    text: @titletext
+    'font-size' : '15px'
+    'font-weight' : 'bold'
+    'text-anchor' : 'middle'
+
 poly.guide = {}
 poly.guide.axis = (type) ->
   if type == 'x'
@@ -497,7 +509,9 @@ poly.guide.axis = (type) ->
 poly.guide.title = (type) ->
   if type in ['y', 'r']
     new TitleV()
-  else # ['x', 't', default...]
+  else if type is 'main'
+    new TitleMain()
+  else # ['x', 't']
     new TitleH()
 
 poly.guide.legend = (aes) -> return new Legend(aes)

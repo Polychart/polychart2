@@ -6,10 +6,6 @@
       segment: ["FirstTime", "FirstTime", "FirstTime", "Return", "Return", "Return", "4+", "4+", "4+"],
       source: ["Referral", "LinkedIn", "Cold Call","Referral", "LinkedIn", "Cold Call","Referral", "LinkedIn", "Cold Call"],
       value: [10,15,20,5,10,18,3,5,8]
-    meta:
-      segment: type: "cat"
-      source: type: "cat"
-      value: type: "num"
 
   c = polyjs.chart
     layers: [ {

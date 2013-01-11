@@ -1129,17 +1129,6 @@
         segment: ["FirstTime", "FirstTime", "FirstTime", "Return", "Return", "Return", "4+", "4+", "4+"],
         source: ["Referral", "LinkedIn", "Cold Call", "Referral", "LinkedIn", "Cold Call", "Referral", "LinkedIn", "Cold Call"],
         value: [10, 15, 20, 5, 10, 18, 3, 5, 8]
-      },
-      meta: {
-        segment: {
-          type: "cat"
-        },
-        source: {
-          type: "cat"
-        },
-        value: {
-          type: "num"
-        }
       }
     });
     return c = polyjs.chart({
@@ -2410,15 +2399,7 @@
           gr: "Grade 12",
           p: 70
         }
-      ],
-      meta: {
-        gr: {
-          type: "cat"
-        },
-        p: {
-          type: "num"
-        }
-      }
+      ]
     });
     return c = polyjs.chart({
       layers: [
@@ -2468,15 +2449,7 @@
           gr: "Grade 12",
           p: 70
         }
-      ],
-      meta: {
-        gr: {
-          type: "cat"
-        },
-        p: {
-          type: "num"
-        }
-      }
+      ]
     });
     data.derive((function(x) {
       return x.p + 5;
@@ -2538,15 +2511,7 @@
           gr: "Senior Services",
           num: 30
         }
-      ],
-      meta: {
-        gr: {
-          type: "cat"
-        },
-        num: {
-          type: "num"
-        }
-      }
+      ]
     });
     data.derive((function(x) {
       return x.num + 40;
@@ -2609,15 +2574,7 @@
           gr: "Terrible",
           num: 70
         }
-      ],
-      meta: {
-        gr: {
-          type: "cat"
-        },
-        num: {
-          type: "num"
-        }
-      }
+      ]
     });
     return c = polyjs.chart({
       layers: [

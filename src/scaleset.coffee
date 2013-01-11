@@ -92,7 +92,11 @@ class ScaleSet
     @titles ?=
       x: poly.guide.title @coord.axisType('x')
       y: poly.guide.title @coord.axisType('y')
-      #main: poly.guide.title 'top'
+      main: poly.guide.title('main')
+    @titles.main.make
+      title: "Main Title"
+      guideSpec: {}
+      position: "top"
     @titles.x.make
       guideSpec: @getSpec 'x'
       title: poly.getLabel @layers, 'x'
@@ -113,6 +117,7 @@ class ScaleSet
     o = @axesOffset(dims)
     @titles.x.render renderer, dims, o
     @titles.y.render renderer, dims, o
+    @titles.main.render renderer, dims, o
 
   makeAxes: (groups) -> # groups = keys of panes
     {deleted, kept, added} = poly.compare(_.keys(@axes), groups)

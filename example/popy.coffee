@@ -9,9 +9,6 @@
         {gr: "Grade 11", p: 50},
         {gr: "Grade 12", p: 70},
       ]
-    meta:
-      gr: type: "cat"
-      p: type: "num"
  
   c = polyjs.chart
     layers: [
@@ -36,9 +33,6 @@
         {gr: "Grade 11", p: 50},
         {gr: "Grade 12", p: 70},
       ]
-    meta:
-      gr: type: "cat"
-      p: type: "num"
 
   data.derive ((x) -> x.p + 5), 'p_10'
   data.derive ((x) -> "#{x.p}%"), 'percent'
@@ -64,9 +58,6 @@
         {gr: "Animal/Pets", num: 70}
         {gr: "Senior Services", num: 30}
       ]
-    meta:
-      gr: type: "cat"
-      num: type: "num"
 
   data.derive ((x) -> x.num+40), 'p_50'
   data.derive ((x) -> "#{Math.round(x.num/800*100)}%"), 'percent'
@@ -91,9 +82,6 @@
         {gr: "Poor", num: 370}
         {gr: "Terrible", num: 70}
       ]
-    meta:
-      gr: type: "cat"
-      num: type: "num"
   
   c = polyjs.chart
     layers: [
@@ -103,5 +91,3 @@
     guide:
       y: { min: 0, max:700 }
     coord: { type:'cartesian', flip: true }
-
-

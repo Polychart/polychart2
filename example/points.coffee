@@ -59,8 +59,6 @@ one = () -> Math.random()*10
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
-
-
 @examples.point2 = (dom) ->
   jsondata = [{x:'A',y:2},{x:'B',y:3},{x:'C',y:1}]
   data = polyjs.data({ json: jsondata })
@@ -93,7 +91,6 @@ one = () -> Math.random()*10
   c.addHandler (type, data) ->
     if type in ['click', 'reset']
       console.log data; alert(type)
-
 
 @examples.errors = (dom) ->
   data2 = {}
