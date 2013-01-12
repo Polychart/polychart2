@@ -6963,10 +6963,14 @@ data processing to be done.
   Facet = (function() {
 
     function Facet(spec) {
+      var _ref;
       this.spec = spec;
       this.values = {};
       this.groups = [];
       this.indices = {};
+      if ((_ref = this.spec) == null) {
+        this.spec = {};
+      }
     }
 
     Facet.prototype.getIndices = function(datas) {

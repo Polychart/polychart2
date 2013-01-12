@@ -20,6 +20,7 @@ class Facet
     @values = {}
     @groups = []
     @indices = {}
+    @spec ?= {}
   getIndices: (datas) ->
     @values = {}
     for key in @groups
