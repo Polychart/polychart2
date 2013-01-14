@@ -2399,17 +2399,25 @@
     data = polyjs.data({
       json: [
         {
+          gr: "Overall",
+          p: 60,
+          colgrp: '1'
+        }, {
           gr: "Grade 9",
-          p: 10
+          p: 10,
+          colgrp: '2'
         }, {
           gr: "Grade 10",
-          p: 40
+          p: 40,
+          colgrp: '2'
         }, {
           gr: "Grade 11",
-          p: 50
+          p: 50,
+          colgrp: '2'
         }, {
           gr: "Grade 12",
-          p: 70
+          p: 70,
+          colgrp: '2'
         }
       ]
     });
@@ -2418,12 +2426,17 @@
         {
           data: data,
           type: 'bar',
-          y: 'p'
+          y: 'p',
+          color: 'colgrp'
         }
       ],
       facet: {
         type: 'wrap',
-        "var": 'gr'
+        "var": 'gr',
+        cols: 5,
+        formatter: function(index) {
+          return index.gr;
+        }
       },
       coord: {
         type: 'polar'
@@ -2440,7 +2453,9 @@
           padding: 0
         }
       },
-      dom: dom
+      dom: dom,
+      height: 150,
+      width: 600
     });
   };
 
@@ -2461,7 +2476,12 @@
           gr: "Grade 12",
           p: 70
         }
-      ]
+      ],
+      meta: {
+        gr: {
+          type: 'cat'
+        }
+      }
     });
     data.derive((function(x) {
       return x.p + 5;
@@ -2490,10 +2510,12 @@
       guides: {
         y: {
           min: 0,
-          max: 100
+          max: 100,
+          title: "Percentage"
         },
         x: {
-          levels: ["Grade 9", "Grade 10", "Grade 11", "Grade 12"]
+          levels: ["Grade 9", "Grade 10", "Grade 11", "Grade 12"],
+          title: 'Grade'
         }
       },
       dom: dom

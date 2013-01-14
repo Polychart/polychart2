@@ -4,25 +4,30 @@
   data = polyjs.data
     json:
       [
-        {gr: "Grade 9", p: 10},
-        {gr: "Grade 10", p: 40},
-        {gr: "Grade 11", p: 50},
-        {gr: "Grade 12", p: 70},
+        {gr: "Overall", p: 60, colgrp: '1'},
+        {gr: "Grade 9", p: 10, colgrp: '2'},
+        {gr: "Grade 10", p: 40, colgrp: '2'},
+        {gr: "Grade 11", p: 50, colgrp: '2'},
+        {gr: "Grade 12", p: 70, colgrp: '2'},
       ]
  
   c = polyjs.chart
     layers: [
-      { data: data, type: 'bar', y:'p' }
+      { data: data, type: 'bar', y:'p', color: 'colgrp' }
     ]
     facet:
       type: 'wrap'
       var: 'gr'
+      cols: 5
+      formatter: (index) -> index.gr
     coord:
       type: 'polar'
     guides:
       y: min: 0, max:100, position: 'none', padding: 0
       x: position: 'none', padding: 0
     dom: dom
+    height: 150
+    width: 600
 
 @examples.popy = (dom) ->
   data = polyjs.data
@@ -33,6 +38,8 @@
         {gr: "Grade 11", p: 50},
         {gr: "Grade 12", p: 70},
       ]
+    meta:
+      gr: type: 'cat'
 
   data.derive ((x) -> x.p + 5), 'p_10'
   data.derive ((x) -> "#{x.p}%"), 'percent'
@@ -43,8 +50,8 @@
       { data: data, type: 'text', x:'gr', y:'p_10', text: 'percent', color: {const:'black'} }
     ]
     guides:
-      y: { min: 0, max:100 }
-      x: { levels : ["Grade 9", "Grade 10", "Grade 11", "Grade 12"] }
+      y: { min: 0, max:100, title: "Percentage"}
+      x: { levels : ["Grade 9", "Grade 10", "Grade 11", "Grade 12"], title: 'Grade'}
     dom: dom
 
 @examples.volexp = (dom) ->
