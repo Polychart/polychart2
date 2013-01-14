@@ -84,8 +84,7 @@ class Graph
     @scaleSet.makeLegends()
 
     @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent
-    renderer = poly.render @handleEvent, @paper, scales, @coord, true
-    rendererG = poly.render @handleEvent, @paper, scales, @coord, false
+    renderer = poly.render @handleEvent, @paper, scales, @coord
 
     for key, pane of @panes
       offset = @facet.getOffset(@dims, key)
@@ -93,10 +92,10 @@ class Graph
       pane.render renderer, offset, clipping, @dims
 
     # axes
-    @scaleSet.renderAxes @dims, rendererG, @facet
-    @scaleSet.renderTitles @dims, rendererG
+    @scaleSet.renderAxes @dims, renderer, @facet
+    @scaleSet.renderTitles @dims, renderer
     # legend
-    @scaleSet.renderLegends @dims, rendererG({})
+    @scaleSet.renderLegends @dims, renderer({}, false, false)
     ### labels
     @scaleSet.renderFacetLabels @dims, rendererG, @facet
     @scaleSet.renderTitle @dims, rendererG, @facet

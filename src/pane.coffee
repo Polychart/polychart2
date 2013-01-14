@@ -18,6 +18,6 @@ class Pane
   _makeDomains: (spec, layers) ->
     poly.domain.make layers, spec.guides, spec.strict
   render: (renderer, offset, clipping, dims) ->
-    @title.render renderer(offset, false), dims, {}
+    @title.render renderer({}, false, false), dims, offset
     for layer in @layers
-      {sampled} = layer.render renderer(offset, clipping)
+      {sampled} = layer.render renderer(offset, clipping, true)

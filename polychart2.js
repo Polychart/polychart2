@@ -3195,7 +3195,7 @@ See the spec definition for more information.
 
     TitleH.prototype._makeTitle = function(dim, offset) {
       var x, y, _ref, _ref1;
-      y = this.position === 'top' ? dim.paddingTop + dim.guideTop - ((_ref = offset.top) != null ? _ref : 0) - 2 : dim.height - dim.paddingBottom - dim.guideBottom + ((_ref1 = offset.bottom) != null ? _ref1 : 0) + 2;
+      y = this.position === 'top' ? dim.paddingTop + dim.guideTop - ((_ref = offset.top) != null ? _ref : 0) - 2 : dim.height - dim.paddingBottom - dim.guideBottom + ((_ref1 = offset.bottom) != null ? _ref1 : 0);
       x = dim.paddingLeft + dim.guideLeft + (dim.width - dim.paddingLeft - dim.guideLeft - dim.paddingRight - dim.guideRight) / 2;
       return {
         type: 'text',
@@ -3222,7 +3222,7 @@ See the spec definition for more information.
 
     TitleV.prototype._makeTitle = function(dim, offset) {
       var x, y, _ref, _ref1;
-      x = this.position === 'left' ? dim.paddingLeft + dim.guideLeft - ((_ref = offset.left) != null ? _ref : 0) - 2 : dim.width - dim.paddingRight - dim.guideRight + ((_ref1 = offset.right) != null ? _ref1 : 0);
+      x = this.position === 'left' ? dim.paddingLeft + dim.guideLeft - ((_ref = offset.left) != null ? _ref : 0) - 7 : dim.width - dim.paddingRight - dim.guideRight + ((_ref1 = offset.right) != null ? _ref1 : 0);
       y = dim.paddingTop + dim.guideTop + (dim.height - dim.paddingTop - dim.guideTop - dim.paddingBottom - dim.guideBottom) / 2;
       return {
         type: 'text',
@@ -3290,11 +3290,11 @@ See the spec definition for more information.
       }
     };
 
-    TitleFacet.prototype._makeTitle = function(dim) {
+    TitleFacet.prototype._makeTitle = function(dim, offset) {
       return {
         type: 'text',
-        x: sf.identity(dim.chartWidth / 2),
-        y: sf.identity(-7),
+        x: sf.identity(offset.x + dim.chartWidth / 2),
+        y: sf.identity(offset.y - 7),
         text: this.titletext,
         'text-anchor': 'middle'
       };
@@ -4155,7 +4155,7 @@ See the spec definition for more information.
 
     ScaleSet.prototype.renderTitles = function(dims, renderer) {
       var o;
-      renderer = renderer({});
+      renderer = renderer({}, false, false);
       o = this.axesOffset(dims);
       this.titles.x.render(renderer, dims, o);
       this.titles.y.render(renderer, dims, o);
@@ -4265,9 +4265,9 @@ See the spec definition for more information.
           }
         }
         override = drawx(key) ? {} : xoverride;
-        axis.x.render(axisDim, this.coord, renderer(offset), override);
+        axis.x.render(axisDim, this.coord, renderer(offset, false, false), override);
         override = drawy(key) ? {} : yoverride;
-        _results.push(axis.y.render(axisDim, this.coord, renderer(offset), override));
+        _results.push(axis.y.render(axisDim, this.coord, renderer(offset, false, false), override));
       }
       return _results;
     };
@@ -6285,12 +6285,12 @@ data processing to be done.
 
     Pane.prototype.render = function(renderer, offset, clipping, dims) {
       var layer, sampled, _i, _len, _ref, _ref1, _results;
-      this.title.render(renderer(offset, false), dims, {});
+      this.title.render(renderer({}, false, false), dims, offset);
       _ref = this.layers;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         layer = _ref[_i];
-        _results.push((_ref1 = layer.render(renderer(offset, clipping)), sampled = _ref1.sampled, _ref1));
+        _results.push((_ref1 = layer.render(renderer(offset, clipping, true)), sampled = _ref1.sampled, _ref1));
       }
       return _results;
     };
@@ -6345,12 +6345,14 @@ data processing to be done.
     dim.chartHeight = dim.height - dim.paddingTop - dim.paddingBottom - dim.guideTop - dim.guideBottom;
     dim.chartWidth = dim.width - dim.paddingLeft - dim.paddingRight - dim.guideLeft - dim.guideRight;
     if ((facetGrid.cols != null) && facetGrid.cols > 1) {
-      dim.chartWidth -= dim.horizontalSpacing * (facetGrid.cols - 1);
+      dim.chartWidth -= dim.horizontalSpacing * facetGrid.cols;
       dim.chartWidth /= facetGrid.cols;
     }
     if ((facetGrid.rows != null) && facetGrid.rows > 1) {
-      dim.chartHeight -= dim.verticalSpacing * facetGrid.rows;
+      dim.chartHeight -= dim.verticalSpacing * (facetGrid.rows + 1);
       dim.chartHeight /= facetGrid.rows;
+    } else {
+      dim.chartHeight -= dim.verticalSpacing;
     }
     return dim;
   };
@@ -6444,8 +6446,17 @@ data processing to be done.
   */
 
 
-  poly.render = function(handleEvent, paper, scales, coord, mayflip) {
-    return function(offset, clipping) {
+  poly.render = function(handleEvent, paper, scales, coord) {
+    return function(offset, clipping, mayflip) {
+      if (offset == null) {
+        offset = {};
+      }
+      if (clipping == null) {
+        clipping = false;
+      }
+      if (mayflip == null) {
+        mayflip = true;
+      }
       return {
         add: function(mark, evtData, tooltip) {
           var pt;
@@ -7351,7 +7362,7 @@ data processing to be done.
     };
 
     Graph.prototype.render = function() {
-      var clipping, dom, key, offset, pane, renderer, rendererG, scales, _ref, _ref1;
+      var clipping, dom, key, offset, pane, renderer, scales, _ref, _ref1;
       if ((this.spec.render != null) && this.spec.render === false) {
         return;
       }
@@ -7364,8 +7375,7 @@ data processing to be done.
       if ((_ref = this.paper) == null) {
         this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
       }
-      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord, true);
-      rendererG = poly.render(this.handleEvent, this.paper, scales, this.coord, false);
+      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord);
       _ref1 = this.panes;
       for (key in _ref1) {
         pane = _ref1[key];
@@ -7373,9 +7383,9 @@ data processing to be done.
         clipping = this.coord.clipping(offset);
         pane.render(renderer, offset, clipping, this.dims);
       }
-      this.scaleSet.renderAxes(this.dims, rendererG, this.facet);
-      this.scaleSet.renderTitles(this.dims, rendererG);
-      return this.scaleSet.renderLegends(this.dims, rendererG({}));
+      this.scaleSet.renderAxes(this.dims, renderer, this.facet);
+      this.scaleSet.renderTitles(this.dims, renderer);
+      return this.scaleSet.renderLegends(this.dims, renderer({}, false, false));
       /* labels
       @scaleSet.renderFacetLabels @dims, rendererG, @facet
       @scaleSet.renderTitle @dims, rendererG, @facet

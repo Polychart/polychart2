@@ -113,7 +113,7 @@ class ScaleSet
           offset[dir] += o[dir]
     offset
   renderTitles: (dims, renderer) ->
-    renderer = renderer({})
+    renderer = renderer({}, false, false)
     o = @axesOffset(dims)
     @titles.x.render renderer, dims, o
     @titles.y.render renderer, dims, o
@@ -180,9 +180,9 @@ class ScaleSet
         if axis.y.type is 'r'
           yoverride.renderLine = false
       override = if drawx(key) then {} else xoverride
-      axis.x.render axisDim, @coord, renderer(offset), override
+      axis.x.render axisDim, @coord, renderer(offset, false, false), override
       override = if drawy(key) then {} else yoverride
-      axis.y.render axisDim, @coord, renderer(offset), override
+      axis.y.render axisDim, @coord, renderer(offset, false, false), override
 
   _mapLayers: (layers) ->
     obj = {}

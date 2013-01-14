@@ -45,11 +45,13 @@ poly.dim.make = (spec, scaleSet, facetGrid) ->
 
   # Facet adjustment
   if facetGrid.cols? and facetGrid.cols > 1
-    dim.chartWidth -= dim.horizontalSpacing * (facetGrid.cols - 1)
+    dim.chartWidth -= dim.horizontalSpacing * (facetGrid.cols)
     dim.chartWidth /= facetGrid.cols
   if facetGrid.rows? and facetGrid.rows > 1
-    dim.chartHeight -= dim.verticalSpacing * (facetGrid.rows)
+    dim.chartHeight -= dim.verticalSpacing * (facetGrid.rows + 1)
     dim.chartHeight /= facetGrid.rows
+  else
+    dim.chartHeight -= dim.verticalSpacing
   dim
 
 poly.dim.guess = (spec, facetGrid) ->

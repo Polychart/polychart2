@@ -460,7 +460,7 @@ class TitleH extends Title
       if @position is 'top'
         dim.paddingTop + dim.guideTop - (offset.top ? 0) - 2
       else
-        dim.height - dim.paddingBottom - dim.guideBottom + (offset.bottom ? 0) + 2
+        dim.height - dim.paddingBottom - dim.guideBottom + (offset.bottom ? 0)
     x = dim.paddingLeft + dim.guideLeft + (dim.width - dim.paddingLeft - dim.guideLeft - dim.paddingRight - dim.guideRight) / 2
     type: 'text'
     x : sf.identity x
@@ -473,7 +473,7 @@ class TitleV extends Title
   _makeTitle: (dim, offset) ->
     x =
       if @position is 'left'
-        dim.paddingLeft + dim.guideLeft - (offset.left ? 0) - 2
+        dim.paddingLeft + dim.guideLeft - (offset.left ? 0) - 7
       else
         dim.width - dim.paddingRight - dim.guideRight + (offset.right ? 0)
     y = dim.paddingTop + dim.guideTop + (dim.height - dim.paddingTop - dim.guideTop - dim.paddingBottom - dim.guideBottom) / 2
@@ -500,15 +500,15 @@ class TitleFacet extends Title
   make: (params) =>
     {title} = params
     @titletext = title
-  render: (renderer, dim, offset) =>
+  render: (renderer, dim, offset) => # note, this "offset" is a FACET offset!
     if @title?
       @title = renderer.animate @title, @_makeTitle(dim, offset)
     else
       @title = renderer.add @_makeTitle(dim, offset)
-  _makeTitle: (dim) ->
+  _makeTitle: (dim, offset) ->
     type: 'text'
-    x : sf.identity dim.chartWidth/2
-    y : sf.identity -7
+    x : sf.identity offset.x + dim.chartWidth/2
+    y : sf.identity offset.y - 7
     text: @titletext
     'text-anchor' : 'middle'
 

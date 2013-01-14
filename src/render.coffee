@@ -20,7 +20,7 @@ poly.paper = (dom, w, h, handleEvent) ->
 ###
 Helper function for rendering all the geoms of an object
 ###
-poly.render = (handleEvent, paper, scales, coord, mayflip) -> (offset, clipping) ->
+poly.render = (handleEvent, paper, scales, coord) -> (offset={}, clipping=false, mayflip=true) ->
   add: (mark, evtData, tooltip) ->
     if not coord.type?
       throw poly.error.unknown "Coordinate don't have at type?"
