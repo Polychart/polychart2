@@ -842,18 +842,20 @@
   this.examples.facet = function(dom) {
     var c, data, i, jsondata, o, spec;
     o = function(i) {
-      if (i % 2 === 0) {
+      if (i % 3 === 0) {
         return 'yay';
-      } else {
+      } else if (i % 3 === 1) {
         return 'no';
+      } else {
+        return 'nodisplay';
       }
     };
     jsondata = (function() {
       var _i, _results;
       _results = [];
-      for (i = _i = 0; _i <= 10; i = ++_i) {
+      for (i = _i = 0; _i <= 20; i = ++_i) {
         _results.push({
-          index: i % 3,
+          index: i % 7,
           value: Math.random() * 10,
           o: o(i)
         });
@@ -877,7 +879,17 @@
       dom: dom,
       facet: {
         type: 'wrap',
-        "var": 'o'
+        "var": {
+          "var": 'o',
+          levels: ['yay', 'no']
+        },
+        formatter: function(x) {
+          if (x.o === 'yay') {
+            return 'First Group';
+          } else {
+            return 'Second Group';
+          }
+        }
       },
       width: 600,
       height: 200

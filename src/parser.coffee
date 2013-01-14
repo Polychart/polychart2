@@ -180,7 +180,7 @@ layerToDataSpec = (lspec, grouping=[]) ->
   filters = {}
   for key, val of lspec.filter ? {}
     filters[(parse key).pretty()] = val # normalize name
-  grouping = ((parse key).pretty() for key in grouping) # normalize name
+  grouping = ((parse key.var).pretty() for key in grouping) # normalize name
   aesthetics = _.pick lspec, poly.const.aes
   for key of aesthetics
     if 'var' not of aesthetics[key]

@@ -23,6 +23,10 @@ poly.spec.toStrictMode = (spec) ->
       # provide a dfault "sample" value
       if not layer.sample?
         layer.sample = 500
+  if spec.facet
+    for v in ['var', 'x', 'y']
+      facetvar = spec.facet[v]
+      if facetvar and _.isString facetvar then spec.facet[v] = { var: facetvar }
   spec
 
 poly.spec.check = (spec) ->

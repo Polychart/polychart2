@@ -807,7 +807,7 @@ See the spec definition for more information.
   poly.spec = {};
 
   poly.spec.toStrictMode = function(spec) {
-    var aes, i, layer, _i, _j, _len, _len1, _ref, _ref1;
+    var aes, facetvar, i, layer, v, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
     if (!(spec.layers != null) && spec.layer) {
       spec.layers = [spec.layer];
     }
@@ -832,6 +832,18 @@ See the spec definition for more information.
         }
         if (!(layer.sample != null)) {
           layer.sample = 500;
+        }
+      }
+    }
+    if (spec.facet) {
+      _ref2 = ['var', 'x', 'y'];
+      for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+        v = _ref2[_k];
+        facetvar = spec.facet[v];
+        if (facetvar && _.isString(facetvar)) {
+          spec.facet[v] = {
+            "var": facetvar
+          };
         }
       }
     }
@@ -1529,7 +1541,7 @@ See the spec definition for more information.
       _results = [];
       for (_i = 0, _len = grouping.length; _i < _len; _i++) {
         key = grouping[_i];
-        _results.push((parse(key)).pretty());
+        _results.push((parse(key["var"])).pretty());
       }
       return _results;
     })();
@@ -6990,18 +7002,22 @@ data processing to be done.
       _ref = this.groups;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         key = _ref[_i];
-        v = [];
-        for (index in datas) {
-          data = datas[index];
-          if (key in data.metaData) {
-            v = _.union(v, _.uniq(_.pluck(data.statData, key)));
+        if (key.levels) {
+          this.values[key["var"]] = key.levels;
+        } else {
+          v = [];
+          for (index in datas) {
+            data = datas[index];
+            if (key["var"] in data.metaData) {
+              v = _.union(v, _.uniq(_.pluck(data.statData, key["var"])));
+            }
           }
+          this.values[key["var"]] = v;
         }
-        this.values[key] = v;
       }
       indexValues = poly.cross(this.values);
       this.indices = {};
-      stringify = poly.stringify(this.groups);
+      stringify = poly.stringify(_.pluck(this.groups, 'var'));
       for (_j = 0, _len1 = indexValues.length; _j < _len1; _j++) {
         val = indexValues[_j];
         this.indices[stringify(val)] = val;
@@ -7010,33 +7026,45 @@ data processing to be done.
     };
 
     Facet.prototype.getFormatter = function() {
+      var formatters, k;
       if (!this.formatter) {
-        this.formatter = this.spec.labels && this.groups.length === 1 ? function(x) {
-          var _ref;
-          return (_ref = this.spec.labels[x[this.groups[0]]]) != null ? _ref : x[this.groups[0]];
-        } : this.spec.formatter ? this.spec.formattter : function(multiindex) {
-          var k, str, v;
-          str = '';
-          for (k in multiindex) {
-            v = multiindex[k];
-            if (str) {
-              str += ", ";
+        this.formatter = (function() {
+          var _i, _len, _ref;
+          if (this.spec.formatter) {
+            return this.spec.formatter;
+          } else {
+            formatters = {};
+            _ref = this.groups;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              k = _ref[_i];
+              formatters[k["var"]] = k.formatter ? k.formatter : poly.format.value;
             }
-            str += "" + k + ": " + (poly.format.value(v));
+            return function(multiindex) {
+              var str, v;
+              str = '';
+              for (k in multiindex) {
+                v = multiindex[k];
+                if (str) {
+                  str += ", ";
+                }
+                str += "" + k + ": " + (formatters[k](v));
+              }
+              return str;
+            };
           }
-          return str;
-        };
+        }).call(this);
       }
       return this.formatter;
     };
 
     Facet.prototype.groupData = function(unfaceted) {
-      var datas, groupedData, id, mindex, pointer, value, _ref;
+      var datas, groupedData, groups, id, mindex, pointer, value, _ref;
       if (!this.indices) {
-        this.getIndices(unfacted, this.groups);
+        this.getIndices(unfacted);
       }
       datas = {};
-      groupedData = poly.groupProcessedData(unfaceted, this.groups);
+      groups = _.pluck(this.groups, 'var');
+      groupedData = poly.groupProcessedData(unfaceted, groups);
       _ref = this.indices;
       for (id in _ref) {
         mindex = _ref[id];
@@ -7135,11 +7163,11 @@ data processing to be done.
 
     function Wrap(spec) {
       this.spec = spec;
+      Wrap.__super__.constructor.call(this, this.spec);
       if (!this.spec["var"]) {
         throw poly.error.defn("You didn't specify a variable to facet on.");
       }
       this["var"] = this.spec["var"];
-      Wrap.__super__.constructor.call(this, this.spec);
       this.groups = [this["var"]];
     }
 
@@ -7150,7 +7178,7 @@ data processing to be done.
       }
       this.cols = this.spec.cols;
       this.rows = this.spec.rows;
-      numFacets = this.values[this["var"]].length;
+      numFacets = this.values[this["var"]["var"]].length;
       if (!this.cols && !this.rows) {
         this.cols = Math.min(3, numFacets);
       }
@@ -7169,18 +7197,18 @@ data processing to be done.
       var col, row,
         _this = this;
       col = function(id) {
-        return _.indexOf(_this.values[_this["var"]], _this.indices[id][_this["var"]]) % _this.cols;
+        return _.indexOf(_this.values[_this["var"]["var"]], _this.indices[id][_this["var"]["var"]]) % _this.cols;
       };
       row = function(id) {
-        return Math.floor(_.indexOf(_this.values[_this["var"]], _this.indices[id][_this["var"]]) / _this.cols);
+        return Math.floor(_.indexOf(_this.values[_this["var"]["var"]], _this.indices[id][_this["var"]["var"]]) / _this.cols);
       };
       return Wrap.__super__.edge.call(this, dir, col, row);
     };
 
     Wrap.prototype.getOffset = function(dims, identifier) {
       var id, value;
-      value = this.indices[identifier][this["var"]];
-      id = _.indexOf(this.values[this["var"]], value);
+      value = this.indices[identifier][this["var"]["var"]];
+      id = _.indexOf(this.values[this["var"]["var"]], value);
       return Wrap.__super__.getOffset.call(this, dims, id % this.cols, Math.floor(id / this.cols));
     };
 
@@ -7194,12 +7222,12 @@ data processing to be done.
 
     function Grid(spec) {
       this.spec = spec;
+      Grid.__super__.constructor.call(this, this.spec);
       if (!this.spec.x && this.spec.y) {
         throw poly.error.defn("You didn't specify a variable to facet on.");
       }
       this.x = this.spec.x;
       this.y = this.spec.y;
-      Grid.__super__.constructor.call(this, this.spec);
       this.groups = _.compact([this.x, this.y]);
     }
 
@@ -7208,8 +7236,8 @@ data processing to be done.
         throw poly.error.input("Need to run getIndices first!");
       }
       return {
-        cols: this.x ? this.values[this.x].length : 1,
-        rows: this.y ? this.values[this.y].length : 1
+        cols: this.x ? this.values[this.x["var"]].length : 1,
+        rows: this.y ? this.values[this.y["var"]].length : 1
       };
     };
 
@@ -7217,10 +7245,10 @@ data processing to be done.
       var col, row,
         _this = this;
       row = function(id) {
-        return _.indexOf(_this.values[_this.y], _this.indices[id][_this.y]);
+        return _.indexOf(_this.values[_this.y["var"]], _this.indices[id][_this.y["var"]]);
       };
       col = function(id) {
-        return _.indexOf(_this.values[_this.x], _this.indices[id][_this.x]);
+        return _.indexOf(_this.values[_this.x["var"]], _this.indices[id][_this.x["var"]]);
       };
       return Grid.__super__.edge.call(this, dir, col, row);
     };
@@ -7230,8 +7258,8 @@ data processing to be done.
       if (!this.values || !this.indices) {
         throw poly.error.input("Need to run getIndices first!");
       }
-      row = _.indexOf(this.values[this.y], this.indices[identifier][this.y]);
-      col = _.indexOf(this.values[this.x], this.indices[identifier][this.x]);
+      row = _.indexOf(this.values[this.y["var"]], this.indices[identifier][this.y["var"]]);
+      col = _.indexOf(this.values[this.x["var"]], this.indices[identifier][this.x["var"]]);
       return Grid.__super__.getOffset.call(this, dims, col, row);
     };
 

@@ -1,8 +1,8 @@
 @examples ?= {}
 
 @examples.facet = (dom) ->
-  o = (i) -> if i%2 is 0 then 'yay' else 'no'
-  jsondata = ({index:i%3, value:Math.random()*10, o: o(i)} for i in [0..10])
+  o = (i) -> if i%3 is 0 then 'yay' else if i%3 is 1 then 'no' else 'nodisplay'
+  jsondata = ({index:i%7, value:Math.random()*10, o: o(i)} for i in [0..20])
   data = polyjs.data json:jsondata
   spec = {
     layers: [
@@ -13,7 +13,8 @@
     dom: dom
     facet:
       type: 'wrap'
-      var: 'o'
+      var: {var: 'o', levels: ['yay', 'no']}
+      formatter: (x) -> if x.o is 'yay' then 'First Group' else 'Second Group'
     width: 600
     height: 200
 

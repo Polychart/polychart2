@@ -24,37 +24,44 @@ class Facet
   getIndices: (datas) ->
     @values = {}
     for key in @groups
-      v = []
-      for index, data of datas
-        if key of data.metaData
-          v = _.union v, _.uniq(_.pluck(data.statData, key))
-      @values[key] = v # add sorting here
+      if key.levels
+        @values[key.var] = key.levels
+      else
+        v = []
+        for index, data of datas
+          if key.var of data.metaData
+            v = _.union v, _.uniq(_.pluck(data.statData, key.var))
+        @values[key.var] = v # add sorting here
     indexValues = poly.cross @values
     # format
     @indices = {}
-    stringify = poly.stringify @groups
+    stringify = poly.stringify _.pluck @groups, 'var'
     for val in indexValues
       @indices[stringify val] = val
     @indices
   getFormatter: () ->
     if not @formatter
       @formatter =
-        if @spec.labels and @groups.length == 1
-          (x) -> @spec.labels[x[@groups[0]]] ? x[@groups[0]]
-        else if @spec.formatter
-          @spec.formattter
+        if @spec.formatter
+          @spec.formatter
         else
+          formatters = {}
+          for k in @groups
+            formatters[k.var] =
+              if k.formatter then k.formatter else poly.format.value
+
           (multiindex) ->
             str = ''
             for k, v of multiindex
               if str then str += ", "
-              str += "#{k}: #{poly.format.value v}"
+              str += "#{k}: #{formatters[k] v}"
             str
     @formatter
   groupData: (unfaceted) ->
-    if not @indices then @getIndices(unfacted, @groups)
+    if not @indices then @getIndices(unfacted)
     datas = {}
-    groupedData = poly.groupProcessedData unfaceted, @groups
+    groups = _.pluck @groups, 'var'
+    groupedData = poly.groupProcessedData unfaceted, groups
     for id, mindex of @indices
       pointer = groupedData
       while pointer.grouped is true
@@ -93,17 +100,17 @@ class NoFacet extends Facet
 
 class Wrap extends Facet
   constructor: (@spec) ->
+    super @spec
     if not @spec.var
       throw poly.error.defn "You didn't specify a variable to facet on."
     @var = @spec.var
-    super @spec
     @groups = [@var]
   getGrid: () ->
     if not @values or not @indices
       throw poly.error.input "Need to run getIndices first!"
     @cols = @spec.cols
     @rows = @spec.rows
-    numFacets = @values[@var].length
+    numFacets = @values[@var.var].length
     if not @cols and not @rows
       @cols = Math.min(3, numFacets)
     if @cols
@@ -113,35 +120,35 @@ class Wrap extends Facet
     cols: @cols
     rows: @rows
   edge: (dir) ->
-    col = (id) => _.indexOf(@values[@var], @indices[id][@var]) % @cols
-    row = (id) => Math.floor(_.indexOf(@values[@var], @indices[id][@var]) / @cols)
+    col = (id) => _.indexOf(@values[@var.var], @indices[id][@var.var]) % @cols
+    row = (id) => Math.floor(_.indexOf(@values[@var.var], @indices[id][@var.var]) / @cols)
     super(dir, col, row)
   getOffset: (dims, identifier) ->
     # buggy?
-    value = @indices[identifier][@var]
-    id = _.indexOf(@values[@var], value)
+    value = @indices[identifier][@var.var]
+    id = _.indexOf(@values[@var.var], value)
     super(dims,id % @cols, Math.floor(id/@cols))
 
 class Grid extends Facet
   constructor: (@spec) ->
+    super @spec
     if not @spec.x and @spec.y
       throw poly.error.defn "You didn't specify a variable to facet on."
     @x = @spec.x
     @y = @spec.y
-    super @spec
     @groups = _.compact [@x, @y]
   getGrid: () ->
     if not @values or not @indices
       throw poly.error.input "Need to run getIndices first!"
-    cols: if @x then @values[@x].length else 1
-    rows: if @y then @values[@y].length else 1
+    cols: if @x then @values[@x.var].length else 1
+    rows: if @y then @values[@y.var].length else 1
   edge: (dir) ->
-    row = (id) => _.indexOf @values[@y], @indices[id][@y]
-    col = (id) => _.indexOf @values[@x], @indices[id][@x]
+    row = (id) => _.indexOf @values[@y.var], @indices[id][@y.var]
+    col = (id) => _.indexOf @values[@x.var], @indices[id][@x.var]
     super(dir, col, row)
   getOffset: (dims, identifier) ->
     if not @values or not @indices
       throw poly.error.input "Need to run getIndices first!"
-    row = _.indexOf @values[@y], @indices[identifier][@y]
-    col = _.indexOf @values[@x], @indices[identifier][@x]
+    row = _.indexOf @values[@y.var], @indices[identifier][@y.var]
+    col = _.indexOf @values[@x.var], @indices[identifier][@x.var]
     super(dims, col, row)
