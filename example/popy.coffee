@@ -28,6 +28,7 @@
     dom: dom
     height: 150
     width: 600
+    title: 'Percentage of student completed 40 hours'
 
 @examples.popy = (dom) ->
   data = polyjs.data

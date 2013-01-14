@@ -85,6 +85,9 @@ class Renderer
     maybeAdd('stroke-dasharray')
     maybeAdd('stroke-dashoffset')
     maybeAdd('transform')
+    maybeAdd('font-size')
+    maybeAdd('font-weight')
+    maybeAdd('font-family')
     attr
 
 

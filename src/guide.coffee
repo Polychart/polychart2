@@ -492,7 +492,7 @@ class TitleMain extends Title
     x : sf.identity x
     y : sf.identity y
     text: @titletext
-    'font-size' : '15px'
+    'font-size' : '13px'
     'font-weight' : 'bold'
     'text-anchor' : 'middle'
 

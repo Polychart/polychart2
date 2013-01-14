@@ -138,7 +138,7 @@ class Graph
     poly.scaleset tmpRanges, @coord
   _makeDimensions: (spec, scaleSet, facet) ->
     scaleSet.makeAxes(_.keys(@panes))
-    scaleSet.makeTitles()
+    scaleSet.makeTitles(@spec.title ? '')
     scaleSet.makeLegends()
     poly.dim.make spec, scaleSet, facet.getGrid()
   _makePaper: (dom, width, height, handleEvent) ->

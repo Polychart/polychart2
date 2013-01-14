@@ -2455,7 +2455,8 @@
       },
       dom: dom,
       height: 150,
-      width: 600
+      width: 600,
+      title: 'Percentage of student completed 40 hours'
     });
   };
 

@@ -3267,7 +3267,7 @@ See the spec definition for more information.
         x: sf.identity(x),
         y: sf.identity(y),
         text: this.titletext,
-        'font-size': '15px',
+        'font-size': '13px',
         'font-weight': 'bold',
         'text-anchor': 'middle'
       };
@@ -4120,7 +4120,7 @@ See the spec definition for more information.
       }
     };
 
-    ScaleSet.prototype.makeTitles = function() {
+    ScaleSet.prototype.makeTitles = function(maintitle) {
       var _ref;
       if ((_ref = this.titles) == null) {
         this.titles = {
@@ -4130,7 +4130,7 @@ See the spec definition for more information.
         };
       }
       this.titles.main.make({
-        title: "Main Title",
+        title: maintitle,
         guideSpec: {},
         position: "top"
       });
@@ -6611,6 +6611,9 @@ data processing to be done.
       maybeAdd('stroke-dasharray');
       maybeAdd('stroke-dashoffset');
       maybeAdd('transform');
+      maybeAdd('font-size');
+      maybeAdd('font-weight');
+      maybeAdd('font-family');
       return attr;
     };
 
@@ -7477,8 +7480,9 @@ data processing to be done.
     };
 
     Graph.prototype._makeDimensions = function(spec, scaleSet, facet) {
+      var _ref;
       scaleSet.makeAxes(_.keys(this.panes));
-      scaleSet.makeTitles();
+      scaleSet.makeTitles((_ref = this.spec.title) != null ? _ref : '');
       scaleSet.makeLegends();
       return poly.dim.make(spec, scaleSet, facet.getGrid());
     };

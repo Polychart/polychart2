@@ -88,13 +88,13 @@ class ScaleSet
 
   getSpec : (a) -> if @guideSpec? and @guideSpec[a]? then @guideSpec[a] else {}
 
-  makeTitles: () ->
+  makeTitles: (maintitle) ->
     @titles ?=
       x: poly.guide.title @coord.axisType('x')
       y: poly.guide.title @coord.axisType('y')
       main: poly.guide.title('main')
     @titles.main.make
-      title: "Main Title"
+      title: maintitle
       guideSpec: {}
       position: "top"
     @titles.x.make
