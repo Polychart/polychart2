@@ -4297,7 +4297,7 @@ See the spec definition for more information.
           } else if (layer.consts[aes] != null) {
             return {
               type: 'const',
-              value: layer["const"][aes]
+              value: layer.consts[aes]
             };
           } else {
             return layer.defaults[aes];

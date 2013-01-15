@@ -44,14 +44,6 @@ class Axis extends Guide
         @line = @_renderline renderer, axisDim
       else
         @line = null
-
-    """
-    if @title?
-      @title = renderer.animate @title, @_makeTitle(axisDim, @titletext)
-    else
-      @title = renderer.add @_makeTitle(axisDim, @titletext)
-    """
-
     {deleted, kept, added} = poly.compare _.keys(@pts), _.keys(@ticks)
     newpts = {}
     for t in kept
@@ -99,7 +91,6 @@ class Axis extends Guide
         obj.grid.toBack()
     obj
   _renderline : () -> throw poly.error.impl()
-  _makeTitle: () -> throw poly.error.impl()
   _makeTick : (obj) ->
     if !obj then throw poly.error.impl()
     obj.type = 'path'
@@ -134,16 +125,6 @@ class XAxis extends Axis # assumes position = bottom
       y: [y, y]
       x: [x1, x2]
       stroke: sf.identity 'black'
-  _makeTitle: (axisDim, text) ->
-    if @position is 'top'
-      y = sf.identity axisDim.top - 27
-    else
-      y = sf.identity axisDim.bottom + 27
-    type: 'text'
-    x : sf.identity axisDim.left+axisDim.width/2
-    y : y
-    text: text
-    'text-anchor' : 'middle'
   _makeTick: (axisDim, tick) ->
     if @position is 'top'
       y1 = sf.identity(axisDim.top)
@@ -194,17 +175,6 @@ class YAxis extends Axis # assumes position = left
       x: [x, x]
       y: [y1, y2]
       stroke: sf.identity 'black'
-  _makeTitle: (axisDim, text) ->
-    if @position is 'left'
-      x = sf.identity axisDim.left - @maxwidth - 15
-    else
-      x = sf.identity axisDim.right + @maxwidth + 15
-    type: 'text'
-    x : x
-    y : sf.identity axisDim.top+axisDim.height/2
-    text: text
-    transform : 'r270'
-    'text-anchor' : 'middle'
   _makeTick: (axisDim, tick) ->
     if @position is 'left'
       x1 = sf.identity(axisDim.left)
@@ -252,13 +222,6 @@ class RAxis extends Axis # assumes position = left
       x: [x, x]
       y: [y1, y2]
       stroke: sf.identity 'black'
-  _makeTitle: (axisDim, text) ->
-    type: 'text'
-    x : sf.identity axisDim.left-@maxwidth-15
-    y : sf.identity axisDim.top+axisDim.height/4
-    text: text
-    transform : 'r270'
-    'text-anchor' : 'middle'
   _makeTick: (axisDim, tick) ->
     super
       x : [sf.identity(axisDim.left), sf.identity(axisDim.left-5)]
@@ -298,12 +261,6 @@ class TAxis extends Axis # assumes position = ... um, what is it supposed to be?
       stroke: sf.identity('black')
       'stroke-width': 1
     }
-  _makeTitle: (axisDim, text) ->
-    type: 'text'
-    x : sf.identity axisDim.left+axisDim.width/2
-    y : sf.identity axisDim.bottom + 27
-    text: text
-    'text-anchor' : 'middle'
   _makeTick: (axisDim, tick) ->
     super
       x : [tick.location, tick.location]

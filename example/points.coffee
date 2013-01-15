@@ -21,6 +21,7 @@ one = () -> Math.random()*10
     spec:
       layers: [sampleLayer]
       guides:
+        legendposition: 'right'
         y :
           position: 'right'
           type:'num', min:0, max:10, ticks:[2,4,6,8],

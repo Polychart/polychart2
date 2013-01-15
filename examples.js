@@ -2460,7 +2460,7 @@
     });
   };
 
-  this.examples.popy = function(dom) {
+  this.examples.popy_gr = function(dom) {
     var c, data;
     data = polyjs.data({
       json: [
@@ -2496,7 +2496,10 @@
           data: data,
           type: 'bar',
           x: 'gr',
-          y: 'p'
+          y: 'p',
+          color: {
+            "const": '#ABC'
+          }
         }, {
           data: data,
           type: 'text',
@@ -2519,11 +2522,12 @@
           title: 'Grade'
         }
       },
-      dom: dom
+      dom: dom,
+      title: 'Percentage of student completed 40 hours'
     });
   };
 
-  this.examples.volexp = function(dom) {
+  this.examples.popy_interests = function(dom) {
     var c, data;
     data = polyjs.data({
       json: [
@@ -2585,11 +2589,111 @@
       coord: {
         type: 'cartesian',
         flip: true
-      }
+      },
+      title: 'Student Interests'
     });
   };
 
-  this.examples.rating = function(dom) {
+  this.examples.popy_intexp = function(dom) {
+    var c, data;
+    data = polyjs.data({
+      json: [
+        {
+          gr: "Health Care",
+          num: 500,
+          type: 'Interest'
+        }, {
+          gr: "Events",
+          num: 400,
+          type: 'Interest'
+        }, {
+          gr: "Recreation",
+          num: 370,
+          type: 'Interest'
+        }, {
+          gr: "Technology",
+          num: 370,
+          type: 'Interest'
+        }, {
+          gr: "Animal/Pets",
+          num: 70,
+          type: 'Interest'
+        }, {
+          gr: "Senior Services",
+          num: 30,
+          type: 'Interest'
+        }, {
+          gr: "Health Care",
+          num: 500,
+          type: 'Org Type'
+        }, {
+          gr: "Events",
+          num: 400,
+          type: 'Org Type'
+        }, {
+          gr: "Recreation",
+          num: 370,
+          type: 'Org Type'
+        }, {
+          gr: "Technology",
+          num: 370,
+          type: 'Org Type'
+        }, {
+          gr: "Animal/Pets",
+          num: 70,
+          type: 'Org Type'
+        }, {
+          gr: "Senior Services",
+          num: 30,
+          type: 'Org Type'
+        }
+      ]
+    });
+    data.derive((function(x) {
+      return x.num + 50;
+    }), 'p_50');
+    data.derive((function(x) {
+      return "" + (Math.round(x.num / 800 * 100)) + "%";
+    }), 'percent');
+    return c = polyjs.chart({
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: {
+            "var": 'gr',
+            sort: 'num'
+          },
+          y: 'num',
+          color: 'type',
+          position: 'dodge'
+        }, {
+          data: data,
+          type: 'text',
+          x: 'gr',
+          y: 'p_50',
+          text: 'percent',
+          color: {
+            "const": 'black'
+          }
+        }
+      ],
+      dom: dom,
+      guide: {
+        y: {
+          min: 0,
+          max: 700
+        }
+      },
+      coord: {
+        type: 'cartesian',
+        flip: true
+      },
+      title: 'Student Interests'
+    });
+  };
+
+  this.examples.popy_rating = function(dom) {
     var c, data;
     data = polyjs.data({
       json: [
@@ -2633,7 +2737,60 @@
       coord: {
         type: 'cartesian',
         flip: true
-      }
+      },
+      title: 'Volunteer Experience Rating'
+    });
+  };
+
+  this.examples.popy_rating_pie = function(dom) {
+    var c, data;
+    data = polyjs.data({
+      json: [
+        {
+          gr: "Excellent",
+          num: 500
+        }, {
+          gr: "Very Good",
+          num: 400
+        }, {
+          gr: "Average",
+          num: 370
+        }, {
+          gr: "Poor",
+          num: 370
+        }, {
+          gr: "Terrible",
+          num: 70
+        }
+      ]
+    });
+    return c = polyjs.chart({
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          y: 'num',
+          color: 'gr'
+        }
+      ],
+      dom: dom,
+      coord: {
+        type: 'polar'
+      },
+      guide: {
+        x: {
+          position: 'none'
+        },
+        y: {
+          position: 'none'
+        },
+        color: {
+          levels: ['Excellent', 'Very Good', 'Average', 'Poor', 'Terrible']
+        }
+      },
+      title: 'Volunteer Experience Rating',
+      width: 400,
+      height: 300
     });
   };
 
