@@ -192,7 +192,7 @@ class ScaleSet
           if layer.mapping[aes]?
             { type: 'map', value: layer.mapping[aes]}
           else if layer.consts[aes]?
-            { type: 'const', value: layer.const[aes]}
+            { type: 'const', value: layer.consts[aes]}
           else
             layer.defaults[aes]
     obj
