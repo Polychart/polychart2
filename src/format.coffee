@@ -3,6 +3,7 @@ poly.format = (type, step) ->
     when 'cat' then return poly.format.identity
     when 'num' then return poly.format.number(step)
     when 'date' then return poly.format.date(step)
+    when 'none' then return poly.format.identity
 
 poly.format.identity = (x) -> x
 
