@@ -227,4 +227,20 @@
   }
   c = polyjs.chart spec
 
-
+@examples.bar_date_binned3 = (dom) ->
+  point = () ->
+    time: moment().add('minutes', Math.random()*206232*4).unix()
+    value: Math.random()*2
+  data = polyjs.data
+    json:(point() for i in [0..5000])
+    meta: { time: { type: 'date', format: 'unix' } }
+  spec = {
+    layers: [
+      data: data
+      type: 'bar'
+      x: 'bin("time", "month")'
+      y: 'sum(value)'
+    ]
+    dom: dom
+  }
+  c = polyjs.chart spec

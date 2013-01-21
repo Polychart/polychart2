@@ -8,7 +8,7 @@ poly.const =
   noLegend: ['x', 'y', 'id', 'text', 'tooltip']
   trans: {'bin': ['key', 'binwidth'], 'lag': ['key', 'lag']},
   stat: {'count': ['key'], 'sum': ['key'], 'mean': ['key'], 'box': ['key'], 'median': ['key']}
-  timerange: ['second','minute','hour','day','week','month', 'year', 'decade']
+  timerange: ['second','minute','hour','day','week','month','2month','quarter','6month','year',  '2year', '5year', 'decade']
   metas: {sort: null, stat: null, limit: null, asc: true},
   scaleFns :
     novalue : () -> {v: null, f: 'novalue', t: 'scalefn'}
