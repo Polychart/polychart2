@@ -101,6 +101,15 @@ class Graph
     @scaleSet.renderTitle @dims, rendererG, @facet
     ###
 
+  debugRender: (mark) ->
+    geom = marks: 0: mark
+    scales = @scaleSet.scales
+    renderer = poly.render @handleEvent, @paper, scales, @coord
+    for key, pane of @panes
+      offset = @facet.getOffset(@dims, key)
+      clipping = @coord.clipping offset
+      r = renderer(offset, clipping, true)
+      r.render(geom)
 
   addHandler : (h) -> @handlers.push h
   removeHandler: (h) ->
@@ -113,6 +122,7 @@ class Graph
       obj = @
       if type == 'select'
         {start, end} = event
+        graph.paper.rect(start.y, start.x, end.y-start.y, end.x-start.x)
         obj.evtData = graph.scaleSet.fromPixels start, end
       else if type == 'data'
         obj.evtData = {}
