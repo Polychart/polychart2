@@ -6,7 +6,10 @@ poly.paper = (dom, w, h, handleEvent) ->
     throw poly.error.depn "The dependency Raphael is not included."
   paper = Raphael(dom, w, h)
   # add click handler for clicking outside of things
-  bg = paper.rect(0,0,w,h).attr('stroke-width', 0)
+  bg = paper.rect(0,0,w,h).attr
+    fill: 'white' # for FireFox
+    opacity: 0    # for not showing background
+    'stroke-width': 0
   bg.click handleEvent('reset')
   # add dragging handle for selecting
   handler = handleEvent('select')
