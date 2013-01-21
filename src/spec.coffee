@@ -27,6 +27,8 @@ poly.spec.toStrictMode = (spec) ->
     for v in ['var', 'x', 'y']
       facetvar = spec.facet[v]
       if facetvar and _.isString facetvar then spec.facet[v] = { var: facetvar }
+  if _.isString spec.dom
+    spec.dom = document.getElementById(spec.dom)
   spec
 
 poly.spec.check = (spec) ->

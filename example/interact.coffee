@@ -20,7 +20,8 @@
     data = e.evtData
     if type == 'click'
       alert("You clicked on index: " + data.index.in[0])
-    #if type == 'select' then console.log data
+    if type == 'select'
+      console.log data
   c.addHandler polyjs.handler.tooltip()
 
 @examples.interact_point = (dom) ->

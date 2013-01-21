@@ -76,14 +76,14 @@ class Graph
   render: () =>
     if @spec.render? and @spec.render is false
       return # for debugging purposes
-    dom = @spec.dom
     scales = @scaleSet.scales
     @coord.setScales scales
     @scaleSet.coord = @coord
     @scaleSet.makeAxes _.keys @panes # TODO: use indices here? pass in Facet?
     @scaleSet.makeLegends()
 
-    @paper ?= @_makePaper dom, @dims.width, @dims.height, @handleEvent
+    @dom = @spec.dom
+    @paper ?= @_makePaper @dom, @dims.width, @dims.height, @handleEvent
     renderer = poly.render @handleEvent, @paper, scales, @coord
 
     for key, pane of @panes
@@ -152,7 +152,6 @@ class Graph
     scaleSet.makeLegends()
     poly.dim.make spec, scaleSet, facet.getGrid()
   _makePaper: (dom, width, height, handleEvent) ->
-    if _.isString dom then dom = document.getElementById(dom)
     paper = poly.paper dom, width, height, handleEvent
 
 poly.chart = (spec) -> new Graph(spec)

@@ -667,6 +667,8 @@ These are constants that are referred to throughout the coebase
         return poly.format.number(step);
       case 'date':
         return poly.format.date(step);
+      case 'none':
+        return poly.format.identity;
     }
   };
 
@@ -845,6 +847,9 @@ See the spec definition for more information.
           };
         }
       }
+    }
+    if (_.isString(spec.dom)) {
+      spec.dom = document.getElementById(spec.dom);
     }
     return spec;
   };
@@ -6379,14 +6384,25 @@ data processing to be done.
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   poly.paper = function(dom, w, h, handleEvent) {
-    var bg, end, handler, onend, onmove, onstart, paper, start;
+    var applyOffset, bg, end, handler, offset, onend, onmove, onstart, paper, start;
     if (!(typeof Raphael !== "undefined" && Raphael !== null)) {
       throw poly.error.depn("The dependency Raphael is not included.");
     }
     paper = Raphael(dom, w, h);
-    bg = paper.rect(0, 0, w, h).attr('stroke-width', 0);
+    bg = paper.rect(0, 0, w, h).attr({
+      fill: 'white',
+      opacity: 0,
+      'stroke-width': 0
+    });
     bg.click(handleEvent('reset'));
     handler = handleEvent('select');
+    offset = poly.offset(dom);
+    applyOffset = function(x, y) {
+      return {
+        x: x - offset.left,
+        y: y - offset.top
+      };
+    };
     start = end = null;
     onstart = function() {
       start = null;
@@ -6394,15 +6410,9 @@ data processing to be done.
     };
     onmove = function(dx, dy, y, x) {
       if (start != null) {
-        return end = {
-          x: x,
-          y: y
-        };
+        return end = applyOffset(x, y);
       } else {
-        return start = {
-          x: x,
-          y: y
-        };
+        return start = applyOffset(x, y);
       }
     };
     onend = function() {
@@ -6415,6 +6425,27 @@ data processing to be done.
     };
     bg.drag(onmove, onstart, onend);
     return paper;
+  };
+
+  poly.offset = function(elem) {
+    var box, doc, docElem, win;
+    box = {
+      top: 0,
+      left: 0
+    };
+    doc = elem && elem.ownerDocument;
+    if (!doc) {
+      return;
+    }
+    docElem = doc.documentElement;
+    if (typeof elem.getBoundingClientRect !== "undefined") {
+      box = elem.getBoundingClientRect();
+    }
+    win = doc !== null && doc === doc.window ? doc : doc.nodeType === 9 && doc.defaultView;
+    return {
+      top: box.top + win.pageYOffset - docElem.clientTop,
+      left: box.left + win.pageXOffset - docElem.clientLeft
+    };
   };
 
   /*
@@ -7357,18 +7388,18 @@ data processing to be done.
     };
 
     Graph.prototype.render = function() {
-      var clipping, dom, key, offset, pane, renderer, scales, _ref, _ref1;
+      var clipping, key, offset, pane, renderer, scales, _ref, _ref1;
       if ((this.spec.render != null) && this.spec.render === false) {
         return;
       }
-      dom = this.spec.dom;
       scales = this.scaleSet.scales;
       this.coord.setScales(scales);
       this.scaleSet.coord = this.coord;
       this.scaleSet.makeAxes(_.keys(this.panes));
       this.scaleSet.makeLegends();
+      this.dom = this.spec.dom;
       if ((_ref = this.paper) == null) {
-        this.paper = this._makePaper(dom, this.dims.width, this.dims.height, this.handleEvent);
+        this.paper = this._makePaper(this.dom, this.dims.width, this.dims.height, this.handleEvent);
       }
       renderer = poly.render(this.handleEvent, this.paper, scales, this.coord);
       _ref1 = this.panes;
@@ -7388,6 +7419,27 @@ data processing to be done.
 
     };
 
+    Graph.prototype.debugRender = function(mark) {
+      var clipping, geom, key, offset, pane, r, renderer, scales, _ref, _results;
+      geom = {
+        marks: {
+          0: mark
+        }
+      };
+      scales = this.scaleSet.scales;
+      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord);
+      _ref = this.panes;
+      _results = [];
+      for (key in _ref) {
+        pane = _ref[key];
+        offset = this.facet.getOffset(this.dims, key);
+        clipping = this.coord.clipping(offset);
+        r = renderer(offset, clipping, true);
+        _results.push(r.render(geom));
+      }
+      return _results;
+    };
+
     Graph.prototype.addHandler = function(h) {
       return this.handlers.push(h);
     };
@@ -7404,6 +7456,7 @@ data processing to be done.
         obj = this;
         if (type === 'select') {
           start = event.start, end = event.end;
+          graph.paper.rect(start.y, start.x, end.y - start.y, end.x - start.x);
           obj.evtData = graph.scaleSet.fromPixels(start, end);
         } else if (type === 'data') {
           obj.evtData = {};
@@ -7453,9 +7506,6 @@ data processing to be done.
 
     Graph.prototype._makePaper = function(dom, width, height, handleEvent) {
       var paper;
-      if (_.isString(dom)) {
-        dom = document.getElementById(dom);
-      }
       return paper = poly.paper(dom, width, height, handleEvent);
     };
 

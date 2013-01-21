@@ -267,18 +267,15 @@
       dom: dom
     };
     c = polyjs.chart(spec);
-    return c.addHandler(function(type, e) {
+    c.addHandler(function(type, e) {
       data = e.evtData;
-      if (type === 'reset') {
-        jsondata.shift();
-        jsondata.push({
-          index: i++,
-          value: Math.random() * 10
-        });
-        spec.layers[0].data.update({
-          json: jsondata
-        });
-      }
+      /*
+          if type == 'reset'
+            jsondata.shift()
+            jsondata.push({index:i++, value:Math.random()*10})
+            spec.layers[0].data.update json: jsondata
+      */
+
       if (type === 'data') {
         c.make(spec);
       }
@@ -287,6 +284,7 @@
         return alert("You clicked on index: " + data.index["in"][0]);
       }
     });
+    return window.c = c;
   };
 
   this.examples.bar_flip = function(dom) {
@@ -1275,7 +1273,10 @@
     c.addHandler(function(type, e) {
       data = e.evtData;
       if (type === 'click') {
-        return alert("You clicked on index: " + data.index["in"][0]);
+        alert("You clicked on index: " + data.index["in"][0]);
+      }
+      if (type === 'select') {
+        return console.log(data);
       }
     });
     return c.addHandler(polyjs.handler.tooltip());

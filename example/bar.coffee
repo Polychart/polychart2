@@ -18,16 +18,19 @@
 
   c.addHandler (type, e) ->
     data = e.evtData
+    ###
     if type == 'reset'
       jsondata.shift()
       jsondata.push({index:i++, value:Math.random()*10})
       spec.layers[0].data.update json: jsondata
+    ###
     if type == 'data'
       c.make spec
     if type == 'click'
       debugger
       alert("You clicked on index: " + data.index.in[0])
     #if type == 'select' then console.log data
+  window.c = c
 
 @examples.bar_flip = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
