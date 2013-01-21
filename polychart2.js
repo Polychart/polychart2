@@ -4561,6 +4561,9 @@ See the spec definition for more information.
       }
       from = from.toString();
       to = to.toString();
+      if (from === to) {
+        return true;
+      }
       if (!checked) {
         this.checkRename(from, to);
       }
@@ -4581,11 +4584,15 @@ See the spec definition for more information.
       var from, to;
       for (from in map) {
         to = map[from];
-        this.checkRename(from, to);
+        if (from !== to) {
+          this.checkRename(from, to);
+        }
       }
       for (from in map) {
         to = map[from];
-        this.rename(from, to, true);
+        if (from !== to) {
+          this.rename(from, to, true);
+        }
       }
       return true;
     };

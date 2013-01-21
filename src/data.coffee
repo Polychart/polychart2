@@ -88,6 +88,7 @@ class FrontendData extends AbstractData
   rename: (from, to, checked=false) ->
     from = from.toString()
     to = to.toString()
+    if from is to then return true
     if not checked then @checkRename from, to
     for item in @raw
       item[to] = item[from]
@@ -99,9 +100,11 @@ class FrontendData extends AbstractData
     true
   renameMany: (map) ->
     for from, to of map
-      @checkRename from, to
+      if from isnt to
+        @checkRename from, to
     for from, to of map
-      @rename from, to, true
+      if from isnt to
+        @rename from, to, true
     true
   remove: (key) ->
     index = _.indexOf(@key, key)
