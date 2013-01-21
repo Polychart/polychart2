@@ -122,7 +122,7 @@ class Graph
       obj = @
       if type == 'select'
         {start, end} = event
-        graph.paper.rect(start.y, start.x, end.y-start.y, end.x-start.x)
+        #graph.paper.rect(start.y, start.x, end.y-start.y, end.x-start.x)
         obj.evtData = graph.scaleSet.fromPixels start, end
       else if type == 'data'
         obj.evtData = {}
@@ -130,7 +130,7 @@ class Graph
         obj.tooltip = obj.data('t')
         obj.evtData = obj.data('e')
         {x, y} = poly.getXY(poly.offset(graph.dom), event)
-        graph.paper.circle(x, y, 2).attr({fill:'red'})
+        #graph.paper.circle(x, y, 2).attr({fill:'red'})
 
       for h in graph.handlers
         if _.isFunction(h)

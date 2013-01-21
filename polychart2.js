@@ -7478,7 +7478,6 @@ data processing to be done.
         obj = this;
         if (type === 'select') {
           start = event.start, end = event.end;
-          graph.paper.rect(start.y, start.x, end.y - start.y, end.x - start.x);
           obj.evtData = graph.scaleSet.fromPixels(start, end);
         } else if (type === 'data') {
           obj.evtData = {};
@@ -7486,9 +7485,6 @@ data processing to be done.
           obj.tooltip = obj.data('t');
           obj.evtData = obj.data('e');
           _ref = poly.getXY(poly.offset(graph.dom), event), x = _ref.x, y = _ref.y;
-          graph.paper.circle(x, y, 2).attr({
-            fill: 'red'
-          });
         }
         _ref1 = graph.handlers;
         _results = [];
