@@ -129,6 +129,8 @@ class Graph
       else
         obj.tooltip = obj.data('t')
         obj.evtData = obj.data('e')
+        {x, y} = poly.getXY(poly.offset(graph.dom), event)
+        graph.paper.circle(x, y, 2).attr({fill:'red'})
 
       for h in graph.handlers
         if _.isFunction(h)
