@@ -2511,8 +2511,6 @@ See the spec definition for more information.
           this.line = null;
         }
       }
-      "if @title?\n  @title = renderer.animate @title, @_makeTitle(axisDim, @titletext)\nelse\n  @title = renderer.add @_makeTitle(axisDim, @titletext)";
-
       _ref = poly.compare(_.keys(this.pts), _.keys(this.ticks)), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
       newpts = {};
       for (_i = 0, _len = kept.length; _i < _len; _i++) {
@@ -2591,10 +2589,6 @@ See the spec definition for more information.
       throw poly.error.impl();
     };
 
-    Axis.prototype._makeTitle = function() {
-      throw poly.error.impl();
-    };
-
     Axis.prototype._makeTick = function(obj) {
       if (!obj) {
         throw poly.error.impl();
@@ -2652,22 +2646,6 @@ See the spec definition for more information.
         x: [x1, x2],
         stroke: sf.identity('black')
       });
-    };
-
-    XAxis.prototype._makeTitle = function(axisDim, text) {
-      var y;
-      if (this.position === 'top') {
-        y = sf.identity(axisDim.top - 27);
-      } else {
-        y = sf.identity(axisDim.bottom + 27);
-      }
-      return {
-        type: 'text',
-        x: sf.identity(axisDim.left + axisDim.width / 2),
-        y: y,
-        text: text,
-        'text-anchor': 'middle'
-      };
     };
 
     XAxis.prototype._makeTick = function(axisDim, tick) {
@@ -2752,23 +2730,6 @@ See the spec definition for more information.
       });
     };
 
-    YAxis.prototype._makeTitle = function(axisDim, text) {
-      var x;
-      if (this.position === 'left') {
-        x = sf.identity(axisDim.left - this.maxwidth - 15);
-      } else {
-        x = sf.identity(axisDim.right + this.maxwidth + 15);
-      }
-      return {
-        type: 'text',
-        x: x,
-        y: sf.identity(axisDim.top + axisDim.height / 2),
-        text: text,
-        transform: 'r270',
-        'text-anchor': 'middle'
-      };
-    };
-
     YAxis.prototype._makeTick = function(axisDim, tick) {
       var x1, x2;
       if (this.position === 'left') {
@@ -2847,17 +2808,6 @@ See the spec definition for more information.
       });
     };
 
-    RAxis.prototype._makeTitle = function(axisDim, text) {
-      return {
-        type: 'text',
-        x: sf.identity(axisDim.left - this.maxwidth - 15),
-        y: sf.identity(axisDim.top + axisDim.height / 4),
-        text: text,
-        transform: 'r270',
-        'text-anchor': 'middle'
-      };
-    };
-
     RAxis.prototype._makeTick = function(axisDim, tick) {
       return RAxis.__super__._makeTick.call(this, {
         x: [sf.identity(axisDim.left), sf.identity(axisDim.left - 5)],
@@ -2918,16 +2868,6 @@ See the spec definition for more information.
         stroke: sf.identity('black'),
         'stroke-width': 1
       });
-    };
-
-    TAxis.prototype._makeTitle = function(axisDim, text) {
-      return {
-        type: 'text',
-        x: sf.identity(axisDim.left + axisDim.width / 2),
-        y: sf.identity(axisDim.bottom + 27),
-        text: text,
-        'text-anchor': 'middle'
-      };
     };
 
     TAxis.prototype._makeTick = function(axisDim, tick) {
@@ -4604,13 +4544,13 @@ See the spec definition for more information.
 
     FrontendData.prototype.checkRename = function(from, to) {
       if (to === '') {
-        throw poly.err.defn("Column names cannot be an empty string");
+        throw poly.error.defn("Column names cannot be an empty string");
       }
       if (_.indexOf(this.key, from) === -1) {
-        throw poly.err.defn("The key " + from + " doesn't exist!");
+        throw poly.error.defn("The key " + from + " doesn't exist!");
       }
       if (_.indexOf(this.key, to) !== -1) {
-        throw poly.err.defn("The key " + to + " already exists!");
+        throw poly.error.defn("The key " + to + " already exists!");
       }
     };
 
@@ -4728,7 +4668,7 @@ See the spec definition for more information.
         item = _ref[_i];
         value = compute.call(context, item);
         if (_.isFunction(value)) {
-          throw poly.err.defn("Derivation function returned another function.");
+          throw poly.error.defn("Derivation function returned another function.");
         }
         item[key] = value;
       }

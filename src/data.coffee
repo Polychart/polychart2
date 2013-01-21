@@ -80,11 +80,11 @@ class FrontendData extends AbstractData
         _getObject json, meta
   checkRename: (from, to) ->
     if to is ''
-      throw poly.err.defn "Column names cannot be an empty string"
+      throw poly.error.defn "Column names cannot be an empty string"
     if _.indexOf(@key, from) is -1
-      throw poly.err.defn "The key #{from} doesn't exist!"
+      throw poly.error.defn "The key #{from} doesn't exist!"
     if _.indexOf(@key, to) isnt -1
-      throw poly.err.defn "The key #{to} already exists!"
+      throw poly.error.defn "The key #{to} already exists!"
   rename: (from, to, checked=false) ->
     from = from.toString()
     to = to.toString()
@@ -106,7 +106,7 @@ class FrontendData extends AbstractData
   remove: (key) ->
     index = _.indexOf(@key, key)
     if index is '-1'
-      return false #throw poly.err.defn "The key #{key} doesn't exist!"
+      return false #throw poly.error.defn "The key #{key} doesn't exist!"
     @key.splice index, 1
     delete @meta[key]
     for item in @raw
@@ -149,7 +149,7 @@ class FrontendData extends AbstractData
     for item in @raw
       value = compute.call context,item
       if _.isFunction value
-        throw poly.err.defn "Derivation function returned another function."
+        throw poly.error.defn "Derivation function returned another function."
       item[key] = value
     if dryrun then return success:true, values: _.pluck @raw[0..10], key
 

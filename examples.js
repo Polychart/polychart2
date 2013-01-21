@@ -2157,6 +2157,7 @@
         spec: {
           layers: [sampleLayer],
           guides: {
+            legendposition: 'right',
             y: {
               position: 'right',
               type: 'num',
