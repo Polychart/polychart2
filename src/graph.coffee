@@ -80,6 +80,7 @@ class Graph
     @coord.setScales scales
     @scaleSet.coord = @coord
     @scaleSet.makeAxes _.keys @panes # TODO: use indices here? pass in Facet?
+    @scaleSet.makeTitles(@spec.title ? '')
     @scaleSet.makeLegends()
 
     @dom = @spec.dom

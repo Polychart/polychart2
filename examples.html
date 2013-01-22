@@ -14,11 +14,13 @@
   </head>
   <body>
     <div id="chart" style="display:inline-block"></div>
+    <div id="chart2" style="display:inline-block"></div>
+    <div id="chart3" style="display:inline-block"></div>
     <div id="nav" style="float:right; display:inline-block"></div>
     <script type="text/javascript">
       var selection = location.search.substr(1)
       if (examples[selection] !== undefined) {
-        examples[selection]('chart')
+        examples[selection]('chart', 'chart2', 'chart3')
       }
 
       $("#nav").append(

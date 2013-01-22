@@ -398,9 +398,8 @@ class Title extends Guide
   render: (renderer, dim, offset) =>
     if @position isnt 'none'
       if @title?
-        @title = renderer.animate @title, @_makeTitle(dim, offset)
-      else
-        @title = renderer.add @_makeTitle(dim, offset)
+        renderer.remove @title
+      @title = renderer.add @_makeTitle(dim, offset)
     else if @title?
       renderer.remove @title
   _makeTitle: () -> throw poly.error.impl()

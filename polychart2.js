@@ -876,6 +876,7 @@ See the spec definition for more information.
 
   poly.spec.toStrictMode = function(spec) {
     var aes, facetvar, i, layer, v, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
+    spec = _.clone(spec);
     if (!(spec.layers != null) && spec.layer) {
       spec.layers = [spec.layer];
     }
@@ -3210,10 +3211,9 @@ See the spec definition for more information.
     Title.prototype.render = function(renderer, dim, offset) {
       if (this.position !== 'none') {
         if (this.title != null) {
-          return this.title = renderer.animate(this.title, this._makeTitle(dim, offset));
-        } else {
-          return this.title = renderer.add(this._makeTitle(dim, offset));
+          renderer.remove(this.title);
         }
+        return this.title = renderer.add(this._makeTitle(dim, offset));
       } else if (this.title != null) {
         return renderer.remove(this.title);
       }
@@ -7504,7 +7504,7 @@ data processing to be done.
     };
 
     Graph.prototype.render = function() {
-      var clipping, key, offset, pane, renderer, scales, _ref, _ref1;
+      var clipping, key, offset, pane, renderer, scales, _ref, _ref1, _ref2;
       if ((this.spec.render != null) && this.spec.render === false) {
         return;
       }
@@ -7512,15 +7512,16 @@ data processing to be done.
       this.coord.setScales(scales);
       this.scaleSet.coord = this.coord;
       this.scaleSet.makeAxes(_.keys(this.panes));
+      this.scaleSet.makeTitles((_ref = this.spec.title) != null ? _ref : '');
       this.scaleSet.makeLegends();
       this.dom = this.spec.dom;
-      if ((_ref = this.paper) == null) {
+      if ((_ref1 = this.paper) == null) {
         this.paper = this._makePaper(this.dom, this.dims.width, this.dims.height, this.handleEvent);
       }
       renderer = poly.render(this.handleEvent, this.paper, scales, this.coord);
-      _ref1 = this.panes;
-      for (key in _ref1) {
-        pane = _ref1[key];
+      _ref2 = this.panes;
+      for (key in _ref2) {
+        pane = _ref2[key];
         offset = this.facet.getOffset(this.dims, key);
         clipping = this.coord.clipping(offset);
         pane.render(renderer, offset, clipping, this.dims);

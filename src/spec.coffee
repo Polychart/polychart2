@@ -5,6 +5,7 @@ See the spec definition for more information.
 poly.spec = {}
 
 poly.spec.toStrictMode = (spec) ->
+  spec = _.clone spec
   # layer -> guides
   if not spec.layers? and spec.layer
     spec.layers = [spec.layer]

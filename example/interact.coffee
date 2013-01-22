@@ -102,3 +102,67 @@
   }
   c = polyjs.chart spec
   c.addHandler polyjs.handler.tooltip()
+
+@examples.interact_twocharts = (dom, dom2) ->
+  data1 = polyjs.data json: [
+    { city: 'tomato', area: 235}
+    { city: 'junkie', area: 135}
+    { city: 'banana', area: 335}
+  ]
+  data2 = polyjs.data json: [
+    { city:'tomato', month: 1, population: 2352 }
+    { city:'tomato', month: 2, population: 2332 }
+    { city:'tomato', month: 3, population: 2342 }
+    { city:'tomato', month: 4, population: 2252 }
+    { city:'tomato', month: 5, population: 2292 }
+    { city:'tomato', month: 6, population: 2292 }
+    { city:'tomato', month: 7, population: 2222 }
+    { city:'junkie', month: 1, population: 4352 }
+    { city:'junkie', month: 2, population: 3332 }
+    { city:'junkie', month: 3, population: 3342 }
+    { city:'junkie', month: 4, population: 4252 }
+    { city:'junkie', month: 5, population: 4292 }
+    { city:'junkie', month: 6, population: 3292 }
+    { city:'junkie', month: 7, population: 3222 }
+    { city:'banana', month: 1, population: 1352 }
+    { city:'banana', month: 2, population: 1332 }
+    { city:'banana', month: 3, population: 1342 }
+    { city:'banana', month: 4, population: 1252 }
+    { city:'banana', month: 5, population: 2002 }
+    { city:'banana', month: 6, population: 1292 }
+    { city:'banana', month: 7, population: 1222 }
+  ]
+  spec1 =
+    layer:
+      data: data1
+      type: 'bar'
+      x: {var: 'city', sort: 'area', asc: false}
+      y: 'area'
+      color: 'city'
+    dom: dom
+  spec2 =
+    layer:
+      data: data2
+      type: 'area'
+      x: 'month'
+      y: 'population'
+      filter: city: in: ['tomato']
+    guide:
+      y: min: 0, max:5000
+    title: 'tomato'
+    dom: dom2
+
+  c1 = polyjs.chart spec1
+  c2 = null
+
+  c1.addHandler (type, e) ->
+    if type is 'click'
+      data = e.evtData
+      filter = city: data.city
+      spec2.layer.filter = filter
+      spec2.layer.color = const: e.attrs.fill
+      spec2.title = filter.city.in[0]
+      if not c2
+        c2 = polyjs.chart spec2
+      else
+        c2.make spec2
