@@ -126,11 +126,14 @@ class Graph
         obj.evtData = graph.scaleSet.fromPixels start, end
       else if type == 'data'
         obj.evtData = {}
-      else
+      else if type in ['reset', 'click', 'mover', 'mout']
         obj.tooltip = obj.data('t')
         obj.evtData = obj.data('e')
         {x, y} = poly.getXY(poly.offset(graph.dom), event)
         #graph.paper.circle(x, y, 2).attr({fill:'red'})
+        f = graph.facet.getFacetInfo(graph.dims, x, y)
+        if type in ['reset', 'click'] and not f then return
+        # console.log f
 
       for h in graph.handlers
         if _.isFunction(h)

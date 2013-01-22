@@ -7129,6 +7129,31 @@ data processing to be done.
       };
     };
 
+    Facet.prototype.getFacetInfo = function(dims, x, y) {
+      var col, offsetX, offsetY, row;
+      col = (x - dims.paddingLeft - dims.guideLeft) / (dims.chartWidth + dims.horizontalSpacing);
+      col = Math.floor(col);
+      offsetX = dims.paddingLeft + dims.guideLeft + (dims.chartWidth + dims.horizontalSpacing) * col;
+      row = (y - dims.paddingTop - dims.guideTop - dims.verticalSpacing) / (dims.chartHeight + dims.verticalSpacing);
+      row = Math.floor(row);
+      offsetY = dims.paddingTop + dims.guideTop + (dims.chartHeight + dims.verticalSpacing) * row + dims.verticalSpacing;
+      if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) {
+        return null;
+      } else if (x - offsetX > dims.chartWidth || y - offsetY > dims.chartHeight) {
+        return null;
+      } else {
+        return {
+          col: col,
+          row: row,
+          evtData: this.getEvtData(col, row),
+          offset: {
+            x: offsetX,
+            y: offsetY
+          }
+        };
+      }
+    };
+
     Facet.prototype.getGrid = function() {
       throw poly.error.impl();
     };
@@ -7168,6 +7193,10 @@ data processing to be done.
       };
     };
 
+    Facet.prototype.getEvtData = function() {
+      throw poly.error.impl();
+    };
+
     return Facet;
 
   })();
@@ -7179,6 +7208,10 @@ data processing to be done.
     function NoFacet() {
       return NoFacet.__super__.constructor.apply(this, arguments);
     }
+
+    NoFacet.prototype.cols = 1;
+
+    NoFacet.prototype.rows = 1;
 
     NoFacet.prototype.getOffset = function(dims) {
       return NoFacet.__super__.getOffset.call(this, dims, 0, 0);
@@ -7195,6 +7228,10 @@ data processing to be done.
       return function() {
         return true;
       };
+    };
+
+    NoFacet.prototype.getEvtData = function(col, row) {
+      return {};
     };
 
     return NoFacet;
@@ -7256,6 +7293,16 @@ data processing to be done.
       return Wrap.__super__.getOffset.call(this, dims, id % this.cols, Math.floor(id / this.cols));
     };
 
+    Wrap.prototype.getEvtData = function(col, row) {
+      var obj;
+      obj = {};
+      debugger;
+      obj[this["var"]["var"]] = {
+        "in": [this.values[this["var"]["var"]][this.rows * row + col]]
+      };
+      return obj;
+    };
+
     return Wrap;
 
   })(Facet);
@@ -7305,6 +7352,18 @@ data processing to be done.
       row = _.indexOf(this.values[this.y["var"]], this.indices[identifier][this.y["var"]]);
       col = _.indexOf(this.values[this.x["var"]], this.indices[identifier][this.x["var"]]);
       return Grid.__super__.getOffset.call(this, dims, col, row);
+    };
+
+    Grid.prototype.getEvtData = function(col, row) {
+      var obj;
+      obj = {};
+      obj[this.x["var"]] = {
+        "in": this.values[this.x["var"]][col]
+      };
+      obj[this.y["var"]] = {
+        "in": this.values[this.y["var"]][row]
+      };
+      return obj;
     };
 
     return Grid;
@@ -7498,7 +7557,7 @@ data processing to be done.
       var graph, handler;
       graph = this;
       handler = function(event) {
-        var end, h, obj, start, x, y, _i, _len, _ref, _ref1, _results;
+        var end, f, h, obj, start, x, y, _i, _len, _ref, _ref1, _results;
         obj = this;
         if (type === 'select') {
           start = event.start, end = event.end;
@@ -7509,6 +7568,8 @@ data processing to be done.
           obj.tooltip = obj.data('t');
           obj.evtData = obj.data('e');
           _ref = poly.getXY(poly.offset(graph.dom), event), x = _ref.x, y = _ref.y;
+          f = graph.facet.getFacetInfo(graph.dims, x, y);
+          console.log(f);
         }
         _ref1 = graph.handlers;
         _results = [];

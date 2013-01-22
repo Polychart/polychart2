@@ -72,6 +72,29 @@ class Facet
   getOffset: (dims, col, row) ->
     x : dims.paddingLeft + dims.guideLeft + (dims.chartWidth + dims.horizontalSpacing) * col
     y : dims.paddingTop + dims.guideTop + (dims.chartHeight + dims.verticalSpacing) * row + dims.verticalSpacing
+
+  getFacetInfo: (dims, x, y) ->
+    col = (x - dims.paddingLeft - dims.guideLeft) / (dims.chartWidth + dims.horizontalSpacing)
+    col = Math.floor col
+    offsetX = dims.paddingLeft + dims.guideLeft + (dims.chartWidth + dims.horizontalSpacing) * col
+    row = (y - dims.paddingTop - dims.guideTop - dims.verticalSpacing) / (dims.chartHeight + dims.verticalSpacing)
+    row = Math.floor row
+    offsetY = dims.paddingTop + dims.guideTop + (dims.chartHeight + dims.verticalSpacing) * row + dims.verticalSpacing
+    if col < 0 or col >= @cols or row < 0 or row >= @rows
+      # outside of facet
+      null
+    else if x - offsetX > dims.chartWidth or y - offsetY > dims.chartHeight
+      # in between facets
+      null
+    else
+      col: col
+      row: row
+      evtData: @getEvtData(col, row)
+      offset:
+        x : offsetX
+        y : offsetY
+
+
   getGrid: () -> throw poly.error.impl()
   edge: (dir, col, row) ->
     if dir is 'none' then return -> false
@@ -92,11 +115,15 @@ class Facet
           k: key
     edge = _.pluck(acc, 'k')
     (identifier) -> identifier in edge
+  getEvtData: () -> throw poly.error.impl()
 
 class NoFacet extends Facet
+  cols: 1
+  rows: 1
   getOffset: (dims) -> super(dims, 0, 0)
   getGrid: () -> {cols: 1, rows: 1}
   edge: (dir) -> () -> true
+  getEvtData: (col, row) -> {}
 
 class Wrap extends Facet
   constructor: (@spec) ->
@@ -128,6 +155,11 @@ class Wrap extends Facet
     value = @indices[identifier][@var.var]
     id = _.indexOf(@values[@var.var], value)
     super(dims,id % @cols, Math.floor(id/@cols))
+  getEvtData: (col, row) ->
+    obj = {}
+    debugger
+    obj[@var.var] = {in: [@values[@var.var][@rows*row + col]]}
+    obj
 
 class Grid extends Facet
   constructor: (@spec) ->
@@ -152,3 +184,8 @@ class Grid extends Facet
     row = _.indexOf @values[@y.var], @indices[identifier][@y.var]
     col = _.indexOf @values[@x.var], @indices[identifier][@x.var]
     super(dims, col, row)
+  getEvtData: (col, row) ->
+    obj = {}
+    obj[@x.var] = {in: @values[@x.var][col]}
+    obj[@y.var] = {in: @values[@y.var][row]}
+    obj
