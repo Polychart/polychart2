@@ -129,7 +129,7 @@ class Path extends Renderer # for both cartesian & polar?
 class Line extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
   attr: (scales, coord, offset, mark, mayflip) ->
-    [mark.x,mark.y] = poly.sortArrays scales.x.sortfn, [mark.x,mark.y]
+    [mark.x,mark.y] = poly.sortArrays scales.x.compare, [mark.x,mark.y]
     {x, y} = coord.getXY mayflip, mark
     {x, y} = @_applyOffset(x, y, offset)
     stroke = @_maybeApply scales, mark,
@@ -164,10 +164,10 @@ class PolarLine extends Renderer
 class Area extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
   attr: (scales, coord, offset, mark, mayflip) ->
-    [x, y] = poly.sortArrays scales.x.sortfn, [mark.x,mark.y.top]
+    [x, y] = poly.sortArrays scales.x.compare, [mark.x,mark.y.top]
     top = coord.getXY mayflip, {x:x, y:y}
     top = @_applyOffset(top.x, top.y, offset)
-    [x, y] = poly.sortArrays ((a) -> -scales.x.sortfn(a)), [mark.x,mark.y.bottom]
+    [x, y] = poly.sortArrays ((a,b) -> -scales.x.compare(a,b)), [mark.x,mark.y.bottom]
     bottom = coord.getXY mayflip, {x:x, y:y}
     bottom = @_applyOffset(bottom.x, bottom.y, offset)
     x = top.x.concat bottom.x

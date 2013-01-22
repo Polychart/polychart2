@@ -312,9 +312,12 @@ Output:
 
 
   poly.sortArrays = function(fn, arrays) {
-    return _.zip.apply(_, _.sortBy(_.zip.apply(_, arrays), function(a) {
-      return fn(a[0]);
-    }));
+    var zipped;
+    zipped = _.zip.apply(_, arrays);
+    zipped.sort(function(a, b) {
+      return fn(a[0], b[0]);
+    });
+    return _.zip.apply(_, zipped);
   };
 
 }).call(this);
@@ -1992,14 +1995,22 @@ See the spec definition for more information.
     return poly.domain.merge(domainSets);
   };
 
-  poly.domain.sortfn = function(domain) {
+  poly.domain.compare = function(domain) {
     if (domain) {
       if (domain.type === 'cat') {
-        return function(x) {
-          var idx;
-          idx = _.indexOf(domain.levels, x);
-          if (idx === -1) {
-            return idx = Infinity;
+        return function(a, b) {
+          a = _.indexOf(domain.levels, a);
+          b = _.indexOf(domain.levels, b);
+          if (a === -1) {
+            return 1;
+          } else if (b === -1) {
+            return -1;
+          } else if (a < b) {
+            return -1;
+          } else if (a > b) {
+            return 1;
+          } else {
+            return 0;
           }
         };
       } else {
@@ -3436,7 +3447,7 @@ See the spec definition for more information.
 
     Scale.prototype.make = function(domain) {
       this.domain = domain;
-      this.sortfn = poly.domain.sortfn(domain);
+      this.compare = poly.domain.compare(domain);
       if (!domain) {
         return this._makeNone();
       }
@@ -4006,8 +4017,8 @@ See the spec definition for more information.
     }
 
     Identity.prototype.make = function() {
-      this.sortfn = function(x) {
-        return x;
+      this.compare = function(a, b) {
+        return 0;
       };
       return this.f = this._identityWrapper(function(x) {
         return x;
@@ -6737,7 +6748,7 @@ data processing to be done.
 
     Line.prototype.attr = function(scales, coord, offset, mark, mayflip) {
       var stroke, x, y, _ref, _ref1, _ref2;
-      _ref = poly.sortArrays(scales.x.sortfn, [mark.x, mark.y]), mark.x = _ref[0], mark.y = _ref[1];
+      _ref = poly.sortArrays(scales.x.compare, [mark.x, mark.y]), mark.x = _ref[0], mark.y = _ref[1];
       _ref1 = coord.getXY(mayflip, mark), x = _ref1.x, y = _ref1.y;
       _ref2 = this._applyOffset(x, y, offset), x = _ref2.x, y = _ref2.y;
       stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
@@ -6807,14 +6818,14 @@ data processing to be done.
 
     Area.prototype.attr = function(scales, coord, offset, mark, mayflip) {
       var bottom, top, x, y, _ref, _ref1;
-      _ref = poly.sortArrays(scales.x.sortfn, [mark.x, mark.y.top]), x = _ref[0], y = _ref[1];
+      _ref = poly.sortArrays(scales.x.compare, [mark.x, mark.y.top]), x = _ref[0], y = _ref[1];
       top = coord.getXY(mayflip, {
         x: x,
         y: y
       });
       top = this._applyOffset(top.x, top.y, offset);
-      _ref1 = poly.sortArrays((function(a) {
-        return -scales.x.sortfn(a);
+      _ref1 = poly.sortArrays((function(a, b) {
+        return -scales.x.compare(a, b);
       }), [mark.x, mark.y.bottom]), x = _ref1[0], y = _ref1[1];
       bottom = coord.getXY(mayflip, {
         x: x,
@@ -7564,12 +7575,14 @@ data processing to be done.
           obj.evtData = graph.scaleSet.fromPixels(start, end);
         } else if (type === 'data') {
           obj.evtData = {};
-        } else {
+        } else if (type === 'reset' || type === 'click' || type === 'mover' || type === 'mout') {
           obj.tooltip = obj.data('t');
           obj.evtData = obj.data('e');
           _ref = poly.getXY(poly.offset(graph.dom), event), x = _ref.x, y = _ref.y;
           f = graph.facet.getFacetInfo(graph.dims, x, y);
-          console.log(f);
+          if ((type === 'reset' || type === 'click') && !f) {
+            return;
+          }
         }
         _ref1 = graph.handlers;
         _results = [];

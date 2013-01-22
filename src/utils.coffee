@@ -208,4 +208,6 @@ points for a line chart, i.e. poly.sortArrays(sortFn, [xs, ys])
 This way, all the points are sorted by (sortFn(x) for x in xs)
 ###
 poly.sortArrays = (fn, arrays) ->
-  _.zip(_.sortBy(_.zip(arrays...), (a) -> fn(a[0]))...)
+  zipped = _.zip(arrays...)
+  zipped.sort (a, b) -> fn a[0], b[0]
+  _.zip(zipped...)

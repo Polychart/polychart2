@@ -53,8 +53,10 @@ test "strSize", ->
   deepEqual polyjs.strSize('\'"'), 14
 
 test "sortArrays", ->
-  deepEqual polyjs.sortArrays(((x)->x), [[1,2,3],[1,2,3]]), [[1,2,3],[1,2,3]]
-  deepEqual polyjs.sortArrays(Math.sin, [[1,2,3],[4,5,6]]), [[3,1,2],[6,4,5]]
+  numcomp = polyjs.type.compare('num')
+  sincomp = (a,b) -> numcomp(Math.sin(a), Math.sin(b))
+  deepEqual polyjs.sortArrays(numcomp, [[1,2,3],[1,2,3]]), [[1,2,3],[1,2,3]]
+  deepEqual polyjs.sortArrays(sincomp, [[1,2,3],[4,5,6]]), [[3,1,2],[6,4,5]]
 
 test "type.impute", ->
   deepEqual polyjs.type.impute([]), 'cat'

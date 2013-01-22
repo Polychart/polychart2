@@ -25,7 +25,7 @@ class Scale
     @f = null
   make: (domain) ->
     @domain = domain
-    @sortfn = poly.domain.sortfn(domain)
+    @compare = poly.domain.compare(domain)
     if not domain
       return @_makeNone()
     switch domain.type
@@ -274,5 +274,5 @@ class Shape extends Scale
 
 class Identity extends Scale
   make: () ->
-    @sortfn = (x) -> x
+    @compare = (a, b) -> 0
     @f = @_identityWrapper (x) -> x
