@@ -21,12 +21,15 @@ poly.domain.make = (layers, guideSpec, strictmode) ->
   poly.domain.merge domainSets
 
 poly.domain.sortfn = (domain) ->
-  if domain and domain.type is 'cat'
-    (x) ->
-      idx = _.indexOf(domain.levels, x)
-      if idx == -1 then idx = Infinity
+  if domain
+    if domain.type is 'cat'
+      (x) ->
+        idx = _.indexOf(domain.levels, x)
+        if idx == -1 then idx = Infinity
+    else
+      poly.type.compare(domain.type)
   else
-    (x) -> x
+    (x) -> x # should not happen...
 
 ###
 # CLASSES & HELPER

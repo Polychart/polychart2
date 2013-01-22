@@ -153,7 +153,8 @@ class Layer
       for aes in groupAes
         values = _.uniq (@_getValue item, aes for item in datas)
         numgroup *= values.length
-        order[aes] = _.sortBy values, (x) -> x
+        values.sort poly.type.compare(@meta[@mapping[aes]].type)
+        order[aes] = values
       orderfn = (item) =>
         m = numgroup
         n = 0

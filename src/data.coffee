@@ -9,11 +9,11 @@ _getArray = (json, meta) ->
     for key in keys
       meta[key] ?= {}
       if not meta[key].type
-        meta[key].type = poly.varType _.pluck(first100, key)
+        meta[key].type = poly.type.impute _.pluck(first100, key)
     for item in json
       for key in keys
         if _.isString item[key]
-          item[key] = poly.coerce item[key], meta[key]
+          item[key] = poly.type.coerce item[key], meta[key]
     key = keys
     raw = json
   else
@@ -28,14 +28,14 @@ _getObject = (json, meta) ->
   for key in keys
     meta[key] ?= {}
     if not meta[key].type
-      meta[key].type = poly.varType json[key][0..99]
+      meta[key].type = poly.type.impute json[key][0..99]
   if keys.length > 0
     len = json[keys[0]].length
     if len > 0
       for i in [0..len-1]
         obj = {}
         for k in keys
-          obj[k] = poly.coerce json[k][i], meta[k]
+          obj[k] = poly.type.coerce json[k][i], meta[k]
         raw.push(obj)
   key = keys
   {key, raw, meta}
@@ -132,7 +132,7 @@ class FrontendData extends AbstractData
   sort: (key, desc) ->
     type = @type key
     newdata =_.clone(@raw)
-    sortfn = if type is 'cat' then poly.sortString else poly.sortNum
+    sortfn = poly.type.compare(type)
     newdata.sort (a,b) -> sortfn a[key], b[key]
     if desc then newdata.reverse()
     newobj = poly.data json: newdata, meta: @meta
@@ -159,7 +159,7 @@ class FrontendData extends AbstractData
     if not (key in @key)
       @key.push key
     @meta[key] =
-      type : poly.varType _.pluck(@raw[0..100], key)
+      type : poly.type.impute _.pluck(@raw[0..100], key)
       derived: true
     if hasFnStr then @meta[key].formula = fnstr
     key
