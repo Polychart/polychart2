@@ -11,7 +11,7 @@ test "smoke test", ->
     {x: 2, y: 4}
   ]
   data = polyjs.data (json: jsondata)
-  deepEqual data.json, jsondata
+  deepEqual data.raw, jsondata
 
 test "transforms -- numeric binning", ->
   data = polyjs.data

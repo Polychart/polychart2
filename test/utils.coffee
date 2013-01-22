@@ -56,13 +56,13 @@ test "sortArrays", ->
   deepEqual polyjs.sortArrays(((x)->x), [[1,2,3],[1,2,3]]), [[1,2,3],[1,2,3]]
   deepEqual polyjs.sortArrays(Math.sin, [[1,2,3],[4,5,6]]), [[3,1,2],[6,4,5]]
 
-test "varType", ->
-  deepEqual polyjs.varType([]), 'cat'
-  deepEqual polyjs.varType(['3', 4]), 'num'
-  deepEqual polyjs.varType(['1900-01-03']), 'date'
-  deepEqual polyjs.varType(['1','$2', '3,125', '$2,000']), 'num'
-  deepEqual polyjs.varType([0,1,2,3,4,5,6,'1900-01-03',7,8,9,0,1,2,3,4,5,6,7,8,9]), 'num'
-  deepEqual polyjs.varType([0,1,2,3,4,5,'1900-01-03',6,7,8]), 'date' #???
+test "type.impute", ->
+  deepEqual polyjs.type.impute([]), 'cat'
+  deepEqual polyjs.type.impute(['3', 4]), 'num'
+  deepEqual polyjs.type.impute(['1900-01-03']), 'date'
+  deepEqual polyjs.type.impute(['1','$2', '3,125', '$2,000']), 'num'
+  deepEqual polyjs.type.impute([0,1,2,3,4,5,6,'1900-01-03',7,8,9,0,1,2,3,4,5,6,7,8,9]), 'num'
+  deepEqual polyjs.type.impute([0,1,2,3,4,5,'1900-01-03',6,7,8]), 'date' #???
 
 test "groupProcessedData", ->
   data =
