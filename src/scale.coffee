@@ -39,7 +39,7 @@ class Scale
   _makeDate: () ->
     throw poly.error.impl "You are using a scale that does not support dates"
   _makeCat: () ->
-    throw poly.error.impl "You are using a scale that does not support categoies"
+    throw poly.error.impl "You are using a scale that does not support categories"
   tickType: () ->
     if not @domain
       return @_tickNone()

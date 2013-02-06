@@ -3474,7 +3474,7 @@ See the spec definition for more information.
     };
 
     Scale.prototype._makeCat = function() {
-      throw poly.error.impl("You are using a scale that does not support categoies");
+      throw poly.error.impl("You are using a scale that does not support categories");
     };
 
     Scale.prototype.tickType = function() {
