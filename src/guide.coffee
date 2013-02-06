@@ -89,9 +89,10 @@ class Axis extends Guide
         obj.grid = renderer.animate pt.grid, @_makeGrid(axisDim, tick)
         obj.grid.toBack()
     obj
-  dispose: (renderer) ->
+  remove: (renderer) ->
     for pt in pts
       @_delete pt
+    pts = {}
   _renderline : () -> throw poly.error.impl()
   _makeTick : (obj) ->
     if !obj then throw poly.error.impl()
@@ -321,7 +322,7 @@ class Legend extends Guide
     for t in added
       newpts[t] = @_add renderer, @ticks[t], legendDim
     @pts = newpts
-  remove: (renderer) ->
+  dispose: (renderer) ->
     for i, pt of @pts
       @_delete renderer, pt
     renderer.remove @title
@@ -342,10 +343,6 @@ class Legend extends Guide
     obj.tick = renderer.animate pt.tick, tickObj, evtData
     obj.text = renderer.animate pt.text, @_makeLabel(legendDim, tick)
     obj
-  dispose: (renderer) ->
-    for pt in pts
-      @_delete pt
-    renderer.remove @title
   _makeLabel: (legendDim, tick) ->
     type: 'text'
     x : sf.identity legendDim.right + 15
@@ -410,6 +407,7 @@ class Title extends Guide
       renderer.remove @title
   dispose: (renderer) ->
     renderer.remove @title
+    @title = null
   _makeTitle: () -> throw poly.error.impl()
   getDimension: () ->
     offset = {}

@@ -10,7 +10,8 @@ class Graph
     @legends = null
     @dims = null
     @paper = null
-    @coord = poly.coord.make spec.coord
+    @coord = null
+    @facet = null
     @initial_spec = spec
     @dataSubscribed = false
     @make spec
@@ -20,13 +21,30 @@ class Graph
       throw poly.error.defn "No graph specification is passed in!"
     @make @initial_spec
 
+  dispose: () ->
+    renderer = poly.render @handleEvent, @paper, @scaleSet.scales, @coord
+    for key, pane of @panes
+      pane.dispose(renderer)
+    @scaleSet.disposeLegends(renderer)
+    @scaleSet.disposeAxes(renderer)
+    @scaleSet.disposeTitles(renderer)
+
+    @scaleSet = null
+    @axes = null
+    @legends = null
+    @dims = null
+    @paper = null
+    @coord = null
+    @facet = null
+
   make: (spec) ->
     spec ?= @initial_spec
     spec = poly.spec.toStrictMode spec
     poly.spec.check spec
     @spec = spec
-    # facet?
-    @facet = poly.facet.make @spec.facet
+    # unchangables
+    @coord ?= poly.coord.make @spec.coord
+    @facet ?= poly.facet.make @spec.facet
     # subscribe to changes to data
     if not @dataSubscribed
       dataChange = @handleEvent 'data'

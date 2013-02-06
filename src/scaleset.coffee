@@ -118,6 +118,12 @@ class ScaleSet
     @titles.x.render renderer, dims, o
     @titles.y.render renderer, dims, o
     @titles.main.render renderer, dims, o
+  disposeTitles: (renderer) ->
+    @titles = {}
+    @titles.x.dispose(renderer)
+    @titles.y.dispose(renderer)
+    @titles.main.dispose(renderer)
+
 
   makeAxes: (groups) -> # groups = keys of panes
     {deleted, kept, added} = poly.compare(_.keys(@axes), groups)
@@ -158,7 +164,7 @@ class ScaleSet
         done[k2] = true
     offset
   renderAxes: (dims, renderer, facet) ->
-    axis.remove(renderer) for axis in @deletedAxes
+    axis.dispose(renderer) for axis in @deletedAxes
     @deletedAxes = []
     axisDim =
       top: 0
@@ -183,6 +189,9 @@ class ScaleSet
       axis.x.render axisDim, @coord, renderer(offset, false, false), override
       override = if drawy(key) then {} else yoverride
       axis.y.render axisDim, @coord, renderer(offset, false, false), override
+  disposeAxes: (renderer) ->
+    for key, axis of @axes
+      axis.dispose(renderer)
 
   _mapLayers: (layers) ->
     obj = {}
@@ -267,7 +276,7 @@ class ScaleSet
     right: offset.x + maxwidth # no height
   renderLegends: (dims, renderer) ->
     # NOTE: if this is changed, change dim.coffee dimension calculation
-    legend.remove(renderer) for legend in @deletedLegends
+    legend.dispose(renderer) for legend in @deletedLegends
     @deletedLegends = []
     offset = { x: 10, y : 0 } # initial spacing
     # axis offset
@@ -286,3 +295,5 @@ class ScaleSet
         maxwidth = newdim.width
       legend.render dims, renderer, offset
       offset.y += newdim.height
+  disposeLegends: (renderer) ->
+    legend.dispose(renderer) for legend in @legends

@@ -2714,14 +2714,13 @@ See the spec definition for more information.
       return obj;
     };
 
-    Axis.prototype.dispose = function(renderer) {
-      var pt, _i, _len, _results;
-      _results = [];
+    Axis.prototype.remove = function(renderer) {
+      var pt, pts, _i, _len;
       for (_i = 0, _len = pts.length; _i < _len; _i++) {
         pt = pts[_i];
-        _results.push(this._delete(pt));
+        this._delete(pt);
       }
-      return _results;
+      return pts = {};
     };
 
     Axis.prototype._renderline = function() {
@@ -3112,7 +3111,7 @@ See the spec definition for more information.
       return this.pts = newpts;
     };
 
-    Legend.prototype.remove = function(renderer) {
+    Legend.prototype.dispose = function(renderer) {
       var i, pt, _ref;
       _ref = this.pts;
       for (i in _ref) {
@@ -3145,15 +3144,6 @@ See the spec definition for more information.
       obj.tick = renderer.animate(pt.tick, tickObj, evtData);
       obj.text = renderer.animate(pt.text, this._makeLabel(legendDim, tick));
       return obj;
-    };
-
-    Legend.prototype.dispose = function(renderer) {
-      var pt, _i, _len;
-      for (_i = 0, _len = pts.length; _i < _len; _i++) {
-        pt = pts[_i];
-        this._delete(pt);
-      }
-      return renderer.remove(this.title);
     };
 
     Legend.prototype._makeLabel = function(legendDim, tick) {
@@ -3266,7 +3256,8 @@ See the spec definition for more information.
     };
 
     Title.prototype.dispose = function(renderer) {
-      return renderer.remove(this.title);
+      renderer.remove(this.title);
+      return this.title = null;
     };
 
     Title.prototype._makeTitle = function() {
@@ -4265,6 +4256,13 @@ See the spec definition for more information.
       return this.titles.main.render(renderer, dims, o);
     };
 
+    ScaleSet.prototype.disposeTitles = function(renderer) {
+      this.titles = {};
+      this.titles.x.dispose(renderer);
+      this.titles.y.dispose(renderer);
+      return this.titles.main.dispose(renderer);
+    };
+
     ScaleSet.prototype.makeAxes = function(groups) {
       var added, axis, deleted, kept, key, _i, _j, _len, _len1, _ref, _ref1;
       _ref = poly.compare(_.keys(this.axes), groups), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
@@ -4332,7 +4330,7 @@ See the spec definition for more information.
       _ref = this.deletedAxes;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         axis = _ref[_i];
-        axis.remove(renderer);
+        axis.dispose(renderer);
       }
       this.deletedAxes = [];
       axisDim = {
@@ -4371,6 +4369,17 @@ See the spec definition for more information.
         axis.x.render(axisDim, this.coord, renderer(offset, false, false), override);
         override = drawy(key) ? {} : yoverride;
         _results.push(axis.y.render(axisDim, this.coord, renderer(offset, false, false), override));
+      }
+      return _results;
+    };
+
+    ScaleSet.prototype.disposeAxes = function(renderer) {
+      var axis, key, _ref, _results;
+      _ref = this.axes;
+      _results = [];
+      for (key in _ref) {
+        axis = _ref[key];
+        _results.push(axis.dispose(renderer));
       }
       return _results;
     };
@@ -4504,7 +4513,7 @@ See the spec definition for more information.
       _ref = this.deletedLegends;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         legend = _ref[_i];
-        legend.remove(renderer);
+        legend.dispose(renderer);
       }
       this.deletedLegends = [];
       offset = {
@@ -4530,6 +4539,17 @@ See the spec definition for more information.
         }
         legend.render(dims, renderer, offset);
         _results.push(offset.y += newdim.height);
+      }
+      return _results;
+    };
+
+    ScaleSet.prototype.disposeLegends = function(renderer) {
+      var legend, _i, _len, _ref, _results;
+      _ref = this.legends;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        legend = _ref[_i];
+        _results.push(legend.dispose(renderer));
       }
       return _results;
     };
@@ -7492,7 +7512,8 @@ data processing to be done.
       this.legends = null;
       this.dims = null;
       this.paper = null;
-      this.coord = poly.coord.make(spec.coord);
+      this.coord = null;
+      this.facet = null;
       this.initial_spec = spec;
       this.dataSubscribed = false;
       this.make(spec);
@@ -7505,8 +7526,28 @@ data processing to be done.
       return this.make(this.initial_spec);
     };
 
+    Graph.prototype.dispose = function() {
+      var key, pane, renderer, _ref;
+      renderer = poly.render(this.handleEvent, this.paper, this.scaleSet.scales, this.coord);
+      _ref = this.panes;
+      for (key in _ref) {
+        pane = _ref[key];
+        pane.dispose(renderer);
+      }
+      this.scaleSet.disposeLegends(renderer);
+      this.scaleSet.disposeAxes(renderer);
+      this.scaleSet.disposeTitles(renderer);
+      this.scaleSet = null;
+      this.axes = null;
+      this.legends = null;
+      this.dims = null;
+      this.paper = null;
+      this.coord = null;
+      return this.facet = null;
+    };
+
     Graph.prototype.make = function(spec) {
-      var dataChange, id, layerSpec, merge, _i, _j, _len, _len1, _ref, _ref1,
+      var dataChange, id, layerSpec, merge, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3,
         _this = this;
       if (spec == null) {
         spec = this.initial_spec;
@@ -7514,12 +7555,17 @@ data processing to be done.
       spec = poly.spec.toStrictMode(spec);
       poly.spec.check(spec);
       this.spec = spec;
-      this.facet = poly.facet.make(this.spec.facet);
+      if ((_ref = this.coord) == null) {
+        this.coord = poly.coord.make(this.spec.coord);
+      }
+      if ((_ref1 = this.facet) == null) {
+        this.facet = poly.facet.make(this.spec.facet);
+      }
       if (!this.dataSubscribed) {
         dataChange = this.handleEvent('data');
-        _ref = spec.layers;
-        for (id = _i = 0, _len = _ref.length; _i < _len; id = ++_i) {
-          layerSpec = _ref[id];
+        _ref2 = spec.layers;
+        for (id = _i = 0, _len = _ref2.length; _i < _len; id = ++_i) {
+          layerSpec = _ref2[id];
           spec.layers[id].data.subscribe(dataChange);
         }
         this.dataSubscribed = true;
@@ -7527,9 +7573,9 @@ data processing to be done.
       merge = _.after(spec.layers.length, this.merge);
       this.dataprocess = {};
       this.processedData = {};
-      _ref1 = spec.layers;
-      for (id = _j = 0, _len1 = _ref1.length; _j < _len1; id = ++_j) {
-        layerSpec = _ref1[id];
+      _ref3 = spec.layers;
+      for (id = _j = 0, _len1 = _ref3.length; _j < _len1; id = ++_j) {
+        layerSpec = _ref3[id];
         spec = this.spec.layers[id];
         this.dataprocess[id] = new poly.DataProcess(spec, this.facet.groups, spec.strict);
         this.dataprocess[id].make(spec, this.facet.groups, function(statData, metaData) {
