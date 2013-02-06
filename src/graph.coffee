@@ -102,16 +102,6 @@ class Graph
     @scaleSet.renderTitle @dims, rendererG, @facet
     ###
 
-  debugRender: (mark) ->
-    geom = marks: 0: mark
-    scales = @scaleSet.scales
-    renderer = poly.render @handleEvent, @paper, scales, @coord
-    for key, pane of @panes
-      offset = @facet.getOffset(@dims, key)
-      clipping = @coord.clipping offset
-      r = renderer(offset, clipping, true)
-      r.render(geom)
-
   addHandler : (h) -> @handlers.push h
   removeHandler: (h) ->
     @handlers.splice _.indexOf(@handlers, h), 1

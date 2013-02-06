@@ -7617,27 +7617,6 @@ data processing to be done.
 
     };
 
-    Graph.prototype.debugRender = function(mark) {
-      var clipping, geom, key, offset, pane, r, renderer, scales, _ref, _results;
-      geom = {
-        marks: {
-          0: mark
-        }
-      };
-      scales = this.scaleSet.scales;
-      renderer = poly.render(this.handleEvent, this.paper, scales, this.coord);
-      _ref = this.panes;
-      _results = [];
-      for (key in _ref) {
-        pane = _ref[key];
-        offset = this.facet.getOffset(this.dims, key);
-        clipping = this.coord.clipping(offset);
-        r = renderer(offset, clipping, true);
-        _results.push(r.render(geom));
-      }
-      return _results;
-    };
-
     Graph.prototype.addHandler = function(h) {
       return this.handlers.push(h);
     };
