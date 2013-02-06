@@ -40,7 +40,7 @@ poly.layer.make = (layerSpec, strictmode) ->
 ###
 Base class for all layers
 ###
-class Layer
+class Layer extends poly.Renderable
   defaults : _.extend(defaults, {'size':7})
 
   constructor: (layerSpec, strict) ->
@@ -77,7 +77,7 @@ class Layer
     if @mapping[key] then @meta[@mapping[key]] else {}
  
   # render and animation functions!
-  render: (render) =>
+  render: (renderer) =>
     geoms =
       if @spec.sample is false
         @geoms
@@ -89,26 +89,30 @@ class Layer
     newpts = {}
     {deleted, kept, added} = poly.compare _.keys(@pts), _.keys(geoms)
     for id in deleted
-      @_delete render, @pts[id]
+      @_delete renderer, @pts[id]
     for id in added
-      newpts[id] = @_add render, geoms[id]
+      newpts[id] = @_add renderer, geoms[id]
     for id in kept
-      newpts[id] = @_modify render, @pts[id], geoms[id]
+      newpts[id] = @_modify renderer, @pts[id], geoms[id]
     @pts = newpts
     sampled :  _.size(geoms) isnt _.size(@geoms)
-  _delete : (render, points) ->
+  _delete : (renderer, points) ->
     for id2, pt of points
-      render.remove pt
-  _modify: (render, points, geom) ->
+      renderer.remove pt
+  _modify: (renderer, points, geom) ->
     objs = {}
     for id2, mark of geom.marks
-      objs[id2] = render.animate points[id2], mark, geom.evtData, geom.tooltip
+      objs[id2] = renderer.animate points[id2], mark, geom.evtData, geom.tooltip
     objs
-  _add: (render, geom) ->
+  _add: (renderer, geom) ->
     objs = {}
     for id2, mark of geom.marks
-      objs[id2] = render.add mark, geom.evtData, geom.tooltip
+      objs[id2] = renderer.add mark, geom.evtData, geom.tooltip
     objs
+
+  dispose: (renderer) =>
+    for pt in @pts
+      @_delete renderer, pt
 
   # helper function to get @mapping and @consts
   _makeMappings: (spec) =>

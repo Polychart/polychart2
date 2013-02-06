@@ -1,7 +1,6 @@
 sf = poly.const.scaleFns
 
-class Guide
-  constructor: () ->
+class Guide extends poly.Renderable
   getDimension: () -> throw poly.error.impl()
 
 class Axis extends Guide
@@ -90,6 +89,9 @@ class Axis extends Guide
         obj.grid = renderer.animate pt.grid, @_makeGrid(axisDim, tick)
         obj.grid.toBack()
     obj
+  dispose: (renderer) ->
+    for pt in pts
+      @_delete pt
   _renderline : () -> throw poly.error.impl()
   _makeTick : (obj) ->
     if !obj then throw poly.error.impl()
@@ -340,6 +342,10 @@ class Legend extends Guide
     obj.tick = renderer.animate pt.tick, tickObj, evtData
     obj.text = renderer.animate pt.text, @_makeLabel(legendDim, tick)
     obj
+  dispose: (renderer) ->
+    for pt in pts
+      @_delete pt
+    renderer.remove @title
   _makeLabel: (legendDim, tick) ->
     type: 'text'
     x : sf.identity legendDim.right + 15
@@ -402,6 +408,8 @@ class Title extends Guide
       @title = renderer.add @_makeTitle(dim, offset)
     else if @title?
       renderer.remove @title
+  dispose: (renderer) ->
+    renderer.remove @title
   _makeTitle: () -> throw poly.error.impl()
   getDimension: () ->
     offset = {}

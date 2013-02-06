@@ -5,6 +5,7 @@ cat \
     compiled/src/utils.js \
     compiled/src/const.js \
     compiled/src/error.js \
+    compiled/src/abstract.js\
     compiled/src/mouse.js \
     compiled/src/format.js \
     compiled/src/type.js \

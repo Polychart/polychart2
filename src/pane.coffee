@@ -1,10 +1,12 @@
 poly.pane = {}
 poly.pane.make = (spec, grp, formatter) -> new Pane spec, grp, formatter
-class Pane
+class Pane extends poly.Renderable
   constructor: (spec, multiindex, formatter) ->
     @spec = spec
     @index = multiindex
     @str = formatter multiindex
+    @layers = null
+    @title = null
   make: (spec, data) ->
     @layers ?= @_makeLayers spec
     @title ?= @_makeTitle spec
@@ -21,3 +23,7 @@ class Pane
     @title.render renderer({}, false, false), dims, offset
     for layer in @layers
       {sampled} = layer.render renderer(offset, clipping, true)
+  dispose: (renderer) ->
+    for layer in @layers
+      layer.dispose(renderer)
+    @title.dispose(renderer)
