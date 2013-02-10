@@ -13,6 +13,10 @@ has not yet been applied.
 
 These geometrical objects are be rendered on the screen using the Geometry class
 found in abstract.coffee
+
+Layers can be reused: i.e. created once and applied to many versions of the same
+data set. It is also disposable, and does not contain state information -- only
+state that needs to be preserved for consistency is the geometry.
 ###
 
 ###
