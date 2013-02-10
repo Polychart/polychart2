@@ -1,7 +1,7 @@
 class Coordinate
-  constructor: (params) ->
-    params ?= {}
-    @flip = params.flip ? false
+  constructor: (@spec) ->
+    @spec ?= {}
+    @flip = @spec.flip ? false
     @scales = null
     [@x, @y] = if @flip then ['y', 'x'] else ['x', 'y']
   make: (dims) -> @dims = dims
@@ -124,8 +124,8 @@ class Polar extends Coordinate
     return getpos(mark.x, mark.y)
 
 poly.coord =
-  cartesian : (params) -> new Cartesian(params)
-  polar : (params) -> new Polar(params)
+  cartesian : (spec) -> new Cartesian(spec)
+  polar : (spec) -> new Polar(spec)
 
 poly.coord.make = (spec) =>
   if not spec? or not spec.type?

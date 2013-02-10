@@ -70,4 +70,3 @@ compareNum = (a, b) ->
   else if a < b then return -1
   else if a > b then 1
   else 0
-

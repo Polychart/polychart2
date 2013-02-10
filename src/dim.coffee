@@ -1,5 +1,7 @@
 ###
-# GLOBALS
+DIMENSIONS
+----------
+Calculate the pixel dimension and layout of a particular chart
 ###
 poly.dim = {}
 poly.dim.make = (spec, scaleSet, facetGrid) ->

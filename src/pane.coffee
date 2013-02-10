@@ -8,8 +8,8 @@ class Pane extends poly.Renderable
     @layers = null
     @title = null
   make: (spec, data) ->
-    @layers ?= @_makeLayers spec
-    @title ?= @_makeTitle spec
+    @layers ?= @_makeLayers spec # spec may have changed!
+    @title ?= @_makeTitle spec # title may have changed?!? (or not...)
     @title.make title: @str
     for layer, id in @layers
       layer.make spec.layers[id], data[id].statData, data[id].metaData

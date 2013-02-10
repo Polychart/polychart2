@@ -37,15 +37,26 @@ class Graph
     @coord = null
     @facet = null
 
+  needDispose: (spec) =>
+    if @coord and !_.isEqual(@coord.spec, spec.coord)
+      true
+    else if @facet and !_.isEqual(@facet.spec, spec.facet)
+      true
+    # change in layers
+    else
+      false
+
   make: (spec) ->
     spec ?= @initial_spec
     spec = poly.spec.toStrictMode spec
     poly.spec.check spec
     @spec = spec
     # unchangables
+    if @needDispose(spec)
+      @dispose()
     @coord ?= poly.coord.make @spec.coord
     @facet ?= poly.facet.make @spec.facet
-    # subscribe to changes to data
+    # subscribe to changes to data -- bad heuristics!
     if not @dataSubscribed
       dataChange = @handleEvent 'data'
       for layerSpec, id in spec.layers

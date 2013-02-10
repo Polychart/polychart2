@@ -1,7 +1,19 @@
 ###
-# GLOBALS
+Data Object
+---------
+Polychart wrapper around a data set. This is contains the data structure
+required for poly.chart().  Data object that either contains JSON format
+of a dataset, or knows how to retrieve data from some source.
 ###
+poly.data = (params) ->
+  if params.url
+    new BackendData params
+  else
+    new FrontendData params
 
+###
+Helper functions
+###
 _getArray = (json, meta) ->
   if json.length > 0
     keys = _.union _.keys(meta), _.keys(json[0])
@@ -20,7 +32,6 @@ _getArray = (json, meta) ->
     key = _.keys(meta)
     raw = []
   {key, raw, meta}
-
 
 _getObject = (json, meta) ->
   keys = _.keys(json)
@@ -43,6 +54,9 @@ _getObject = (json, meta) ->
 _getCSV = (str, meta) ->
   _getObject poly.csv.parse str
 
+###
+Classes
+###
 class AbstractData
   isData: true
   constructor: () ->
@@ -58,7 +72,6 @@ class AbstractData
   unsubscribe: (h) ->
     @subscribed.splice _.indexOf(@subscribed, h), 1
   keys: () -> @key
-
 
 class FrontendData extends AbstractData
   constructor: (params) ->
@@ -188,13 +201,4 @@ class BackendData extends AbstractData
     @raw = null
     super()
 
-###
-Generalized data object that either contains JSON format of a dataset,
-or knows how to retrieve data from some source.
-###
 
-poly.data = (params) ->
-  if params.url
-    new BackendData params
-  else
-    new FrontendData params
