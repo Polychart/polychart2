@@ -1,5 +1,14 @@
-# Graph Object
+##
+# Graph Object And Entry Point: poly.chart()
+# ------------------------------------------
+# This is the main graph object and controls the main visualization workflow.
+##
+
 class Graph
+  ###
+  The constructor does not do any real work. It just sets a bunch of variables
+  to its default value and call @make(), which actually does the real work.
+  ###
   constructor: (spec) ->
     if not spec?
       throw poly.error.defn "No graph specification is passed in!"
@@ -15,12 +24,17 @@ class Graph
     @initial_spec = spec
     @dataSubscribed = false
     @make spec
-
+  ###
+  Reset the graph to its initial specification.
+  ###
   reset : () =>
     if not @initial_spec?
       throw poly.error.defn "No graph specification is passed in!"
+    @dispose()
     @make @initial_spec
-
+  ###
+  Remove all existing items on the graph.
+  ###
   dispose: () ->
     renderer = poly.render @handleEvent, @paper, @scaleSet.scales, @coord
     for key, pane of @panes
@@ -36,7 +50,14 @@ class Graph
     @paper = null
     @coord = null
     @facet = null
-
+  ###
+  Determine whether re-rendering of a particupar spec would require removing
+  all existing items from the graph and starting all over again. This would
+  happen if:
+    * the coordinate has changed
+    * the facet variable has changed
+    * layers had changed
+  ###
   needDispose: (spec) =>
     if @coord and !_.isEqual(@coord.spec, spec.coord)
       true
@@ -45,13 +66,18 @@ class Graph
     # change in layers
     else
       false
-
+  ###
+  Begin work to plot the graph. This function does only half of the work:
+  i.e. things that needs to be done prior to data process. Because data
+  process may be asynchronous, we pass in @merge() as a callback for when
+  data processing is complete.
+  ###
   make: (spec) ->
     spec ?= @initial_spec
     spec = poly.spec.toStrictMode spec
     poly.spec.check spec
     @spec = spec
-    # unchangables
+    # check if we need to re-plot the graph from scratch
     if @needDispose(spec)
       @dispose()
     @coord ?= poly.coord.make @spec.coord
@@ -76,6 +102,14 @@ class Graph
         merge()
     # default handlers
     @addHandler polyjs.handler.tooltip()
+  ###
+  Complete work to plot the graph. This includes three stages:
+    1) Create each "pane". Each "pane" is a facet containing a smallversion
+       of the chart, filtered to only data that falls within that facet.
+    2) Merge the domains from each layer and each pane. This is used to
+       define scales and determine the min/max point of each axis.
+    3) Actually render the chart.
+  ###
   merge: () =>
     @makePanes()
     @mergeDomains()
