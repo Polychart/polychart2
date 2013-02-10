@@ -1,6 +1,14 @@
-##########
-# CONSTANTS
-##########
+###
+Layer
+------------------------------------------
+A "Layer" is a visual representation of some data. It is sometimes referred
+to as a glymph, geometry, or mark, and was (erronously) referred to as "chart
+type" in Polychart graph builder.
+###
+
+###
+Shared constants
+###
 
 aesthetics = poly.const.aes # list of aesthetics
 sf = poly.const.scaleFns    # list of scale functions
@@ -12,30 +20,6 @@ defaults = {                # global default values for aesthetics
   'opacity': 0.9
   'shape': 1
 }
-
-##########
-# GLOBALS
-##########
-poly.layer = {}
-
-###
-Public interface to making different layer types.
-###
-poly.layer.make = (layerSpec, strictmode) ->
-  switch layerSpec.type
-    when 'point' then return new Point(layerSpec, strictmode)
-    when 'text' then return new Text(layerSpec, strictmode)
-    when 'line' then return new Line(layerSpec, strictmode)
-    when 'path' then return new Path(layerSpec, strictmode)
-    when 'area' then return new Area(layerSpec, strictmode)
-    when 'bar' then return new Bar(layerSpec, strictmode)
-    when 'tile' then return new Tile(layerSpec, strictmode)
-    when 'box' then return new Box(layerSpec, strictmode)
-    else throw poly.error.defn "No such layer #{layerSpec.type}."
-
-###########
-# CLASSES
-###########
 
 ###
 Base class for all layers
@@ -389,3 +373,25 @@ class Box extends Layer
           size: sf.identity 3
           opacity: opacity
       @geoms[idfn item] = geom
+
+###
+Public interface to making different layer types.
+TODO: this should be changed to make it easier to make other
+      types of layers.
+###
+poly.layer = {}
+poly.layer.classes = {
+  'point' : Point
+  'text' : Text
+  'line' : Line
+  'path' : Path
+  'area' : Area
+  'bar' : Bar
+  'tile' : Tile
+  'box' : Box
+}
+poly.layer.make = (layerSpec, strictmode) ->
+  type = layerSpec.type
+  if type of poly.layer.classes
+    return new poly.layer.classes[type](layerSpec, strictmode)
+  throw poly.error.defn "No such layer #{layerSpec.type}."
