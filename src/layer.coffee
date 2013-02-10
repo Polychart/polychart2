@@ -4,6 +4,15 @@ Layer
 A "Layer" is a visual representation of some data. It is sometimes referred
 to as a glymph, geometry, or mark, and was (erronously) referred to as "chart
 type" in Polychart graph builder.
+
+Each layer needs to be initiated with a specification object. Once initiated,
+the layer's @calculate() function takes a dataset + metadata, and produces
+one or more objects representing geometric objects. These geometrical objects
+have the appropriate data mapped to each appropriate aesthetics, but the scale
+has not yet been applied.
+
+These geometrical objects are be rendered on the screen using the Geometry class
+found in abstract.coffee
 ###
 
 ###
