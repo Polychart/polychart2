@@ -5,6 +5,7 @@ These are constants that are referred to throughout the coebase
 ###
 poly.const =
   aes : ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id', 'text']
+  noDomain: ['id', 'text', 'tooltip']
   noLegend: ['x', 'y', 'id', 'text', 'tooltip']
   trans: {'bin': ['key', 'binwidth'], 'lag': ['key', 'lag']},
   stat: {'count': ['key'], 'sum': ['key'], 'mean': ['key'], 'box': ['key'], 'median': ['key']}

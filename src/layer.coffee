@@ -8,7 +8,7 @@ defaults = {                # global default values for aesthetics
   'x': sf.novalue()
   'y': sf.novalue()
   'color': 'steelblue'
-  'size': 2
+  'size': 7
   'opacity': 0.9
   'shape': 1
 }
@@ -40,94 +40,32 @@ poly.layer.make = (layerSpec, strictmode) ->
 ###
 Base class for all layers
 ###
-class Layer extends poly.Renderable
-  defaults : _.extend(defaults, {'size':7})
-
-  constructor: (layerSpec, strict) ->
-    @initialSpec = layerSpec
-    @prevSpec = null
-    @spec = null
-    @pts = {}
-
-  reset : () => @make @initialSpec
-
-  make: (spec, statData, metaData) ->
+class Layer
+  constructor: (spec) ->
     @spec = spec
-    @_makeMappings @spec
-    @prevSpec = @spec
-    @statData = statData
-    @meta = metaData
-    if not @statData?
-      throw poly.error.data "No data is passed into the layer"
-    @_calcGeoms()
-    @prevSpec = @spec
-
-  _calcGeoms: () -> @geoms = {} # layer level geom calculation
-
-  _tooltip: (item) ->
-    tooltip = null
-    for v in _.uniq _.values @mapping
-      if not tooltip
-        tooltip = "#{v}: #{poly.format.value item[v]}"
-      else
-        tooltip += "\n#{v}: #{poly.format.value item[v]}"
-    tooltip
-
-  getMeta: (key) ->
-    if @mapping[key] then @meta[@mapping[key]] else {}
- 
-  # render and animation functions!
-  render: (renderer) =>
-    geoms =
-      if @spec.sample is false
-        @geoms
-      else if _.isNumber @spec.sample
-        poly.sample @geoms, @spec.sample
-      else
-        throw poly.error.defn "A layer's 'sample' definition should be an integer, not #{@spec.sample}"
-
-    newpts = {}
-    {deleted, kept, added} = poly.compare _.keys(@pts), _.keys(geoms)
-    for id in deleted
-      @_delete renderer, @pts[id]
-    for id in added
-      newpts[id] = @_add renderer, geoms[id]
-    for id in kept
-      newpts[id] = @_modify renderer, @pts[id], geoms[id]
-    @pts = newpts
-    sampled :  _.size(geoms) isnt _.size(@geoms)
-  _delete : (renderer, points) ->
-    for id2, pt of points
-      renderer.remove pt
-  _modify: (renderer, points, geom) ->
-    objs = {}
-    for id2, mark of geom.marks
-      objs[id2] = renderer.animate points[id2], mark, geom.evtData, geom.tooltip
-    objs
-  _add: (renderer, geom) ->
-    objs = {}
-    for id2, mark of geom.marks
-      objs[id2] = renderer.add mark, geom.evtData, geom.tooltip
-    objs
-
-  dispose: (renderer) =>
-    for pt in @pts
-      @_delete renderer, pt
-
-  # helper function to get @mapping and @consts
-  _makeMappings: (spec) =>
     @mapping = {}      # aesthetic mappings
     @consts = {}       # constants supplied by the spec
     for aes in aesthetics
       if spec[aes]
         if spec[aes].var then @mapping[aes] = spec[aes].var
         if spec[aes].const then @consts[aes] = spec[aes].const
+  calculate: (@statData, @meta) ->
+    @_calcGeoms()
+    meta = {}
+    for aes, key of @mapping
+      meta[aes] = @meta[key]
+    geoms: @geoms
+    meta: meta
+  _calcGeoms: () ->
+    throw poly.error.impl()
+  _tooltip: (item) -> 'foo'
+  _mappings: (spec) ->
   # helper for getting the value of a particular aesthetic from an item
   _getValue: (item, aes) ->
     if @mapping[aes]          then item[@mapping[aes]]
     else if @consts[aes]      then sf.identity @consts[aes]
-    else if aes in ['x', 'y'] then @defaults[aes]
-    else                           sf.identity @defaults[aes]
+    else if aes in ['x', 'y'] then defaults[aes]
+    else                           sf.identity defaults[aes]
   # helper function to get an element's "id"
   _getIdFunc: () ->
     if @mapping['id']? then (item) => @_getValue item, 'id' else poly.counter()

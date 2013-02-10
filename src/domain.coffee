@@ -14,10 +14,10 @@ Produce a domain set for each layer based on both the information in each
 layer and the specification of the guides, then merge them into one domain
 set.
 ###
-poly.domain.make = (layers, guideSpec, strictmode) ->
+poly.domain.make = (geoms, metas, guideSpec, strictmode) ->
   domainSets = []
-  for layerObj in layers
-    domainSets.push makeDomainSet layerObj, guideSpec, strictmode
+  for i, g of geoms
+    domainSets.push makeDomainSet g.geoms, metas[i], guideSpec, strictmode
   poly.domain.merge domainSets
 
 poly.domain.compare = (domain) ->
@@ -63,14 +63,15 @@ makeDomain = (params) ->
 Make a domain set. A domain set is an associate array of domains, with the
 keys being aesthetics
 ###
-makeDomainSet = (layerObj, guideSpec, strictmode) ->
+makeDomainSet = (geoms, metas, guideSpec, strictmode) ->
+  debugger
   domain = {}
-  for aes of layerObj.mapping
+  for aes, meta of metas
+    if aes in poly.const.noDomain then continue
     if strictmode
       domain[aes] = makeDomain guideSpec[aes]
     else
-      values = flattenGeoms(layerObj.geoms, aes)
-      meta = layerObj.getMeta(aes) ? {}
+      values = flattenGeoms(geoms, aes)
       fromspec = (item) -> if guideSpec[aes]? then guideSpec[aes][item] else null
       switch meta.type
         when 'num'
