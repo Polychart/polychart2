@@ -9,7 +9,6 @@ class ScaleSet
     @ranges = tmpRanges
     @axes = {}
     @legends = []
-    @deletedAxes = []
     @deletedLegends = []
 
   make: (guideSpec, domains, layers) ->
@@ -123,49 +122,40 @@ class ScaleSet
     @titles.x.dispose(renderer)
     @titles.y.dispose(renderer)
     @titles.main.dispose(renderer)
-
-
-  makeAxes: (groups) -> # groups = keys of panes
-    {deleted, kept, added} = poly.compare(_.keys(@axes), groups)
-    for key in deleted
-      @deletedAxes.push @axes[key]
-      delete @axes[key]
-    for key in added
-      @axes[key] =
-        x: poly.guide.axis @coord.axisType('x')
-        y: poly.guide.axis @coord.axisType('y')
-    for key, axis of @axes
-      axis.x.make
-        domain: @domainx
-        type: @scales.x.tickType()
-        guideSpec: @getSpec 'x'
-        key: poly.getLabel @layers, 'x'
-      axis.y.make
-        domain: @domainy
-        type: @scales.y.tickType()
-        guideSpec: @getSpec 'y'
-        key: poly.getLabel @layers, 'y'
-    @axes
+  makeAxes: () ->
+    @axes =
+      x : poly.guide.axis(@coord.axisType('x'),
+            domain: @domainx
+            type: @scales.x.tickType()
+            guideSpec: @getSpec 'x'
+            key: poly.getLabel @layers, 'x'
+          )
+      y : poly.guide.axis(@coord.axisType('y'),
+            domain: @domainy
+            type: @scales.y.tickType()
+            guideSpec: @getSpec 'y'
+            key: poly.getLabel @layers, 'y'
+          )
   axesOffset: (dim) ->
     offset = {}
-    done = {}
-    for key, axis of @axes # loop over everything? pretty inefficient
-      for k2, obj of axis
-        if done[k2]? then continue
-        d = obj.getDimension()
-        if d.position == 'left'
-          offset.left = d.width
-        else if d.position == 'right'
-          offset.right = d.width
-        else if d.position == 'bottom'
-          offset.bottom = d.height
-        else if d.position == 'top'
-          offset.top = d.height
-        done[k2] = true
+    for key, axis of @axes
+      d = axis.getDimension()
+      if d.position == 'left'
+        offset.left = d.width
+      else if d.position == 'right'
+        offset.right = d.width
+      else if d.position == 'bottom'
+        offset.bottom = d.height
+      else if d.position == 'top'
+        offset.top = d.height
     offset
   renderAxes: (dims, renderer, facet) ->
-    axis.dispose(renderer) for axis in @deletedAxes
-    @deletedAxes = []
+    @axesGeoms ?= {}
+    indices = _.keys(facet.indices)
+    {deleted, kept, added} = poly.compare(_.keys(@axesGeoms), indices)
+    for key in deleted
+      for axis in @axesGeoms[key]
+        axis.dispose()
     axisDim =
       top: 0
       left : 0
@@ -173,25 +163,38 @@ class ScaleSet
       bottom : dims.chartHeight
       width: dims.chartWidth
       height: dims.chartHeight
-    drawx = drawy = null
+    drawx = facet.edge(@axes.x.position)
+    drawy = facet.edge(@axes.y.position)
     xoverride = renderLabel : false, renderTick : false
     yoverride = renderLabel : false, renderTick : false
-    for key, axis of @axes
+    if @axes.x.type is 'r'
+      xoverride.renderLine = false
+    if @axes.y.type is 'r'
+      yoverride.renderLine = false
+    for key in indices
       offset = facet.getOffset(dims, key)
-      if not drawx
-        drawx = facet.edge(axis.x.position)
-        drawy = facet.edge(axis.y.position)
-        if axis.x.type is 'r'
-          xoverride.renderLine = false
-        if axis.y.type is 'r'
-          yoverride.renderLine = false
+      @axesGeoms[key] ?=
+        x: new poly.Geometry()
+        y: new poly.Geometry()
+      r = renderer(offset, false, false)
+      # x
       override = if drawx(key) then {} else xoverride
-      axis.x.render axisDim, @coord, renderer(offset, false, false), override
+      @axesGeoms[key].x.set @axes.x.calculate(axisDim, @coord, override)
+      @axesGeoms[key].x.render(r)
+      # y
       override = if drawy(key) then {} else yoverride
-      axis.y.render axisDim, @coord, renderer(offset, false, false), override
+      @axesGeoms[key].y.set @axes.y.calculate(axisDim, @coord, override)
+      @axesGeoms[key].y.render(r)
+      # hack to move the grid to the BACK
+      for aes in ['x', 'y']
+        for k, pts of @axesGeoms[key][aes].pts
+          if pts.grid
+            pts.grid.toBack()
+
   disposeAxes: (renderer) ->
-    for key, axis of @axes
-      axis.dispose(renderer)
+    for key, axes of @axesGeoms
+      axes.x.dispose()
+      axes.y.dispose()
 
   _mapLayers: (layers) ->
     obj = {}

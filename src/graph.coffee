@@ -142,7 +142,7 @@ class Graph
     scales = @scaleSet.scales
     @coord.setScales scales
     @scaleSet.coord = @coord
-    @scaleSet.makeAxes _.keys @panes # TODO: use indices here? pass in Facet?
+    @scaleSet.makeAxes()
     @scaleSet.makeTitles(@spec.title ? '')
     @scaleSet.makeLegends()
 
@@ -206,7 +206,7 @@ class Graph
     tmpRanges = @coord.ranges()
     poly.scaleset tmpRanges, @coord
   _makeDimensions: (spec, scaleSet, facet) ->
-    scaleSet.makeAxes(_.keys(@panes))
+    scaleSet.makeAxes()
     scaleSet.makeTitles(@spec.title ? '')
     scaleSet.makeLegends()
     poly.dim.make spec, scaleSet, facet.getGrid()

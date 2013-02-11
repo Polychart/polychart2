@@ -112,7 +112,6 @@ class Circle extends Renderer # for both cartesian & polar
 
     fill = @_maybeApply scales, mark, 'color'
     if fill and fill isnt 'none' then attr.fill = fill
-
     @_shared scales, mark, attr
 
 class Path extends Renderer # for both cartesian & polar?

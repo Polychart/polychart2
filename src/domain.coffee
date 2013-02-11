@@ -64,7 +64,6 @@ Make a domain set. A domain set is an associate array of domains, with the
 keys being aesthetics
 ###
 makeDomainSet = (geoms, metas, guideSpec, strictmode) ->
-  debugger
   domain = {}
   for aes, meta of metas
     if aes in poly.const.noDomain then continue

@@ -1,9 +1,6 @@
 sf = poly.const.scaleFns
 
-class Guide extends poly.Renderable
-  getDimension: () -> throw poly.error.impl()
-
-class Axis extends Guide
+class Axis extends poly.Guide
   constructor: () ->
     @line = null
     @title = null
@@ -110,183 +107,7 @@ class Axis extends Guide
     obj['stroke-dashoffset'] = 3
     obj
 
-class XAxis extends Axis # assumes position = bottom
-  constructor: () ->
-    super()
-    @type = 'x'
-    @defaultPosition = 'bottom'
-    @validPositions = ['top', 'bottom', 'none']
-  _renderline : (renderer, axisDim) ->
-    if @position is 'top'
-      y = sf.identity axisDim.top
-    else
-      y = sf.identity axisDim.bottom
-    x1 = sf.identity axisDim.left
-    x2 = sf.identity axisDim.left+axisDim.width
-    renderer.add
-      type: 'path'
-      y: [y, y]
-      x: [x1, x2]
-      stroke: sf.identity 'black'
-  _makeTick: (axisDim, tick) ->
-    if @position is 'top'
-      y1 = sf.identity(axisDim.top)
-      y2 = sf.identity(axisDim.top-5)
-    else
-      y1 = sf.identity(axisDim.bottom)
-      y2 = sf.identity(axisDim.bottom+5)
-    super
-      x : [tick.location, tick.location]
-      y : [y1, y2]
-  _makeLabel: (axisDim, tick) ->
-    if @position is 'top'
-      y = sf.identity(axisDim.top-15)
-    else
-      y = sf.identity(axisDim.bottom+15)
-    super
-      x : tick.location
-      y : y
-      text: tick.value
-      'text-anchor' : 'middle'
-  _makeGrid: (axisDim, tick) ->
-    y1 = sf.identity(axisDim.top)
-    y2 = sf.identity(axisDim.bottom)
-    super
-      type: 'path'
-      x : [tick.location, tick.location]
-      y : [y1, y2]
-  getDimension: () ->
-    position: @position ? 'bottom'
-    height: 30
-    width: 'all'
-
-class YAxis extends Axis # assumes position = left
-  constructor: () ->
-    super()
-    @type = 'y'
-    @defaultPosition = 'left'
-    @validPositions = ['left', 'right', 'none']
-  _renderline : (renderer, axisDim) ->
-    if @position is 'left'
-      x = sf.identity axisDim.left
-    else
-      x = sf.identity axisDim.right
-    y1 = sf.identity axisDim.top
-    y2 = sf.identity axisDim.top+axisDim.height
-    renderer.add
-      type: 'path'
-      x: [x, x]
-      y: [y1, y2]
-      stroke: sf.identity 'black'
-  _makeTick: (axisDim, tick) ->
-    if @position is 'left'
-      x1 = sf.identity(axisDim.left)
-      x2 = sf.identity(axisDim.left-5)
-    else
-      x1 = sf.identity(axisDim.right)
-      x2 = sf.identity(axisDim.right+5)
-    super
-      x : [x1, x2]
-      y : [tick.location, tick.location]
-  _makeLabel: (axisDim, tick) ->
-    if @position is 'left'
-      x = sf.identity(axisDim.left-7)
-    else
-      x = sf.identity(axisDim.right+7)
-    super
-      x : x
-      y : tick.location
-      text: tick.value
-      'text-anchor' : if @position is 'left' then 'end' else 'start'
-  _makeGrid: (axisDim, tick) ->
-    x1 = sf.identity(axisDim.left)
-    x2 = sf.identity(axisDim.right)
-    super
-      type: 'path'
-      y : [tick.location, tick.location]
-      x : [x1, x2]
-  getDimension: () ->
-    position: @position ? 'right'
-    height: 'all'
-    width: 5+@maxwidth
-
-class RAxis extends Axis # assumes position = left
-  constructor: () ->
-    super()
-    @type = 'r'
-    @defaultPosition = 'left'
-    @validPositions = ['left', 'right', 'none']
-  _renderline : (renderer, axisDim) ->
-    x = sf.identity axisDim.left
-    y1 = sf.identity axisDim.top
-    y2 = sf.identity axisDim.top+axisDim.height/2
-    renderer.add
-      type: 'path'
-      x: [x, x]
-      y: [y1, y2]
-      stroke: sf.identity 'black'
-  _makeTick: (axisDim, tick) ->
-    super
-      x : [sf.identity(axisDim.left), sf.identity(axisDim.left-5)]
-      y : [tick.location, tick.location]
-  _makeLabel: (axisDim, tick) ->
-    super
-      x : sf.identity(axisDim.left-7)
-      y : tick.location
-      text: tick.value
-      'text-anchor' : 'end'
-  _makeGrid: (axisDim, tick) ->
-    super
-      type: 'circle'
-      x: sf.identity axisDim.centerx
-      y: sf.identity axisDim.centery
-      size: sf.identity @coord.getScale('r') tick.location
-      fill: sf.identity('white')
-      'stroke-width': 1
-  getDimension: () ->
-    position: 'left'
-    height: 'all'
-    width: 5+@maxwidth
-
-class TAxis extends Axis # assumes position = ... um, what is it supposed to be?
-  constructor: () ->
-    super()
-    @type = 't'
-    @defaultPosition = 'out'
-    @validPositions = ['out', 'none']
-  _renderline : (renderer, axisDim) ->
-    renderer.add {
-      type: 'circle',
-      x: sf.identity axisDim.centerx
-      y: sf.identity axisDim.centery
-      size: sf.identity axisDim.radius
-      color: sf.identity('none')
-      stroke: sf.identity('black')
-      'stroke-width': 1
-    }
-  _makeTick: (axisDim, tick) ->
-    super
-      x : [tick.location, tick.location]
-      y : [sf.max(0), sf.max(3)]
-  _makeLabel: (axisDim, tick) ->
-    super
-      x : tick.location
-      y : sf.max(12)
-      text: tick.value
-      'text-anchor' : 'middle'
-  _makeGrid: (axisDim, tick) ->
-    x1 = sf.identity axisDim.centerx
-    y1 = sf.identity axisDim.centery
-    theta = @coord.getScale('t')(tick.location) - Math.PI/2
-    x2 = sf.identity(axisDim.centerx + axisDim.radius * Math.cos(theta))
-    y2 = sf.identity(axisDim.centery + axisDim.radius * Math.sin(theta))
-    super
-      type: 'path'
-      y : [y1, y2]
-      x : [x1, x2]
-  getDimension: () -> {}
-
-class Legend extends Guide
+class Legend extends poly.Guide
   TITLEHEIGHT: 15
   TICKHEIGHT: 12
   SPACING: 10
@@ -387,7 +208,7 @@ class Legend extends Guide
     height: @height
     width: 15+@maxwidth
 
-class Title extends Guide
+class Title extends poly.Guide
   constructor: () ->
     @position = 'none'
     @titletext = null
@@ -474,16 +295,7 @@ class TitleFacet extends Title
     text: @titletext
     'text-anchor' : 'middle'
 
-poly.guide = {}
-poly.guide.axis = (type) ->
-  if type == 'x'
-    new XAxis()
-  else if type == 'y'
-    new YAxis()
-  else if type == 'r'
-    new RAxis()
-  else if type == 't'
-    new TAxis()
+poly.guide ?= {}
 poly.guide.title = (type) ->
   if type in ['y', 'r']
     new TitleV()

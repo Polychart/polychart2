@@ -7,6 +7,33 @@ class Renderable
   render: () -> poly.error.impl()
   dispose: () -> poly.error.impl()
 
+class Guide extends Renderable
+  getDimension: () -> throw poly.error.impl()
+
+
+###
+This should probably be in its own class folder, and should technically
+be named "Renderable", but whatever. It manages what is currently on the
+screen, and what needs to be rendered.
+  @geoms : a key-value pair of an identifier to a group of objects to be
+           rendered. It should be of the following form:
+            @geoms = {
+              'id' : {
+                marks: {
+                  # an assoc array of renderable "marks", acceptable by 
+                  # poly.render() function
+                },
+                evtData: {
+                  # data bound to a click/mouseover/mouseout event
+                  # on the marks plotted
+                },
+                tooltip: # tooltip text to show on mouseover
+              }
+            }
+  @pts   : a key-value pair of identfier to a group of objects rendered.
+           the group of objects is also a key-value pair, corresponding
+           to the key-value pair provided by `marks` as above.
+###
 class Geometry extends Renderable
   constructor: () ->
     @geoms = {}
@@ -42,4 +69,5 @@ class Geometry extends Renderable
     @pts = {}
 
 poly.Renderable = Renderable
+poly.Guide = Guide
 poly.Geometry = Geometry

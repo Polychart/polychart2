@@ -157,7 +157,6 @@ class Wrap extends Facet
     super(dims,id % @cols, Math.floor(id/@cols))
   getEvtData: (col, row) ->
     obj = {}
-    debugger
     obj[@var.var] = {in: [@values[@var.var][@rows*row + col]]}
     obj
 
