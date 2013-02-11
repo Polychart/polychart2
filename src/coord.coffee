@@ -1,3 +1,8 @@
+###
+Coordinates
+-----------
+Defines what coordinate system is used to plot the graph.
+###
 class Coordinate
   constructor: (@spec) ->
     @spec ?= {}

@@ -1,5 +1,7 @@
 ###
-# GLOBALS
+Tick Generation
+---------------
+Helper functions to legends & axes for generating ticks
 ###
 poly.tick = {}
 
