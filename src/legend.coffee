@@ -115,6 +115,9 @@ class Legends extends poly.GuideSet
 
 
 class Legend extends poly.Guide
+  TITLEHEIGHT: 15
+  TICKHEIGHT: 12
+  SPACING : 10
   constructor: (@aes) ->
     @geometry = new poly.Geometry
   make: (params) ->

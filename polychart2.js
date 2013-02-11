@@ -3754,6 +3754,12 @@ Legends (GuideSet) object to determine the correct position of a legend.
 
     __extends(Legend, _super);
 
+    Legend.prototype.TITLEHEIGHT = 15;
+
+    Legend.prototype.TICKHEIGHT = 12;
+
+    Legend.prototype.SPACING = 10;
+
     function Legend(aes) {
       this.aes = aes;
       this._makeEvtData = __bind(this._makeEvtData, this);
