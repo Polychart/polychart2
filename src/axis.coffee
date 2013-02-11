@@ -10,6 +10,83 @@ objects that can later be rendered using Geometry class.
 
 sf = poly.const.scaleFns
 
+class Axes extends poly.GuideSet
+  constructor: () ->
+    @axesGeoms = {}
+  make: (params) ->
+    {@domains, @coord, @scales, @specs, @labels} = params
+    @axes =
+      x : poly.guide.axis(@coord.axisType('x'),
+            domain: @domains.x
+            type: @scales.x.tickType()
+            guideSpec: @specs.x ? {}
+            key: @labels.x ? 'x'
+          )
+      y : poly.guide.axis(@coord.axisType('y'),
+            domain: @domains.y
+            type: @scales.y.tickType()
+            guideSpec: @specs.y ? {}
+            key: @labels.y ? 'y'
+          )
+  getDimension: (dims) ->
+    offset = {}
+    for key, axis of @axes
+      d = axis.getDimension()
+      if d.position == 'left'
+        offset.left = d.width
+      else if d.position == 'right'
+        offset.right = d.width
+      else if d.position == 'bottom'
+        offset.bottom = d.height
+      else if d.position == 'top'
+        offset.top = d.height
+    offset
+  render: (dims, renderer, facet) ->
+    indices = _.keys(facet.indices)
+    {deleted, kept, added} = poly.compare(_.keys(@axesGeoms), indices)
+    for key in deleted
+      for axis in @axesGeoms[key]
+        axis.dispose()
+    axisDim =
+      top: 0
+      left : 0
+      right: dims.chartWidth
+      bottom : dims.chartHeight
+      width: dims.chartWidth
+      height: dims.chartHeight
+    drawx = facet.edge(@axes.x.position)
+    drawy = facet.edge(@axes.y.position)
+    xoverride = renderLabel : false, renderTick : false
+    yoverride = renderLabel : false, renderTick : false
+    if @axes.x.type is 'r'
+      xoverride.renderLine = false
+    if @axes.y.type is 'r'
+      yoverride.renderLine = false
+    for key in indices
+      offset = facet.getOffset(dims, key)
+      @axesGeoms[key] ?=
+        x: new poly.Geometry()
+        y: new poly.Geometry()
+      r = renderer(offset, false, false)
+      # x
+      override = if drawx(key) then {} else xoverride
+      @axesGeoms[key].x.set @axes.x.calculate(axisDim, @coord, override)
+      @axesGeoms[key].x.render(r)
+      # y
+      override = if drawy(key) then {} else yoverride
+      @axesGeoms[key].y.set @axes.y.calculate(axisDim, @coord, override)
+      @axesGeoms[key].y.render(r)
+      # hack to move the grid to the BACK
+      for aes in ['x', 'y']
+        for k, pts of @axesGeoms[key][aes].pts
+          if pts.grid
+            pts.grid.toBack()
+  dispose: (renderer) ->
+    for key, axes of @axesGeoms
+      axes.x.dispose()
+      axes.y.dispose()
+    @axesGeoms = {}
+
 class Axis extends poly.Guide
   constructor: (params) ->
     {domain, type, guideSpec, key} = params
@@ -246,3 +323,4 @@ poly.guide.axis = (type, params) ->
     new RAxis(params)
   else if type == 't'
     new TAxis(params)
+poly.guide.axes = (params) -> new Axes(params)

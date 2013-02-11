@@ -10,6 +10,9 @@ class Renderable
 class Guide extends Renderable
   getDimension: () -> throw poly.error.impl()
 
+class GuideSet extends Renderable
+  getDimension: () -> throw poly.error.impl()
+  make: () -> throw poly.error.impl()
 
 ###
 This should probably be in its own class folder, and should technically
@@ -70,4 +73,5 @@ class Geometry extends Renderable
 
 poly.Renderable = Renderable
 poly.Guide = Guide
+poly.GuideSet = GuideSet
 poly.Geometry = Geometry

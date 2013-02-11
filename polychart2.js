@@ -558,7 +558,7 @@ Abstract classes, almost used like interfaces throughout the codebase
 
 
 (function() {
-  var Geometry, Guide, Renderable,
+  var Geometry, Guide, GuideSet, Renderable,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -592,6 +592,26 @@ Abstract classes, almost used like interfaces throughout the codebase
     };
 
     return Guide;
+
+  })(Renderable);
+
+  GuideSet = (function(_super) {
+
+    __extends(GuideSet, _super);
+
+    function GuideSet() {
+      return GuideSet.__super__.constructor.apply(this, arguments);
+    }
+
+    GuideSet.prototype.getDimension = function() {
+      throw poly.error.impl();
+    };
+
+    GuideSet.prototype.make = function() {
+      throw poly.error.impl();
+    };
+
+    return GuideSet;
 
   })(Renderable);
 
@@ -702,6 +722,8 @@ Abstract classes, almost used like interfaces throughout the codebase
   poly.Renderable = Renderable;
 
   poly.Guide = Guide;
+
+  poly.GuideSet = GuideSet;
 
   poly.Geometry = Geometry;
 
@@ -3275,13 +3297,155 @@ objects that can later be rendered using Geometry class.
 
 
 (function() {
-  var Axis, RAxis, TAxis, XAxis, YAxis, sf, _ref,
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+  var Axes, Axis, RAxis, TAxis, XAxis, YAxis, sf, _ref,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   sf = poly["const"].scaleFns;
+
+  Axes = (function(_super) {
+
+    __extends(Axes, _super);
+
+    function Axes() {
+      this.axesGeoms = {};
+    }
+
+    Axes.prototype.make = function(params) {
+      var _ref, _ref1, _ref2, _ref3;
+      this.domains = params.domains, this.coord = params.coord, this.scales = params.scales, this.specs = params.specs, this.labels = params.labels;
+      return this.axes = {
+        x: poly.guide.axis(this.coord.axisType('x'), {
+          domain: this.domains.x,
+          type: this.scales.x.tickType(),
+          guideSpec: (_ref = this.specs.x) != null ? _ref : {},
+          key: (_ref1 = this.labels.x) != null ? _ref1 : 'x'
+        }),
+        y: poly.guide.axis(this.coord.axisType('y'), {
+          domain: this.domains.y,
+          type: this.scales.y.tickType(),
+          guideSpec: (_ref2 = this.specs.y) != null ? _ref2 : {},
+          key: (_ref3 = this.labels.y) != null ? _ref3 : 'y'
+        })
+      };
+    };
+
+    Axes.prototype.getDimension = function(dims) {
+      var axis, d, key, offset, _ref;
+      offset = {};
+      _ref = this.axes;
+      for (key in _ref) {
+        axis = _ref[key];
+        d = axis.getDimension();
+        if (d.position === 'left') {
+          offset.left = d.width;
+        } else if (d.position === 'right') {
+          offset.right = d.width;
+        } else if (d.position === 'bottom') {
+          offset.bottom = d.height;
+        } else if (d.position === 'top') {
+          offset.top = d.height;
+        }
+      }
+      return offset;
+    };
+
+    Axes.prototype.render = function(dims, renderer, facet) {
+      var added, aes, axis, axisDim, deleted, drawx, drawy, indices, k, kept, key, offset, override, pts, r, xoverride, yoverride, _base, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _results;
+      indices = _.keys(facet.indices);
+      _ref = poly.compare(_.keys(this.axesGeoms), indices), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
+      for (_i = 0, _len = deleted.length; _i < _len; _i++) {
+        key = deleted[_i];
+        _ref1 = this.axesGeoms[key];
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          axis = _ref1[_j];
+          axis.dispose();
+        }
+      }
+      axisDim = {
+        top: 0,
+        left: 0,
+        right: dims.chartWidth,
+        bottom: dims.chartHeight,
+        width: dims.chartWidth,
+        height: dims.chartHeight
+      };
+      drawx = facet.edge(this.axes.x.position);
+      drawy = facet.edge(this.axes.y.position);
+      xoverride = {
+        renderLabel: false,
+        renderTick: false
+      };
+      yoverride = {
+        renderLabel: false,
+        renderTick: false
+      };
+      if (this.axes.x.type === 'r') {
+        xoverride.renderLine = false;
+      }
+      if (this.axes.y.type === 'r') {
+        yoverride.renderLine = false;
+      }
+      _results = [];
+      for (_k = 0, _len2 = indices.length; _k < _len2; _k++) {
+        key = indices[_k];
+        offset = facet.getOffset(dims, key);
+        if ((_ref2 = (_base = this.axesGeoms)[key]) == null) {
+          _base[key] = {
+            x: new poly.Geometry(),
+            y: new poly.Geometry()
+          };
+        }
+        r = renderer(offset, false, false);
+        override = drawx(key) ? {} : xoverride;
+        this.axesGeoms[key].x.set(this.axes.x.calculate(axisDim, this.coord, override));
+        this.axesGeoms[key].x.render(r);
+        override = drawy(key) ? {} : yoverride;
+        this.axesGeoms[key].y.set(this.axes.y.calculate(axisDim, this.coord, override));
+        this.axesGeoms[key].y.render(r);
+        _results.push((function() {
+          var _l, _len3, _ref3, _results1;
+          _ref3 = ['x', 'y'];
+          _results1 = [];
+          for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
+            aes = _ref3[_l];
+            _results1.push((function() {
+              var _ref4, _results2;
+              _ref4 = this.axesGeoms[key][aes].pts;
+              _results2 = [];
+              for (k in _ref4) {
+                pts = _ref4[k];
+                if (pts.grid) {
+                  _results2.push(pts.grid.toBack());
+                } else {
+                  _results2.push(void 0);
+                }
+              }
+              return _results2;
+            }).call(this));
+          }
+          return _results1;
+        }).call(this));
+      }
+      return _results;
+    };
+
+    Axes.prototype.dispose = function(renderer) {
+      var axes, key, _ref;
+      _ref = this.axesGeoms;
+      for (key in _ref) {
+        axes = _ref[key];
+        axes.x.dispose();
+        axes.y.dispose();
+      }
+      return this.axesGeoms = {};
+    };
+
+    return Axes;
+
+  })(poly.GuideSet);
 
   Axis = (function(_super) {
 
@@ -3687,6 +3851,10 @@ objects that can later be rendered using Geometry class.
     } else if (type === 't') {
       return new TAxis(params);
     }
+  };
+
+  poly.guide.axes = function(params) {
+    return new Axes(params);
   };
 
 }).call(this);
@@ -4346,7 +4514,7 @@ objects that can later be rendered using Geometry class.
     function ScaleSet(tmpRanges, coord) {
       this.coord = coord;
       this.ranges = tmpRanges;
-      this.axes = {};
+      this.axes = poly.guide.axes();
       this.legends = [];
       this.deletedLegends = [];
     }
@@ -4524,135 +4692,32 @@ objects that can later be rendered using Geometry class.
     };
 
     ScaleSet.prototype.makeAxes = function() {
-      return this.axes = {
-        x: poly.guide.axis(this.coord.axisType('x'), {
-          domain: this.domainx,
-          type: this.scales.x.tickType(),
-          guideSpec: this.getSpec('x'),
-          key: poly.getLabel(this.layers, 'x')
-        }),
-        y: poly.guide.axis(this.coord.axisType('y'), {
-          domain: this.domainy,
-          type: this.scales.y.tickType(),
-          guideSpec: this.getSpec('y'),
-          key: poly.getLabel(this.layers, 'y')
-        })
-      };
+      var _ref;
+      return this.axes.make({
+        domains: {
+          x: this.domainx,
+          y: this.domainy
+        },
+        coord: this.coord,
+        scales: this.scales,
+        specs: (_ref = this.guideSpec) != null ? _ref : {},
+        labels: {
+          x: poly.getLabel(this.layers, 'x'),
+          y: poly.getLabel(this.layers, 'y')
+        }
+      });
     };
 
-    ScaleSet.prototype.axesOffset = function(dim) {
-      var axis, d, key, offset, _ref;
-      offset = {};
-      _ref = this.axes;
-      for (key in _ref) {
-        axis = _ref[key];
-        d = axis.getDimension();
-        if (d.position === 'left') {
-          offset.left = d.width;
-        } else if (d.position === 'right') {
-          offset.right = d.width;
-        } else if (d.position === 'bottom') {
-          offset.bottom = d.height;
-        } else if (d.position === 'top') {
-          offset.top = d.height;
-        }
-      }
-      return offset;
+    ScaleSet.prototype.axesOffset = function(dims) {
+      return this.axes.getDimension(dims);
     };
 
     ScaleSet.prototype.renderAxes = function(dims, renderer, facet) {
-      var added, aes, axis, axisDim, deleted, drawx, drawy, indices, k, kept, key, offset, override, pts, r, xoverride, yoverride, _base, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _results;
-      if ((_ref = this.axesGeoms) == null) {
-        this.axesGeoms = {};
-      }
-      indices = _.keys(facet.indices);
-      _ref1 = poly.compare(_.keys(this.axesGeoms), indices), deleted = _ref1.deleted, kept = _ref1.kept, added = _ref1.added;
-      for (_i = 0, _len = deleted.length; _i < _len; _i++) {
-        key = deleted[_i];
-        _ref2 = this.axesGeoms[key];
-        for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-          axis = _ref2[_j];
-          axis.dispose();
-        }
-      }
-      axisDim = {
-        top: 0,
-        left: 0,
-        right: dims.chartWidth,
-        bottom: dims.chartHeight,
-        width: dims.chartWidth,
-        height: dims.chartHeight
-      };
-      drawx = facet.edge(this.axes.x.position);
-      drawy = facet.edge(this.axes.y.position);
-      xoverride = {
-        renderLabel: false,
-        renderTick: false
-      };
-      yoverride = {
-        renderLabel: false,
-        renderTick: false
-      };
-      if (this.axes.x.type === 'r') {
-        xoverride.renderLine = false;
-      }
-      if (this.axes.y.type === 'r') {
-        yoverride.renderLine = false;
-      }
-      _results = [];
-      for (_k = 0, _len2 = indices.length; _k < _len2; _k++) {
-        key = indices[_k];
-        offset = facet.getOffset(dims, key);
-        if ((_ref3 = (_base = this.axesGeoms)[key]) == null) {
-          _base[key] = {
-            x: new poly.Geometry(),
-            y: new poly.Geometry()
-          };
-        }
-        r = renderer(offset, false, false);
-        override = drawx(key) ? {} : xoverride;
-        this.axesGeoms[key].x.set(this.axes.x.calculate(axisDim, this.coord, override));
-        this.axesGeoms[key].x.render(r);
-        override = drawy(key) ? {} : yoverride;
-        this.axesGeoms[key].y.set(this.axes.y.calculate(axisDim, this.coord, override));
-        this.axesGeoms[key].y.render(r);
-        _results.push((function() {
-          var _l, _len3, _ref4, _results1;
-          _ref4 = ['x', 'y'];
-          _results1 = [];
-          for (_l = 0, _len3 = _ref4.length; _l < _len3; _l++) {
-            aes = _ref4[_l];
-            _results1.push((function() {
-              var _ref5, _results2;
-              _ref5 = this.axesGeoms[key][aes].pts;
-              _results2 = [];
-              for (k in _ref5) {
-                pts = _ref5[k];
-                if (pts.grid) {
-                  _results2.push(pts.grid.toBack());
-                } else {
-                  _results2.push(void 0);
-                }
-              }
-              return _results2;
-            }).call(this));
-          }
-          return _results1;
-        }).call(this));
-      }
-      return _results;
+      return this.axes.render(dims, renderer, facet);
     };
 
     ScaleSet.prototype.disposeAxes = function(renderer) {
-      var axes, key, _ref, _results;
-      _ref = this.axesGeoms;
-      _results = [];
-      for (key in _ref) {
-        axes = _ref[key];
-        axes.x.dispose();
-        _results.push(axes.y.dispose());
-      }
-      return _results;
+      return this.axes.dispose(renderer);
     };
 
     ScaleSet.prototype._mapLayers = function(layers) {
