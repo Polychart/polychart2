@@ -123,7 +123,6 @@ class Legend extends poly.Guide
   make: (params) ->
     {domain, type, guideSpec, @mapping, keys} = params
     @titletext = guideSpec.title ? keys
-    debugger
     @ticks = poly.tick.make domain, guideSpec, type
     @height = @TITLEHEIGHT + @SPACING + @TICKHEIGHT*_.size @ticks
     titleWidth = poly.strSize @titletext

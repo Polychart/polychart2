@@ -410,6 +410,7 @@ TODO: this should be changed to make it easier to make other
       types of layers.
 ###
 poly.layer = {}
+poly.layer.Base = Layer # expose this to allow for overwriting
 poly.layer.classes = {
   'point' : Point
   'text' : Text
