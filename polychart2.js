@@ -5767,15 +5767,7 @@ Shared constants
       this.statData = statData;
       this.meta = meta;
       this._calcGeoms();
-      this.geoms = (function() {
-        if (this.spec.sample === false) {
-          return this.geoms;
-        } else if (_.isNumber(this.spec.sample)) {
-          return poly.sample(this.geoms, this.spec.sample);
-        } else {
-          throw poly.error.defn("A layer's 'sample' definition should be an integer, not " + this.spec.sample);
-        }
-      }).call(this);
+      this.geoms = this._sample(this.geoms);
       meta = {};
       _ref = this.mapping;
       for (aes in _ref) {
@@ -5796,7 +5788,15 @@ Shared constants
       return 'foo';
     };
 
-    Layer.prototype._mappings = function(spec) {};
+    Layer.prototype._sample = function(geoms) {
+      if (this.spec.sample === false) {
+        return geoms;
+      } else if (_.isNumber(this.spec.sample)) {
+        return poly.sample(geoms, this.spec.sample);
+      } else {
+        throw poly.error.defn("A layer's 'sample' definition should be an integer, not " + this.spec.sample);
+      }
+    };
 
     Layer.prototype._getValue = function(item, aes) {
       if (this.mapping[aes]) {

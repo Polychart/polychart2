@@ -49,13 +49,7 @@ class Layer
         if spec[aes].const then @consts[aes] = spec[aes].const
   calculate: (@statData, @meta) ->
     @_calcGeoms()
-    @geoms =
-      if @spec.sample is false
-        @geoms
-      else if _.isNumber @spec.sample
-        poly.sample @geoms, @spec.sample
-      else
-        throw poly.error.defn "A layer's 'sample' definition should be an integer, not #{@spec.sample}"
+    @geoms = @_sample @geoms
     meta = {}
     for aes, key of @mapping
       meta[aes] = @meta[key]
@@ -64,7 +58,15 @@ class Layer
   _calcGeoms: () ->
     throw poly.error.impl()
   _tooltip: (item) -> 'foo'
-  _mappings: (spec) ->
+  # helper to sample the number of geometrical points plotted, when encessary
+  _sample: (geoms) ->
+    if @spec.sample is false
+      geoms
+    else if _.isNumber @spec.sample
+      poly.sample geoms, @spec.sample
+    else
+      throw poly.error.defn "A layer's 'sample' definition should be an integer, not #{@spec.sample}"
+
   # helper for getting the value of a particular aesthetic from an item
   _getValue: (item, aes) ->
     if @mapping[aes]          then item[@mapping[aes]]
