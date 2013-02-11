@@ -48,6 +48,20 @@ one = () -> Math.random()*10
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
+@examples.point_missing = (dom) ->
+  data = polyjs.data json: [
+    {a: 2, b: 4}
+    {a: 3, b: 7}
+    {a: 9, b: 10}
+    {a: 5}
+    {a: null, b: 3}
+    {a: undefined, b: null}
+  ]
+  polyjs.chart
+    layer:
+      data:data, type:'point', x:'a', y:'b'
+    dom:dom
+
 @examples.point_sampled = (dom) ->
   jsondata = ({x:one(), y:one(), c:one()} for i in [0..1000])
   data = polyjs.data json:jsondata

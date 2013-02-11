@@ -18,6 +18,30 @@
   }
   c = polyjs.chart spec
 
+@examples.area_missing = (dom) ->
+  data = polyjs.data json: [
+    {a: 4, b: 2, c: 'B'}
+    {a: 5, b: 7, c: 'B'}
+    {a: 10, b: 2, c: 'B'}
+    {a: 11, b: 2, c: 'B'}
+    {a: 7, c: 'B'}
+    {a: null, b: 3, c: 'B'}
+    {a: undefined, b: null, c: 'B'}
+    {a: 2, b: 2, c: 'A'}
+    {a: 4, b: 7, c: 'A'}
+    {a: 9, b: null, c: 'A'}
+    {a: 11, b: 1, c: 'A'}
+    {a: 5, c: 'A'}
+    {a: null, b: 3, c: 'A'}
+    {a: undefined, b: null, c: 'A'}
+  ]
+  polyjs.chart
+    layer:
+      data:data, type:'area', x:'a', y:'b', color: 'c'
+    dom:dom
+
+
+
 @examples.area_single = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
   data = polyjs.data json:jsondata

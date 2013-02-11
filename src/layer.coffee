@@ -253,7 +253,8 @@ class Bar extends Layer
 
 class Area extends Layer
   _calcGeoms: () ->
-    all_x = _.uniq (@_getValue item, 'x' for item in @statData)
+    all_x = (x for item in @statData when poly.isDefined(@_getValue(item, 'y')) and poly.isDefined(x = @_getValue(item, 'x')))
+    all_x = _.uniq all_x
     counters = {} # handle +/- separately?
     for key in all_x
       counters[key] = 0

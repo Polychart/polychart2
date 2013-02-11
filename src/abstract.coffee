@@ -59,12 +59,28 @@ class Geometry extends Renderable
   _modify: (renderer, points, geom) ->
     objs = {}
     for id2, mark of geom.marks
-      objs[id2] = renderer.animate points[id2], mark, geom.evtData, geom.tooltip
+      try
+        objs[id2] =
+          if points[id2]
+            renderer.animate points[id2], mark, geom.evtData, geom.tooltip
+          else
+            renderer.add mark, geom.evtData, geom.tooltip
+      catch error
+        if error.name is 'MissingData'
+          console.log error.message
+        else
+          throw error
     objs
   _add: (renderer, geom) ->
     objs = {}
     for id2, mark of geom.marks
-      objs[id2] = renderer.add mark, geom.evtData, geom.tooltip
+      try
+        objs[id2] = renderer.add mark, geom.evtData, geom.tooltip
+      catch error
+        if error.name is 'MissingData'
+          console.log error.message
+        else
+          throw error
     objs
   dispose: (renderer) =>
     for id, pt of @pts

@@ -65,6 +65,7 @@ class Renderer
   animate: (pt, scales, coord, offset, mark, mayflip) ->
     pt.animate @attr(scales, coord, offset, mark, mayflip), 300
   attr: (scales, coord, offset, mark, mayflip) -> throw poly.error.impl()
+  _cantRender: (aes) -> throw poly.error.missingdata()
   _makePath : (xs, ys, type='L') ->
     path = _.map xs, (x, i) -> (if i == 0 then 'M' else type) + x+' '+ys[i]
     path.join(' ')
@@ -95,12 +96,18 @@ class Renderer
     maybeAdd('font-weight')
     maybeAdd('font-family')
     attr
-
+  _checkPointUndefined: (x, y, type="Point") ->
+    if x is undefined or y is undefined
+      throw poly.error.missing "#{type} cannot be plotted due to undefined data."
+  _checkArrayUndefined: (x, y, type="Line") ->
+    if _.all (x[i] is undefined or y[i] is undefined for i in [0..x.length-1])
+      throw poly.error.missing "Line cannot be plotted due to too many missing points."
 
 class Circle extends Renderer # for both cartesian & polar
   _make: (paper) -> paper.circle()
   attr: (scales, coord, offset, mark, mayflip) ->
     {x, y} = coord.getXY mayflip, mark
+    @_checkPointUndefined(x, y, "Circle")
     {x, y} = @_applyOffset(x, y, offset)
     stroke = @_maybeApply scales, mark,
       if mark.stroke then 'stroke' else 'color'
@@ -118,6 +125,7 @@ class Path extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
   attr: (scales, coord, offset, mark, mayflip) ->
     {x, y} = coord.getXY mayflip, mark
+    @_checkArrayUndefined(x, y, "Path")
     {x, y} = @_applyOffset(x, y, offset)
     stroke = @_maybeApply scales, mark,
       if mark.stroke then 'stroke' else 'color'
@@ -130,6 +138,9 @@ class Line extends Renderer # for both cartesian & polar?
   attr: (scales, coord, offset, mark, mayflip) ->
     [mark.x,mark.y] = poly.sortArrays scales.x.compare, [mark.x,mark.y]
     {x, y} = coord.getXY mayflip, mark
+    @_checkArrayUndefined(x, y, "Line")
+    for xi, i in x
+      yi = y[i]
     {x, y} = @_applyOffset(x, y, offset)
     stroke = @_maybeApply scales, mark,
       if mark.stroke then 'stroke' else 'color'
@@ -142,6 +153,7 @@ class PolarLine extends Renderer
   _make: (paper) -> paper.path()
   attr: (scales, coord, offset, mark, mayflip) ->
     {x, y, r, t} = coord.getXY mayflip, mark
+    @_checkArrayUndefined(x, y, "Line")
     {x, y} = @_applyOffset(x, y, offset)
     path =
       if _.max(r) - _.min(r) < poly.const.epsilon
@@ -181,6 +193,8 @@ class Rect extends Renderer # for CARTESIAN only
   _make: (paper) -> paper.rect()
   attr: (scales, coord, offset, mark, mayflip) ->
     {x, y} = coord.getXY mayflip, mark
+    @_checkPointUndefined(x[0], y[0], "Bar")
+    @_checkPointUndefined(x[1], y[1], "Bar")
     {x, y} = @_applyOffset(x, y, offset)
     stroke = @_maybeApply scales, mark,
       if mark.stroke then 'stroke' else 'color'
@@ -198,6 +212,8 @@ class CircleRect extends Renderer # FOR POLAR ONLY
   attr: (scales, coord, offset, mark, mayflip) ->
     [x0, x1] = mark.x
     [y0, y1] = mark.y
+    @_checkPointUndefined(x0, y0, "Bar")
+    @_checkPointUndefined(x1, y1, "Bar")
     mark.x = [x0, x0, x1, x1]
     mark.y = [y0, y1, y1, y0]
     {x, y, r, t} = coord.getXY mayflip, mark
@@ -224,6 +240,7 @@ class Text extends Renderer # for both cartesian & polar
   _make: (paper) -> paper.text()
   attr: (scales, coord, offset, mark, mayflip) ->
     {x, y} = coord.getXY mayflip, mark
+    @_checkPointUndefined(x, y, "Text")
     {x, y} = @_applyOffset(x, y, offset)
 
     @_shared scales, mark,

@@ -70,6 +70,79 @@
     return c = polyjs.chart(spec);
   };
 
+  this.examples.area_missing = function(dom) {
+    var data;
+    data = polyjs.data({
+      json: [
+        {
+          a: 4,
+          b: 2,
+          c: 'B'
+        }, {
+          a: 5,
+          b: 7,
+          c: 'B'
+        }, {
+          a: 10,
+          b: 2,
+          c: 'B'
+        }, {
+          a: 11,
+          b: 2,
+          c: 'B'
+        }, {
+          a: 7,
+          c: 'B'
+        }, {
+          a: null,
+          b: 3,
+          c: 'B'
+        }, {
+          a: void 0,
+          b: null,
+          c: 'B'
+        }, {
+          a: 2,
+          b: 2,
+          c: 'A'
+        }, {
+          a: 4,
+          b: 7,
+          c: 'A'
+        }, {
+          a: 9,
+          b: null,
+          c: 'A'
+        }, {
+          a: 11,
+          b: 1,
+          c: 'A'
+        }, {
+          a: 5,
+          c: 'A'
+        }, {
+          a: null,
+          b: 3,
+          c: 'A'
+        }, {
+          a: void 0,
+          b: null,
+          c: 'A'
+        }
+      ]
+    });
+    return polyjs.chart({
+      layer: {
+        data: data,
+        type: 'area',
+        x: 'a',
+        y: 'b',
+        color: 'c'
+      },
+      dom: dom
+    });
+  };
+
   this.examples.area_single = function(dom) {
     var c, data, i, jsondata, spec, update;
     jsondata = (function() {
@@ -286,6 +359,79 @@
       }
     });
     return window.c = c;
+  };
+
+  this.examples.bar_missing = function(dom) {
+    var data;
+    data = polyjs.data({
+      json: [
+        {
+          a: 4,
+          b: 2,
+          c: 'B'
+        }, {
+          a: 5,
+          b: 7,
+          c: 'B'
+        }, {
+          a: 10,
+          b: 2,
+          c: 'B'
+        }, {
+          a: 11,
+          b: 2,
+          c: 'B'
+        }, {
+          a: 7,
+          c: 'B'
+        }, {
+          a: null,
+          b: 3,
+          c: 'B'
+        }, {
+          a: void 0,
+          b: null,
+          c: 'B'
+        }, {
+          a: 2,
+          b: 2,
+          c: 'A'
+        }, {
+          a: 4,
+          b: 7,
+          c: 'A'
+        }, {
+          a: 9,
+          b: null,
+          c: 'A'
+        }, {
+          a: 11,
+          b: 1,
+          c: 'A'
+        }, {
+          a: 5,
+          c: 'A'
+        }, {
+          a: null,
+          b: 3,
+          c: 'A'
+        }, {
+          a: void 0,
+          b: null,
+          c: 'A'
+        }
+      ]
+    });
+    return polyjs.chart({
+      layer: {
+        data: data,
+        type: 'bar',
+        x: 'bin(a, 1)',
+        y: 'b',
+        color: 'c'
+      },
+      dom: dom
+    });
   };
 
   this.examples.bar_flip = function(dom) {
@@ -1678,6 +1824,76 @@
     return setTimeout(redraw, 1000);
   };
 
+  this.examples.line_missing2 = function(dom) {
+    var data;
+    data = polyjs.data({
+      json: [
+        {
+          a: 2,
+          b: null
+        }, {
+          a: void 0,
+          b: 7
+        }, {
+          a: 9,
+          b: null
+        }, {
+          a: 5
+        }, {
+          a: null,
+          b: 3
+        }, {
+          a: void 0,
+          b: null
+        }
+      ]
+    });
+    return polyjs.chart({
+      layer: {
+        data: data,
+        type: 'line',
+        x: 'a',
+        y: 'b'
+      },
+      dom: dom
+    });
+  };
+
+  this.examples.line_missing = function(dom) {
+    var data;
+    data = polyjs.data({
+      json: [
+        {
+          a: 2,
+          b: 4
+        }, {
+          a: 3,
+          b: 7
+        }, {
+          a: 9,
+          b: 10
+        }, {
+          a: 5
+        }, {
+          a: null,
+          b: 3
+        }, {
+          a: void 0,
+          b: null
+        }
+      ]
+    });
+    return polyjs.chart({
+      layer: {
+        data: data,
+        type: 'line',
+        x: 'a',
+        y: 'b'
+      },
+      dom: dom
+    });
+  };
+
   this.examples.line_sum = function(dom) {
     var c, data, i, jsondata, next, redraw, s, spec;
     i = 0;
@@ -2428,6 +2644,41 @@
       return setTimeout(redraw, 1000);
     };
     return setTimeout(redraw, 1000);
+  };
+
+  this.examples.point_missing = function(dom) {
+    var data;
+    data = polyjs.data({
+      json: [
+        {
+          a: 2,
+          b: 4
+        }, {
+          a: 3,
+          b: 7
+        }, {
+          a: 9,
+          b: 10
+        }, {
+          a: 5
+        }, {
+          a: null,
+          b: 3
+        }, {
+          a: void 0,
+          b: null
+        }
+      ]
+    });
+    return polyjs.chart({
+      layer: {
+        data: data,
+        type: 'point',
+        x: 'a',
+        y: 'b'
+      },
+      dom: dom
+    });
   };
 
   this.examples.point_sampled = function(dom) {

@@ -102,7 +102,10 @@ Output:
 - A function that, given the x-coord, returns the y-coord
 ###
 poly.linear = (x1, y1, x2, y2) ->
-  (x) -> (y2-y1)/(x2-x1)*(x-x1) + y1
+  if _.isFinite(x1) and _.isFinite(y1) and _.isFinite(x2) and _.isFinite(y2)
+    (x) -> (y2-y1)/(x2-x1)*(x-x1) + y1
+  else
+    throw poly.error.input "Attempting to create linear function from infinity"
 
 ###
 given a sorted list and a midpoint calculate the median
@@ -211,3 +214,15 @@ poly.sortArrays = (fn, arrays) ->
   zipped = _.zip(arrays...)
   zipped.sort (a, b) -> fn a[0], b[0]
   _.zip(zipped...)
+
+###
+Determine if a value is not null and not undefined.
+###
+poly.isDefined = (x) ->
+  if _.isObject(x)
+    if x.t is 'scalefn' and x.f isnt 'novalue'
+      poly.isDefined(x.v)
+    else
+      true
+  else
+    x isnt undefined and x isnt null and !(_.isNumber(x) and _.isNaN(x))

@@ -8,8 +8,11 @@ poly.type = {}
 poly.type.impute = (values) ->
   date = 0
   num = 0
+  length = 0
   for value in values
-    if not value? then continue
+    if not value? or value is undefined or value is null
+      continue
+    length++
     # check if it's a number
     if not isNaN(value) or not isNaN value.replace(/\$|\,/g,'')
       num++
@@ -17,9 +20,9 @@ poly.type.impute = (values) ->
     m = moment(value)
     if m? and m.isValid()
       date++
-  if num > THRESHOLD*values.length
+  if num > THRESHOLD*length
     return 'num'
-  if date > THRESHOLD*values.length
+  if date > THRESHOLD*length
     return 'date'
   return 'cat'
 

@@ -84,10 +84,13 @@ class PositionScale extends Scale
     @finv = () -> {}
 
   _NaNCheckWrap: (fn) -> (value) ->
-    out = fn(value)
-    if isNaN(out) or out is Infinity or out is -Infinity
-      throw poly.error.input "SCALE BEHAVING BADLY"
-    out
+    if not poly.isDefined(value)
+      undefined
+    else
+      out = fn(value)
+      if isNaN(out) or out is Infinity or out is -Infinity
+        throw poly.error.scale "Scale outputed a value that is not finite."
+      out
   _numWrapper: (domain, y) => @_NaNCheckWrap (value) =>
     # NOTE: the below spacing makes sure that animation in polar coordinates
     # behave as expected. Test with polar bar charts to see...

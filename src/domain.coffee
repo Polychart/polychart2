@@ -120,8 +120,7 @@ flattenGeoms = (geoms, aes) ->
   for k, geom of geoms
     for l, mark of geom.marks
       values = values.concat poly.flatten mark[aes]
-  values
-
+  (v for v in values when poly.isDefined(v))
 
 ###
 Merge an array of domain sets: i.e. merge all the domains that shares the

@@ -24,6 +24,36 @@
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
+@examples.line_missing2 = (dom) ->
+  data = polyjs.data json: [
+    {a: 2, b: null}
+    {a: undefined, b: 7}
+    {a: 9, b: null}
+    {a: 5}
+    {a: null, b: 3}
+    {a: undefined, b: null}
+  ]
+  polyjs.chart
+    layer:
+      data:data, type:'line', x:'a', y:'b'
+    dom:dom
+
+
+@examples.line_missing = (dom) ->
+  data = polyjs.data json: [
+    {a: 2, b: 4}
+    {a: 3, b: 7}
+    {a: 9, b: 10}
+    {a: 5}
+    {a: null, b: 3}
+    {a: undefined, b: null}
+  ]
+  polyjs.chart
+    layer:
+      data:data, type:'line', x:'a', y:'b'
+    dom:dom
+
+
 @examples.line_sum = (dom) ->
   i = 0; s = 0
   next = () ->
