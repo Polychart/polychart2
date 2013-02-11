@@ -15,7 +15,7 @@ cat \
     compiled/src/coord.js \
     compiled/src/domain.js \
     compiled/src/tick.js \
-    compiled/src/guide.js \
+    compiled/src/title.js \
     compiled/src/axis.js \
     compiled/src/legend.js \
     compiled/src/scale.js \

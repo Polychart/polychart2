@@ -1,3 +1,16 @@
+###
+Title (Guide)
+---------
+Classes related to the generation and management of titles.
+
+Titles are guides that is a single text: i.e. main titles and
+axis & facet labels.
+
+TODO: This is still the OLD version of Title that does not make
+use of Geometry/Renderable. This is okay for now since titles are
+so simple, but not scalable.
+###
+
 sf = poly.const.scaleFns
 
 class Title extends poly.Guide

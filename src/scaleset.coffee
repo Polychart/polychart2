@@ -8,8 +8,7 @@ class ScaleSet
     @coord = coord
     @ranges = tmpRanges
     @axes = poly.guide.axes()
-    @legends = []
-    @deletedLegends = []
+    @legends = poly.guide.legends()
 
   make: (guideSpec, domains, layers) ->
     @guideSpec = guideSpec
@@ -146,100 +145,19 @@ class ScaleSet
           else
             layer.defaults[aes]
     obj
-  _mergeAes: (layers) ->
-    merging = [] # array of {aes: __, mapped: ___}
-    for aes of @domains
-      if aes in poly.const.noLegend then continue
-      mapped = _.map layers, (layer) -> layer.mapping[aes]
-      if not _.all mapped, _.isUndefined
-        merged = false
-        for m in merging # slow but ok, <7 aes anyways...
-          if _.isEqual(m.mapped, mapped)
-            m.aes.push(aes)
-            merged = true
-            break
-        if not merged
-          merging.push {aes: [aes], mapped: mapped}
-    _.pluck merging, 'aes'
-
-  makeLegends: (mapping) -> # ok, this will be a complex f'n. deep breath:
-    # figure out which groups of aesthetics need to be represented
-    aesGroups = @_mergeAes @layers
-
-    # now iterate through existing legends AND the aesGroups to see
-    #   1) if any existing legends need to be deleted,
-    #      in which case move that legend from @legends into @deletedLEgends
-    #   2) if any new legends need to be created
-    #      in which case KEEP it in aesGroups (otherwise remove)
-    idx = 0
-    while idx < @legends.length
-      legend = @legends[idx]
-      legenddeleted = true
-      i = 0
-      while i < aesGroups.length
-        aes = aesGroups[i]
-        if _.isEqual aes, legend.aes
-          aesGroups.splice i, 1
-          legenddeleted = false
-          break
-        i++
-      if legenddeleted
-        @deletedLegends.push legend
-        @legends.splice(idx, 1)
-      else
-        idx++
-    # create new legends
-    for aes in aesGroups
-      @legends.push poly.guide.legend aes
-    # make each legend
-    for legend in @legends
-      aes = legend.aes[0]
-      legend.make
-        domain: @domains[aes]
-        guideSpec: @getSpec aes
-        type: @scales[aes].tickType()
-        mapping: @layerMapping
-        keys: poly.getLabel(@layers, aes)
-    @legends
-  legendOffset: (dims) ->
-    maxheight =  dims.height - dims.guideTop - dims.paddingTop
-    maxwidth = 0
-    offset = { x: 10, y : 0 } # initial spacing
-    for legend in @legends
-      d = legend.getDimension()
-      if d.height + offset.y > maxheight
-        offset.x += maxwidth + 5
-        offset.y = 0
-        maxwidth = 0
-      if d.width > maxwidth
-        maxwidth = d.width
-      offset.y += d.height
-    right: offset.x + maxwidth # no height
+  makeLegends: (mapping) ->
+    @legends.make
+      mapping: mapping
+      domains: @domains
+      layers: @layers
+      guideSpec: @guideSpec
+      scales: @scales
+      layerMapping: @layerMapping
+  legendOffset: (dims) -> @legends.getDimension(dims)
   renderLegends: (dims, renderer) ->
-    legend.dispose(renderer()) for legend in @deletedLegends
-    legendDim =
-      top: dims.paddingTop + dims.guideTop
-      right: dims.width - dims.guideRight - dims.paddingRight
-    @deletedLegends = []
     offset = { x: 10, y : 0 } # initial spacing
     # axis offset
     offset.x += @axesOffset(dims).right ? 0
     offset.x += @titleOffset(dims).right ? 0
-
-    maxwidth = 0
-    maxheight = dims.height - dims.guideTop - dims.paddingTop
-    for legend in @legends # assume position = right
-      newdim = legend.getDimension()
-      if newdim.height + offset.y > maxheight
-        offset.x += maxwidth + 5
-        offset.y = 0
-        maxwidth = 0
-      if newdim.width > maxwidth
-        maxwidth = newdim.width
-      realoffset =
-        x: offset.x + legendDim.right
-        y: offset.y + legendDim.top
-      legend.render(renderer(realoffset, false, false))
-      offset.y += newdim.height
-  disposeLegends: (renderer) ->
-    legend.dispose(renderer()) for legend in @legends
+    @legends.render(dims, renderer, offset)
+  disposeLegends: (renderer) -> @legends.dispose(renderer)
