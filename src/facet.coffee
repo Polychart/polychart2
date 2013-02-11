@@ -1,10 +1,10 @@
 ##
-# Faceting related functions
-#
-# Note that even though Facet is a class, it does not do any rendering and can
-# be created every time a graph is re-drawn. This is okay.
+# Faceting
+# --------
+# Facets can split a graph into multiple, smaller graphs of the same type, and
+# is useful for analyzing data of different groups. An instance of the Facet
+# class controls rendering of panes.
 ##
-
 poly.facet = {}
 poly.facet.make = () -> new Facet()
 
@@ -16,16 +16,6 @@ class Facet
     @groups = []
     @panes = {}
     @deletedPanes = []
-  dispose: (renderer) ->
-    for key, pane of @panes
-      @deletedPanes.push pane
-    @panes = {}
-    if renderer
-      for pane in @deletedPanes
-        pane.dispose(renderer)
-      @deletedPanes = []
-    else
-      # need to call 
   make: (@spec) ->
     # get the new mapping
     {@type, mapping} = @_getMappings(@spec.facet)
@@ -76,13 +66,20 @@ class Facet
         pane.dispose(renderRemoval)
       @deletedPanes = []
     for key, pane of @panes
-      debugger
       offset = @getOffset(dims, key)
       clipping = coord.clipping offset
       pane.render renderer, offset, clipping, dims
-  getGrid: () ->
-    cols: @cols
-    rows: @rows
+  dispose: (renderer) ->
+    for key, pane of @panes
+      @deletedPanes.push pane
+    @panes = {}
+    if renderer
+      for pane in @deletedPanes
+        pane.dispose(renderer)
+      @deletedPanes = []
+    else
+      # need to call render(); to remove from screen
+  getGrid: () -> {cols: @cols, rows: @rows}
   getOffset: (dims, id) ->
     {col, row} = @_getRowCol(id)
     x : dims.paddingLeft + dims.guideLeft + (dims.chartWidth + dims.horizontalSpacing) * col
@@ -142,7 +139,9 @@ class Facet
       offset:
         x : offsetX
         y : offsetY
-
+  ###
+  Helper functions
+  ###
   _getMappings: (spec) ->
     retobj =
       type: 'none'
@@ -199,3 +198,56 @@ class Facet
       retobj.row = _.indexOf @values[@mapping.y], @indices[id][@mapping.y]
       retobj.col = _.indexOf @values[@mapping.x], @indices[id][@mapping.x]
     retobj
+
+###
+Take a processedData from the data processing step and group it for faceting
+purposes.
+
+Input is in the format: 
+processData = {
+  layer_id : { statData: [...], metaData: {...} }
+  ...
+}
+
+Output should be in one of the two format:
+  groupedData = {
+    grouped: true
+    key: group1
+    values: {
+      value1: groupedData2 # note recursive def'n
+      value2: groupedData3
+      ...
+    }
+  }
+  OR
+  groupedData = {
+    layer_id : { statData: [...], metaData: {...} }
+    ...
+  }
+###
+poly.groupProcessedData = (processedData, groups) ->
+  if groups.length is 0
+    return processedData
+  currGrp = groups.splice(0, 1)[0]
+  uniqueValues = []
+  for index, data of processedData
+    if currGrp of data.metaData
+      uniqueValues = _.union uniqueValues, _.uniq(_.pluck(data.statData, currGrp))
+  result =
+    grouped: true
+    key: currGrp
+    values: {}
+  for value in uniqueValues
+    # construct new processedData
+    newProcessedData = {}
+    for index, data of processedData
+      newProcessedData[index] = metaData : data.metaData
+      newProcessedData[index].statData =
+        if currGrp of data.metaData
+          poly.filter(data.statData, currGrp, value)
+        else
+          _.clone data.statData
+    # construct value
+    result.values[value] =
+      poly.groupProcessedData(newProcessedData, _.clone groups)
+  result
