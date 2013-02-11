@@ -57,7 +57,14 @@ class Layer
     meta: meta
   _calcGeoms: () ->
     throw poly.error.impl()
-  _tooltip: (item) -> 'foo'
+  _tooltip: (item) ->
+    tooltip = null
+    for v in _.uniq _.values @mapping
+      if not tooltip
+        tooltip = "#{v}: #{poly.format.value item[v]}"
+      else
+        tooltip += "\n#{v}: #{poly.format.value item[v]}"
+    tooltip
   # helper to sample the number of geometrical points plotted, when encessary
   _sample: (geoms) ->
     if @spec.sample is false

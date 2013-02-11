@@ -5785,7 +5785,18 @@ Shared constants
     };
 
     Layer.prototype._tooltip = function(item) {
-      return 'foo';
+      var tooltip, v, _i, _len, _ref;
+      tooltip = null;
+      _ref = _.uniq(_.values(this.mapping));
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        v = _ref[_i];
+        if (!tooltip) {
+          tooltip = "" + v + ": " + (poly.format.value(item[v]));
+        } else {
+          tooltip += "\n" + v + ": " + (poly.format.value(item[v]));
+        }
+      }
+      return tooltip;
     };
 
     Layer.prototype._sample = function(geoms) {
