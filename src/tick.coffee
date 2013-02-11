@@ -21,7 +21,7 @@ poly.tick.make = (domain, guideSpec, type) ->
   else if guideSpec.formatter
     formatter = guideSpec.formatter
   else
-    formatter = poly.format(type, step)
+    formatter = poly.format(type.split('-')[0], step)
   tickobjs = {}
   tickfn = tickFactory(type, formatter)
 
@@ -97,6 +97,7 @@ tickValues =
     ticks: ticks
     step: Math.floor(Math.log(step)/Math.LN10)
   'num-log' : (domain, numticks) ->
+    ticks = []
     {min, max} = domain
     lg = (v) -> Math.log(v) / Math.LN10
     exp = (v) -> Math.exp v*Math.LN10
@@ -113,11 +114,14 @@ tickValues =
         if num % 1 == 0
           tmp += step
           continue
+      else
+        num = tmp
       num = exp num
       if num < min or num > max
         tmp += step
         continue
       ticks.push num
+      tmp += step
     ticks: ticks
   'date' : (domain, numticks) ->
     {min, max} = domain

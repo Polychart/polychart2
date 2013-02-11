@@ -1,11 +1,7 @@
 ###
-# CONSTANTS
-###
-aesthetics = poly.const.aes
-
-
-###
-Scales here are objects that can construct functions that takes a value from
+Scales
+------
+Scales are objects that can construct functions that takes a value from
 the data, and returns another value that is suitable for rendering an
 attribute of that value.
 ###
@@ -199,9 +195,11 @@ class Linear extends PositionScale
 
 class Log extends PositionScale
   _makeNum: () ->
+    if @domain.min < 0
+      throw poly.error.input "Log scale cannot handle zero or negative input."
     lg = Math.log
     ylin = poly.linear lg(@domain.min), @range.min, lg(@domain.max), @range.max
-    @f = @_numWrapper (x) -> ylin lg(x)
+    @f = @_numWrapper @domain, (x) -> ylin lg(x)
 
     ylininv = poly.linear @range.min, lg(@domain.min), @range.max, lg(@domain.max)
     x = (y) -> Math.exp(ylininv(y))
