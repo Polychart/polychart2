@@ -5760,6 +5760,15 @@ Shared constants
       this.statData = statData;
       this.meta = meta;
       this._calcGeoms();
+      this.geoms = (function() {
+        if (this.spec.sample === false) {
+          return this.geoms;
+        } else if (_.isNumber(this.spec.sample)) {
+          return poly.sample(this.geoms, this.spec.sample);
+        } else {
+          throw poly.error.defn("A layer's 'sample' definition should be an integer, not " + this.spec.sample);
+        }
+      }).call(this);
       meta = {};
       _ref = this.mapping;
       for (aes in _ref) {

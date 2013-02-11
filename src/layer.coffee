@@ -49,6 +49,13 @@ class Layer
         if spec[aes].const then @consts[aes] = spec[aes].const
   calculate: (@statData, @meta) ->
     @_calcGeoms()
+    @geoms =
+      if @spec.sample is false
+        @geoms
+      else if _.isNumber @spec.sample
+        poly.sample @geoms, @spec.sample
+      else
+        throw poly.error.defn "A layer's 'sample' definition should be an integer, not #{@spec.sample}"
     meta = {}
     for aes, key of @mapping
       meta[aes] = @meta[key]
