@@ -183,6 +183,7 @@ class Legend extends poly.Guide
     type: 'text'
     x : sf.identity 5
     y : sf.identity 0
+    color: sf.identity 'black'
     text: text
     'text-anchor' : 'start'
   getDimension: () ->

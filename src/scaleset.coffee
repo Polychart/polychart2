@@ -41,35 +41,41 @@ class ScaleSet
   _makeYScale: () -> @scales.y.make @domainy, @ranges.y, @getSpec('y').padding
   _makeScales : (guideSpec, domains, ranges) ->
     # this function contains information about default scales!
+    # todo: typechecking.
     specScale = (a) ->
       if guideSpec and guideSpec[a]? and guideSpec[a].scale?
-        return guideSpec[a].scale
-      return null
+        if _.isFunction(guideSpec[a].scale)
+          type: 'custom'
+          function: guideSpec[a].scale
+        else
+          guideSpec[a].scale
+      else
+        null
     scales = {}
     # x 
-    scales.x = specScale('x') ? poly.scale.linear()
+    scales.x =  poly.scale.make specScale('x') || {type: 'linear'}
     scales.x.make(domains.x, ranges.x, @getSpec('x').padding)
     # y
-    scales.y = specScale('y') ? poly.scale.linear()
+    scales.y =  poly.scale.make specScale('y') || {type: 'linear'}
     scales.y.make(domains.y, ranges.y, @getSpec('y').padding)
     # color
     if domains.color?
       if domains.color.type == 'cat'
-        scales.color = specScale('color') ? poly.scale.color()
+        scales.color = poly.scale.make specScale('color') || {type: 'color'}
       else
-        scales.color = specScale('color') ?
-          poly.scale.gradient upper:'steelblue', lower:'red'
+        defaultSpec = {type:'gradient', upper:'steelblue', lower:'red'}
+        scales.color = poly.scale.make specScale('color') || defaultSpec
       scales.color.make(domains.color)
     # size
     if domains.size?
-      scales.size = specScale('size') || poly.scale.area()
+      scales.size = poly.scale.make specScale('size') || {type: 'area'}
       scales.size.make(domains.size)
     # opacity
     if domains.opacity?
-      scales.opacity= specScale('opacity') || poly.scale.opacity()
+      scales.opacity= poly.scale.make specScale('opacity') || {type: 'opacity'}
       scales.opacity.make(domains.opacity)
     # text
-    scales.text = poly.scale.identity()
+    scales.text = poly.scale.make {type: 'identity'}
     scales.text.make()
     scales
 

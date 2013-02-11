@@ -2909,6 +2909,7 @@ so simple, but not scalable.
         type: 'text',
         x: sf.identity(x),
         y: sf.identity(y),
+        color: sf.identity('black'),
         text: this.titletext,
         'text-anchor': 'middle'
       };
@@ -2936,6 +2937,7 @@ so simple, but not scalable.
         type: 'text',
         x: sf.identity(x),
         y: sf.identity(y),
+        color: sf.identity('black'),
         text: this.titletext,
         'text-anchor': 'middle',
         transform: 'r270'
@@ -2962,6 +2964,7 @@ so simple, but not scalable.
         type: 'text',
         x: sf.identity(x),
         y: sf.identity(y),
+        color: sf.identity('black'),
         text: this.titletext,
         'font-size': '13px',
         'font-weight': 'bold',
@@ -3003,6 +3006,7 @@ so simple, but not scalable.
         type: 'text',
         x: sf.identity(offset.x + dim.chartWidth / 2),
         y: sf.identity(offset.y - 7),
+        color: sf.identity('black'),
         text: this.titletext,
         'text-anchor': 'middle'
       };
@@ -3279,6 +3283,7 @@ objects that can later be rendered using Geometry class.
       }
       obj.type = 'path';
       obj.stroke = sf.identity('black');
+      obj.color = sf.identity('black');
       return obj;
     };
 
@@ -3287,6 +3292,8 @@ objects that can later be rendered using Geometry class.
         throw poly.error.impl();
       }
       obj.type = 'text';
+      obj.stroke = sf.identity('black');
+      obj.color = sf.identity('black');
       return obj;
     };
 
@@ -3853,6 +3860,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
       var domain, guideSpec, keys, tickWidth, titleWidth, type, _ref;
       domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.mapping = params.mapping, keys = params.keys;
       this.titletext = (_ref = guideSpec.title) != null ? _ref : keys;
+      debugger;
       this.ticks = poly.tick.make(domain, guideSpec, type);
       this.height = this.TITLEHEIGHT + this.SPACING + this.TICKHEIGHT * _.size(this.ticks);
       titleWidth = poly.strSize(this.titletext);
@@ -3956,6 +3964,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
         type: 'text',
         x: sf.identity(5),
         y: sf.identity(0),
+        color: sf.identity('black'),
         text: text,
         'text-anchor': 'start'
       };
@@ -3982,44 +3991,12 @@ Legends (GuideSet) object to determine the correct position of a legend.
 
 
 (function() {
-  var Area, Brewer, Color, Gradient, Gradient2, Identity, Linear, Log, Opacity, PositionScale, Scale, Shape, aesthetics,
+  var Area, Color, CustomScale, Gradient, Gradient2, Identity, Linear, Log, Opacity, PositionScale, Scale, Shape, aesthetics,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   aesthetics = poly["const"].aes;
-
-  /*
-  # GLOBALS
-  */
-
-
-  poly.scale = {
-    linear: function(params) {
-      return new Linear(params);
-    },
-    log: function(params) {
-      return new Log(params);
-    },
-    area: function(params) {
-      return new Area(params);
-    },
-    color: function(params) {
-      return new Color(params);
-    },
-    gradient: function(params) {
-      return new Gradient(params);
-    },
-    gradient2: function(params) {
-      return new Gradient2(params);
-    },
-    identity: function(params) {
-      return new Identity(params);
-    },
-    opacity: function(params) {
-      return new Opacity(params);
-    }
-  };
 
   /*
   Scales here are objects that can construct functions that takes a value from
@@ -4530,20 +4507,6 @@ Legends (GuideSet) object to determine the correct position of a legend.
 
   })(Scale);
 
-  Brewer = (function(_super) {
-
-    __extends(Brewer, _super);
-
-    function Brewer() {
-      return Brewer.__super__.constructor.apply(this, arguments);
-    }
-
-    Brewer.prototype._makeCat = function() {};
-
-    return Brewer;
-
-  })(Scale);
-
   Gradient = (function(_super) {
 
     __extends(Gradient, _super);
@@ -4613,6 +4576,24 @@ Legends (GuideSet) object to determine the correct position of a legend.
 
   })(Scale);
 
+  CustomScale = (function(_super) {
+
+    __extends(CustomScale, _super);
+
+    function CustomScale(params) {
+      this["function"] = params["function"];
+    }
+
+    CustomScale.prototype.make = function(domain) {
+      this.domain = domain;
+      this.compare = poly.domain.compare(domain);
+      return this.f = this._identityWrapper(this["function"]);
+    };
+
+    return CustomScale;
+
+  })(Scale);
+
   Shape = (function(_super) {
 
     __extends(Shape, _super);
@@ -4635,7 +4616,8 @@ Legends (GuideSet) object to determine the correct position of a legend.
       return Identity.__super__.constructor.apply(this, arguments);
     }
 
-    Identity.prototype.make = function() {
+    Identity.prototype.make = function(domain) {
+      this.domain = domain;
       this.compare = function(a, b) {
         return 0;
       };
@@ -4647,6 +4629,36 @@ Legends (GuideSet) object to determine the correct position of a legend.
     return Identity;
 
   })(Scale);
+
+  /*
+  Public interface to making different scales
+  */
+
+
+  poly.scale = {};
+
+  poly.scale.Base = Scale;
+
+  poly.scale.classes = {
+    linear: Linear,
+    log: Log,
+    area: Area,
+    color: Color,
+    gradient: Gradient,
+    gradient2: Gradient2,
+    identity: Identity,
+    opacity: Opacity,
+    custom: CustomScale
+  };
+
+  poly.scale.make = function(spec) {
+    var type;
+    type = spec.type;
+    if (type in poly.scale.classes) {
+      return new poly.scale.classes[type](spec);
+    }
+    throw poly.error.defn("No such scale " + spec.type + ".");
+  };
 
 }).call(this);
 // Generated by CoffeeScript 1.4.0
@@ -4712,38 +4724,60 @@ Legends (GuideSet) object to determine the correct position of a legend.
     };
 
     ScaleSet.prototype._makeScales = function(guideSpec, domains, ranges) {
-      var scales, specScale, _ref, _ref1, _ref2, _ref3;
+      var defaultSpec, scales, specScale;
       specScale = function(a) {
         if (guideSpec && (guideSpec[a] != null) && (guideSpec[a].scale != null)) {
-          return guideSpec[a].scale;
+          if (_.isFunction(guideSpec[a].scale)) {
+            return {
+              type: 'custom',
+              "function": guideSpec[a].scale
+            };
+          } else {
+            return guideSpec[a].scale;
+          }
+        } else {
+          return null;
         }
-        return null;
       };
       scales = {};
-      scales.x = (_ref = specScale('x')) != null ? _ref : poly.scale.linear();
+      scales.x = poly.scale.make(specScale('x') || {
+        type: 'linear'
+      });
       scales.x.make(domains.x, ranges.x, this.getSpec('x').padding);
-      scales.y = (_ref1 = specScale('y')) != null ? _ref1 : poly.scale.linear();
+      scales.y = poly.scale.make(specScale('y') || {
+        type: 'linear'
+      });
       scales.y.make(domains.y, ranges.y, this.getSpec('y').padding);
       if (domains.color != null) {
         if (domains.color.type === 'cat') {
-          scales.color = (_ref2 = specScale('color')) != null ? _ref2 : poly.scale.color();
+          scales.color = poly.scale.make(specScale('color') || {
+            type: 'color'
+          });
         } else {
-          scales.color = (_ref3 = specScale('color')) != null ? _ref3 : poly.scale.gradient({
+          defaultSpec = {
+            type: 'gradient',
             upper: 'steelblue',
             lower: 'red'
-          });
+          };
+          scales.color = poly.scale.make(specScale('color') || defaultSpec);
         }
         scales.color.make(domains.color);
       }
       if (domains.size != null) {
-        scales.size = specScale('size') || poly.scale.area();
+        scales.size = poly.scale.make(specScale('size') || {
+          type: 'area'
+        });
         scales.size.make(domains.size);
       }
       if (domains.opacity != null) {
-        scales.opacity = specScale('opacity') || poly.scale.opacity();
+        scales.opacity = poly.scale.make(specScale('opacity') || {
+          type: 'opacity'
+        });
         scales.opacity.make(domains.opacity);
       }
-      scales.text = poly.scale.identity();
+      scales.text = poly.scale.make({
+        type: 'identity'
+      });
       scales.text.make();
       return scales;
     };

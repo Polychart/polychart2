@@ -135,10 +135,13 @@ class Axis extends poly.Guide
     if !obj then throw poly.error.impl()
     obj.type = 'path'
     obj.stroke = sf.identity 'black'
+    obj.color = sf.identity 'black'
     obj
   _makeLabel: (obj) ->
     if !obj then throw poly.error.impl()
     obj.type = 'text'
+    obj.stroke = sf.identity 'black'
+    obj.color = sf.identity 'black'
     obj
   _makeGrid: (obj) ->
     if !obj then throw poly.error.impl()

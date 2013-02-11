@@ -53,6 +53,7 @@ class TitleH extends Title
     type: 'text'
     x : sf.identity x
     y : sf.identity y
+    color: sf.identity 'black'
     text: @titletext
     'text-anchor' : 'middle'
 
@@ -68,6 +69,7 @@ class TitleV extends Title
     type: 'text'
     x : sf.identity x
     y : sf.identity y
+    color: sf.identity 'black'
     text: @titletext
     'text-anchor' : 'middle'
     transform : 'r270'
@@ -79,6 +81,7 @@ class TitleMain extends Title
     type: 'text'
     x : sf.identity x
     y : sf.identity y
+    color: sf.identity 'black'
     text: @titletext
     'font-size' : '13px'
     'font-weight' : 'bold'
@@ -97,6 +100,7 @@ class TitleFacet extends Title
     type: 'text'
     x : sf.identity offset.x + dim.chartWidth/2
     y : sf.identity offset.y - 7
+    color: sf.identity 'black'
     text: @titletext
     'text-anchor' : 'middle'
 

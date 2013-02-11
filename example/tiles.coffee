@@ -35,7 +35,7 @@ datafn = () ->
       color: 'value'
     ]
     guides:
-      color: { scale: polyjs.scale.gradient(lower: '#FFF', upper:'#000') }
+      color: { scale: {type: 'gradient', lower: '#FFF', upper:'#000'} }
     dom: dom
   }
   c = polyjs.chart spec
@@ -51,7 +51,23 @@ datafn = () ->
       color: 'value'
     ]
     guides:
-      color: { scale: polyjs.scale.gradient2(lower: 'red', upper:'blue', middle:'white') }
+      color: { scale: {type: 'gradient2', lower: 'red', upper:'blue', middle:'white'}}
+    dom: dom
+  }
+  c = polyjs.chart spec
+
+@examples.tiles_custom = (dom) ->
+  data = polyjs.data json:datafn()
+  spec = {
+    layers: [
+      data: data
+      type: 'tile'
+      x : 'bin(mod5, 1)'
+      y : 'bin(floor5,1)'
+      color: 'value'
+    ]
+    guides:
+      color: { scale: (value) -> if value < 0 then 'red' else if value < 1 then 'blue' else 'gray'}
     dom: dom
   }
   c = polyjs.chart spec

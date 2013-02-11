@@ -3,18 +3,6 @@
 ###
 aesthetics = poly.const.aes
 
-###
-# GLOBALS
-###
-poly.scale =
-  linear : (params) -> new Linear(params)
-  log : (params) -> new Log(params)
-  area : (params) -> new Area(params)
-  color : (params) -> new Color(params)
-  gradient : (params) -> new Gradient(params)
-  gradient2 : (params) -> new Gradient2(params)
-  identity: (params) -> new Identity(params)
-  opacity: (params) -> new Opacity(params)
 
 ###
 Scales here are objects that can construct functions that takes a value from
@@ -254,9 +242,6 @@ class Color extends Scale
     h = poly.linear @domain.min, 0, @domain.max, 1
     @f = (value) -> Raphael.hsl(0.5,h(value),0.5)
 
-class Brewer extends Scale
-  _makeCat: () ->
-
 class Gradient extends Scale
   constructor: (params) ->
     {@lower, @upper} = params
@@ -289,13 +274,42 @@ class Gradient2 extends Scale
           Raphael.rgb r1(value), g1(value), b1(value)
         else
           Raphael.rgb r2(value), g2(value), b2(value)
-
   _makeCat: () =>
+
+class CustomScale extends Scale
+  constructor: (params) -> {@function} = params
+  make: (domain) ->
+    @domain = domain
+    @compare = poly.domain.compare(domain)
+    @f = @_identityWrapper @function
 
 class Shape extends Scale
   _makeCat: () ->
 
 class Identity extends Scale
-  make: () ->
+  make: (domain) ->
+    @domain = domain
     @compare = (a, b) -> 0
     @f = @_identityWrapper (x) -> x
+
+###
+Public interface to making different scales
+###
+poly.scale = {}
+poly.scale.Base = Scale
+poly.scale.classes = {
+  linear : Linear
+  log : Log
+  area : Area
+  color : Color
+  gradient : Gradient
+  gradient2 : Gradient2
+  identity: Identity
+  opacity: Opacity
+  custom: CustomScale
+}
+poly.scale.make = (spec) ->
+  type = spec.type
+  if type of poly.scale.classes
+    return new poly.scale.classes[type](spec)
+  throw poly.error.defn "No such scale #{spec.type}."

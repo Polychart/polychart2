@@ -3370,10 +3370,11 @@
       ],
       guides: {
         color: {
-          scale: polyjs.scale.gradient({
+          scale: {
+            type: 'gradient',
             lower: '#FFF',
             upper: '#000'
-          })
+          }
         }
       },
       dom: dom
@@ -3398,11 +3399,45 @@
       ],
       guides: {
         color: {
-          scale: polyjs.scale.gradient2({
+          scale: {
+            type: 'gradient2',
             lower: 'red',
             upper: 'blue',
             middle: 'white'
-          })
+          }
+        }
+      },
+      dom: dom
+    };
+    return c = polyjs.chart(spec);
+  };
+
+  this.examples.tiles_custom = function(dom) {
+    var c, data, spec;
+    data = polyjs.data({
+      json: datafn()
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'tile',
+          x: 'bin(mod5, 1)',
+          y: 'bin(floor5,1)',
+          color: 'value'
+        }
+      ],
+      guides: {
+        color: {
+          scale: function(value) {
+            if (value < 0) {
+              return 'red';
+            } else if (value < 1) {
+              return 'blue';
+            } else {
+              return 'gray';
+            }
+          }
         }
       },
       dom: dom
