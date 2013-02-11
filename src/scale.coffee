@@ -12,6 +12,7 @@ poly.scale =
   area : (params) -> new Area(params)
   color : (params) -> new Color(params)
   gradient : (params) -> new Gradient(params)
+  gradient2 : (params) -> new Gradient2(params)
   identity: (params) -> new Identity(params)
   opacity: (params) -> new Opacity(params)
 
@@ -269,7 +270,26 @@ class Gradient extends Scale
       @_identityWrapper (value) => Raphael.rgb r(value), g(value), b(value)
 
 class Gradient2 extends Scale
-  constructor: (params) -> {lower, zero, upper} = params
+  constructor: (params) ->
+    {@lower, @middle, @upper, @midpoint} = params
+    @midpoint ?= 0
+  _makeNum: () =>
+    lower = Raphael.color(@lower)
+    middle = Raphael.color(@middle)
+    upper = Raphael.color(@upper)
+    r1 = poly.linear @domain.min, lower.r, @midpoint, middle.r
+    g1 = poly.linear @domain.min, lower.g, @midpoint, middle.g
+    b1 = poly.linear @domain.min, lower.b, @midpoint, middle.b
+    r2 = poly.linear @midpoint, middle.r, @domain.max, upper.r
+    g2 = poly.linear @midpoint, middle.g, @domain.max, upper.g
+    b2 = poly.linear @midpoint, middle.b, @domain.max, upper.b
+    @f =
+      @_identityWrapper (value) =>
+        if value < @midpoint
+          Raphael.rgb r1(value), g1(value), b1(value)
+        else
+          Raphael.rgb r2(value), g2(value), b2(value)
+
   _makeCat: () =>
 
 class Shape extends Scale

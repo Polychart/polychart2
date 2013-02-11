@@ -4010,6 +4010,9 @@ Legends (GuideSet) object to determine the correct position of a legend.
     gradient: function(params) {
       return new Gradient(params);
     },
+    gradient2: function(params) {
+      return new Gradient2(params);
+    },
     identity: function(params) {
       return new Identity(params);
     },
@@ -4574,9 +4577,35 @@ Legends (GuideSet) object to determine the correct position of a legend.
     function Gradient2(params) {
       this._makeCat = __bind(this._makeCat, this);
 
-      var lower, upper, zero;
-      lower = params.lower, zero = params.zero, upper = params.upper;
+      this._makeNum = __bind(this._makeNum, this);
+
+      var _ref;
+      this.lower = params.lower, this.middle = params.middle, this.upper = params.upper, this.midpoint = params.midpoint;
+      if ((_ref = this.midpoint) == null) {
+        this.midpoint = 0;
+      }
     }
+
+    Gradient2.prototype._makeNum = function() {
+      var b1, b2, g1, g2, lower, middle, r1, r2, upper,
+        _this = this;
+      lower = Raphael.color(this.lower);
+      middle = Raphael.color(this.middle);
+      upper = Raphael.color(this.upper);
+      r1 = poly.linear(this.domain.min, lower.r, this.midpoint, middle.r);
+      g1 = poly.linear(this.domain.min, lower.g, this.midpoint, middle.g);
+      b1 = poly.linear(this.domain.min, lower.b, this.midpoint, middle.b);
+      r2 = poly.linear(this.midpoint, middle.r, this.domain.max, upper.r);
+      g2 = poly.linear(this.midpoint, middle.g, this.domain.max, upper.g);
+      b2 = poly.linear(this.midpoint, middle.b, this.domain.max, upper.b);
+      return this.f = this._identityWrapper(function(value) {
+        if (value < _this.midpoint) {
+          return Raphael.rgb(r1(value), g1(value), b1(value));
+        } else {
+          return Raphael.rgb(r2(value), g2(value), b2(value));
+        }
+      });
+    };
 
     Gradient2.prototype._makeCat = function() {};
 

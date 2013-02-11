@@ -3317,7 +3317,7 @@
       return Math.floor(i / 5);
     };
     value = function() {
-      return Math.random() * 5;
+      return Math.random() * 5 - 2.5;
     };
     item = function(i) {
       return {
@@ -3373,6 +3373,35 @@
           scale: polyjs.scale.gradient({
             lower: '#FFF',
             upper: '#000'
+          })
+        }
+      },
+      dom: dom
+    };
+    return c = polyjs.chart(spec);
+  };
+
+  this.examples.tiles_g2 = function(dom) {
+    var c, data, spec;
+    data = polyjs.data({
+      json: datafn()
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'tile',
+          x: 'bin(mod5, 1)',
+          y: 'bin(floor5,1)',
+          color: 'value'
+        }
+      ],
+      guides: {
+        color: {
+          scale: polyjs.scale.gradient2({
+            lower: 'red',
+            upper: 'blue',
+            middle: 'white'
           })
         }
       },
