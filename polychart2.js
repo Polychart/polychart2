@@ -5854,6 +5854,8 @@ Shared constants
 
   Layer = (function() {
 
+    Layer.prototype.defaults = defaults;
+
     function Layer(spec) {
       var aes, _i, _len;
       this.spec = spec;

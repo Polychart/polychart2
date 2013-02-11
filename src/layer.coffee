@@ -38,6 +38,7 @@ defaults = {                # global default values for aesthetics
 Base class for all layers
 ###
 class Layer
+  defaults: defaults
   constructor: (spec) ->
     @spec = spec
     @mapping = {}      # aesthetic mappings

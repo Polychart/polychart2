@@ -25,8 +25,8 @@ test "domain: strict mode num & cat", ->
   deepEqual domains.y.levels, [1,2,3]
   equal domains.y.sorted, false
 
-  xticks = graph.scaleSet.axes[""].x.ticks
-  yticks = graph.scaleSet.axes[""].y.ticks
+  xticks = graph.scaleSet.axes.axes.x.ticks
+  yticks = graph.scaleSet.axes.axes.y.ticks
   deepEqual _.pluck(xticks, 'location'), [2, 3, 2.5, 3.5]
   deepEqual _.pluck(yticks, 'location'), [1, 2, 3]
   deepEqual _.pluck(yticks, 'value'), ['One', 'Five', 3]
