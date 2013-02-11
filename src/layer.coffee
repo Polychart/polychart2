@@ -29,7 +29,7 @@ defaults = {                # global default values for aesthetics
   'x': sf.novalue()
   'y': sf.novalue()
   'color': 'steelblue'
-  'size': 7
+  'size': 5
   'opacity': 0.9
   'shape': 1
 }

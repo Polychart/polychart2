@@ -159,7 +159,7 @@ class Graph
     @scaleSet.renderAxes @dims, renderer, @facet
     @scaleSet.renderTitles @dims, renderer
     # legend
-    @scaleSet.renderLegends @dims, renderer({}, false, false)
+    @scaleSet.renderLegends @dims, renderer
     ### labels
     @scaleSet.renderFacetLabels @dims, rendererG, @facet
     @scaleSet.renderTitle @dims, rendererG, @facet

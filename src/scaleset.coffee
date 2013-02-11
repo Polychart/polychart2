@@ -136,7 +136,7 @@ class ScaleSet
   disposeAxes: (renderer) -> @axes.dispose(renderer)
   _mapLayers: (layers) ->
     obj = {}
-    for aes of @domains
+    for aes in poly.const.aes
       obj[aes] =
         _.map layers, (layer) ->
           if layer.mapping[aes]?
@@ -201,8 +201,8 @@ class ScaleSet
         mapping: @layerMapping
         keys: poly.getLabel(@layers, aes)
     @legends
-  legendOffset: (dim) ->
-    maxheight =  dim.height - dim.guideTop - dim.paddingTop
+  legendOffset: (dims) ->
+    maxheight =  dims.height - dims.guideTop - dims.paddingTop
     maxwidth = 0
     offset = { x: 10, y : 0 } # initial spacing
     for legend in @legends
@@ -216,8 +216,10 @@ class ScaleSet
       offset.y += d.height
     right: offset.x + maxwidth # no height
   renderLegends: (dims, renderer) ->
-    # NOTE: if this is changed, change dim.coffee dimension calculation
-    legend.dispose(renderer) for legend in @deletedLegends
+    legend.dispose(renderer()) for legend in @deletedLegends
+    legendDim =
+      top: dims.paddingTop + dims.guideTop
+      right: dims.width - dims.guideRight - dims.paddingRight
     @deletedLegends = []
     offset = { x: 10, y : 0 } # initial spacing
     # axis offset
@@ -234,7 +236,10 @@ class ScaleSet
         maxwidth = 0
       if newdim.width > maxwidth
         maxwidth = newdim.width
-      legend.render dims, renderer, offset
+      realoffset =
+        x: offset.x + legendDim.right
+        y: offset.y + legendDim.top
+      legend.render(renderer(realoffset, false, false))
       offset.y += newdim.height
   disposeLegends: (renderer) ->
-    legend.dispose(renderer) for legend in @legends
+    legend.dispose(renderer()) for legend in @legends

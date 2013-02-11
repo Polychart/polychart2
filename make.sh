@@ -17,6 +17,7 @@ cat \
     compiled/src/tick.js \
     compiled/src/guide.js \
     compiled/src/axis.js \
+    compiled/src/legend.js \
     compiled/src/scale.js \
     compiled/src/scaleset.js \
     compiled/src/data.js \
