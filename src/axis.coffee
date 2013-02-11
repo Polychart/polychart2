@@ -10,6 +10,9 @@ objects that can later be rendered using Geometry class.
 
 sf = poly.const.scaleFns
 
+###
+Renders and manages multiple axes, plot over multiple facets.
+###
 class Axes extends poly.GuideSet
   constructor: () ->
     @axesGeoms = {}
@@ -87,6 +90,9 @@ class Axes extends poly.GuideSet
       axes.y.dispose()
     @axesGeoms = {}
 
+###
+Abstract class for a single axis.
+###
 class Axis extends poly.Guide
   constructor: (params) ->
     {domain, type, guideSpec, key} = params
@@ -142,11 +148,9 @@ class Axis extends poly.Guide
     obj
 
 class XAxis extends Axis # assumes position = bottom
-  constructor: (params) ->
-    @type = 'x'
-    @defaultPosition = 'bottom'
-    @validPositions = ['top', 'bottom', 'none']
-    super(params)
+  type : 'x'
+  defaultPosition : 'bottom'
+  validPositions : ['top', 'bottom', 'none']
   _renderline : (axisDim) ->
     if @position is 'top'
       y = sf.identity axisDim.top
@@ -191,11 +195,9 @@ class XAxis extends Axis # assumes position = bottom
     width: 'all'
 
 class YAxis extends Axis # assumes position = left
-  constructor: (params) ->
-    @type = 'y'
-    @defaultPosition = 'left'
-    @validPositions = ['left', 'right', 'none']
-    super(params)
+  type : 'y'
+  defaultPosition : 'left'
+  validPositions : ['left', 'right', 'none']
   _renderline : (axisDim) ->
     if @position is 'left'
       x = sf.identity axisDim.left
@@ -240,11 +242,9 @@ class YAxis extends Axis # assumes position = left
     width: 5+@maxwidth
 
 class RAxis extends Axis # assumes position = left
-  constructor: (params) ->
-    @type = 'r'
-    @defaultPosition = 'left'
-    @validPositions = ['left', 'right', 'none']
-    super(params)
+  type : 'r'
+  defaultPosition : 'left'
+  validPositions : ['left', 'right', 'none']
   _renderline : (axisDim) ->
     x = sf.identity axisDim.left
     y1 = sf.identity axisDim.top
@@ -278,11 +278,9 @@ class RAxis extends Axis # assumes position = left
     width: 5+@maxwidth
 
 class TAxis extends Axis # assumes position = ... um, what is it supposed to be?
-  constructor: (params) ->
-    @type = 't'
-    @defaultPosition = 'out'
-    @validPositions = ['out', 'none']
-    super(params)
+  type : 't'
+  defaultPosition : 'out'
+  validPositions : ['out', 'none']
   _renderline : (axisDim) ->
     type: 'circle',
     x: sf.identity axisDim.centerx

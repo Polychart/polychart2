@@ -3305,6 +3305,11 @@ objects that can later be rendered using Geometry class.
 
   sf = poly["const"].scaleFns;
 
+  /*
+  Renders and manages multiple axes, plot over multiple facets.
+  */
+
+
   Axes = (function(_super) {
 
     __extends(Axes, _super);
@@ -3447,6 +3452,11 @@ objects that can later be rendered using Geometry class.
 
   })(poly.GuideSet);
 
+  /*
+  Abstract class for a single axis.
+  */
+
+
   Axis = (function(_super) {
 
     __extends(Axis, _super);
@@ -3552,12 +3562,15 @@ objects that can later be rendered using Geometry class.
 
     __extends(XAxis, _super);
 
-    function XAxis(params) {
-      this.type = 'x';
-      this.defaultPosition = 'bottom';
-      this.validPositions = ['top', 'bottom', 'none'];
-      XAxis.__super__.constructor.call(this, params);
+    function XAxis() {
+      return XAxis.__super__.constructor.apply(this, arguments);
     }
+
+    XAxis.prototype.type = 'x';
+
+    XAxis.prototype.defaultPosition = 'bottom';
+
+    XAxis.prototype.validPositions = ['top', 'bottom', 'none'];
 
     XAxis.prototype._renderline = function(axisDim) {
       var x1, x2, y;
@@ -3634,12 +3647,15 @@ objects that can later be rendered using Geometry class.
 
     __extends(YAxis, _super);
 
-    function YAxis(params) {
-      this.type = 'y';
-      this.defaultPosition = 'left';
-      this.validPositions = ['left', 'right', 'none'];
-      YAxis.__super__.constructor.call(this, params);
+    function YAxis() {
+      return YAxis.__super__.constructor.apply(this, arguments);
     }
+
+    YAxis.prototype.type = 'y';
+
+    YAxis.prototype.defaultPosition = 'left';
+
+    YAxis.prototype.validPositions = ['left', 'right', 'none'];
 
     YAxis.prototype._renderline = function(axisDim) {
       var x, y1, y2;
@@ -3716,12 +3732,15 @@ objects that can later be rendered using Geometry class.
 
     __extends(RAxis, _super);
 
-    function RAxis(params) {
-      this.type = 'r';
-      this.defaultPosition = 'left';
-      this.validPositions = ['left', 'right', 'none'];
-      RAxis.__super__.constructor.call(this, params);
+    function RAxis() {
+      return RAxis.__super__.constructor.apply(this, arguments);
     }
+
+    RAxis.prototype.type = 'r';
+
+    RAxis.prototype.defaultPosition = 'left';
+
+    RAxis.prototype.validPositions = ['left', 'right', 'none'];
 
     RAxis.prototype._renderline = function(axisDim) {
       var x, y1, y2;
@@ -3780,12 +3799,15 @@ objects that can later be rendered using Geometry class.
 
     __extends(TAxis, _super);
 
-    function TAxis(params) {
-      this.type = 't';
-      this.defaultPosition = 'out';
-      this.validPositions = ['out', 'none'];
-      TAxis.__super__.constructor.call(this, params);
+    function TAxis() {
+      return TAxis.__super__.constructor.apply(this, arguments);
     }
+
+    TAxis.prototype.type = 't';
+
+    TAxis.prototype.defaultPosition = 'out';
+
+    TAxis.prototype.validPositions = ['out', 'none'];
 
     TAxis.prototype._renderline = function(axisDim) {
       return {
