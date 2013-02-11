@@ -13,14 +13,13 @@ class Graph
     if not spec?
       throw poly.error.defn "No graph specification is passed in!"
     @handlers = []
-    @panes = null
     @scaleSet = null
     @axes = null
     @legends = null
     @dims = null
     @paper = null
     @coord = null
-    @facet = null
+    @facet = poly.facet.make()
     @initial_spec = spec
     @dataSubscribed = false
     @make spec
@@ -37,8 +36,7 @@ class Graph
   ###
   dispose: () ->
     renderer = poly.render @handleEvent, @paper, @scaleSet.scales, @coord
-    for key, pane of @panes
-      pane.dispose(renderer)
+    @facet.dispose(renderer)
     @scaleSet.disposeLegends(renderer)
     @scaleSet.disposeAxes(renderer)
     @scaleSet.disposeTitles(renderer)
@@ -49,7 +47,6 @@ class Graph
     @dims = null
     @paper = null
     @coord = null
-    @facet = null
   ###
   Determine whether re-rendering of a particupar spec would require removing
   all existing items from the graph and starting all over again. This would
@@ -60,8 +57,6 @@ class Graph
   ###
   needDispose: (spec) =>
     if @coord and !_.isEqual(@coord.spec, spec.coord)
-      true
-    else if @facet and !_.isEqual(@facet.spec, spec.facet)
       true
     # change in layers
     else
@@ -81,21 +76,23 @@ class Graph
     if @needDispose(spec)
       @dispose()
     @coord ?= poly.coord.make @spec.coord
-    @facet ?= poly.facet.make @spec.facet
+    @facet.make(spec)
+
     # subscribe to changes to data -- bad heuristics!
     if not @dataSubscribed
       dataChange = @handleEvent 'data'
       for layerSpec, id in spec.layers
         spec.layers[id].data.subscribe dataChange
       @dataSubscribed = true
+
     # callback after data processing
     merge = _.after(spec.layers.length, @merge)
     @dataprocess = {}
     @processedData = {}
     for layerSpec, id in spec.layers
       spec = @spec.layers[id] #repeated
-      @dataprocess[id] = new poly.DataProcess spec, @facet.groups, spec.strict
-      @dataprocess[id].make spec, @facet.groups, (statData, metaData) =>
+      @dataprocess[id] = new poly.DataProcess spec, @facet.specgroups, spec.strict
+      @dataprocess[id].make spec, @facet.specgroups, (statData, metaData) =>
         @processedData[id] =
           statData: statData
           metaData: metaData
@@ -111,25 +108,15 @@ class Graph
     3) Actually render the chart.
   ###
   merge: () =>
-    @makePanes()
+    @layers = _.map @spec.layers, (layerSpec) => poly.layer.make(layerSpec, @spec.strict)
+    @facet.calculate(@processedData, @layers)
     @mergeDomains()
     @render()
-  makePanes: () =>
-    # prep work to make indices
-    indices = @facet.getIndices @processedData
-    datas = @facet.groupData @processedData
-    formatter = @facet.getFormatter()
-    # make panes
-    @panes ?= @_makePanes @spec, indices, formatter
-    # make data
-    # set data
-    for key, pane of @panes
-      pane.make @spec, datas[key]
   mergeDomains: () =>
-    domainsets = _.map @panes, (p) -> p.domains
+    domainsets = _.map @facet.panes, (p) -> p.domains
     domains = poly.domain.merge domainsets
     @scaleSet ?= @_makeScaleSet @spec, domains, @facet
-    @scaleSet.make @spec.guides, domains, _.toArray(@panes)[0].layers
+    @scaleSet.make @spec.guides, domains, @layers
     # dimension calculation
     if not @dims
       @dims = @_makeDimensions @spec, @scaleSet, @facet
@@ -149,11 +136,9 @@ class Graph
     @dom = @spec.dom
     @paper ?= @_makePaper @dom, @dims.width, @dims.height, @handleEvent
     renderer = poly.render @handleEvent, @paper, scales, @coord
+    debugger
 
-    for key, pane of @panes
-      offset = @facet.getOffset(@dims, key)
-      clipping = @coord.clipping offset
-      pane.render renderer, offset, clipping, @dims
+    @facet.render(renderer, @dims, @coord)
 
     # axes
     @scaleSet.renderAxes @dims, renderer, @facet
@@ -195,12 +180,6 @@ class Graph
         else
           h.handle(type, obj, event)
     _.throttle handler, 1000
-  _makePanes: (spec, indices, formatter) ->
-    # make panes
-    panes = {}
-    for identifier, mindex of indices
-      panes[identifier] = poly.pane.make spec, mindex, formatter
-    panes
   _makeScaleSet: (spec, domains, facet) ->
     @coord.make poly.dim.guess(spec, facet.getGrid())
     tmpRanges = @coord.ranges()
