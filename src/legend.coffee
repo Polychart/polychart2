@@ -59,7 +59,7 @@ class Legends extends poly.GuideSet
         guideSpec: guideSpec[aes] ? {}
         type: scales[aes].tickType()
         mapping: layerMapping
-        keys: poly.getLabel(@layers, aes)
+        keys: poly.getLabel(layers, aes)
   _mergeAes: (domains, layers) ->
     merging = [] # array of {aes: __, mapped: ___}
     for aes of domains
@@ -123,6 +123,7 @@ class Legend extends poly.Guide
   make: (params) ->
     {domain, type, guideSpec, @mapping, keys} = params
     @titletext = guideSpec.title ? keys
+    debugger
     @ticks = poly.tick.make domain, guideSpec, type
     @height = @TITLEHEIGHT + @SPACING + @TICKHEIGHT*_.size @ticks
     titleWidth = poly.strSize @titletext

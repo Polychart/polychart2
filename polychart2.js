@@ -3628,7 +3628,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
           guideSpec: (_ref1 = guideSpec[aes]) != null ? _ref1 : {},
           type: scales[aes].tickType(),
           mapping: layerMapping,
-          keys: poly.getLabel(this.layers, aes)
+          keys: poly.getLabel(layers, aes)
         }));
       }
       return _results;
@@ -3773,6 +3773,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
       var domain, guideSpec, keys, tickWidth, titleWidth, type, _ref;
       domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.mapping = params.mapping, keys = params.keys;
       this.titletext = (_ref = guideSpec.title) != null ? _ref : keys;
+      debugger;
       this.ticks = poly.tick.make(domain, guideSpec, type);
       this.height = this.TITLEHEIGHT + this.SPACING + this.TICKHEIGHT * _.size(this.ticks);
       titleWidth = poly.strSize(this.titletext);
