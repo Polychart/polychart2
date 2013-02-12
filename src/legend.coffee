@@ -148,6 +148,7 @@ class Legend extends poly.Guide
     type: 'text'
     x : sf.identity 20
     y : sf.identity (15+tick.index*12) + 1
+    color: sf.identity 'black'
     text: tick.value
     'text-anchor' : 'start'
   _makeTick: (tick) =>

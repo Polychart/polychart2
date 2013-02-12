@@ -146,7 +146,12 @@ poly.getLabel = (layers, aes) ->
 ###
 Estimate the number of pixels rendering this string would take...?
 ###
-poly.strSize = (str) -> (str+"").length * 7
+poly.strSize = (str) ->
+  len = (str+"").length
+  if len < 10
+    len * 6
+  else
+    (len - 10) * 5 + 60
 
 ###
 Sort Arrays: given a sorting function and some number of arrays, sort all the

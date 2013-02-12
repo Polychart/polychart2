@@ -129,9 +129,12 @@ class Path extends Renderer # for both cartesian & polar?
     {x, y} = @_applyOffset(x, y, offset)
     stroke = @_maybeApply scales, mark,
       if mark.stroke then 'stroke' else 'color'
+    size = @_maybeApply scales, mark,
+      if mark.size then 'size' else 'stroke-width'
     @_shared scales, mark,
       path: @_makePath x, y
       stroke: stroke
+      'stroke-width': size
 
 class Line extends Renderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
@@ -144,9 +147,12 @@ class Line extends Renderer # for both cartesian & polar?
     {x, y} = @_applyOffset(x, y, offset)
     stroke = @_maybeApply scales, mark,
       if mark.stroke then 'stroke' else 'color'
+    size = @_maybeApply scales, mark,
+      if mark.size then 'size' else 'stroke-width'
     @_shared scales, mark,
       path: @_makePath x, y
       stroke: stroke
+      'stroke-width': size
 
 # The difference between Line and PolarLine is that Polar Line MAY plot a circle
 class PolarLine extends Renderer

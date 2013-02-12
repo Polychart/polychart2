@@ -242,7 +242,13 @@ Output:
 
 
   poly.strSize = function(str) {
-    return (str + "").length * 7;
+    var len;
+    len = (str + "").length;
+    if (len < 10) {
+      return len * 6;
+    } else {
+      return (len - 10) * 5 + 60;
+    }
   };
 
   /*
@@ -3849,6 +3855,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
         type: 'text',
         x: sf.identity(20),
         y: sf.identity((15 + tick.index * 12) + 1),
+        color: sf.identity('black'),
         text: tick.value,
         'text-anchor': 'start'
       };
@@ -6142,7 +6149,8 @@ Shared constants
                 return _results1;
               }).call(this),
               color: this._getValue(sample, 'color'),
-              opacity: this._getValue(sample, 'opacity')
+              opacity: this._getValue(sample, 'opacity'),
+              size: this._getValue(sample, 'size')
             }
           },
           evtData: evtData
@@ -6207,7 +6215,8 @@ Shared constants
               x: x,
               y: y,
               color: this._getValue(sample, 'color'),
-              opacity: this._getValue(sample, 'opacity')
+              opacity: this._getValue(sample, 'opacity'),
+              size: this._getValue(sample, 'size')
             }
           },
           evtData: evtData
@@ -7144,14 +7153,16 @@ Calculate the pixel dimension and layout of a particular chart
     };
 
     Path.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var stroke, x, y, _ref, _ref1;
+      var size, stroke, x, y, _ref, _ref1;
       _ref = coord.getXY(mayflip, mark), x = _ref.x, y = _ref.y;
       this._checkArrayUndefined(x, y, "Path");
       _ref1 = this._applyOffset(x, y, offset), x = _ref1.x, y = _ref1.y;
       stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
+      size = this._maybeApply(scales, mark, mark.size ? 'size' : 'stroke-width');
       return this._shared(scales, mark, {
         path: this._makePath(x, y),
-        stroke: stroke
+        stroke: stroke,
+        'stroke-width': size
       });
     };
 
@@ -7172,7 +7183,7 @@ Calculate the pixel dimension and layout of a particular chart
     };
 
     Line.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var i, stroke, x, xi, y, yi, _i, _len, _ref, _ref1, _ref2;
+      var i, size, stroke, x, xi, y, yi, _i, _len, _ref, _ref1, _ref2;
       _ref = poly.sortArrays(scales.x.compare, [mark.x, mark.y]), mark.x = _ref[0], mark.y = _ref[1];
       _ref1 = coord.getXY(mayflip, mark), x = _ref1.x, y = _ref1.y;
       this._checkArrayUndefined(x, y, "Line");
@@ -7182,9 +7193,11 @@ Calculate the pixel dimension and layout of a particular chart
       }
       _ref2 = this._applyOffset(x, y, offset), x = _ref2.x, y = _ref2.y;
       stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
+      size = this._maybeApply(scales, mark, mark.size ? 'size' : 'stroke-width');
       return this._shared(scales, mark, {
         path: this._makePath(x, y),
-        stroke: stroke
+        stroke: stroke,
+        'stroke-width': size
       });
     };
 
@@ -7473,26 +7486,6 @@ Calculate the pixel dimension and layout of a particular chart
       this.deletedPanes = [];
     }
 
-    Facet.prototype.dispose = function(renderer) {
-      var key, pane, _i, _len, _ref, _ref1;
-      _ref = this.panes;
-      for (key in _ref) {
-        pane = _ref[key];
-        this.deletedPanes.push(pane);
-      }
-      this.panes = {};
-      if (renderer) {
-        _ref1 = this.deletedPanes;
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          pane = _ref1[_i];
-          pane.dispose(renderer);
-        }
-        return this.deletedPanes = [];
-      } else {
-
-      }
-    };
-
     Facet.prototype.make = function(spec) {
       var aes, key, mapping, _ref, _results;
       this.spec = spec;
@@ -7574,12 +7567,31 @@ Calculate the pixel dimension and layout of a particular chart
       _results = [];
       for (key in _ref1) {
         pane = _ref1[key];
-        debugger;
         offset = this.getOffset(dims, key);
         clipping = coord.clipping(offset);
         _results.push(pane.render(renderer, offset, clipping, dims));
       }
       return _results;
+    };
+
+    Facet.prototype.dispose = function(renderer) {
+      var key, pane, _i, _len, _ref, _ref1;
+      _ref = this.panes;
+      for (key in _ref) {
+        pane = _ref[key];
+        this.deletedPanes.push(pane);
+      }
+      this.panes = {};
+      if (renderer) {
+        _ref1 = this.deletedPanes;
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          pane = _ref1[_i];
+          pane.dispose(renderer);
+        }
+        return this.deletedPanes = [];
+      } else {
+
+      }
     };
 
     Facet.prototype.getGrid = function() {
@@ -7697,6 +7709,11 @@ Calculate the pixel dimension and layout of a particular chart
         };
       }
     };
+
+    /*
+      Helper functions
+    */
+
 
     Facet.prototype._getMappings = function(spec) {
       var retobj;
@@ -8057,7 +8074,6 @@ Calculate the pixel dimension and layout of a particular chart
         this.paper = this._makePaper(this.dom, this.dims.width, this.dims.height, this.handleEvent);
       }
       renderer = poly.render(this.handleEvent, this.paper, scales, this.coord);
-      debugger;
       this.facet.render(renderer, this.dims, this.coord);
       this.scaleSet.renderAxes(this.dims, renderer, this.facet);
       this.scaleSet.renderTitles(this.dims, renderer);

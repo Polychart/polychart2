@@ -136,7 +136,6 @@ class Graph
     @dom = @spec.dom
     @paper ?= @_makePaper @dom, @dims.width, @dims.height, @handleEvent
     renderer = poly.render @handleEvent, @paper, scales, @coord
-    debugger
 
     @facet.render(renderer, @dims, @coord)
 

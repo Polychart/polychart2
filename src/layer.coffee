@@ -163,6 +163,7 @@ class Path extends Layer
             y: (@_getValue item, 'y' for item in data)
             color: @_getValue sample, 'color'
             opacity: @_getValue sample, 'opacity'
+            size: @_getValue sample, 'size'
         evtData: evtData
 
 class Line extends Layer
@@ -190,6 +191,7 @@ class Line extends Layer
             y: y
             color: @_getValue sample, 'color'
             opacity: @_getValue sample, 'opacity'
+            size: @_getValue sample, 'size'
         evtData: evtData
 
 class Bar extends Layer
