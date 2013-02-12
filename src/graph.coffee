@@ -21,7 +21,7 @@ class Graph
     @coord = null
     @facet = poly.facet.make()
     @initial_spec = spec
-    @dataSubscribed = false
+    @dataSubscribed = []
     @make spec
   ###
   Reset the graph to its initial specification.
@@ -79,11 +79,11 @@ class Graph
     @facet.make(spec)
 
     # subscribe to changes to data -- bad heuristics!
-    if not @dataSubscribed
-      dataChange = @handleEvent 'data'
-      for layerSpec, id in spec.layers
-        spec.layers[id].data.subscribe dataChange
-      @dataSubscribed = true
+    dataChange = @handleEvent 'data'
+    datas = (layerSpec.data for layerSpec, id in spec.layers)
+    for d in _.difference(datas, @dataSubscribed)
+      d.subscribe dataChange
+    @dataSubscribed = datas
 
     # callback after data processing
     merge = _.after(spec.layers.length, @merge)
@@ -154,7 +154,7 @@ class Graph
     @handlers.splice _.indexOf(@handlers, h), 1
 
   handleEvent : (type) =>
-    # POSSIBLE EVENTS: select, click, mover, mout, data
+    # POSSIBLE EVENTS: select, click, guide-click, mover, mout, data, reset
     graph = @
     handler = (event) ->
       obj = @
