@@ -9,7 +9,7 @@ data = {
 @examples.population = (dom, dom2, dom3) ->
   polyd = polyjs.data json: data
   polyd.derive ((x) -> if x.year < 2012 then 'actual' else 'estimate'), 'type'
-  today = polyjs.chart
+  today_spec =
     layer:
       data: polyd
       type: 'bar'
@@ -19,12 +19,15 @@ data = {
       id: 'subcontinent'
       filter: year: in: [2010]
     legendPosition: 'none'
-    guides: {x: numticks: 50}
+    guides:
+      x: numticks: 50
+      color: scale: (x) -> 'steelblue'
     coord: {type: 'cartesian', flip: true}
     dom: dom
     title: 'World Population By (Sub)continent 2010'
     width: 400
     height: 400
+  today = polyjs.chart today_spec
   yearly_spec =
     layers: [
       {
@@ -81,6 +84,8 @@ data = {
       yearly_spec.guides.y.min = 0
       yearly_spec.guides.y.max = 5500000
       yearly.make yearly_spec
+      today_spec.guides.color.scale = (x) -> if x is data.subcontinent.in[0] then 'red' else 'steelblue'
+      today.make today_spec
     else if type is 'reset'
       for layer in yearly_spec.layers
         delete layer.filter
@@ -88,6 +93,9 @@ data = {
       yearly_spec.guides.y.min = 0
       yearly_spec.guides.y.max = 12500000
       yearly.make yearly_spec
+
+      today_spec.guides.color.scale = (x) -> 'steelblue'
+      today.make today_spec
 
   show_breakdown = (type, e) ->
     if type is 'click'

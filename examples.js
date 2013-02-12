@@ -3006,7 +3006,7 @@
   }
 
   this.examples.population = function(dom, dom2, dom3) {
-    var breakdown, breakdown_spec, polyd, show_breakdown, show_country, today, yearly, yearly_spec, yscale_toggle;
+    var breakdown, breakdown_spec, polyd, show_breakdown, show_country, today, today_spec, yearly, yearly_spec, yscale_toggle;
     polyd = polyjs.data({
       json: data
     });
@@ -3017,7 +3017,7 @@
         return 'estimate';
       }
     }), 'type');
-    today = polyjs.chart({
+    today_spec = {
       layer: {
         data: polyd,
         type: 'bar',
@@ -3039,6 +3039,11 @@
       guides: {
         x: {
           numticks: 50
+        },
+        color: {
+          scale: function(x) {
+            return 'steelblue';
+          }
         }
       },
       coord: {
@@ -3049,7 +3054,8 @@
       title: 'World Population By (Sub)continent 2010',
       width: 400,
       height: 400
-    });
+    };
+    today = polyjs.chart(today_spec);
     yearly_spec = {
       layers: [
         {
@@ -3152,7 +3158,15 @@
         yearly_spec.title = "Population growth of " + data.subcontinent["in"][0] + " (click chart to zoom)";
         yearly_spec.guides.y.min = 0;
         yearly_spec.guides.y.max = 5500000;
-        return yearly.make(yearly_spec);
+        yearly.make(yearly_spec);
+        today_spec.guides.color.scale = function(x) {
+          if (x === data.subcontinent["in"][0]) {
+            return 'red';
+          } else {
+            return 'steelblue';
+          }
+        };
+        return today.make(today_spec);
       } else if (type === 'reset') {
         _ref2 = yearly_spec.layers;
         for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
@@ -3162,7 +3176,11 @@
         yearly_spec.title = "Population growth of the World (click chart to zoom)";
         yearly_spec.guides.y.min = 0;
         yearly_spec.guides.y.max = 12500000;
-        return yearly.make(yearly_spec);
+        yearly.make(yearly_spec);
+        today_spec.guides.color.scale = function(x) {
+          return 'steelblue';
+        };
+        return today.make(today_spec);
       }
     };
     show_breakdown = function(type, e) {
