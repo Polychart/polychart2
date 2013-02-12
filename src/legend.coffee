@@ -16,7 +16,11 @@ sf = poly.const.scaleFns
 
 poly.guide.legends = () -> return new Legends()
 
-poly.guide.legend = (aes) -> return new Legend(aes)
+poly.guide.legend = (aes, type='vertical') ->
+  if type is 'vertical'
+    new VerticalLegend(aes)
+  else
+    new HorizontalLegend(aes)
 
 class Legends extends poly.GuideSet
   constructor: () ->
@@ -126,10 +130,6 @@ class Legend extends poly.Guide
     {domain, type, guideSpec, @mapping, keys} = params
     @titletext = guideSpec.title ? keys
     @ticks = poly.tick.make domain, guideSpec, type
-    @height = @TITLEHEIGHT + @SPACING + @TICKHEIGHT*_.size @ticks
-    titleWidth = poly.strSize @titletext
-    tickWidth = _.max _.map @ticks, (t) -> poly.strSize t.value
-    @maxwidth = Math.max titleWidth, tickWidth
   calculate: () ->
     geoms = {}
     geoms['title'] = marks: 0: @_makeTitle(@titletext)
@@ -146,6 +146,18 @@ class Legend extends poly.Guide
     @geometry.set @calculate()
     @geometry.render(renderer)
   dispose: (renderer) -> @geometry.dispose(renderer)
+  getDimension: () ->
+    position: 'left'
+    height: @height
+    width: 15+@maxwidth
+
+class VerticalLegend extends Legend
+  make: (params) ->
+    super(params)
+    @height = @TITLEHEIGHT + @SPACING + @TICKHEIGHT*_.size @ticks
+    titleWidth = poly.strSize @titletext
+    tickWidth = _.max _.map @ticks, (t) -> poly.strSize t.value
+    @maxwidth = Math.max titleWidth, tickWidth
   _makeLabel: (tick) ->
     type: 'text'
     x : sf.identity 20
@@ -189,7 +201,5 @@ class Legend extends poly.Guide
     color: sf.identity 'black'
     text: text
     'text-anchor' : 'start'
-  getDimension: () ->
-    position: 'left'
-    height: @height
-    width: 15+@maxwidth
+
+
