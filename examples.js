@@ -3027,6 +3027,7 @@
           asc: false
         },
         y: 'population',
+        color: 'subcontinent',
         id: 'subcontinent',
         filter: {
           year: {
@@ -3034,6 +3035,7 @@
           }
         }
       },
+      legendPosition: 'none',
       guides: {
         x: {
           numticks: 50

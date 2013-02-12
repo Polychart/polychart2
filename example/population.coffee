@@ -15,8 +15,10 @@ data = {
       type: 'bar'
       x : {var:'subcontinent', sort:'population', asc: false}
       y : 'population'
+      color: 'subcontinent'
       id: 'subcontinent'
       filter: year: in: [2010]
+    legendPosition: 'none'
     guides: {x: numticks: 50}
     coord: {type: 'cartesian', flip: true}
     dom: dom

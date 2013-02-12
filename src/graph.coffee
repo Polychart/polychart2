@@ -131,7 +131,7 @@ class Graph
     @scaleSet.coord = @coord
     @scaleSet.makeAxes()
     @scaleSet.makeTitles(@spec.title ? '')
-    @scaleSet.makeLegends()
+    @scaleSet.makeLegends(@spec.legendPosition ? 'right')
 
     @dom = @spec.dom
     @paper ?= @_makePaper @dom, @dims.width, @dims.height, @handleEvent
@@ -183,7 +183,7 @@ class Graph
   _makeDimensions: (spec, scaleSet, facet) ->
     scaleSet.makeAxes()
     scaleSet.makeTitles(@spec.title ? '')
-    scaleSet.makeLegends()
+    scaleSet.makeLegends(@spec.legendPosition ? 'right')
     poly.dim.make spec, scaleSet, facet.getGrid()
   _makePaper: (dom, width, height, handleEvent) ->
     paper = poly.paper dom, width, height, handleEvent

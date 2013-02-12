@@ -3631,8 +3631,14 @@ Legends (GuideSet) object to determine the correct position of a legend.
     }
 
     Legends.prototype.make = function(params) {
-      var aes, aesGroups, domains, guideSpec, i, idx, layerMapping, layers, legend, legenddeleted, mapping, scales, _i, _j, _len, _len1, _ref, _ref1, _results;
-      mapping = params.mapping, domains = params.domains, layers = params.layers, guideSpec = params.guideSpec, scales = params.scales, layerMapping = params.layerMapping;
+      var aes, aesGroups, domains, guideSpec, i, idx, layerMapping, layers, legend, legenddeleted, position, scales, _i, _j, _len, _len1, _ref, _ref1, _results;
+      domains = params.domains, layers = params.layers, guideSpec = params.guideSpec, scales = params.scales, layerMapping = params.layerMapping, position = params.position;
+      if (position == null) {
+        position = 'right';
+      }
+      if (position === 'none') {
+        return;
+      }
       aesGroups = this._mergeAes(domains, layers);
       idx = 0;
       while (idx < this.legends.length) {
@@ -4876,14 +4882,18 @@ attribute of that value.
       return obj;
     };
 
-    ScaleSet.prototype.makeLegends = function(mapping) {
+    ScaleSet.prototype.makeLegends = function(position) {
+      if (position == null) {
+        position = 'right';
+      }
+      alert(position);
       return this.legends.make({
-        mapping: mapping,
         domains: this.domains,
         layers: this.layers,
         guideSpec: this.guideSpec,
         scales: this.scales,
-        layerMapping: this.layerMapping
+        layerMapping: this.layerMapping,
+        position: position
       });
     };
 
@@ -8157,7 +8167,7 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Graph.prototype.render = function() {
-      var renderer, scales, _ref, _ref1;
+      var renderer, scales, _ref, _ref1, _ref2;
       if ((this.spec.render != null) && this.spec.render === false) {
         return;
       }
@@ -8166,9 +8176,9 @@ The functions here makes it easier to create common types of interactions.
       this.scaleSet.coord = this.coord;
       this.scaleSet.makeAxes();
       this.scaleSet.makeTitles((_ref = this.spec.title) != null ? _ref : '');
-      this.scaleSet.makeLegends();
+      this.scaleSet.makeLegends((_ref1 = this.spec.legendPosition) != null ? _ref1 : 'right');
       this.dom = this.spec.dom;
-      if ((_ref1 = this.paper) == null) {
+      if ((_ref2 = this.paper) == null) {
         this.paper = this._makePaper(this.dom, this.dims.width, this.dims.height, this.handleEvent);
       }
       renderer = poly.render(this.handleEvent, this.paper, scales, this.coord);
@@ -8234,10 +8244,10 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Graph.prototype._makeDimensions = function(spec, scaleSet, facet) {
-      var _ref;
+      var _ref, _ref1;
       scaleSet.makeAxes();
       scaleSet.makeTitles((_ref = this.spec.title) != null ? _ref : '');
-      scaleSet.makeLegends();
+      scaleSet.makeLegends((_ref1 = this.spec.legendPosition) != null ? _ref1 : 'right');
       return poly.dim.make(spec, scaleSet, facet.getGrid());
     };
 

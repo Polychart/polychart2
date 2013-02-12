@@ -23,7 +23,9 @@ class Legends extends poly.GuideSet
     @legends = []
     @deletedLegends = []
   make: (params) ->
-    {mapping, domains, layers, guideSpec, scales, layerMapping} = params
+    {domains, layers, guideSpec, scales, layerMapping, position} = params
+    position ?= 'right'
+    if position is 'none' then return
     # figure out which groups of aesthetics need to be represented
     aesGroups = @_mergeAes domains, layers
     # now iterate through existing legends AND the aesGroups to see

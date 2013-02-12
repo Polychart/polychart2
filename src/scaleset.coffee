@@ -151,14 +151,14 @@ class ScaleSet
           else
             layer.defaults[aes]
     obj
-  makeLegends: (mapping) ->
+  makeLegends: (position='right') ->
     @legends.make
-      mapping: mapping
       domains: @domains
       layers: @layers
       guideSpec: @guideSpec
       scales: @scales
       layerMapping: @layerMapping
+      position: position
   legendOffset: (dims) -> @legends.getDimension(dims)
   renderLegends: (dims, renderer) ->
     offset = { x: 10, y : 0 } # initial spacing
