@@ -38,7 +38,7 @@ screen, and what needs to be rendered.
            to the key-value pair provided by `marks` as above.
 ###
 class Geometry extends Renderable
-  constructor: () ->
+  constructor: (@type=null) ->
     @geoms = {}
     @pts = {}
   set: (geoms) ->
@@ -64,7 +64,7 @@ class Geometry extends Renderable
           if points[id2]
             renderer.animate points[id2], mark, geom.evtData, geom.tooltip
           else
-            renderer.add mark, geom.evtData, geom.tooltip
+            renderer.add mark, geom.evtData, geom.tooltip, @type
       catch error
         if error.name is 'MissingData'
           console.log error.message
@@ -75,7 +75,7 @@ class Geometry extends Renderable
     objs = {}
     for id2, mark of geom.marks
       try
-        objs[id2] = renderer.add mark, geom.evtData, geom.tooltip
+        objs[id2] = renderer.add mark, geom.evtData, geom.tooltip, @type
       catch error
         if error.name is 'MissingData'
           console.log error.message

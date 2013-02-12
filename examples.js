@@ -3055,8 +3055,11 @@
     breakdown = polyjs.chart(breakdown_spec);
     show_country = function(type, e) {
       var filter, layer, _i, _j, _len, _len1, _ref1, _ref2;
-      if (type === 'click') {
+      if (type === 'click' || type === 'guide-click') {
         data = e.evtData;
+        if (!data.subcontinent) {
+          return;
+        }
         filter = {
           subcontinent: data.subcontinent
         };
@@ -3089,7 +3092,7 @@
           filter = {
             year: data.year
           };
-          breakdown.title = "Population Breakdown in " + data.year[0];
+          breakdown_spec.title = "Population Breakdown in " + data.year["in"][0];
           breakdown_spec.layer.filter = filter;
           return breakdown.make(breakdown_spec);
         }

@@ -69,8 +69,9 @@ data = {
   breakdown = polyjs.chart breakdown_spec
 
   show_country = (type, e) ->
-    if type is 'click'
+    if type is 'click' or type is 'guide-click'
       data = e.evtData
+      if not data.subcontinent then return
       filter = subcontinent: data.subcontinent
       for layer in yearly_spec.layers
         layer.filter = filter
@@ -91,7 +92,7 @@ data = {
       data = e.evtData
       if data.year
         filter = year: data.year
-        breakdown.title = "Population Breakdown in #{data.year[0]}"
+        breakdown_spec.title = "Population Breakdown in #{data.year.in[0]}"
         breakdown_spec.layer.filter = filter
         breakdown.make breakdown_spec
 

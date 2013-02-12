@@ -119,7 +119,7 @@ class Legend extends poly.Guide
   TICKHEIGHT: 12
   SPACING : 10
   constructor: (@aes) ->
-    @geometry = new poly.Geometry
+    @geometry = new poly.Geometry('guide')
   make: (params) ->
     {domain, type, guideSpec, @mapping, keys} = params
     @titletext = guideSpec.title ? keys
@@ -169,13 +169,13 @@ class Legend extends poly.Guide
         # take the layer default value
         obj[aes] = sf.identity value
       else
-        # take teh global default value
+        # take the global default value
         obj[aes] = sf.identity poly.const.defaults[aes]
+    obj.size = 5 # not negotiable
     obj
   _makeEvtData: (tick) =>
     evtData = {}
     for aes, value of @mapping
-      if aes in poly.const.noLegend then continue
       for v in value
         if aes in @aes and v.type is 'map'
           evtData[v.value] = tick.evtData

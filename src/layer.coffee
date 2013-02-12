@@ -78,8 +78,8 @@ class Layer
   _getValue: (item, aes) ->
     if @mapping[aes]          then item[@mapping[aes]]
     else if @consts[aes]      then sf.identity @consts[aes]
-    else if aes in ['x', 'y'] then defaults[aes]
-    else                           sf.identity defaults[aes]
+    else if aes in ['x', 'y'] then @defaults[aes]
+    else                           sf.identity @defaults[aes]
   # helper function to get an element's "id"
   _getIdFunc: () ->
     if @mapping['id']? then (item) => @_getValue item, 'id' else poly.counter()
@@ -167,6 +167,13 @@ class Path extends Layer
         evtData: evtData
 
 class Line extends Layer
+  defaults:
+    'x': sf.novalue()
+    'y': sf.novalue()
+    'color': 'steelblue'
+    'size': 1
+    'opacity': 0.9
+    'shape': 1
   _calcGeoms: () ->
     # @ys = if @mapping['y'] then _.uniq _.pluck @statData, @mapping['y'] else []
     all_x = _.uniq (@_getValue item, 'x' for item in @statData)

@@ -50,7 +50,7 @@ tickFactory = (type, formatter) ->
   i = 0
   (value, prev, next) ->
     if type is 'cat'
-      evtData = {in : value}
+      evtData = {in : [value]}
     else
       evtData = {}
       if prev? then evtData.ge = prev

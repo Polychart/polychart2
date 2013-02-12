@@ -644,8 +644,10 @@ Abstract classes, almost used like interfaces throughout the codebase
 
     __extends(Geometry, _super);
 
-    function Geometry() {
+    function Geometry(type) {
+      this.type = type != null ? type : null;
       this.dispose = __bind(this.dispose, this);
+
       this.geoms = {};
       this.pts = {};
     }
@@ -690,7 +692,7 @@ Abstract classes, almost used like interfaces throughout the codebase
       for (id2 in _ref) {
         mark = _ref[id2];
         try {
-          objs[id2] = points[id2] ? renderer.animate(points[id2], mark, geom.evtData, geom.tooltip) : renderer.add(mark, geom.evtData, geom.tooltip);
+          objs[id2] = points[id2] ? renderer.animate(points[id2], mark, geom.evtData, geom.tooltip) : renderer.add(mark, geom.evtData, geom.tooltip, this.type);
         } catch (error) {
           if (error.name === 'MissingData') {
             console.log(error.message);
@@ -709,7 +711,7 @@ Abstract classes, almost used like interfaces throughout the codebase
       for (id2 in _ref) {
         mark = _ref[id2];
         try {
-          objs[id2] = renderer.add(mark, geom.evtData, geom.tooltip);
+          objs[id2] = renderer.add(mark, geom.evtData, geom.tooltip, this.type);
         } catch (error) {
           if (error.name === 'MissingData') {
             console.log(error.message);
@@ -2596,7 +2598,7 @@ Helper functions to legends & axes for generating ticks
       var evtData;
       if (type === 'cat') {
         evtData = {
-          "in": value
+          "in": [value]
         };
       } else {
         evtData = {};
@@ -3802,7 +3804,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
 
       this._makeTick = __bind(this._makeTick, this);
 
-      this.geometry = new poly.Geometry;
+      this.geometry = new poly.Geometry('guide');
     }
 
     Legend.prototype.make = function(params) {
@@ -3886,6 +3888,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
           obj[aes] = sf.identity(poly["const"].defaults[aes]);
         }
       }
+      obj.size = 5;
       return obj;
     };
 
@@ -3895,9 +3898,6 @@ Legends (GuideSet) object to determine the correct position of a legend.
       _ref = this.mapping;
       for (aes in _ref) {
         value = _ref[aes];
-        if (__indexOf.call(poly["const"].noLegend, aes) >= 0) {
-          continue;
-        }
         for (_i = 0, _len = value.length; _i < _len; _i++) {
           v = value[_i];
           if (__indexOf.call(this.aes, aes) >= 0 && v.type === 'map') {
@@ -5908,9 +5908,9 @@ Shared constants
       } else if (this.consts[aes]) {
         return sf.identity(this.consts[aes]);
       } else if (aes === 'x' || aes === 'y') {
-        return defaults[aes];
+        return this.defaults[aes];
       } else {
-        return sf.identity(defaults[aes]);
+        return sf.identity(this.defaults[aes]);
       }
     };
 
@@ -6170,6 +6170,15 @@ Shared constants
     function Line() {
       return Line.__super__.constructor.apply(this, arguments);
     }
+
+    Line.prototype.defaults = {
+      'x': sf.novalue(),
+      'y': sf.novalue(),
+      'color': 'steelblue',
+      'size': 1,
+      'opacity': 0.9,
+      'shape': 1
+    };
 
     Line.prototype._calcGeoms = function() {
       var all_x, data, datas, evtData, group, idfn, item, k, key, sample, x, y, _i, _len, _ref, _results;
@@ -6924,7 +6933,7 @@ Calculate the pixel dimension and layout of a particular chart
         mayflip = true;
       }
       return {
-        add: function(mark, evtData, tooltip) {
+        add: function(mark, evtData, tooltip, type) {
           var pt;
           if (!(coord.type != null)) {
             throw poly.error.unknown("Coordinate don't have at type?");
@@ -6945,8 +6954,12 @@ Calculate the pixel dimension and layout of a particular chart
           if (tooltip) {
             pt.data('t', tooltip);
           }
-          pt.click(handleEvent('click'));
-          pt.hover(handleEvent('mover'), handleEvent('mout'));
+          if (type === 'guide') {
+            pt.click(handleEvent('guide-click'));
+          } else {
+            pt.click(handleEvent('click'));
+            pt.hover(handleEvent('mover'), handleEvent('mout'));
+          }
           return pt;
         },
         remove: function(pt) {
@@ -8104,7 +8117,7 @@ Calculate the pixel dimension and layout of a particular chart
           obj.evtData = graph.scaleSet.fromPixels(start, end);
         } else if (type === 'data') {
           obj.evtData = {};
-        } else if (type === 'reset' || type === 'click' || type === 'mover' || type === 'mout') {
+        } else if (type === 'reset' || type === 'click' || type === 'mover' || type === 'mout' || type === 'guide-click') {
           obj.tooltip = obj.data('t');
           obj.evtData = obj.data('e');
           _ref = poly.getXY(poly.offset(graph.dom), event), x = _ref.x, y = _ref.y;
