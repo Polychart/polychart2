@@ -1,6 +1,14 @@
+###
+Interaction
+-----------
+The functions here makes it easier to create common types of interactions.
+###
+
 poly.handler = {}
 
-
+###
+Render a tooltip. This is actually included automatically for every graph.
+###
 poly.handler.tooltip = () ->
   tooltip = {}
   (type, obj, event) ->
@@ -31,3 +39,43 @@ poly.handler.tooltip = () ->
         # move the text to the front of the rectangle
         tooltip.text.toFront()
 
+###
+Drilldown. Suitable for bar charts over categorical data, mostly.
+This function does not handle the following:
+  * drilldown for multiple aesthetics. does this even make sense?
+  * breaks if an initial filter overlaps with one of the drilldown levels
+###
+poly.handler.drilldown = (aes, levels, initial_filter = {}) ->
+  if not _.isArray(levels)
+    throw poly.error.input("Parameter `levels` should be an array.")
+  if aes not in poly.const.aes
+    throw poly.error.input("Unknown aesthetic #{aes}.")
+
+  current = 0
+  filters = [initial_filter]
+  (type, obj, event, graph) ->
+    if type is 'reset' and current > 0
+      spec = graph.spec
+      filters.pop()
+      newFilter = filters.unshift()
+      current--
+      for layer in spec.layers
+        layer.filter = newFilter
+        layer[aes] = levels[current]
+        layer.id = levels[current]
+      graph.make graph.spec
+    else if type is 'click' and current < levels.length-1
+      data = obj.evtData
+      spec = graph.spec
+      newFilterValue = data[levels[current]]
+      if not newFilterValue then return
+      newFilter = {}
+      newFilter[levels[current]] = newFilterValue
+      current++
+      newFilter = _.extend(_.clone(filters[filters.length - 1]), newFilter)
+      for layer in spec.layers
+        layer.filter = newFilter
+        layer[aes] = levels[current]
+        layer.id = levels[current]
+      filters.push(newFilter)
+      graph.make graph.spec

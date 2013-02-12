@@ -172,9 +172,9 @@ class Graph
         if type in ['reset', 'click'] and not f then return
       for h in graph.handlers
         if _.isFunction(h)
-          h(type, obj, event)
+          h(type, obj, event, graph)
         else
-          h.handle(type, obj, event)
+          h.handle(type, obj, event, graph)
     _.throttle handler, 1000
   _makeScaleSet: (spec, domains, facet) ->
     @coord.make poly.dim.guess(spec, facet.getGrid())

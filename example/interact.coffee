@@ -166,3 +166,28 @@
         c2 = polyjs.chart spec2
       else
         c2.make spec2
+
+@examples.interact_drilldown = (dom) ->
+  data = polyjs.data json: [
+    { country: 'Canada', region: 'Ontario', city: 'Toronto', value: 5235 }
+    { country: 'Canada', region: 'Ontario', city: 'Kingston', value: 5034 }
+    { country: 'Canada', region: 'Ontario', city: 'Waterloo', value: 235 }
+    { country: 'Canada', region: 'Ontario', city: 'Kitchener', value: 935 }
+    { country: 'Canada', region: 'BC', city: 'Vancouver', value: 6735 }
+    { country: 'Canada', region: 'BC', city: 'Victoria', value: 3732 }
+    { country: 'Canada', region: 'BC', city: 'Kelona', value: 29 }
+    { country: 'Canada', region: 'Nova Scotia', city: 'Halifax', value: 29 }
+    { country: 'United States', region: 'New York', city: 'Manhattan', value: 9900 }
+    { country: 'United States', region: 'New York', city: 'Albany', value: 1900 }
+    { country: 'United States', region: 'California', city: 'San Francisco', value: 8900 }
+    { country: 'United States', region: 'California', city: 'San Antonio', value: 1900 }
+  ]
+  c = polyjs.chart
+    layer:
+      data: data
+      type: 'bar'
+      x: 'country'
+      y: 'sum(value)'
+    dom: dom
+
+  c.addHandler polyjs.handler.drilldown('x', ['country', 'region', 'city'])

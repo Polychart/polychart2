@@ -71,6 +71,8 @@ makeDomainSet = (geoms, metas, guideSpec, strictmode) ->
       domain[aes] = makeDomain guideSpec[aes]
     else
       values = flattenGeoms(geoms, aes)
+      if values.length is 0
+        throw poly.error.input("Dataset is none?")
       fromspec = (item) -> if guideSpec[aes]? then guideSpec[aes][item] else null
       switch meta.type
         when 'num'
