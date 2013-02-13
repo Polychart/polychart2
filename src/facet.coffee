@@ -34,8 +34,8 @@ class Facet
     if @type is 'none'
       @rows = @cols = 1
     else
-      @rows = @spec.facet.cols
-      @cols = @spec.facet.rows
+      @cols = @spec.facet.cols
+      @rows = @spec.facet.rows
       if @type is 'wrap'
         numFacets = @values[@mapping.var].length
         if not @cols and not @rows

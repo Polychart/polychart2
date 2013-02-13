@@ -7636,8 +7636,8 @@ The functions here makes it easier to create common types of interactions.
       if (this.type === 'none') {
         this.rows = this.cols = 1;
       } else {
-        this.rows = this.spec.facet.cols;
-        this.cols = this.spec.facet.rows;
+        this.cols = this.spec.facet.cols;
+        this.rows = this.spec.facet.rows;
         if (this.type === 'wrap') {
           numFacets = this.values[this.mapping["var"]].length;
           if (!this.cols && !this.rows) {
