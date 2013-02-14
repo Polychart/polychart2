@@ -4790,6 +4790,33 @@ attribute of that value.
       }
     };
 
+    ScaleSet.prototype.makeGuides = function(spec, dims) {
+      var _ref, _ref1;
+      this.makeAxes();
+      this.makeTitles((_ref = spec.title) != null ? _ref : '');
+      this.makeLegends((_ref1 = spec.legendPosition) != null ? _ref1 : 'right', dims);
+      return {
+        axes: this.axes,
+        legends: this.legends,
+        title: this.title
+      };
+    };
+
+    ScaleSet.prototype.renderGuides = function(dims, renderer, facet) {
+      this.axes.render(dims, renderer, facet);
+      this.renderTitles(dims, renderer);
+      return this.renderLegends(dims, renderer);
+    };
+
+    ScaleSet.prototype.diposeGuides = function(renderer) {
+      this.axes.dispose(renderer);
+      this.legends.dispose(renderer);
+      this.titles.x.dispose(renderer);
+      this.titles.y.dispose(renderer);
+      this.titles.main.dispose(renderer);
+      return this.titles = {};
+    };
+
     ScaleSet.prototype.makeTitles = function(maintitle) {
       var _ref;
       if ((_ref = this.titles) == null) {
@@ -4844,13 +4871,6 @@ attribute of that value.
       return this.titles.main.render(renderer, dims, o);
     };
 
-    ScaleSet.prototype.disposeTitles = function(renderer) {
-      this.titles = {};
-      this.titles.x.dispose(renderer);
-      this.titles.y.dispose(renderer);
-      return this.titles.main.dispose(renderer);
-    };
-
     ScaleSet.prototype.makeAxes = function() {
       var _ref;
       return this.axes.make({
@@ -4870,14 +4890,6 @@ attribute of that value.
 
     ScaleSet.prototype.axesOffset = function(dims) {
       return this.axes.getDimension(dims);
-    };
-
-    ScaleSet.prototype.renderAxes = function(dims, renderer, facet) {
-      return this.axes.render(dims, renderer, facet);
-    };
-
-    ScaleSet.prototype.disposeAxes = function(renderer) {
-      return this.axes.dispose(renderer);
     };
 
     ScaleSet.prototype._mapLayers = function(layers) {
@@ -4932,10 +4944,6 @@ attribute of that value.
       offset.x += (_ref = this.axesOffset(dims).right) != null ? _ref : 0;
       offset.x += (_ref1 = this.titleOffset(dims).right) != null ? _ref1 : 0;
       return this.legends.render(dims, renderer, offset);
-    };
-
-    ScaleSet.prototype.disposeLegends = function(renderer) {
-      return this.legends.dispose(renderer);
     };
 
     return ScaleSet;
@@ -8061,9 +8069,7 @@ The functions here makes it easier to create common types of interactions.
       var renderer;
       renderer = poly.render(this.handleEvent, this.paper, this.scaleSet.scales, this.coord);
       this.facet.dispose(renderer);
-      this.scaleSet.disposeLegends(renderer);
-      this.scaleSet.disposeAxes(renderer);
-      this.scaleSet.disposeTitles(renderer);
+      this.scaleSet.disposeGuides(renderer);
       this.scaleSet = null;
       this.axes = null;
       this.legends = null;
@@ -8171,17 +8177,20 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Graph.prototype.mergeDomains = function() {
-      var domains, domainsets, _ref;
+      var domains, domainsets, tmpDims, tmpRanges;
       domainsets = _.map(this.facet.panes, function(p) {
         return p.domains;
       });
       domains = poly.domain.merge(domainsets);
-      if ((_ref = this.scaleSet) == null) {
-        this.scaleSet = this._makeScaleSet(this.spec, domains, this.facet);
+      if (!this.scaleSet) {
+        tmpDims = poly.dim.guess(this.spec, this.facet.getGrid());
+        this.coord.make(tmpDims);
+        tmpRanges = this.coord.ranges();
+        this.scaleSet = poly.scaleset(tmpRanges, this.coord);
       }
       this.scaleSet.make(this.spec.guides, domains, this.layers);
       if (!this.dims) {
-        this.dims = this._makeDimensions(this.spec, this.scaleSet, this.facet);
+        this.dims = this._makeDimensions(this.spec, this.scaleSet, this.facet, tmpDims);
         this.coord.make(this.dims);
         this.ranges = this.coord.ranges();
       }
@@ -8189,30 +8198,21 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Graph.prototype.render = function() {
-      var renderer, scales, _ref, _ref1, _ref2;
+      var renderer, scales, _ref, _ref1;
       if ((this.spec.render != null) && this.spec.render === false) {
         return;
       }
       scales = this.scaleSet.scales;
       this.coord.setScales(scales);
       this.scaleSet.coord = this.coord;
-      this.scaleSet.makeAxes();
-      this.scaleSet.makeTitles((_ref = this.spec.title) != null ? _ref : '');
-      this.scaleSet.makeLegends((_ref1 = this.spec.legendPosition) != null ? _ref1 : 'right');
+      _ref = this.scaleSet.makeGuides(this.spec, this.dims), this.axes = _ref.axes, this.titles = _ref.titles, this.legends = _ref.legends;
       this.dom = this.spec.dom;
-      if ((_ref2 = this.paper) == null) {
+      if ((_ref1 = this.paper) == null) {
         this.paper = this._makePaper(this.dom, this.dims.width, this.dims.height, this.handleEvent);
       }
       renderer = poly.render(this.handleEvent, this.paper, scales, this.coord);
       this.facet.render(renderer, this.dims, this.coord);
-      this.scaleSet.renderAxes(this.dims, renderer, this.facet);
-      this.scaleSet.renderTitles(this.dims, renderer);
-      return this.scaleSet.renderLegends(this.dims, renderer);
-      /* labels
-      @scaleSet.renderFacetLabels @dims, rendererG, @facet
-      @scaleSet.renderTitle @dims, rendererG, @facet
-      */
-
+      return this.scaleSet.renderGuides(this.dims, renderer, this.facet);
     };
 
     Graph.prototype.addHandler = function(h) {
@@ -8260,16 +8260,12 @@ The functions here makes it easier to create common types of interactions.
 
     Graph.prototype._makeScaleSet = function(spec, domains, facet) {
       var tmpRanges;
-      this.coord.make(poly.dim.guess(spec, facet.getGrid()));
       tmpRanges = this.coord.ranges();
       return poly.scaleset(tmpRanges, this.coord);
     };
 
-    Graph.prototype._makeDimensions = function(spec, scaleSet, facet) {
-      var _ref, _ref1;
-      scaleSet.makeAxes();
-      scaleSet.makeTitles((_ref = this.spec.title) != null ? _ref : '');
-      scaleSet.makeLegends((_ref1 = this.spec.legendPosition) != null ? _ref1 : 'right');
+    Graph.prototype._makeDimensions = function(spec, scaleSet, facet, tmpDims) {
+      scaleSet.makeGuides(spec, tmpDims);
       return poly.dim.make(spec, scaleSet, facet.getGrid());
     };
 

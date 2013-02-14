@@ -37,10 +37,7 @@ class Graph
   dispose: () ->
     renderer = poly.render @handleEvent, @paper, @scaleSet.scales, @coord
     @facet.dispose(renderer)
-    @scaleSet.disposeLegends(renderer)
-    @scaleSet.disposeAxes(renderer)
-    @scaleSet.disposeTitles(renderer)
-
+    @scaleSet.disposeGuides(renderer)
     @scaleSet = null
     @axes = null
     @legends = null
@@ -115,11 +112,15 @@ class Graph
   mergeDomains: () =>
     domainsets = _.map @facet.panes, (p) -> p.domains
     domains = poly.domain.merge domainsets
-    @scaleSet ?= @_makeScaleSet @spec, domains, @facet
+    if not @scaleSet
+      tmpDims = poly.dim.guess(@spec, @facet.getGrid())
+      @coord.make tmpDims
+      tmpRanges = @coord.ranges()
+      @scaleSet = poly.scaleset tmpRanges, @coord
     @scaleSet.make @spec.guides, domains, @layers
     # dimension calculation
     if not @dims
-      @dims = @_makeDimensions @spec, @scaleSet, @facet
+      @dims = @_makeDimensions @spec, @scaleSet, @facet, tmpDims
       @coord.make @dims
       @ranges = @coord.ranges()
     @scaleSet.setRanges @ranges
@@ -129,25 +130,14 @@ class Graph
     scales = @scaleSet.scales
     @coord.setScales scales
     @scaleSet.coord = @coord
-    @scaleSet.makeAxes()
-    @scaleSet.makeTitles(@spec.title ? '')
-    @scaleSet.makeLegends(@spec.legendPosition ? 'right')
+    {@axes, @titles, @legends} = @scaleSet.makeGuides(@spec, @dims)
 
     @dom = @spec.dom
     @paper ?= @_makePaper @dom, @dims.width, @dims.height, @handleEvent
     renderer = poly.render @handleEvent, @paper, scales, @coord
 
     @facet.render(renderer, @dims, @coord)
-
-    # axes
-    @scaleSet.renderAxes @dims, renderer, @facet
-    @scaleSet.renderTitles @dims, renderer
-    # legend
-    @scaleSet.renderLegends @dims, renderer
-    ### labels
-    @scaleSet.renderFacetLabels @dims, rendererG, @facet
-    @scaleSet.renderTitle @dims, rendererG, @facet
-    ###
+    @scaleSet.renderGuides @dims, renderer, @facet
 
   addHandler : (h) -> @handlers.push h
   removeHandler: (h) ->
@@ -177,13 +167,10 @@ class Graph
           h.handle(type, obj, event, graph)
     _.throttle handler, 1000
   _makeScaleSet: (spec, domains, facet) ->
-    @coord.make poly.dim.guess(spec, facet.getGrid())
     tmpRanges = @coord.ranges()
     poly.scaleset tmpRanges, @coord
-  _makeDimensions: (spec, scaleSet, facet) ->
-    scaleSet.makeAxes()
-    scaleSet.makeTitles(@spec.title ? '')
-    scaleSet.makeLegends(@spec.legendPosition ? 'right')
+  _makeDimensions: (spec, scaleSet, facet, tmpDims) ->
+    scaleSet.makeGuides(spec, tmpDims)
     poly.dim.make spec, scaleSet, facet.getGrid()
   _makePaper: (dom, width, height, handleEvent) ->
     paper = poly.paper dom, width, height, handleEvent

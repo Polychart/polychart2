@@ -92,6 +92,23 @@ class ScaleSet
 
   getSpec : (a) -> if @guideSpec? and @guideSpec[a]? then @guideSpec[a] else {}
 
+  makeGuides: (spec, dims) ->
+    @makeAxes()
+    @makeTitles(spec.title ? '')
+    @makeLegends(spec.legendPosition ? 'right', dims)
+    {@axes, @legends, @title}
+  renderGuides: (dims, renderer, facet) ->
+    @axes.render(dims, renderer, facet)
+    @renderTitles dims, renderer
+    @renderLegends dims, renderer
+  diposeGuides: (renderer) ->
+    @axes.dispose(renderer)
+    @legends.dispose(renderer)
+    @titles.x.dispose(renderer)
+    @titles.y.dispose(renderer)
+    @titles.main.dispose(renderer)
+    @titles = {}
+
   makeTitles: (maintitle) ->
     @titles ?=
       x: poly.guide.title @coord.axisType('x')
@@ -122,11 +139,6 @@ class ScaleSet
     @titles.x.render renderer, dims, o
     @titles.y.render renderer, dims, o
     @titles.main.render renderer, dims, o
-  disposeTitles: (renderer) ->
-    @titles = {}
-    @titles.x.dispose(renderer)
-    @titles.y.dispose(renderer)
-    @titles.main.dispose(renderer)
 
   makeAxes: () ->
     @axes.make
@@ -137,8 +149,6 @@ class ScaleSet
       labels: {x: poly.getLabel(@layers, 'x'), y: poly.getLabel(@layers, 'y')}
 
   axesOffset: (dims) -> @axes.getDimension(dims)
-  renderAxes: (dims, renderer, facet) -> @axes.render(dims, renderer, facet)
-  disposeAxes: (renderer) -> @axes.dispose(renderer)
   _mapLayers: (layers) ->
     obj = {}
     for aes in poly.const.aes
@@ -166,4 +176,3 @@ class ScaleSet
     offset.x += @axesOffset(dims).right ? 0
     offset.x += @titleOffset(dims).right ? 0
     @legends.render(dims, renderer, offset)
-  disposeLegends: (renderer) -> @legends.dispose(renderer)
