@@ -53,10 +53,10 @@ class Axes extends poly.GuideSet
     axisDim =
       top: 0
       left : 0
-      right: dims.chartWidth
-      bottom : dims.chartHeight
-      width: dims.chartWidth
-      height: dims.chartHeight
+      right: dims.eachWidth
+      bottom : dims.eachHeight
+      width: dims.eachWidth
+      height: dims.eachHeight
     drawx = facet.edge(@axes.x.position)
     drawy = facet.edge(@axes.y.position)
     xoverride = renderLabel : false, renderTick : false

@@ -12,7 +12,7 @@ class Coordinate
   make: (dims) -> @dims = dims
   setScales: (scales) -> @scales = x: scales.x.f, y: scales.y.f
   clipping: (offset) ->
-    [offset.x, offset.y, @dims.chartWidth, @dims.chartHeight]
+    [offset.x, offset.y, @dims.eachWidth, @dims.eachHeight]
   getScale: (aes) ->
   ranges: () ->
 
@@ -27,9 +27,9 @@ class Cartesian extends Coordinate
     ranges = {}
     ranges[@x] =
       min: 0
-      max: @dims.chartWidth
+      max: @dims.eachWidth
     ranges[@y] =
-      min: @dims.chartHeight
+      min: @dims.eachHeight
       max: 0
     ranges
   axisType: (aes) -> @[aes]
@@ -58,8 +58,8 @@ class Polar extends Coordinate
   type: 'polar'
   make: (dims) ->
     @dims = dims
-    @cx = @dims.chartWidth/2
-    @cy = @dims.chartHeight/2
+    @cx = @dims.eachWidth/2
+    @cy = @dims.eachHeight/2
   getScale: (aes) ->
     if aes is 'r'
       @scales[@x]
@@ -73,7 +73,7 @@ class Polar extends Coordinate
     ranges[t] = min: 0, max: 2*Math.PI
     ranges[r] =
       min: 0
-      max: Math.min(@dims.chartWidth,@dims.chartHeight)/2 -10
+      max: Math.min(@dims.eachWidth,@dims.eachHeight)/2 -10
     ranges
   axisType: (aes) -> if @[aes] == 'x' then 'r' else 't'
   getXY: (mayflip, mark) =>

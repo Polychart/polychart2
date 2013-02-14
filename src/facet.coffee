@@ -82,8 +82,8 @@ class Facet
   getGrid: () -> {cols: @cols, rows: @rows}
   getOffset: (dims, id) ->
     {col, row} = @_getRowCol(id)
-    x : dims.paddingLeft + dims.guideLeft + (dims.chartWidth + dims.horizontalSpacing) * col
-    y : dims.paddingTop + dims.guideTop + (dims.chartHeight + dims.verticalSpacing) * row + dims.verticalSpacing
+    x : dims.paddingLeft + dims.guideLeft + (dims.eachWidth + dims.horizontalSpacing) * col
+    y : dims.paddingTop + dims.guideTop + (dims.eachHeight + dims.verticalSpacing) * row + dims.verticalSpacing
   edge: (dir) ->
     if @type is 'none'
       return () -> true
@@ -120,16 +120,16 @@ class Facet
         obj[key] = {in: @values[key][@rows*row + col]}
     obj
   getFacetInfo: (dims, x, y) ->
-    col = (x - dims.paddingLeft - dims.guideLeft) / (dims.chartWidth + dims.horizontalSpacing)
+    col = (x - dims.paddingLeft - dims.guideLeft) / (dims.eachWidth + dims.horizontalSpacing)
     col = Math.floor col
-    offsetX = dims.paddingLeft + dims.guideLeft + (dims.chartWidth + dims.horizontalSpacing) * col
-    row = (y - dims.paddingTop - dims.guideTop - dims.verticalSpacing) / (dims.chartHeight + dims.verticalSpacing)
+    offsetX = dims.paddingLeft + dims.guideLeft + (dims.eachWidth + dims.horizontalSpacing) * col
+    row = (y - dims.paddingTop - dims.guideTop - dims.verticalSpacing) / (dims.eachHeight + dims.verticalSpacing)
     row = Math.floor row
-    offsetY = dims.paddingTop + dims.guideTop + (dims.chartHeight + dims.verticalSpacing) * row + dims.verticalSpacing
+    offsetY = dims.paddingTop + dims.guideTop + (dims.eachHeight + dims.verticalSpacing) * row + dims.verticalSpacing
     if col < 0 or col >= @cols or row < 0 or row >= @rows
       # outside of facet
       null
-    else if x - offsetX > dims.chartWidth or y - offsetY > dims.chartHeight
+    else if x - offsetX > dims.eachWidth or y - offsetY > dims.eachHeight
       # in between facets
       null
     else

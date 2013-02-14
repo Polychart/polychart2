@@ -1930,7 +1930,7 @@ Defines what coordinate system is used to plot the graph.
     };
 
     Coordinate.prototype.clipping = function(offset) {
-      return [offset.x, offset.y, this.dims.chartWidth, this.dims.chartHeight];
+      return [offset.x, offset.y, this.dims.eachWidth, this.dims.eachHeight];
     };
 
     Coordinate.prototype.getScale = function(aes) {};
@@ -1964,10 +1964,10 @@ Defines what coordinate system is used to plot the graph.
       ranges = {};
       ranges[this.x] = {
         min: 0,
-        max: this.dims.chartWidth
+        max: this.dims.eachWidth
       };
       ranges[this.y] = {
-        min: this.dims.chartHeight,
+        min: this.dims.eachHeight,
         max: 0
       };
       return ranges;
@@ -2022,8 +2022,8 @@ Defines what coordinate system is used to plot the graph.
 
     Polar.prototype.make = function(dims) {
       this.dims = dims;
-      this.cx = this.dims.chartWidth / 2;
-      return this.cy = this.dims.chartHeight / 2;
+      this.cx = this.dims.eachWidth / 2;
+      return this.cy = this.dims.eachHeight / 2;
     };
 
     Polar.prototype.getScale = function(aes) {
@@ -2046,7 +2046,7 @@ Defines what coordinate system is used to plot the graph.
       };
       ranges[r] = {
         min: 0,
-        max: Math.min(this.dims.chartWidth, this.dims.chartHeight) / 2 - 10
+        max: Math.min(this.dims.eachWidth, this.dims.eachHeight) / 2 - 10
       };
       return ranges;
     };
@@ -2958,7 +2958,7 @@ so simple, but not scalable.
     TitleFacet.prototype._makeTitle = function(dim, offset) {
       return {
         type: 'text',
-        x: sf.identity(offset.x + dim.chartWidth / 2),
+        x: sf.identity(offset.x + dim.eachWidth / 2),
         y: sf.identity(offset.y - 7),
         color: sf.identity('black'),
         text: this.titletext,
@@ -3076,10 +3076,10 @@ objects that can later be rendered using Geometry class.
       axisDim = {
         top: 0,
         left: 0,
-        right: dims.chartWidth,
-        bottom: dims.chartHeight,
-        width: dims.chartWidth,
-        height: dims.chartHeight
+        right: dims.eachWidth,
+        bottom: dims.eachHeight,
+        width: dims.eachWidth,
+        height: dims.eachHeight
       };
       drawx = facet.edge(this.axes.x.position);
       drawy = facet.edge(this.axes.y.position);
@@ -6817,6 +6817,26 @@ Shared constants
 DIMENSIONS
 ----------
 Calculate the pixel dimension and layout of a particular chart
+
+Dimension object has the following elements (all numeric in pixels):
+  @width: the width of the entire chart, including paddings, guides, etc.
+  @height : the height of the entire chart, including paddings, guides, etc.
+  @paddingLeft: left padding, not including guides
+  @paddingRight: right padding, not including guides
+  @paddingTop: top padding, not including guides
+  @paddingBottom: bottom padding, not including guides
+  @guideLeft: space for guides (axes & legends) on the left side of chart
+  @guideRight: space for guides (axes & legends) on the right side of chart
+  @guideTop: space for guides (axes & legends) on the top of chart
+  @guideBottom: space for guides (axes & legends) on the bottom of chart
+  @chartHeight: height of area given for actual chart, includes all facets and
+                the spaces between the facets
+  @chartWidth: width of area given for actual chart, includes all facets and
+               the spaces between the facets
+  @eachHeight: the height of the chart area for each facet
+  @eachWidth: the width of the chart area for each facet
+  @horizontalSpacing: horizontal space between ajacent facets
+  @verticalSpacing: horizontal space between ajacent facets
 */
 
 
@@ -6858,15 +6878,18 @@ Calculate the pixel dimension and layout of a particular chart
     dim.chartHeight = dim.height - dim.paddingTop - dim.paddingBottom - dim.guideTop - dim.guideBottom;
     dim.chartWidth = dim.width - dim.paddingLeft - dim.paddingRight - dim.guideLeft - dim.guideRight;
     if ((facetGrid.cols != null) && facetGrid.cols > 1) {
-      dim.chartWidth -= dim.horizontalSpacing * facetGrid.cols;
-      dim.chartWidth /= facetGrid.cols;
+      dim.eachWidth = dim.chartWidth - dim.horizontalSpacing * facetGrid.cols;
+      dim.eachWidth /= facetGrid.cols;
+    } else {
+      dim.eachWidth = dim.chartWidth;
     }
     if ((facetGrid.rows != null) && facetGrid.rows > 1) {
-      dim.chartHeight -= dim.verticalSpacing * (facetGrid.rows + 1);
-      dim.chartHeight /= facetGrid.rows;
+      dim.eachHeight = dim.chartHeight - dim.verticalSpacing * (facetGrid.rows + 1);
+      dim.eachHeight /= facetGrid.rows;
     } else {
-      dim.chartHeight -= dim.verticalSpacing;
+      dim.eachHeight = dim.chartHeight - dim.verticalSpacing;
     }
+    console.log(dim);
     return dim;
   };
 
@@ -6889,18 +6912,18 @@ Calculate the pixel dimension and layout of a particular chart
     dim.chartHeight = dim.height - dim.paddingTop - dim.paddingBottom - dim.guideTop - dim.guideBottom;
     dim.chartWidth = dim.width - dim.paddingLeft - dim.paddingRight - dim.guideLeft - dim.guideRight;
     if ((facetGrid.cols != null) && facetGrid.cols > 1) {
-      dim.chartWidth -= dim.horizontalSpacing * (facetGrid.cols - 1);
+      dim.eachWidth = dim.chartWidth - dim.horizontalSpacing * (facetGrid.cols - 1);
+    } else {
+      dim.eachWidth = dim.chartWidth;
     }
     if ((facetGrid.rows != null) && facetGrid.rows > 1) {
-      dim.chartHeight -= dim.verticalSpacing * (facetGrid.rows - 1);
+      dim.eachHeight = dim.chartHeight - dim.verticalSpacing * (facetGrid.rows - 1);
+    } else {
+      dim.eachHeight = dim.chartHeight;
     }
+    console.log(dim);
     return dim;
   };
-
-  /*
-  # CLASSES
-  */
-
 
 }).call(this);
 // Generated by CoffeeScript 1.4.0
@@ -7735,8 +7758,8 @@ The functions here makes it easier to create common types of interactions.
       var col, row, _ref;
       _ref = this._getRowCol(id), col = _ref.col, row = _ref.row;
       return {
-        x: dims.paddingLeft + dims.guideLeft + (dims.chartWidth + dims.horizontalSpacing) * col,
-        y: dims.paddingTop + dims.guideTop + (dims.chartHeight + dims.verticalSpacing) * row + dims.verticalSpacing
+        x: dims.paddingLeft + dims.guideLeft + (dims.eachWidth + dims.horizontalSpacing) * col,
+        y: dims.paddingTop + dims.guideTop + (dims.eachHeight + dims.verticalSpacing) * row + dims.verticalSpacing
       };
     };
 
@@ -7817,15 +7840,15 @@ The functions here makes it easier to create common types of interactions.
 
     Facet.prototype.getFacetInfo = function(dims, x, y) {
       var col, offsetX, offsetY, row;
-      col = (x - dims.paddingLeft - dims.guideLeft) / (dims.chartWidth + dims.horizontalSpacing);
+      col = (x - dims.paddingLeft - dims.guideLeft) / (dims.eachWidth + dims.horizontalSpacing);
       col = Math.floor(col);
-      offsetX = dims.paddingLeft + dims.guideLeft + (dims.chartWidth + dims.horizontalSpacing) * col;
-      row = (y - dims.paddingTop - dims.guideTop - dims.verticalSpacing) / (dims.chartHeight + dims.verticalSpacing);
+      offsetX = dims.paddingLeft + dims.guideLeft + (dims.eachWidth + dims.horizontalSpacing) * col;
+      row = (y - dims.paddingTop - dims.guideTop - dims.verticalSpacing) / (dims.eachHeight + dims.verticalSpacing);
       row = Math.floor(row);
-      offsetY = dims.paddingTop + dims.guideTop + (dims.chartHeight + dims.verticalSpacing) * row + dims.verticalSpacing;
+      offsetY = dims.paddingTop + dims.guideTop + (dims.eachHeight + dims.verticalSpacing) * row + dims.verticalSpacing;
       if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) {
         return null;
-      } else if (x - offsetX > dims.chartWidth || y - offsetY > dims.chartHeight) {
+      } else if (x - offsetX > dims.eachWidth || y - offsetY > dims.eachHeight) {
         return null;
       } else {
         return {

@@ -98,7 +98,7 @@ class TitleFacet extends Title
       @title = renderer.add @_makeTitle(dim, offset)
   _makeTitle: (dim, offset) ->
     type: 'text'
-    x : sf.identity offset.x + dim.chartWidth/2
+    x : sf.identity offset.x + dim.eachWidth/2
     y : sf.identity offset.y - 7
     color: sf.identity 'black'
     text: @titletext

@@ -2,6 +2,26 @@
 DIMENSIONS
 ----------
 Calculate the pixel dimension and layout of a particular chart
+
+Dimension object has the following elements (all numeric in pixels):
+  @width: the width of the entire chart, including paddings, guides, etc.
+  @height : the height of the entire chart, including paddings, guides, etc.
+  @paddingLeft: left padding, not including guides
+  @paddingRight: right padding, not including guides
+  @paddingTop: top padding, not including guides
+  @paddingBottom: bottom padding, not including guides
+  @guideLeft: space for guides (axes & legends) on the left side of chart
+  @guideRight: space for guides (axes & legends) on the right side of chart
+  @guideTop: space for guides (axes & legends) on the top of chart
+  @guideBottom: space for guides (axes & legends) on the bottom of chart
+  @chartHeight: height of area given for actual chart, includes all facets and
+                the spaces between the facets
+  @chartWidth: width of area given for actual chart, includes all facets and
+               the spaces between the facets
+  @eachHeight: the height of the chart area for each facet
+  @eachWidth: the width of the chart area for each facet
+  @horizontalSpacing: horizontal space between ajacent facets
+  @verticalSpacing: horizontal space between ajacent facets
 ###
 poly.dim = {}
 poly.dim.make = (spec, scaleSet, facetGrid) ->
@@ -47,13 +67,16 @@ poly.dim.make = (spec, scaleSet, facetGrid) ->
 
   # Facet adjustment
   if facetGrid.cols? and facetGrid.cols > 1
-    dim.chartWidth -= dim.horizontalSpacing * (facetGrid.cols)
-    dim.chartWidth /= facetGrid.cols
-  if facetGrid.rows? and facetGrid.rows > 1
-    dim.chartHeight -= dim.verticalSpacing * (facetGrid.rows + 1)
-    dim.chartHeight /= facetGrid.rows
+    dim.eachWidth = dim.chartWidth - dim.horizontalSpacing * (facetGrid.cols)
+    dim.eachWidth /= facetGrid.cols
   else
-    dim.chartHeight -= dim.verticalSpacing
+    dim.eachWidth = dim.chartWidth
+  if facetGrid.rows? and facetGrid.rows > 1
+    dim.eachHeight = dim.chartHeight - dim.verticalSpacing * (facetGrid.rows + 1)
+    dim.eachHeight /= facetGrid.rows
+  else
+    dim.eachHeight = dim.chartHeight - dim.verticalSpacing
+  console.log dim
   dim
 
 poly.dim.guess = (spec, facetGrid) ->
@@ -78,11 +101,12 @@ poly.dim.guess = (spec, facetGrid) ->
 
   # Facet adjustment
   if facetGrid.cols? and facetGrid.cols > 1
-    dim.chartWidth -= dim.horizontalSpacing * (facetGrid.cols - 1)
+    dim.eachWidth = dim.chartWidth - dim.horizontalSpacing * (facetGrid.cols - 1)
+  else
+    dim.eachWidth = dim.chartWidth
   if facetGrid.rows? and facetGrid.rows > 1
-    dim.chartHeight -= dim.verticalSpacing * (facetGrid.rows - 1)
+    dim.eachHeight = dim.chartHeight - dim.verticalSpacing * (facetGrid.rows - 1)
+  else
+    dim.eachHeight = dim.chartHeight
+  console.log dim
   dim
-
-###
-# CLASSES
-###
