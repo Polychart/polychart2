@@ -16,8 +16,8 @@ sf = poly.const.scaleFns
 
 poly.guide.legends = () -> return new Legends()
 
-poly.guide.legend = (aes, type='vertical') ->
-  if type is 'vertical'
+poly.guide.legend = (aes, position) ->
+  if position in ['left', 'right']
     new VerticalLegend(aes)
   else
     new HorizontalLegend(aes)
@@ -56,12 +56,13 @@ class Legends extends poly.GuideSet
         idx++
     # create new legends
     for aes in aesGroups
-      @legends.push poly.guide.legend aes
+      @legends.push poly.guide.legend aes, @position
     # make each legend
     for legend in @legends
       aes = legend.aes[0]
       legend.make
         domain: domains[aes]
+        position: @position
         guideSpec: guideSpec[aes] ? {}
         type: scales[aes].tickType()
         mapping: layerMapping
@@ -109,16 +110,16 @@ class Legends extends poly.GuideSet
     for legend in @legends
       d = legend.getDimension(dims)
       height += d.height + 10 # spacing
-    retobj[@position] = height
+    height
 
   render: (dims, renderer, offset) ->
     legend.dispose(renderer()) for legend in @deletedLegends
     @deletedLegends = []
     if @position is 'left' or @position is 'right'
-      @_renderH(dims, renderer, offset)
-    else if @position is 'top' or @position is 'bottom'
       @_renderV(dims, renderer, offset)
-  _renderH: (dims, renderer, offset) ->
+    else if @position is 'top' or @position is 'bottom'
+      @_renderH(dims, renderer, offset)
+  _renderV: (dims, renderer, offset) ->
     legendDim =
       top: dims.paddingTop + dims.guideTop
       left:
@@ -143,7 +144,7 @@ class Legends extends poly.GuideSet
         y: offsetY + legendDim.top
       legend.render(renderer(realoffset, false, false), maxwidth)
       offsetY += newdim.height
-  _renderV: (dims, renderer, offset) ->
+  _renderH: (dims, renderer, offset) ->
     legendDim =
       left: dims.paddingLeft
       top:
@@ -152,11 +153,11 @@ class Legends extends poly.GuideSet
         else
           dims.height - dims.guideBottom - dims.paddingBottom
     realoffset =
-      x: offset.x + legendDim.left
-      y: offset.y + legendDim.top
+      x: legendDim.left
+      y: offset.bottom + legendDim.top
     for legend in @legends
       newdim = legend.getDimension(dims)
-      legend.render(renderer(realoffset, false, false), maxwidth)
+      legend.render(renderer(realoffset, false, false))
       realoffset.y += newdim.height + 10 # spacing
   dispose: (renderer) ->
     legend.dispose(renderer()) for legend in @legends
@@ -169,7 +170,7 @@ class Legend extends poly.Guide
   constructor: (@aes) ->
     @geometry = new poly.Geometry('guide')
   make: (params) ->
-    {domain, type, guideSpec, @mapping, keys} = params
+    {domain, type, guideSpec, @mapping, @position, keys} = params
     @titletext = guideSpec.title ? keys
     @ticks = poly.tick.make domain, guideSpec, type
   calculate: () ->
@@ -188,30 +189,33 @@ class Legend extends poly.Guide
     @geometry.set @calculate()
     @geometry.render(renderer)
   dispose: (renderer) -> @geometry.dispose(renderer)
-  getDimension: () ->
-    position: 'left'
-    height: @height
-    width: 15+@maxwidth
-
-class VerticalLegend extends Legend
-  make: (params) ->
-    super(params)
-    @height = @TITLEHEIGHT + @SPACING + @TICKHEIGHT*_.size @ticks
-    titleWidth = poly.strSize @titletext
-    tickWidth = _.max _.map @ticks, (t) -> poly.strSize t.value
-    @maxwidth = Math.max titleWidth, tickWidth
-  _makeLabel: (tick) ->
+  _makeTitle: (text, offset={x:0, y:0}) ->
     type: 'text'
-    x : sf.identity 20
-    y : sf.identity (15+tick.index*12) + 1
+    x : sf.identity offset.x + 5
+    y : sf.identity offset.y
+    color: sf.identity 'black'
+    text: text
+    'text-anchor' : 'start'
+  _makeLabel: (tick, offset) ->
+    if not offset
+      offset =
+        x: 0
+        y: (15+tick.index*12)
+    type: 'text'
+    x : sf.identity offset.x + 20
+    y : sf.identity offset.y + 1
     color: sf.identity 'black'
     text: tick.value
     'text-anchor' : 'start'
-  _makeTick: (tick) =>
+  _makeTick: (tick, offset) =>
+    if not offset
+      offset =
+        x : 0
+        y : (15+tick.index*12)
     obj =
       type: 'circle'
-      x : sf.identity 10
-      y : sf.identity (15+tick.index*12)
+      x : sf.identity offset.x + 10
+      y : sf.identity offset.y
       color: sf.identity 'steelblue' # can be overwritten
     for aes, value of @mapping
       if aes in poly.const.noLegend then continue
@@ -237,12 +241,56 @@ class VerticalLegend extends Legend
         if aes in @aes and v.type is 'map'
           evtData[v.value] = tick.evtData
     evtData
-  _makeTitle: (text) ->
-    type: 'text'
-    x : sf.identity 5
-    y : sf.identity 0
-    color: sf.identity 'black'
-    text: text
-    'text-anchor' : 'start'
 
+class VerticalLegend extends Legend
+  make: (params) ->
+    super(params)
+    @height = @TITLEHEIGHT + @SPACING + @TICKHEIGHT*_.size @ticks
+    titleWidth = poly.strSize @titletext
+    tickWidth = _.max _.map @ticks, (t) -> poly.strSize t.value
+    @maxwidth = Math.max titleWidth, tickWidth
+  getDimension: () ->
+    position: @position
+    height: @height
+    width: 15+@maxwidth
+
+class HorizontalLegend extends Legend
+  TICKSPACING : 25
+  make: (params) ->
+    super(params)
+    @maxwidth = params.dims.width
+    @height = @TITLEHEIGHT + @SPACING
+    width = 0
+    @height += @TICKHEIGHT # first row
+    for t in @ticks
+      currWidth = poly.strSize(t.value) + @TICKSPACING
+      if (width + currWidth) < @maxwidth
+        width += currWidth
+      else
+        @height += @TICKHEIGHT # additional rows
+        width = currWidth
+    null
+  calculate: () ->
+    geoms = {}
+    geoms['title'] = marks: 0: @_makeTitle(@titletext)
+    offset = {x: 0, y: @TITLEHEIGHT}
+    for key, tick of @ticks
+      marks = {}
+      marks.tick = @_makeTick(tick, offset)
+      marks.text = @_makeLabel(tick, offset)
+      evtData = @_makeEvtData(tick, offset)
+      geoms[key] =
+        marks: marks
+        evtData: evtData
+      currWidth = poly.strSize(tick.value) + @TICKSPACING
+      if (offset.x + currWidth) < @maxwidth
+        offset.x += currWidth
+      else
+        offset.x = 0
+        offset.y += @TICKHEIGHT
+    geoms
+  getDimension: () ->
+    position: @position
+    height: @height
+    width: 'all'
 

@@ -20,8 +20,8 @@ one = () -> Math.random()*10
     data:jsondata
     spec:
       layers: [sampleLayer]
+      legendPosition: 'bottom'
       guides:
-        legendposition: 'right'
         y :
           position: 'right'
           type:'num', min:0, max:10, ticks:[2,4,6,8],
@@ -86,7 +86,7 @@ one = () -> Math.random()*10
     size: {'const': 10},
     color: 'x'
   }
-  spec =  { layers: [sampleLayer], dom:dom }
+  spec =  { layers: [sampleLayer], dom:dom, legendPosition: 'bottom' }
   c = polyjs.chart(spec)
 
 @examples.point3 = (dom) ->

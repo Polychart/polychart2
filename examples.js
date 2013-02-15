@@ -2726,8 +2726,8 @@
         data: jsondata,
         spec: {
           layers: [sampleLayer],
+          legendPosition: 'bottom',
           guides: {
-            legendposition: 'right',
             y: {
               position: 'right',
               type: 'num',
@@ -2896,7 +2896,8 @@
     };
     spec = {
       layers: [sampleLayer],
-      dom: dom
+      dom: dom,
+      legendPosition: 'bottom'
     };
     return c = polyjs.chart(spec);
   };

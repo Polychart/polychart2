@@ -3605,7 +3605,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
 
 
 (function() {
-  var Legend, Legends, VerticalLegend, sf,
+  var HorizontalLegend, Legend, Legends, VerticalLegend, sf,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
@@ -3617,11 +3617,8 @@ Legends (GuideSet) object to determine the correct position of a legend.
     return new Legends();
   };
 
-  poly.guide.legend = function(aes, type) {
-    if (type == null) {
-      type = 'vertical';
-    }
-    if (type === 'vertical') {
+  poly.guide.legend = function(aes, position) {
+    if (position === 'left' || position === 'right') {
       return new VerticalLegend(aes);
     } else {
       return new HorizontalLegend(aes);
@@ -3670,7 +3667,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
       }
       for (_i = 0, _len = aesGroups.length; _i < _len; _i++) {
         aes = aesGroups[_i];
-        this.legends.push(poly.guide.legend(aes));
+        this.legends.push(poly.guide.legend(aes, this.position));
       }
       _ref1 = this.legends;
       _results = [];
@@ -3679,6 +3676,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
         aes = legend.aes[0];
         _results.push(legend.make({
           domain: domains[aes],
+          position: this.position,
           guideSpec: (_ref2 = guideSpec[aes]) != null ? _ref2 : {},
           type: scales[aes].tickType(),
           mapping: layerMapping,
@@ -3766,7 +3764,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
         d = legend.getDimension(dims);
         height += d.height + 10;
       }
-      return retobj[this.position] = height;
+      return height;
     };
 
     Legends.prototype.render = function(dims, renderer, offset) {
@@ -3778,13 +3776,13 @@ Legends (GuideSet) object to determine the correct position of a legend.
       }
       this.deletedLegends = [];
       if (this.position === 'left' || this.position === 'right') {
-        return this._renderH(dims, renderer, offset);
-      } else if (this.position === 'top' || this.position === 'bottom') {
         return this._renderV(dims, renderer, offset);
+      } else if (this.position === 'top' || this.position === 'bottom') {
+        return this._renderH(dims, renderer, offset);
       }
     };
 
-    Legends.prototype._renderH = function(dims, renderer, offset) {
+    Legends.prototype._renderV = function(dims, renderer, offset) {
       var legend, legendDim, maxheight, maxwidth, newdim, offsetX, offsetY, realoffset, _i, _len, _ref, _results;
       legendDim = {
         top: dims.paddingTop + dims.guideTop,
@@ -3817,22 +3815,22 @@ Legends (GuideSet) object to determine the correct position of a legend.
       return _results;
     };
 
-    Legends.prototype._renderV = function(dims, renderer, offset) {
+    Legends.prototype._renderH = function(dims, renderer, offset) {
       var legend, legendDim, newdim, realoffset, _i, _len, _ref, _results;
       legendDim = {
         left: dims.paddingLeft,
         top: this.position === 'top' ? dims.paddingTop : dims.height - dims.guideBottom - dims.paddingBottom
       };
       realoffset = {
-        x: offset.x + legendDim.left,
-        y: offset.y + legendDim.top
+        x: legendDim.left,
+        y: offset.bottom + legendDim.top
       };
       _ref = this.legends;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         legend = _ref[_i];
         newdim = legend.getDimension(dims);
-        legend.render(renderer(realoffset, false, false), maxwidth);
+        legend.render(renderer(realoffset, false, false));
         _results.push(realoffset.y += newdim.height + 10);
       }
       return _results;
@@ -3865,12 +3863,16 @@ Legends (GuideSet) object to determine the correct position of a legend.
 
     function Legend(aes) {
       this.aes = aes;
+      this._makeEvtData = __bind(this._makeEvtData, this);
+
+      this._makeTick = __bind(this._makeTick, this);
+
       this.geometry = new poly.Geometry('guide');
     }
 
     Legend.prototype.make = function(params) {
       var domain, guideSpec, keys, type, _ref;
-      domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.mapping = params.mapping, keys = params.keys;
+      domain = params.domain, type = params.type, guideSpec = params.guideSpec, this.mapping = params.mapping, this.position = params.position, keys = params.keys;
       this.titletext = (_ref = guideSpec.title) != null ? _ref : keys;
       return this.ticks = poly.tick.make(domain, guideSpec, type);
     };
@@ -3907,57 +3909,52 @@ Legends (GuideSet) object to determine the correct position of a legend.
       return this.geometry.dispose(renderer);
     };
 
-    Legend.prototype.getDimension = function() {
+    Legend.prototype._makeTitle = function(text, offset) {
+      if (offset == null) {
+        offset = {
+          x: 0,
+          y: 0
+        };
+      }
       return {
-        position: 'left',
-        height: this.height,
-        width: 15 + this.maxwidth
+        type: 'text',
+        x: sf.identity(offset.x + 5),
+        y: sf.identity(offset.y),
+        color: sf.identity('black'),
+        text: text,
+        'text-anchor': 'start'
       };
     };
 
-    return Legend;
-
-  })(poly.Guide);
-
-  VerticalLegend = (function(_super) {
-
-    __extends(VerticalLegend, _super);
-
-    function VerticalLegend() {
-      this._makeEvtData = __bind(this._makeEvtData, this);
-
-      this._makeTick = __bind(this._makeTick, this);
-      return VerticalLegend.__super__.constructor.apply(this, arguments);
-    }
-
-    VerticalLegend.prototype.make = function(params) {
-      var tickWidth, titleWidth;
-      VerticalLegend.__super__.make.call(this, params);
-      this.height = this.TITLEHEIGHT + this.SPACING + this.TICKHEIGHT * _.size(this.ticks);
-      titleWidth = poly.strSize(this.titletext);
-      tickWidth = _.max(_.map(this.ticks, function(t) {
-        return poly.strSize(t.value);
-      }));
-      return this.maxwidth = Math.max(titleWidth, tickWidth);
-    };
-
-    VerticalLegend.prototype._makeLabel = function(tick) {
+    Legend.prototype._makeLabel = function(tick, offset) {
+      if (!offset) {
+        offset = {
+          x: 0,
+          y: 15 + tick.index * 12
+        };
+      }
       return {
         type: 'text',
-        x: sf.identity(20),
-        y: sf.identity((15 + tick.index * 12) + 1),
+        x: sf.identity(offset.x + 20),
+        y: sf.identity(offset.y + 1),
         color: sf.identity('black'),
         text: tick.value,
         'text-anchor': 'start'
       };
     };
 
-    VerticalLegend.prototype._makeTick = function(tick) {
+    Legend.prototype._makeTick = function(tick, offset) {
       var aes, obj, value, _ref;
+      if (!offset) {
+        offset = {
+          x: 0,
+          y: 15 + tick.index * 12
+        };
+      }
       obj = {
         type: 'circle',
-        x: sf.identity(10),
-        y: sf.identity(15 + tick.index * 12),
+        x: sf.identity(offset.x + 10),
+        y: sf.identity(offset.y),
         color: sf.identity('steelblue')
       };
       _ref = this.mapping;
@@ -3983,7 +3980,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
       return obj;
     };
 
-    VerticalLegend.prototype._makeEvtData = function(tick) {
+    Legend.prototype._makeEvtData = function(tick) {
       var aes, evtData, v, value, _i, _len, _ref;
       evtData = {};
       _ref = this.mapping;
@@ -3999,18 +3996,115 @@ Legends (GuideSet) object to determine the correct position of a legend.
       return evtData;
     };
 
-    VerticalLegend.prototype._makeTitle = function(text) {
+    return Legend;
+
+  })(poly.Guide);
+
+  VerticalLegend = (function(_super) {
+
+    __extends(VerticalLegend, _super);
+
+    function VerticalLegend() {
+      return VerticalLegend.__super__.constructor.apply(this, arguments);
+    }
+
+    VerticalLegend.prototype.make = function(params) {
+      var tickWidth, titleWidth;
+      VerticalLegend.__super__.make.call(this, params);
+      this.height = this.TITLEHEIGHT + this.SPACING + this.TICKHEIGHT * _.size(this.ticks);
+      titleWidth = poly.strSize(this.titletext);
+      tickWidth = _.max(_.map(this.ticks, function(t) {
+        return poly.strSize(t.value);
+      }));
+      return this.maxwidth = Math.max(titleWidth, tickWidth);
+    };
+
+    VerticalLegend.prototype.getDimension = function() {
       return {
-        type: 'text',
-        x: sf.identity(5),
-        y: sf.identity(0),
-        color: sf.identity('black'),
-        text: text,
-        'text-anchor': 'start'
+        position: this.position,
+        height: this.height,
+        width: 15 + this.maxwidth
       };
     };
 
     return VerticalLegend;
+
+  })(Legend);
+
+  HorizontalLegend = (function(_super) {
+
+    __extends(HorizontalLegend, _super);
+
+    function HorizontalLegend() {
+      return HorizontalLegend.__super__.constructor.apply(this, arguments);
+    }
+
+    HorizontalLegend.prototype.TICKSPACING = 25;
+
+    HorizontalLegend.prototype.make = function(params) {
+      var currWidth, t, width, _i, _len, _ref;
+      HorizontalLegend.__super__.make.call(this, params);
+      this.maxwidth = params.dims.width;
+      this.height = this.TITLEHEIGHT + this.SPACING;
+      width = 0;
+      this.height += this.TICKHEIGHT;
+      _ref = this.ticks;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        t = _ref[_i];
+        currWidth = poly.strSize(t.value) + this.TICKSPACING;
+        if ((width + currWidth) < this.maxwidth) {
+          width += currWidth;
+        } else {
+          this.height += this.TICKHEIGHT;
+          width = currWidth;
+        }
+      }
+      return null;
+    };
+
+    HorizontalLegend.prototype.calculate = function() {
+      var currWidth, evtData, geoms, key, marks, offset, tick, _ref;
+      geoms = {};
+      geoms['title'] = {
+        marks: {
+          0: this._makeTitle(this.titletext)
+        }
+      };
+      offset = {
+        x: 0,
+        y: this.TITLEHEIGHT
+      };
+      _ref = this.ticks;
+      for (key in _ref) {
+        tick = _ref[key];
+        marks = {};
+        marks.tick = this._makeTick(tick, offset);
+        marks.text = this._makeLabel(tick, offset);
+        evtData = this._makeEvtData(tick, offset);
+        geoms[key] = {
+          marks: marks,
+          evtData: evtData
+        };
+        currWidth = poly.strSize(tick.value) + this.TICKSPACING;
+        if ((offset.x + currWidth) < this.maxwidth) {
+          offset.x += currWidth;
+        } else {
+          offset.x = 0;
+          offset.y += this.TICKHEIGHT;
+        }
+      }
+      return geoms;
+    };
+
+    HorizontalLegend.prototype.getDimension = function() {
+      return {
+        position: this.position,
+        height: this.height,
+        width: 'all'
+      };
+    };
+
+    return HorizontalLegend;
 
   })(Legend);
 
