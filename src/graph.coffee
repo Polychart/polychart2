@@ -95,7 +95,7 @@ class Graph
           metaData: metaData
         merge()
     # default handlers
-    @addHandler polyjs.handler.tooltip()
+    @addHandler poly.handler.tooltip()
   ###
   Complete work to plot the graph. This includes three stages:
     1) Create each "pane". Each "pane" is a facet containing a smallversion
