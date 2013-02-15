@@ -3977,7 +3977,9 @@ Legends (GuideSet) object to determine the correct position of a legend.
           obj[aes] = sf.identity(poly["const"].defaults[aes]);
         }
       }
-      obj.size = 5;
+      if (_.isObject(obj.size)) {
+        obj.size = sf.identity(5);
+      }
       return obj;
     };
 

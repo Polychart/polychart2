@@ -227,7 +227,8 @@ class VerticalLegend extends Legend
       else
         # take the global default value
         obj[aes] = sf.identity poly.const.defaults[aes]
-    obj.size = 5 # not negotiable
+    if _.isObject(obj.size)
+      obj.size = sf.identity 5 # not negotiable
     obj
   _makeEvtData: (tick) =>
     evtData = {}
