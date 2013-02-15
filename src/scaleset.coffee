@@ -161,7 +161,7 @@ class ScaleSet
           else
             layer.defaults[aes]
     obj
-  makeLegends: (position='right') ->
+  makeLegends: (position='right', dims) ->
     @legends.make
       domains: @domains
       layers: @layers
@@ -169,10 +169,14 @@ class ScaleSet
       scales: @scales
       layerMapping: @layerMapping
       position: position
+      dims: dims
   legendOffset: (dims) -> @legends.getDimension(dims)
   renderLegends: (dims, renderer) ->
-    offset = { x: 10, y : 0 } # initial spacing
+    offset = { left: 0, right : 0, top: 0, bottom:0 } # initial spacing
     # axis offset
-    offset.x += @axesOffset(dims).right ? 0
-    offset.x += @titleOffset(dims).right ? 0
+    axesOffset = @axesOffset(dims)
+    titleOffset = @titleOffset(dims)
+    for dir in ['left', 'right', 'top', 'bottom']
+      offset[dir] += axesOffset[dir] ? 0
+      offset[dir] += titleOffset[dir] ? 0
     @legends.render(dims, renderer, offset)

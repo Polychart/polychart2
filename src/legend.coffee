@@ -27,9 +27,9 @@ class Legends extends poly.GuideSet
     @legends = []
     @deletedLegends = []
   make: (params) ->
-    {domains, layers, guideSpec, scales, layerMapping, position} = params
-    position ?= 'right'
-    if position is 'none' then return
+    {domains, layers, guideSpec, scales, layerMapping, @position, dims} = params
+    @postion ?= 'right'
+    if @position is 'none' then return
     # figure out which groups of aesthetics need to be represented
     aesGroups = @_mergeAes domains, layers
     # now iterate through existing legends AND the aesGroups to see
@@ -66,6 +66,7 @@ class Legends extends poly.GuideSet
         type: scales[aes].tickType()
         mapping: layerMapping
         keys: poly.getLabel(layers, aes)
+        dims: dims
   _mergeAes: (domains, layers) ->
     merging = [] # array of {aes: __, mapped: ___}
     for aes of domains
@@ -82,11 +83,18 @@ class Legends extends poly.GuideSet
           merging.push {aes: [aes], mapped: mapped}
     _.pluck merging, 'aes'
   getDimension: (dims) ->
-    maxheight =  dims.height - dims.guideTop - dims.paddingTop
+    retobj = {}
+    if @position in ['left', 'right']
+      retobj[@position] = @_leftrightWidth(dims)
+    else if @position in ['top', 'bottom']
+      retobj[@position] = @_topbottomHeight(dims)
+    retobj
+  _leftrightWidth: (dims) ->
+    maxheight =  dims.chartHeight
     maxwidth = 0
     offset = { x: 10, y : 0 } # initial spacing
     for legend in @legends
-      d = legend.getDimension()
+      d = legend.getDimension(dims)
       if d.height + offset.y > maxheight
         offset.x += maxwidth + 5
         offset.y = 0
@@ -94,28 +102,62 @@ class Legends extends poly.GuideSet
       if d.width > maxwidth
         maxwidth = d.width
       offset.y += d.height
-    right: offset.x + maxwidth # no height
-  render: (dims, renderer, offset={x:10, y:0}) ->
+    offset.x + maxwidth
+  _topbottomHeight: (dims) ->
+    maxwidth = dims.chartWidth
+    height = 10 # initial height
+    for legend in @legends
+      d = legend.getDimension(dims)
+      height += d.height + 10 # spacing
+    retobj[@position] = height
+
+  render: (dims, renderer, offset) ->
     legend.dispose(renderer()) for legend in @deletedLegends
     @deletedLegends = []
+    if @position is 'left' or @position is 'right'
+      @_renderH(dims, renderer, offset)
+    else if @position is 'top' or @position is 'bottom'
+      @_renderV(dims, renderer, offset)
+  _renderH: (dims, renderer, offset) ->
     legendDim =
       top: dims.paddingTop + dims.guideTop
-      right: dims.width - dims.guideRight - dims.paddingRight
+      left:
+        if @position is 'left'
+          dims.paddingLeft
+        else
+          dims.width - dims.guideRight - dims.paddingRight
     maxwidth = 0
     maxheight = dims.height - dims.guideTop - dims.paddingTop
+    offsetY = 10 # initial
+    offsetX = if @position is 'right' then offset.right else 0
     for legend in @legends # assume position = right
-      newdim = legend.getDimension()
+      newdim = legend.getDimension(dims)
       if newdim.height + offset.y > maxheight
-        offset.x += maxwidth + 5
-        offset.y = 0
+        offsetX += maxwidth + 5
+        offsetY = 0
         maxwidth = 0
       if newdim.width > maxwidth
         maxwidth = newdim.width
       realoffset =
-        x: offset.x + legendDim.right
-        y: offset.y + legendDim.top
-      legend.render(renderer(realoffset, false, false))
-      offset.y += newdim.height
+        x: offsetX + legendDim.left
+        y: offsetY + legendDim.top
+      legend.render(renderer(realoffset, false, false), maxwidth)
+      offsetY += newdim.height
+  _renderV: (dims, renderer, offset) ->
+    legendDim =
+      left: dims.paddingLeft
+      top:
+        if @position is 'top'
+          dims.paddingTop
+        else
+          dims.height - dims.guideBottom - dims.paddingBottom
+    realoffset =
+      x: offset.x + legendDim.left
+      y: offset.y + legendDim.top
+    for legend in @legends
+      newdim = legend.getDimension(dims)
+      legend.render(renderer(realoffset, false, false), maxwidth)
+      realoffset.y += newdim.height + 10 # spacing
   dispose: (renderer) ->
     legend.dispose(renderer()) for legend in @legends
 

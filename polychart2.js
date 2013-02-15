@@ -3638,12 +3638,12 @@ Legends (GuideSet) object to determine the correct position of a legend.
     }
 
     Legends.prototype.make = function(params) {
-      var aes, aesGroups, domains, guideSpec, i, idx, layerMapping, layers, legend, legenddeleted, position, scales, _i, _j, _len, _len1, _ref, _ref1, _results;
-      domains = params.domains, layers = params.layers, guideSpec = params.guideSpec, scales = params.scales, layerMapping = params.layerMapping, position = params.position;
-      if (position == null) {
-        position = 'right';
+      var aes, aesGroups, dims, domains, guideSpec, i, idx, layerMapping, layers, legend, legenddeleted, scales, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
+      domains = params.domains, layers = params.layers, guideSpec = params.guideSpec, scales = params.scales, layerMapping = params.layerMapping, this.position = params.position, dims = params.dims;
+      if ((_ref = this.postion) == null) {
+        this.postion = 'right';
       }
-      if (position === 'none') {
+      if (this.position === 'none') {
         return;
       }
       aesGroups = this._mergeAes(domains, layers);
@@ -3672,17 +3672,18 @@ Legends (GuideSet) object to determine the correct position of a legend.
         aes = aesGroups[_i];
         this.legends.push(poly.guide.legend(aes));
       }
-      _ref = this.legends;
+      _ref1 = this.legends;
       _results = [];
-      for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
-        legend = _ref[_j];
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        legend = _ref1[_j];
         aes = legend.aes[0];
         _results.push(legend.make({
           domain: domains[aes],
-          guideSpec: (_ref1 = guideSpec[aes]) != null ? _ref1 : {},
+          guideSpec: (_ref2 = guideSpec[aes]) != null ? _ref2 : {},
           type: scales[aes].tickType(),
           mapping: layerMapping,
-          keys: poly.getLabel(layers, aes)
+          keys: poly.getLabel(layers, aes),
+          dims: dims
         }));
       }
       return _results;
@@ -3720,8 +3721,19 @@ Legends (GuideSet) object to determine the correct position of a legend.
     };
 
     Legends.prototype.getDimension = function(dims) {
+      var retobj, _ref, _ref1;
+      retobj = {};
+      if ((_ref = this.position) === 'left' || _ref === 'right') {
+        retobj[this.position] = this._leftrightWidth(dims);
+      } else if ((_ref1 = this.position) === 'top' || _ref1 === 'bottom') {
+        retobj[this.position] = this._topbottomHeight(dims);
+      }
+      return retobj;
+    };
+
+    Legends.prototype._leftrightWidth = function(dims) {
       var d, legend, maxheight, maxwidth, offset, _i, _len, _ref;
-      maxheight = dims.height - dims.guideTop - dims.paddingTop;
+      maxheight = dims.chartHeight;
       maxwidth = 0;
       offset = {
         x: 10,
@@ -3730,7 +3742,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
       _ref = this.legends;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         legend = _ref[_i];
-        d = legend.getDimension();
+        d = legend.getDimension(dims);
         if (d.height + offset.y > maxheight) {
           offset.x += maxwidth + 5;
           offset.y = 0;
@@ -3741,50 +3753,87 @@ Legends (GuideSet) object to determine the correct position of a legend.
         }
         offset.y += d.height;
       }
-      return {
-        right: offset.x + maxwidth
-      };
+      return offset.x + maxwidth;
+    };
+
+    Legends.prototype._topbottomHeight = function(dims) {
+      var d, height, legend, maxwidth, _i, _len, _ref;
+      maxwidth = dims.chartWidth;
+      height = 10;
+      _ref = this.legends;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        legend = _ref[_i];
+        d = legend.getDimension(dims);
+        height += d.height + 10;
+      }
+      return retobj[this.position] = height;
     };
 
     Legends.prototype.render = function(dims, renderer, offset) {
-      var legend, legendDim, maxheight, maxwidth, newdim, realoffset, _i, _j, _len, _len1, _ref, _ref1, _results;
-      if (offset == null) {
-        offset = {
-          x: 10,
-          y: 0
-        };
-      }
+      var legend, _i, _len, _ref;
       _ref = this.deletedLegends;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         legend = _ref[_i];
         legend.dispose(renderer());
       }
       this.deletedLegends = [];
+      if (this.position === 'left' || this.position === 'right') {
+        return this._renderH(dims, renderer, offset);
+      } else if (this.position === 'top' || this.position === 'bottom') {
+        return this._renderV(dims, renderer, offset);
+      }
+    };
+
+    Legends.prototype._renderH = function(dims, renderer, offset) {
+      var legend, legendDim, maxheight, maxwidth, newdim, offsetX, offsetY, realoffset, _i, _len, _ref, _results;
       legendDim = {
         top: dims.paddingTop + dims.guideTop,
-        right: dims.width - dims.guideRight - dims.paddingRight
+        left: this.position === 'left' ? dims.paddingLeft : dims.width - dims.guideRight - dims.paddingRight
       };
       maxwidth = 0;
       maxheight = dims.height - dims.guideTop - dims.paddingTop;
-      _ref1 = this.legends;
+      offsetY = 10;
+      offsetX = this.position === 'right' ? offset.right : 0;
+      _ref = this.legends;
       _results = [];
-      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-        legend = _ref1[_j];
-        newdim = legend.getDimension();
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        legend = _ref[_i];
+        newdim = legend.getDimension(dims);
         if (newdim.height + offset.y > maxheight) {
-          offset.x += maxwidth + 5;
-          offset.y = 0;
+          offsetX += maxwidth + 5;
+          offsetY = 0;
           maxwidth = 0;
         }
         if (newdim.width > maxwidth) {
           maxwidth = newdim.width;
         }
         realoffset = {
-          x: offset.x + legendDim.right,
-          y: offset.y + legendDim.top
+          x: offsetX + legendDim.left,
+          y: offsetY + legendDim.top
         };
-        legend.render(renderer(realoffset, false, false));
-        _results.push(offset.y += newdim.height);
+        legend.render(renderer(realoffset, false, false), maxwidth);
+        _results.push(offsetY += newdim.height);
+      }
+      return _results;
+    };
+
+    Legends.prototype._renderV = function(dims, renderer, offset) {
+      var legend, legendDim, newdim, realoffset, _i, _len, _ref, _results;
+      legendDim = {
+        left: dims.paddingLeft,
+        top: this.position === 'top' ? dims.paddingTop : dims.height - dims.guideBottom - dims.paddingBottom
+      };
+      realoffset = {
+        x: offset.x + legendDim.left,
+        y: offset.y + legendDim.top
+      };
+      _ref = this.legends;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        legend = _ref[_i];
+        newdim = legend.getDimension(dims);
+        legend.render(renderer(realoffset, false, false), maxwidth);
+        _results.push(realoffset.y += newdim.height + 10);
       }
       return _results;
     };
@@ -4917,7 +4966,7 @@ attribute of that value.
       return obj;
     };
 
-    ScaleSet.prototype.makeLegends = function(position) {
+    ScaleSet.prototype.makeLegends = function(position, dims) {
       if (position == null) {
         position = 'right';
       }
@@ -4927,7 +4976,8 @@ attribute of that value.
         guideSpec: this.guideSpec,
         scales: this.scales,
         layerMapping: this.layerMapping,
-        position: position
+        position: position,
+        dims: dims
       });
     };
 
@@ -4936,13 +4986,21 @@ attribute of that value.
     };
 
     ScaleSet.prototype.renderLegends = function(dims, renderer) {
-      var offset, _ref, _ref1;
+      var axesOffset, dir, offset, titleOffset, _i, _len, _ref, _ref1, _ref2;
       offset = {
-        x: 10,
-        y: 0
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0
       };
-      offset.x += (_ref = this.axesOffset(dims).right) != null ? _ref : 0;
-      offset.x += (_ref1 = this.titleOffset(dims).right) != null ? _ref1 : 0;
+      axesOffset = this.axesOffset(dims);
+      titleOffset = this.titleOffset(dims);
+      _ref = ['left', 'right', 'top', 'bottom'];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        dir = _ref[_i];
+        offset[dir] += (_ref1 = axesOffset[dir]) != null ? _ref1 : 0;
+        offset[dir] += (_ref2 = titleOffset[dir]) != null ? _ref2 : 0;
+      }
       return this.legends.render(dims, renderer, offset);
     };
 
@@ -6889,7 +6947,6 @@ Dimension object has the following elements (all numeric in pixels):
     } else {
       dim.eachHeight = dim.chartHeight - dim.verticalSpacing;
     }
-    console.log(dim);
     return dim;
   };
 
@@ -6921,7 +6978,6 @@ Dimension object has the following elements (all numeric in pixels):
     } else {
       dim.eachHeight = dim.chartHeight;
     }
-    console.log(dim);
     return dim;
   };
 

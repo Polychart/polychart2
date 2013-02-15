@@ -76,7 +76,6 @@ poly.dim.make = (spec, scaleSet, facetGrid) ->
     dim.eachHeight /= facetGrid.rows
   else
     dim.eachHeight = dim.chartHeight - dim.verticalSpacing
-  console.log dim
   dim
 
 poly.dim.guess = (spec, facetGrid) ->
@@ -108,5 +107,4 @@ poly.dim.guess = (spec, facetGrid) ->
     dim.eachHeight = dim.chartHeight - dim.verticalSpacing * (facetGrid.rows - 1)
   else
     dim.eachHeight = dim.chartHeight
-  console.log dim
   dim

@@ -258,6 +258,7 @@
           title: "Parity"
         }
       },
+      legendPosition: "left",
       dom: dom
     };
     c = polyjs.chart(spec);
