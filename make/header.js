@@ -3,6 +3,7 @@
  * Copyright (c) Polychart Inc
  * All Rights Reserved
  */
-window.polyjs = (function(poly) {
-  if (!poly) {
-  poly = {};
+window.polyjs = (function(polyjs) {
+  if (!polyjs) {
+    var poly = {};
+

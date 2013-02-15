@@ -1352,9 +1352,10 @@
           position: "none"
         }
       },
-      coord: polyjs.coord.cartesian({
+      coord: {
+        type: 'cartesian',
         flip: true
-      }),
+      },
       dom: dom,
       paddingTop: 50,
       height: 300
