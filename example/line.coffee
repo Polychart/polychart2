@@ -93,7 +93,9 @@
       y :
         type:'num', min:0, max:10, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
-    coord: polyjs.coord.cartesian(flip:true)
+    coord:
+      type: 'cartesian'
+      flip: true
     dom: dom
   }
   c = polyjs.chart spec

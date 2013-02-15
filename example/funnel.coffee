@@ -24,7 +24,9 @@
         renderGrid: false
       y:
         position: "none"
-    coord: polyjs.coord.cartesian(flip: true)
+    coord:
+      type: 'cartesian'
+      flip: true
     dom: dom
     paddingTop: 50
     height: 300
