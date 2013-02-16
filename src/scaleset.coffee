@@ -101,7 +101,7 @@ class ScaleSet
     @axes.render(dims, renderer, facet)
     @renderTitles dims, renderer
     @renderLegends dims, renderer
-  diposeGuides: (renderer) ->
+  disposeGuides: (renderer) ->
     @axes.dispose(renderer)
     @legends.dispose(renderer)
     @titles.x.dispose(renderer)

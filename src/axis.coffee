@@ -48,8 +48,8 @@ class Axes extends poly.GuideSet
     indices = _.keys(facet.indices)
     {deleted, kept, added} = poly.compare(_.keys(@axesGeoms), indices)
     for key in deleted
-      for axis in @axesGeoms[key]
-        axis.dispose()
+      for type, axis of @axesGeoms[key]
+        axis.dispose(renderer())
     axisDim =
       top: 0
       left : 0
@@ -86,8 +86,8 @@ class Axes extends poly.GuideSet
             pts.grid.toBack()
   dispose: (renderer) ->
     for key, axes of @axesGeoms
-      axes.x.dispose()
-      axes.y.dispose()
+      axes.x.dispose(renderer)
+      axes.y.dispose(renderer)
     @axesGeoms = {}
 
 ###

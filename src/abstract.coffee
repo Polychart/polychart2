@@ -62,7 +62,11 @@ class Geometry extends Renderable
       try
         objs[id2] =
           if points[id2]
-            renderer.animate points[id2], mark, geom.evtData, geom.tooltip
+            if points[id2].data('m').type is mark.type
+              renderer.animate points[id2], mark, geom.evtData, geom.tooltip
+            else
+              renderer.remove points[id2]
+              renderer.add mark, geom.evtData, geom.tooltip, @type
           else
             renderer.add mark, geom.evtData, geom.tooltip, @type
       catch error

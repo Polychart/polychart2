@@ -36,6 +36,7 @@ poly.render = (handleEvent, paper, scales, coord) -> (offset={}, clipping=false,
       throw poly.error.input "Coord #{coord.type} has no mark #{mark.type}"
 
     pt = renderer[coord.type][mark.type].render paper, scales, coord, offset, mark, mayflip
+    pt.data 'm', mark
     if clipping? then pt.attr('clip-rect', clipping)
     if evtData and _.keys(evtData).length > 0
       pt.data 'e', evtData

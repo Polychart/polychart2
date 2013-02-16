@@ -34,8 +34,9 @@ class Graph
   ###
   Remove all existing items on the graph.
   ###
-  dispose: () ->
+  dispose: () =>
     renderer = poly.render @handleEvent, @paper, @scaleSet.scales, @coord
+    renderer = renderer()
     @facet.dispose(renderer)
     @scaleSet.disposeGuides(renderer)
     @scaleSet = null
@@ -55,7 +56,8 @@ class Graph
   needDispose: (spec) =>
     if @coord and !_.isEqual(@coord.spec, spec.coord)
       true
-    # change in layers
+    #else if @facet.spec and !_.isEqual(@facet.spec, spec.facet)
+    #  true
     else
       false
   ###
@@ -119,10 +121,11 @@ class Graph
       @scaleSet = poly.scaleset tmpRanges, @coord
     @scaleSet.make @spec.guides, domains, @layers
     # dimension calculation
-    if not @dims
-      @dims = @_makeDimensions @spec, @scaleSet, @facet, tmpDims
-      @coord.make @dims
-      @ranges = @coord.ranges()
+    #if not @dims
+    @dims = @_makeDimensions @spec, @scaleSet, @facet, tmpDims
+    @coord.make @dims
+    @ranges = @coord.ranges()
+    # end
     @scaleSet.setRanges @ranges
   render: () =>
     if @spec.render? and @spec.render is false

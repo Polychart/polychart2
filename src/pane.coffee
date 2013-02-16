@@ -29,6 +29,7 @@ class Pane extends poly.Renderable
     for k, geom of @geoms
       geom.render(r)
   dispose: (renderer) ->
-    for layer in @layers
-      layer.dispose(renderer)
+    for k, geom of @geoms
+      geom.dispose(renderer)
+    @geoms = {}
     @title.dispose(renderer)

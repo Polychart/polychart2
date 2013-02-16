@@ -113,7 +113,7 @@ class Legends extends poly.GuideSet
     height
 
   render: (dims, renderer, offset) ->
-    legend.dispose(renderer()) for legend in @deletedLegends
+    legend.dispose(renderer) for legend in @deletedLegends
     @deletedLegends = []
     if @position is 'left' or @position is 'right'
       @_renderV(dims, renderer, offset)
@@ -160,7 +160,7 @@ class Legends extends poly.GuideSet
       legend.render(renderer(realoffset, false, false))
       realoffset.y += newdim.height + 10 # spacing
   dispose: (renderer) ->
-    legend.dispose(renderer()) for legend in @legends
+    legend.dispose(renderer) for legend in @legends
 
 
 class Legend extends poly.Guide

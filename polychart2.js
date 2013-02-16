@@ -693,7 +693,7 @@ Abstract classes, almost used like interfaces throughout the codebase
       for (id2 in _ref) {
         mark = _ref[id2];
         try {
-          objs[id2] = points[id2] ? renderer.animate(points[id2], mark, geom.evtData, geom.tooltip) : renderer.add(mark, geom.evtData, geom.tooltip, this.type);
+          objs[id2] = points[id2] ? points[id2].data('m').type === mark.type ? renderer.animate(points[id2], mark, geom.evtData, geom.tooltip) : (renderer.remove(points[id2]), renderer.add(mark, geom.evtData, geom.tooltip, this.type)) : renderer.add(mark, geom.evtData, geom.tooltip, this.type);
         } catch (error) {
           if (error.name === 'MissingData') {
             console.log(error.message);
@@ -3063,15 +3063,15 @@ objects that can later be rendered using Geometry class.
     };
 
     Axes.prototype.render = function(dims, renderer, facet) {
-      var added, aes, axis, axisDim, deleted, drawx, drawy, indices, k, kept, key, offset, override, pts, r, xoverride, yoverride, _base, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _results;
+      var added, aes, axis, axisDim, deleted, drawx, drawy, indices, k, kept, key, offset, override, pts, r, type, xoverride, yoverride, _base, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
       indices = _.keys(facet.indices);
       _ref = poly.compare(_.keys(this.axesGeoms), indices), deleted = _ref.deleted, kept = _ref.kept, added = _ref.added;
       for (_i = 0, _len = deleted.length; _i < _len; _i++) {
         key = deleted[_i];
         _ref1 = this.axesGeoms[key];
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          axis = _ref1[_j];
-          axis.dispose();
+        for (type in _ref1) {
+          axis = _ref1[type];
+          axis.dispose(renderer());
         }
       }
       axisDim = {
@@ -3099,8 +3099,8 @@ objects that can later be rendered using Geometry class.
         yoverride.renderLine = false;
       }
       _results = [];
-      for (_k = 0, _len2 = indices.length; _k < _len2; _k++) {
-        key = indices[_k];
+      for (_j = 0, _len1 = indices.length; _j < _len1; _j++) {
+        key = indices[_j];
         offset = facet.getOffset(dims, key);
         if ((_ref2 = (_base = this.axesGeoms)[key]) == null) {
           _base[key] = {
@@ -3116,11 +3116,11 @@ objects that can later be rendered using Geometry class.
         this.axesGeoms[key].y.set(this.axes.y.calculate(axisDim, this.coord, override));
         this.axesGeoms[key].y.render(r);
         _results.push((function() {
-          var _l, _len3, _ref3, _results1;
+          var _k, _len2, _ref3, _results1;
           _ref3 = ['x', 'y'];
           _results1 = [];
-          for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
-            aes = _ref3[_l];
+          for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
+            aes = _ref3[_k];
             _results1.push((function() {
               var _ref4, _results2;
               _ref4 = this.axesGeoms[key][aes].pts;
@@ -3147,8 +3147,8 @@ objects that can later be rendered using Geometry class.
       _ref = this.axesGeoms;
       for (key in _ref) {
         axes = _ref[key];
-        axes.x.dispose();
-        axes.y.dispose();
+        axes.x.dispose(renderer);
+        axes.y.dispose(renderer);
       }
       return this.axesGeoms = {};
     };
@@ -3773,7 +3773,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
       _ref = this.deletedLegends;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         legend = _ref[_i];
-        legend.dispose(renderer());
+        legend.dispose(renderer);
       }
       this.deletedLegends = [];
       if (this.position === 'left' || this.position === 'right') {
@@ -3843,7 +3843,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         legend = _ref[_i];
-        _results.push(legend.dispose(renderer()));
+        _results.push(legend.dispose(renderer));
       }
       return _results;
     };
@@ -4954,7 +4954,7 @@ attribute of that value.
       return this.renderLegends(dims, renderer);
     };
 
-    ScaleSet.prototype.diposeGuides = function(renderer) {
+    ScaleSet.prototype.disposeGuides = function(renderer) {
       this.axes.dispose(renderer);
       this.legends.dispose(renderer);
       this.titles.x.dispose(renderer);
@@ -6952,12 +6952,13 @@ Shared constants
     };
 
     Pane.prototype.dispose = function(renderer) {
-      var layer, _i, _len, _ref;
-      _ref = this.layers;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        layer = _ref[_i];
-        layer.dispose(renderer);
+      var geom, k, _ref;
+      _ref = this.geoms;
+      for (k in _ref) {
+        geom = _ref[k];
+        geom.dispose(renderer);
       }
+      this.geoms = {};
       return this.title.dispose(renderer);
     };
 
@@ -7164,6 +7165,7 @@ Dimension object has the following elements (all numeric in pixels):
             throw poly.error.input("Coord " + coord.type + " has no mark " + mark.type);
           }
           pt = renderer[coord.type][mark.type].render(paper, scales, coord, offset, mark, mayflip);
+          pt.data('m', mark);
           if (clipping != null) {
             pt.attr('clip-rect', clipping);
           }
@@ -7796,9 +7798,6 @@ The functions here makes it easier to create common types of interactions.
       var aes, key, mapping, _ref, _results;
       this.spec = spec;
       _ref = this._getMappings(this.spec.facet), this.type = _ref.type, mapping = _ref.mapping;
-      if (!_.isEqual(mapping, this.mapping)) {
-        this.dispose();
-      }
       this.mapping = mapping;
       this.groups = _.values(this.mapping);
       this.specgroups = {};
@@ -7882,12 +7881,13 @@ The functions here makes it easier to create common types of interactions.
 
     Facet.prototype.dispose = function(renderer) {
       var key, pane, _i, _len, _ref, _ref1;
+      console.log('disposed');
       _ref = this.panes;
       for (key in _ref) {
         pane = _ref[key];
         this.deletedPanes.push(pane);
+        delete this.panes[key];
       }
-      this.panes = {};
       if (renderer) {
         _ref1 = this.deletedPanes;
         for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
@@ -8206,6 +8206,8 @@ The functions here makes it easier to create common types of interactions.
 
       this.needDispose = __bind(this.needDispose, this);
 
+      this.dispose = __bind(this.dispose, this);
+
       this.reset = __bind(this.reset, this);
       if (!(spec != null)) {
         throw poly.error.defn("No graph specification is passed in!");
@@ -8244,6 +8246,7 @@ The functions here makes it easier to create common types of interactions.
     Graph.prototype.dispose = function() {
       var renderer;
       renderer = poly.render(this.handleEvent, this.paper, this.scaleSet.scales, this.coord);
+      renderer = renderer();
       this.facet.dispose(renderer);
       this.scaleSet.disposeGuides(renderer);
       this.scaleSet = null;
@@ -8365,11 +8368,9 @@ The functions here makes it easier to create common types of interactions.
         this.scaleSet = poly.scaleset(tmpRanges, this.coord);
       }
       this.scaleSet.make(this.spec.guides, domains, this.layers);
-      if (!this.dims) {
-        this.dims = this._makeDimensions(this.spec, this.scaleSet, this.facet, tmpDims);
-        this.coord.make(this.dims);
-        this.ranges = this.coord.ranges();
-      }
+      this.dims = this._makeDimensions(this.spec, this.scaleSet, this.facet, tmpDims);
+      this.coord.make(this.dims);
+      this.ranges = this.coord.ranges();
       return this.scaleSet.setRanges(this.ranges);
     };
 

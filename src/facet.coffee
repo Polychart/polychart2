@@ -19,8 +19,8 @@ class Facet
   make: (@spec) ->
     # get the new mapping
     {@type, mapping} = @_getMappings(@spec.facet)
-    if !_.isEqual(mapping, @mapping)
-      @dispose()
+    #if !_.isEqual(mapping, @mapping)
+    #  @dispose()
     @mapping = mapping
     @groups = _.values(@mapping)
     @specgroups = {}
@@ -70,9 +70,10 @@ class Facet
       clipping = coord.clipping offset
       pane.render renderer, offset, clipping, dims
   dispose: (renderer) ->
+    console.log('disposed')
     for key, pane of @panes
       @deletedPanes.push pane
-    @panes = {}
+      delete @panes[key]
     if renderer
       for pane in @deletedPanes
         pane.dispose(renderer)
