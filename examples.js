@@ -1420,12 +1420,17 @@
     };
     c = polyjs.chart(spec);
     return c.addHandler(function(type, e) {
+      var r;
       data = e.evtData;
       if (type === 'click') {
         alert("You clicked on index: " + data.index["in"][0]);
       }
       if (type === 'select') {
-        return console.log(data);
+        console.log(data);
+        r = function(x) {
+          return Math.round(x * 10) / 10;
+        };
+        return alert("index: " + (r(data.index.le)) + " - " + (r(data.index.ge)) + "\nvalue: " + (r(data.value.le)) + " - " + (r(data.value.ge)));
       }
     });
   };
