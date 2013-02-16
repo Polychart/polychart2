@@ -43,7 +43,6 @@ class Graph
     @axes = null
     @legends = null
     @dims = null
-    @paper = null
     @coord = null
   ###
   Determine whether re-rendering of a particupar spec would require removing

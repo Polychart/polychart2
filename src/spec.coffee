@@ -29,9 +29,9 @@ poly.spec.toStrictMode = (spec) ->
       facetvar = spec.facet[v]
       if facetvar and _.isString facetvar then spec.facet[v] = { var: facetvar }
   else
-    spec.facet = {}
+    spec.facet = {type: 'none'}
   if not spec.coord
-    spec.coord = {}
+    spec.coord = {type: 'cartesian', flip: false}
   if _.isString spec.dom
     spec.dom = document.getElementById(spec.dom)
   spec
@@ -47,5 +47,4 @@ poly.spec.check = (spec) ->
   if not (spec.render? and spec.render is false) and not spec.dom
     throw poly.error.defn "No DOM element specified. Where to make plot?"
   spec
-
 

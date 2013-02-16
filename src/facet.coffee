@@ -70,7 +70,6 @@ class Facet
       clipping = coord.clipping offset
       pane.render renderer, offset, clipping, dims
   dispose: (renderer) ->
-    console.log('disposed')
     for key, pane of @panes
       @deletedPanes.push pane
       delete @panes[key]

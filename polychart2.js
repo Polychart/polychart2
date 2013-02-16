@@ -1118,10 +1118,15 @@ See the spec definition for more information.
         }
       }
     } else {
-      spec.facet = {};
+      spec.facet = {
+        type: 'none'
+      };
     }
     if (!spec.coord) {
-      spec.coord = {};
+      spec.coord = {
+        type: 'cartesian',
+        flip: false
+      };
     }
     if (_.isString(spec.dom)) {
       spec.dom = document.getElementById(spec.dom);
@@ -7881,7 +7886,6 @@ The functions here makes it easier to create common types of interactions.
 
     Facet.prototype.dispose = function(renderer) {
       var key, pane, _i, _len, _ref, _ref1;
-      console.log('disposed');
       _ref = this.panes;
       for (key in _ref) {
         pane = _ref[key];
@@ -8253,7 +8257,6 @@ The functions here makes it easier to create common types of interactions.
       this.axes = null;
       this.legends = null;
       this.dims = null;
-      this.paper = null;
       return this.coord = null;
     };
 
@@ -8284,6 +8287,7 @@ The functions here makes it easier to create common types of interactions.
 
 
     Graph.prototype.make = function(spec) {
+      debugger;
       var d, dataChange, datas, id, layerSpec, merge, _i, _j, _len, _len1, _ref, _ref1, _ref2,
         _this = this;
       if (spec == null) {
