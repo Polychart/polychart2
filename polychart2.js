@@ -8259,16 +8259,6 @@ The functions here makes it easier to create common types of interactions.
     };
 
     /*
-      Determine whether re-rendering of a particupar spec would require removing
-      all existing items from the graph and starting all over again. This would
-      happen if:
-        * the coordinate has changed
-        * the facet variable has changed
-        * layers had changed
-    */
-
-
-    /*
       Begin work to plot the graph. This function does only half of the work:
       i.e. things that needs to be done prior to data process. Because data
       process may be asynchronous, we pass in @merge() as a callback for when
