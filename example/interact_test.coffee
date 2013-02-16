@@ -80,8 +80,8 @@ data = polyjs.data json:({index:i, k:""+i%2, value:Math.random()*10} for i in [0
   spec2 = {
     layer:
       data: data
-      type: 'bar'
-      x: 'bin(index,2)'
+      type: 'point'
+      x: 'index'
       y: 'value'
       color: 'k'
     dom: dom

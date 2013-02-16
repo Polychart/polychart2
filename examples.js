@@ -1947,8 +1947,8 @@
     spec2 = {
       layer: {
         data: data,
-        type: 'bar',
-        x: 'bin(index,2)',
+        type: 'point',
+        x: 'index',
         y: 'value',
         color: 'k'
       },

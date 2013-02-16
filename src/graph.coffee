@@ -32,18 +32,17 @@ class Graph
     @dispose()
     @make @initial_spec
   ###
-  Remove all existing items on the graph.
+  Remove all existing items on the graph, if necessary
   ###
-  dispose: () =>
+  maybeDispose: (spec) =>
     renderer = poly.render @handleEvent, @paper, @scaleSet.scales, @coord
     renderer = renderer()
-    @facet.dispose(renderer)
-    @scaleSet.disposeGuides(renderer)
-    @scaleSet = null
-    @axes = null
-    @legends = null
-    @dims = null
-    @coord = null
+    if @coord and !_.isEqual(@coord.spec, spec.coord)
+      if @scaleSet
+        @scaleSet.disposeGuides(renderer)
+        @scaleSet = null
+      @coord = null
+
   ###
   Determine whether re-rendering of a particupar spec would require removing
   all existing items from the graph and starting all over again. This would
@@ -52,27 +51,21 @@ class Graph
     * the facet variable has changed
     * layers had changed
   ###
-  needDispose: (spec) =>
-    if @coord and !_.isEqual(@coord.spec, spec.coord)
-      true
-    #else if @facet.spec and !_.isEqual(@facet.spec, spec.facet)
-    #  true
-    else
-      false
+
   ###
   Begin work to plot the graph. This function does only half of the work:
   i.e. things that needs to be done prior to data process. Because data
   process may be asynchronous, we pass in @merge() as a callback for when
   data processing is complete.
   ###
-  make: (spec) ->
+  make: (spec, @callback) ->
     spec ?= @initial_spec
     spec = poly.spec.toStrictMode spec
     poly.spec.check spec
     @spec = spec
     # check if we need to re-plot the graph from scratch
-    if @needDispose(spec)
-      @dispose()
+    if @scaleSet
+      @maybeDispose(spec)
     @coord ?= poly.coord.make @spec.coord
     @facet.make(spec)
 
@@ -140,6 +133,8 @@ class Graph
 
     @facet.render(renderer, @dims, @coord)
     @scaleSet.renderGuides @dims, renderer, @facet
+    if @callback
+      @callback()
 
   addHandler : (h) -> @handlers.push h
   removeHandler: (h) ->

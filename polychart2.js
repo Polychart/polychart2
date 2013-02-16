@@ -8208,9 +8208,7 @@ The functions here makes it easier to create common types of interactions.
 
       this.merge = __bind(this.merge, this);
 
-      this.needDispose = __bind(this.needDispose, this);
-
-      this.dispose = __bind(this.dispose, this);
+      this.maybeDispose = __bind(this.maybeDispose, this);
 
       this.reset = __bind(this.reset, this);
       if (!(spec != null)) {
@@ -8243,21 +8241,21 @@ The functions here makes it easier to create common types of interactions.
     };
 
     /*
-      Remove all existing items on the graph.
+      Remove all existing items on the graph, if necessary
     */
 
 
-    Graph.prototype.dispose = function() {
+    Graph.prototype.maybeDispose = function(spec) {
       var renderer;
       renderer = poly.render(this.handleEvent, this.paper, this.scaleSet.scales, this.coord);
       renderer = renderer();
-      this.facet.dispose(renderer);
-      this.scaleSet.disposeGuides(renderer);
-      this.scaleSet = null;
-      this.axes = null;
-      this.legends = null;
-      this.dims = null;
-      return this.coord = null;
+      if (this.coord && !_.isEqual(this.coord.spec, spec.coord)) {
+        if (this.scaleSet) {
+          this.scaleSet.disposeGuides(renderer);
+          this.scaleSet = null;
+        }
+        return this.coord = null;
+      }
     };
 
     /*
@@ -8270,14 +8268,6 @@ The functions here makes it easier to create common types of interactions.
     */
 
 
-    Graph.prototype.needDispose = function(spec) {
-      if (this.coord && !_.isEqual(this.coord.spec, spec.coord)) {
-        return true;
-      } else {
-        return false;
-      }
-    };
-
     /*
       Begin work to plot the graph. This function does only half of the work:
       i.e. things that needs to be done prior to data process. Because data
@@ -8286,18 +8276,18 @@ The functions here makes it easier to create common types of interactions.
     */
 
 
-    Graph.prototype.make = function(spec) {
-      debugger;
+    Graph.prototype.make = function(spec, callback) {
       var d, dataChange, datas, id, layerSpec, merge, _i, _j, _len, _len1, _ref, _ref1, _ref2,
         _this = this;
+      this.callback = callback;
       if (spec == null) {
         spec = this.initial_spec;
       }
       spec = poly.spec.toStrictMode(spec);
       poly.spec.check(spec);
       this.spec = spec;
-      if (this.needDispose(spec)) {
-        this.dispose();
+      if (this.scaleSet) {
+        this.maybeDispose(spec);
       }
       if ((_ref = this.coord) == null) {
         this.coord = poly.coord.make(this.spec.coord);
@@ -8393,7 +8383,10 @@ The functions here makes it easier to create common types of interactions.
       }
       renderer = poly.render(this.handleEvent, this.paper, scales, this.coord);
       this.facet.render(renderer, this.dims, this.coord);
-      return this.scaleSet.renderGuides(this.dims, renderer, this.facet);
+      this.scaleSet.renderGuides(this.dims, renderer, this.facet);
+      if (this.callback) {
+        return this.callback();
+      }
     };
 
     Graph.prototype.addHandler = function(h) {
