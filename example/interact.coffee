@@ -22,7 +22,6 @@
       alert("You clicked on index: " + data.index.in[0])
     if type == 'select'
       console.log data
-  c.addHandler polyjs.handler.tooltip()
 
 @examples.interact_point = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
@@ -35,12 +34,10 @@
   }
   c = polyjs.chart spec
 
-  c.addHandler polyjs.handler.tooltip()
   c.addHandler (type, e) ->
     data = e.evtData
     if type == 'click'
       alert("You clicked on index: " + data.index.in[0])
-  c.addHandler polyjs.handler.tooltip()
     #if type == 'select' then console.log data
 
 @examples.interact_line = (dom) ->
@@ -54,7 +51,6 @@
   }
   c = polyjs.chart spec
 
-  c.addHandler polyjs.handler.tooltip()
   c.addHandler (type, e) ->
     data = e.evtData
     if type == 'click'
@@ -101,7 +97,6 @@
     dom: dom
   }
   c = polyjs.chart spec
-  c.addHandler polyjs.handler.tooltip()
 
 @examples.interact_twocharts = (dom, dom2) ->
   data1 = polyjs.data json: [
