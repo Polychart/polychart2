@@ -68,8 +68,8 @@ class Axes extends poly.GuideSet
     for key in indices
       offset = facet.getOffset(dims, key)
       @axesGeoms[key] ?=
-        x: new poly.Geometry()
-        y: new poly.Geometry()
+        x: new poly.Geometry('guide')
+        y: new poly.Geometry('guide')
       r = renderer(offset, false, false)
       # x
       override = if drawx(key) then {} else xoverride

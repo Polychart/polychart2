@@ -2823,7 +2823,7 @@ so simple, but not scalable.
         if (this.title != null) {
           renderer.remove(this.title);
         }
-        return this.title = renderer.add(this._makeTitle(dim, offset));
+        return this.title = renderer.add(this._makeTitle(dim, offset), null, null, 'guide');
       } else if (this.title != null) {
         return renderer.remove(this.title);
       }
@@ -2957,7 +2957,7 @@ so simple, but not scalable.
       if (this.title != null) {
         return this.title = renderer.animate(this.title, this._makeTitle(dim, offset));
       } else {
-        return this.title = renderer.add(this._makeTitle(dim, offset));
+        return this.title = renderer.add(this._makeTitle(dim, offset), null, null, 'guide');
       }
     };
 
@@ -3109,8 +3109,8 @@ objects that can later be rendered using Geometry class.
         offset = facet.getOffset(dims, key);
         if ((_ref2 = (_base = this.axesGeoms)[key]) == null) {
           _base[key] = {
-            x: new poly.Geometry(),
-            y: new poly.Geometry()
+            x: new poly.Geometry('guide'),
+            y: new poly.Geometry('guide')
           };
         }
         r = renderer(offset, false, false);

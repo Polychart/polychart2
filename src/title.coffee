@@ -28,7 +28,7 @@ class Title extends poly.Guide
     if @position isnt 'none'
       if @title?
         renderer.remove @title
-      @title = renderer.add @_makeTitle(dim, offset)
+      @title = renderer.add @_makeTitle(dim, offset), null, null, 'guide'
     else if @title?
       renderer.remove @title
   dispose: (renderer) ->
@@ -95,7 +95,7 @@ class TitleFacet extends Title
     if @title?
       @title = renderer.animate @title, @_makeTitle(dim, offset)
     else
-      @title = renderer.add @_makeTitle(dim, offset)
+      @title = renderer.add @_makeTitle(dim, offset), null, null, 'guide'
   _makeTitle: (dim, offset) ->
     type: 'text'
     x : sf.identity offset.x + dim.eachWidth/2
