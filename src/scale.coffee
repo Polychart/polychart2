@@ -224,7 +224,7 @@ class Opacity extends Scale
     max = 1
     @f = @_identityWrapper poly.linear(@domain.min, min, @domain.max, max)
 
-class Color extends Scale
+class Palette extends Scale
   _makeCat: () => #TEMPORARY
     n = @domain.levels.length
     if n <= 9
@@ -236,9 +236,6 @@ class Color extends Scale
     else
       h = (v) => _.indexOf(@domain.levels, v) / n + 1/(2*n)
       @f = (value) => Raphael.hsl(h(value),0.5,0.5)
-  _makeNum: () =>
-    h = poly.linear @domain.min, 0, @domain.max, 1
-    @f = (value) -> Raphael.hsl(0.5,h(value),0.5)
 
 class Gradient extends Scale
   constructor: (params) ->
@@ -299,7 +296,7 @@ poly.scale.classes = {
   linear : Linear
   log : Log
   area : Area
-  color : Color
+  palette : Palette 
   gradient : Gradient
   gradient2 : Gradient2
   identity: Identity

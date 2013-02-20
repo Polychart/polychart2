@@ -61,7 +61,7 @@ class ScaleSet
     # color
     if domains.color?
       if domains.color.type == 'cat'
-        scales.color = poly.scale.make specScale('color') || {type: 'color'}
+        scales.color = poly.scale.make specScale('color') || {type: 'palette'}
       else
         defaultSpec = {type:'gradient', upper:'steelblue', lower:'red'}
         scales.color = poly.scale.make specScale('color') || defaultSpec
