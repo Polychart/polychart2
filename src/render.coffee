@@ -73,6 +73,9 @@ class Renderer
   _makePath : (xs, ys, type='L') ->
     path = _.map xs, (x, i) -> (if i == 0 then 'M' else type) + x+' '+ys[i]
     path.join(' ')
+  _makeCurve : (xs, ys) ->
+    curve = _.map xs, (x, i) -> (if i == 0 then "M #{x} #{ys[i]} R " else '') + "#{x} #{ys[i]}"
+    curve.join(' ')
   _maybeApply : (scales, mark, key) ->
     val = mark[key]
     if _.isObject(val) and val.f is 'identity'
@@ -105,7 +108,10 @@ class Renderer
       throw poly.error.missing "#{type} cannot be plotted due to undefined data."
   _checkArrayUndefined: (x, y, type="Line") ->
     if _.all (x[i] is undefined or y[i] is undefined for i in [0..x.length-1])
-      throw poly.error.missing "Line cannot be plotted due to too many missing points."
+      throw poly.error.missing "#{type} cannot be plotted due to too many missing points."
+  _checkArrayNaN: (xs, ys) ->
+    zs = _.map _.zip(xs, ys), (z,i) -> (if isNaN(z[0]) or isNaN(z[1]) then undefined else z)
+    {x: (z[0] for z in zs when z?),  y: (z[1] for z in zs when z?)}
 
 class Circle extends Renderer # for both cartesian & polar
   _make: (paper) -> paper.circle()
@@ -261,6 +267,25 @@ class Text extends Renderer # for both cartesian & polar
       'text-anchor' : mark['text-anchor'] ? 'left'
       fill: @_maybeApply(scales, mark, 'color') or 'black'
 
+class Spline extends Renderer
+  _make: (paper) -> paper.path()
+  attr: (scales, coord, offset, mark, mayflip) ->
+    [mark.x,mark.y] = poly.sortArrays scales.x.compare, [mark.x,mark.y]
+    {x, y} = coord.getXY mayflip, mark
+    @_checkArrayUndefined(x, y, "Spline")
+    for xi, i in x
+      yi = y[i]
+    {x, y} = @_applyOffset(x, y, offset)
+    {x, y} = @_checkArrayNaN x, y # Remove any non numeric values---needed for splines
+    stroke = @_maybeApply scales, mark,
+      if mark.stroke then 'stroke' else 'color'
+    size = @_maybeApply scales, mark,
+      if mark.size then 'size' else 'stroke-width'
+    @_shared scales, mark,
+      path: @_makeCurve x, y
+      stroke: stroke
+      'stroke-width': size
+
 renderer =
   cartesian:
     circle: new Circle()
@@ -270,6 +295,7 @@ renderer =
     path: new Path()
     text: new Text()
     rect: new Rect()
+    spline: new Spline()
   polar:
     circle: new Circle()
     path: new Path()
@@ -278,3 +304,4 @@ renderer =
     area: new Area()
     text: new Text()
     rect: new CircleRect()
+    spline: new Spline()
