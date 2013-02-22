@@ -41,7 +41,7 @@ class ScaleSet
   _makeYScale: () -> @scales.y.make @domainy, @ranges.y, @getSpec('y').padding
   _makeScales : (guideSpec, domains, ranges) ->
     # this function contains information about default scales!
-    # todo: typechecking.
+    # TODO: Add some sort of typechecking for custom scales?
     specScale = (a) ->
       if guideSpec and guideSpec[a]? and guideSpec[a].scale?
         if _.isFunction(guideSpec[a].scale)
