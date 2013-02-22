@@ -30,6 +30,10 @@ class MissingData extends Error
   constructor: (@message) ->
     @name = "MissingData"
 
+class Type extends Error
+  constructor: (@message) ->
+    @name = "Type"
+
 poly.error = (msg) -> new Error(msg)
 poly.error.data = (msg) -> new DataError(msg)
 poly.error.depn = (msg) -> new DependencyError(msg)
@@ -39,3 +43,4 @@ poly.error.impl = (msg) -> new NotImplemented(msg)
 poly.error.input = (msg) -> new UnknownInput(msg)
 poly.error.scale = (msg) -> new ScaleError(msg)
 poly.error.missing = (msg) -> new MissingData(msg)
+poly.error.type = (msg) -> new Type(msg)

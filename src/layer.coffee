@@ -450,6 +450,37 @@ class Spline extends Layer
             size: @_getValue sample, 'size'
         evtData: evtData
 
+class Step extends Layer
+  defaults:
+    'x': sf.novalue()
+    'y': sf.novalue()
+    'color': 'steelblue'
+    'size': 2
+    'opacity': 0.9
+    'shape': 1
+  _calcGeoms: () ->
+    all_x = _.uniq (@_getValue item, 'x' for item in @statData)
+    group = (@mapping[k] for k in _.without(_.keys(@mapping), 'x', 'y'))
+    datas = poly.groupBy @statData, group
+    idfn = @_getIdFunc()
+    @geoms = {}
+    for k, data of datas
+      sample = data[0]
+      evtData = {}
+      for key in group
+        evtData[key] = { in : [sample[key]] }
+      {x, y} = @_fillZeros(data, all_x)
+      @geoms[idfn sample] =
+        marks:
+          0:
+            type: 'step'
+            x: x
+            y: y
+            color: @_getValue sample, 'color'
+            opacity: @_getValue sample, 'opacity'
+            size: @_getValue sample, 'size'
+        evtData: evtData
+
 ###
 Public interface to making different layer types.
 TODO: this should be changed to make it easier to make other
@@ -467,6 +498,7 @@ poly.layer.classes = {
   'tile' : Tile
   'box' : Box
   'spline' : Spline
+  'step' : Step
 }
 poly.layer.make = (layerSpec, strictmode) ->
   type = layerSpec.type

@@ -48,7 +48,20 @@ class ScaleSet
           type: 'custom'
           function: guideSpec[a].scale
         else
-          guideSpec[a].scale
+          switch a
+            when 'x' then possibleScales = ['linear', 'log']
+            when 'y' then possibleScales = ['linear', 'log']
+            when 'color' then possibleScales = ['palatte', 'gradient', 'gradient2']
+            when 'size' then possibleScales = ['linear', 'log']
+            when 'opacity' then possibleScales = ['opacity']
+            when 'shape' then possibleScales = ['linear', 'log', 'area']
+            when 'id' then possibleScales = ['identity']
+            when 'text' then possibleScales = ['identity']
+            else possibleScales = []
+          if guideSpec[a].scale.type in possibleScales
+            guideSpec[a].scale
+          else
+            throw poly.error.scale "Aesthetic #{a} cannot have scale #{guideSpec[a].scale.type}"
       else
         null
     scales = {}
@@ -180,3 +193,4 @@ class ScaleSet
       offset[dir] += axesOffset[dir] ? 0
       offset[dir] += titleOffset[dir] ? 0
     @legends.render(dims, renderer, offset)
+typeError = (msg) -> msg

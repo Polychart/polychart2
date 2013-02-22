@@ -71,11 +71,14 @@ class Renderer
   attr: (scales, coord, offset, mark, mayflip) -> throw poly.error.impl()
   _cantRender: (aes) -> throw poly.error.missingdata()
   _makePath : (xs, ys, type='L') ->
-    path = _.map xs, (x, i) -> (if i == 0 then 'M' else type) + x+' '+ys[i]
+    switch type
+      when 'spline'
+        path = _.map xs, (x, i) -> (if i == 0 then "M #{x} #{ys[i]} R " else '') + "#{x} #{ys[i]}"
+      when 'step'
+        path = _.map xs, (x, i) -> (if i == 0 then "M #{x} #{ys[i]}" else "L #{x} #{ys[i-1]} #{x} #{ys[i]}")
+      else
+        path = _.map xs, (x, i) -> (if i == 0 then 'M' else type) + x+' '+ys[i]
     path.join(' ')
-  _makeCurve : (xs, ys) ->
-    curve = _.map xs, (x, i) -> (if i == 0 then "M #{x} #{ys[i]} R " else '') + "#{x} #{ys[i]}"
-    curve.join(' ')
   _maybeApply : (scales, mark, key) ->
     val = mark[key]
     if _.isObject(val) and val.f is 'identity'
@@ -155,6 +158,7 @@ class Line extends Renderer # for both cartesian & polar?
     for xi, i in x
       yi = y[i]
     {x, y} = @_applyOffset(x, y, offset)
+    {x, y} = @_checkArrayNaN(x, y)
     stroke = @_maybeApply scales, mark,
       if mark.stroke then 'stroke' else 'color'
     size = @_maybeApply scales, mark,
@@ -282,7 +286,26 @@ class Spline extends Renderer
     size = @_maybeApply scales, mark,
       if mark.size then 'size' else 'stroke-width'
     @_shared scales, mark,
-      path: @_makeCurve x, y
+      path: @_makePath x, y, 'spline'
+      stroke: stroke
+      'stroke-width': size
+
+class Step extends Renderer
+  _make: (paper) -> paper.path()
+  attr: (scales, coord, offset, mark, mayflip) ->
+    [mark.x,mark.y] = poly.sortArrays scales.x.compare, [mark.x,mark.y]
+    {x, y} = coord.getXY mayflip, mark
+    @_checkArrayUndefined(x, y, "Spline")
+    for xi, i in x
+      yi = y[i]
+    {x, y} = @_applyOffset(x, y, offset)
+    {x, y} = @_checkArrayNaN x, y # Remove any non numeric values---needed for splines
+    stroke = @_maybeApply scales, mark,
+      if mark.stroke then 'stroke' else 'color'
+    size = @_maybeApply scales, mark,
+      if mark.size then 'size' else 'stroke-width'
+    @_shared scales, mark,
+      path: @_makePath x, y, 'step'
       stroke: stroke
       'stroke-width': size
 
@@ -296,6 +319,7 @@ renderer =
     text: new Text()
     rect: new Rect()
     spline: new Spline()
+    step: new Step()
   polar:
     circle: new Circle()
     path: new Path()
