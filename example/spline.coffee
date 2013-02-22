@@ -173,6 +173,12 @@
     {index: i, value: vv}
   hdata = polyjs.data json:jshdata
   vdata = polyjs.data json:jsvdata
+  htooltip = (item) ->
+    date = if item.index < 24 then "6. Oct 2009, " else "7. Oct 2009, "
+    indexTime = if (item.index % 24) > 9 then (item.index % 24) + ":00" else "0" + (item.index % 24) + ":00"
+    windValue = item.value + "m/s"
+    date + indexTime + ": " + windValue
+
   spec = {
     layers: [
       {
@@ -190,6 +196,7 @@
         y: 'value'
         color: {const: '#88CE02'}
         size: {const: 4}
+        tooltip: htooltip
       },
       {
         data: vdata
@@ -206,6 +213,7 @@
         y: 'value'
         color: {const: '#89CEBB'}
         size: {const: 4}
+        tooltip: htooltip
       }
     ]
     guides:
@@ -292,3 +300,18 @@
     c.make spec
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
+
+@examples.spline_tooltip = (dom) ->
+  jsondata = ({index:i, value:Math.sin(Math.random() * Math.PI)} for i in [0..10])
+  data = polyjs.data json:jsondata
+  spline_tool = (item) ->
+    square = item.value *  item.value
+    tooltip = "The square of this value is " + square
+  spec = {
+    layers: [
+      { data: data, type: 'spline', x: 'index', y: 'value' }
+      { data: data, type: 'point', x:'index', y:'value', tooltip: spline_tool}
+    ]
+    dom: dom
+  }
+  c = polyjs.chart spec

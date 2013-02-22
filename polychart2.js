@@ -6073,16 +6073,22 @@ Shared constants
     Layer.prototype._tooltip = function(item) {
       var tooltip, v, _i, _len, _ref;
       tooltip = null;
-      _ref = _.uniq(_.values(this.mapping));
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        v = _ref[_i];
-        if (!tooltip) {
-          tooltip = "" + v + ": " + (poly.format.value(item[v]));
-        } else {
-          tooltip += "\n" + v + ": " + (poly.format.value(item[v]));
+      if (typeof this.spec.tooltip === 'function') {
+        return tooltip = this.spec.tooltip(item);
+      } else if (this.spec.tooltip != null) {
+        return tooltip = this.spec.tooltip;
+      } else {
+        _ref = _.uniq(_.values(this.mapping));
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          v = _ref[_i];
+          if (!tooltip) {
+            tooltip = "" + v + ": " + (poly.format.value(item[v]));
+          } else {
+            tooltip += "\n" + v + ": " + (poly.format.value(item[v]));
+          }
         }
+        return tooltip;
       }
-      return tooltip;
     };
 
     Layer.prototype._sample = function(geoms) {

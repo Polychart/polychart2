@@ -4253,7 +4253,7 @@
   };
 
   this.examples.spline_series = function(dom) {
-    var c, hdata, hestavollandata_raw, hv, i, jshdata, jsvdata, spec, vdata, volldata_raw, vv;
+    var c, hdata, hestavollandata_raw, htooltip, hv, i, jshdata, jsvdata, spec, vdata, volldata_raw, vv;
     hestavollandata_raw = [4.3, 5.1, 4.3, 5.2, 5.4, 4.7, 3.5, 4.1, 5.6, 7.4, 6.9, 7.1, 7.9, 7.9, 7.5, 6.7, 7.7, 7.7, 7.4, 7.0, 7.1, 5.8, 5.9, 7.4, 8.2, 8.5, 9.4, 8.1, 10.9, 10.4, 10.9, 12.4, 12.1, 9.5, 7.5, 7.1, 7.5, 8.1, 6.8, 3.4, 2.1, 1.9, 2.8, 2.9, 1.3, 4.4, 4.2, 3.0, 3.0];
     volldata_raw = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.3, 0.0, 0.0, 0.4, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.6, 1.2, 1.7, 0.7, 2.9, 4.1, 2.6, 3.7, 3.9, 1.7, 2.3, 3.0, 3.3, 4.8, 5.0, 4.8, 5.0, 3.2, 2.0, 0.9, 0.4, 0.3, 0.5, 0.4];
     jshdata = (function() {
@@ -4286,6 +4286,13 @@
     vdata = polyjs.data({
       json: jsvdata
     });
+    htooltip = function(item) {
+      var date, indexTime, windValue;
+      date = item.index < 24 ? "6. Oct 2009, " : "7. Oct 2009, ";
+      indexTime = (item.index % 24) > 9 ? (item.index % 24) + ":00" : "0" + (item.index % 24) + ":00";
+      windValue = item.value + "m/s";
+      return date + indexTime + ": " + windValue;
+    };
     spec = {
       layers: [
         {
@@ -4309,7 +4316,8 @@
           },
           size: {
             "const": 4
-          }
+          },
+          tooltip: htooltip
         }, {
           data: vdata,
           type: 'spline',
@@ -4331,7 +4339,8 @@
           },
           size: {
             "const": 4
-          }
+          },
+          tooltip: htooltip
         }
       ],
       guides: {
@@ -4549,6 +4558,47 @@
       return setTimeout(redraw, 1000);
     };
     return setTimeout(redraw, 1000);
+  };
+
+  this.examples.spline_tooltip = function(dom) {
+    var c, data, i, jsondata, spec, spline_tool;
+    jsondata = (function() {
+      var _i, _results;
+      _results = [];
+      for (i = _i = 0; _i <= 10; i = ++_i) {
+        _results.push({
+          index: i,
+          value: Math.sin(Math.random() * Math.PI)
+        });
+      }
+      return _results;
+    })();
+    data = polyjs.data({
+      json: jsondata
+    });
+    spline_tool = function(item) {
+      var square, tooltip;
+      square = item.value * item.value;
+      return tooltip = "The square of this value is " + square;
+    };
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'spline',
+          x: 'index',
+          y: 'value'
+        }, {
+          data: data,
+          type: 'point',
+          x: 'index',
+          y: 'value',
+          tooltip: spline_tool
+        }
+      ],
+      dom: dom
+    };
+    return c = polyjs.chart(spec);
   };
 
 }).call(this);
