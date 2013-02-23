@@ -5,11 +5,21 @@ Polychart wrapper around a data set. This is contains the data structure
 required for poly.chart().  Data object that either contains JSON format
 of a dataset, or knows how to retrieve data from some source.
 ###
+
 poly.data = (params) ->
   if params.url
     new BackendData params
   else
     new FrontendData params
+
+poly.data.json = (data, meta) ->
+  new FrontendData json: data, meta:meta
+
+poly.data.csv = (data, meta) ->
+  new FrontendData csv: data, meta:meta
+
+poly.data.url = (url) ->
+  new BackendData {url}
 
 ###
 Helper functions
@@ -72,6 +82,23 @@ class AbstractData
   unsubscribe: (h) ->
     @subscribed.splice _.indexOf(@subscribed, h), 1
   keys: () -> @key
+  rename: () -> false # throw not implemented?
+  renameMany: () -> false # throw not implemented?
+  remove: () -> false # throw not implemented?
+  filter: () -> false # throw not implemented?
+  sort: () -> false # throw not implemented?
+  derive: () -> false # throw not implemented?
+  get: () -> throw poly.error.data "Data has not been fetched or is undefined."
+  len: () -> throw poly.error.data "Data has not been fetched or is undefined."
+  getObject: () -> throw poly.error.data "Data has not been fetched or is undefined."
+  max: () -> throw poly.error.data "Data has not been fetched or is undefined."
+  min: () -> throw poly.error.data "Data has not been fetched or is undefined."
+  getMeta: (key) -> if @meta then @meta[key] else undefined
+  type: (key) ->
+    if key of @meta
+      t = @meta[key].type
+      return if t is 'num' then 'number' else t
+    throw poly.error.defn "Data does not have column #{key}."
 
 class FrontendData extends AbstractData
   constructor: (params) ->
@@ -91,7 +118,7 @@ class FrontendData extends AbstractData
         _getArray json, meta
       else if _.isObject json
         _getObject json, meta
-  checkRename: (from, to) ->
+  _checkRename: (from, to) ->
     if to is ''
       throw poly.error.defn "Column names cannot be an empty string"
     if _.indexOf(@key, from) is -1
@@ -176,12 +203,6 @@ class FrontendData extends AbstractData
       derived: true
     if hasFnStr then @meta[key].formula = fnstr
     key
-  getMeta: (key) -> @meta[key]
-  type: (key) ->
-    if key of @meta
-      t = @meta[key].type
-      return if t is 'num' then 'number' else t
-    throw poly.error.defn "Data does not have column #{key}."
   get: (key) -> _.pluck @raw, key
   len: () -> @raw.length
   getObject: (i) -> @raw[i]
@@ -200,5 +221,3 @@ class BackendData extends AbstractData
   update: (params) ->
     @raw = null
     super()
-
-
