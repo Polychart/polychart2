@@ -5181,6 +5181,26 @@ of a dataset, or knows how to retrieve data from some source.
     }
   };
 
+  poly.data.json = function(data, meta) {
+    return new FrontendData({
+      json: data,
+      meta: meta
+    });
+  };
+
+  poly.data.csv = function(data, meta) {
+    return new FrontendData({
+      csv: data,
+      meta: meta
+    });
+  };
+
+  poly.data.url = function(url) {
+    return new BackendData({
+      url: url
+    });
+  };
+
   /*
   Helper functions
   */
@@ -5301,6 +5321,71 @@ of a dataset, or knows how to retrieve data from some source.
       return this.key;
     };
 
+    AbstractData.prototype.rename = function() {
+      return false;
+    };
+
+    AbstractData.prototype.renameMany = function() {
+      return false;
+    };
+
+    AbstractData.prototype.remove = function() {
+      return false;
+    };
+
+    AbstractData.prototype.filter = function() {
+      return false;
+    };
+
+    AbstractData.prototype.sort = function() {
+      return false;
+    };
+
+    AbstractData.prototype.derive = function() {
+      return false;
+    };
+
+    AbstractData.prototype.get = function() {
+      throw poly.error.data("Data has not been fetched or is undefined.");
+    };
+
+    AbstractData.prototype.len = function() {
+      throw poly.error.data("Data has not been fetched or is undefined.");
+    };
+
+    AbstractData.prototype.getObject = function() {
+      throw poly.error.data("Data has not been fetched or is undefined.");
+    };
+
+    AbstractData.prototype.max = function() {
+      throw poly.error.data("Data has not been fetched or is undefined.");
+    };
+
+    AbstractData.prototype.min = function() {
+      throw poly.error.data("Data has not been fetched or is undefined.");
+    };
+
+    AbstractData.prototype.getMeta = function(key) {
+      if (this.meta) {
+        return this.meta[key];
+      } else {
+        return void 0;
+      }
+    };
+
+    AbstractData.prototype.type = function(key) {
+      var t;
+      if (key in this.meta) {
+        t = this.meta[key].type;
+        if (t === 'num') {
+          return 'number';
+        } else {
+          return t;
+        }
+      }
+      throw poly.error.defn("Data does not have column " + key + ".");
+    };
+
     return AbstractData;
 
   })();
@@ -5332,7 +5417,7 @@ of a dataset, or knows how to retrieve data from some source.
       return _ref = csv ? _getCSV(csv, meta) : _.isArray(json) ? _getArray(json, meta) : _.isObject(json) ? _getObject(json, meta) : void 0, this.key = _ref.key, this.raw = _ref.raw, this.meta = _ref.meta, _ref;
     };
 
-    FrontendData.prototype.checkRename = function(from, to) {
+    FrontendData.prototype._checkRename = function(from, to) {
       if (to === '') {
         throw poly.error.defn("Column names cannot be an empty string");
       }
@@ -5486,23 +5571,6 @@ of a dataset, or knows how to retrieve data from some source.
         this.meta[key].formula = fnstr;
       }
       return key;
-    };
-
-    FrontendData.prototype.getMeta = function(key) {
-      return this.meta[key];
-    };
-
-    FrontendData.prototype.type = function(key) {
-      var t;
-      if (key in this.meta) {
-        t = this.meta[key].type;
-        if (t === 'num') {
-          return 'number';
-        } else {
-          return t;
-        }
-      }
-      throw poly.error.defn("Data does not have column " + key + ".");
     };
 
     FrontendData.prototype.get = function(key) {
@@ -7886,6 +7954,7 @@ Dimension object has the following elements (all numeric in pixels):
         y: y,
         r: 10,
         text: this._maybeApply(scales, mark, 'text'),
+        'font-size': this._maybeApply(scales, mark, 'size'),
         'text-anchor': (_ref2 = mark['text-anchor']) != null ? _ref2 : 'left',
         fill: this._maybeApply(scales, mark, 'color') || 'black'
       });
