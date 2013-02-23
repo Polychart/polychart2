@@ -2,7 +2,7 @@
 
 @examples.interact_bar = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'bar', x : 'index', y : 'value', id: 'index', opacity:'value'}
@@ -27,7 +27,7 @@
 
 @examples.interact_point = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       data: data, type: 'point', x : 'index', y : 'value'
@@ -44,7 +44,7 @@
 
 @examples.interact_line = (dom) ->
   jsondata = ({index:i, k:""+i%2, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       data: data, type: 'line', x : 'index', y : 'value', color:'k'
@@ -61,7 +61,7 @@
 
 @examples.interact_path = (dom) ->
   jsondata = ({index:i, k:""+i%2, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       data: data, type: 'path', x : 'index', y : 'value', color:'k'
@@ -87,7 +87,7 @@
       value: value()
     (item(i) for i in [0..24])
 
-  data = polyjs.data json:datafn()
+  data = polyjs.data data:datafn()
   spec = {
     layers: [
       data: data
@@ -101,12 +101,12 @@
   c = polyjs.chart spec
 
 @examples.interact_twocharts = (dom, dom2) ->
-  data1 = polyjs.data json: [
+  data1 = polyjs.data data: [
     { city: 'tomato', area: 235}
     { city: 'junkie', area: 135}
     { city: 'banana', area: 335}
   ]
-  data2 = polyjs.data json: [
+  data2 = polyjs.data data: [
     { city:'tomato', month: 1, population: 2352 }
     { city:'tomato', month: 2, population: 2332 }
     { city:'tomato', month: 3, population: 2342 }
@@ -165,7 +165,7 @@
         c2.make spec2
 
 @examples.interact_drilldown = (dom) ->
-  data = polyjs.data json: [
+  data = polyjs.data data: [
     { country: 'Canada', region: 'Ontario', city: 'Toronto', value: 5235 }
     { country: 'Canada', region: 'Ontario', city: 'Kingston', value: 5034 }
     { country: 'Canada', region: 'Ontario', city: 'Waterloo', value: 235 }

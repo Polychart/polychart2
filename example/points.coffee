@@ -5,7 +5,7 @@ one = () -> Math.random()*10
 @examples.point = (dom) ->
   spec = () ->
     jsondata = ({x:one(), y:one(), c:one()} for i in [0..10])
-    data = polyjs.data json:jsondata
+    data = polyjs.data data:jsondata
     sampleLayer =
       data: data
       type: 'point'
@@ -43,13 +43,13 @@ one = () -> Math.random()*10
 
   redraw = () ->
     newspec = spec()
-    initspec.layers[0].data.update(json:newspec.data)
+    initspec.layers[0].data.update(data:newspec.data)
     c.make(newspec.spec)
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
 @examples.point_missing = (dom) ->
-  data = polyjs.data json: [
+  data = polyjs.data data: [
     {a: 2, b: 4}
     {a: 3, b: 7}
     {a: 9, b: 10}
@@ -64,7 +64,7 @@ one = () -> Math.random()*10
 
 @examples.point_sampled = (dom) ->
   jsondata = ({x:one(), y:one(), c:one()} for i in [0..1000])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   c = polyjs.chart
     layer:
       data:data, type:'point', x:'x', y:'y', sample:50
@@ -76,7 +76,7 @@ one = () -> Math.random()*10
 
 @examples.point2 = (dom) ->
   jsondata = [{x:'A',y:2},{x:'B',y:3},{x:'C',y:1}]
-  data = polyjs.data({ json: jsondata })
+  data = polyjs.data({ data: jsondata })
   sampleLayer = {
     dom: dom
     data: data,
@@ -91,14 +91,14 @@ one = () -> Math.random()*10
 
 @examples.point3 = (dom) ->
   jsondata = [{x:'A',y:'X'},{x:'B',y:'Y'},{x:'C',y:'Z'}]
-  data = polyjs.data({ json: jsondata })
+  data = polyjs.data({ data: jsondata })
   sampleLayer = { data: data, type: 'point', x: 'x', y: 'y', color: {const:'#E01B6A'} }
   spec =  { layers: [sampleLayer], dom:dom }
   c = polyjs.chart(spec)
 
 @examples.point3_flip = (dom) ->
   jsondata = [{x:'A',y:'X'},{x:'B',y:'Y'},{x:'C',y:'Z'}]
-  data = polyjs.data({ json: jsondata })
+  data = polyjs.data({ data: jsondata })
   sampleLayer = { data: data, type: 'point', x: 'x', y: 'y', color: {const:'#E01B6A'} }
   spec =  { layers: [sampleLayer], coord: { type:'polar', flip:true } , dom:dom}
   c = polyjs.chart(spec)

@@ -2,7 +2,7 @@
 
 @examples.spline = (dom) ->
   jsondata = ({index: i, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'spline', x : 'index', y : 'value'}
@@ -19,13 +19,13 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw,1000)
   setTimeout(redraw, 1000)
 
 @examples.spline_missing2 = (dom) ->
-  data = polyjs.data json: [
+  data = polyjs.data data: [
     {a: 2, b: null}
     {a: undefined, b: 7}
     {a: 9, b: null}
@@ -39,7 +39,7 @@
     dom: dom
 
 @examples.spline_missing = (dom) ->
-  data = polyjs.data json: [
+  data = polyjs.data data: [
     {a: 2, b: 4}
     {a: 3, b: 7}
     {a: 9, b: 10}
@@ -59,7 +59,7 @@
     s += v
     {index:i++, value:v, total:s}
   jsondata = (next() for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'spline', x : 'index', y : 'total'}
@@ -74,7 +74,7 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push(next())
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
@@ -83,7 +83,7 @@
 # not symmetrical. Fix this.
 @examples.spline_flip = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'spline', x : 'index', y : 'value'}
@@ -103,7 +103,7 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
@@ -115,7 +115,7 @@
     {a:1,b:5,c:'A'},{a:3,b:4,c:'A'},{a:2,b:3,c:'A'}
     {a:2,b:2,c:'B'},{a:1,b:4,c:'B'},{a:2.2,b:3,c:'B'},{a:3,b:3,c:'B'}
   ]
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'spline', x : 'a', y : 'b', color:'c'}
@@ -134,7 +134,7 @@
     {a:'2012-01-06',b:3,c:'B'},
     {a:'2012-01-07',b:3,c:'B'}
   ]
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'spline', x : 'a', y : 'b'}
@@ -148,7 +148,7 @@
     {a:1,b:5,c:'A'},{a:3,b:4,c:'A'},{a:2,b:3,c:'A'}
     {a:2,b:2,c:'B'},{a:1,b:4,c:'B'},{a:2.2,b:3,c:'B'},{a:3,b:3,c:'B'}
   ]
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'spline', x : 'a', y : 'b', color:'c'}
@@ -171,8 +171,8 @@
     {index: i, value: hv}
   jsvdata = for vv, i in volldata_raw
     {index: i, value: vv}
-  hdata = polyjs.data json:jshdata
-  vdata = polyjs.data json:jsvdata
+  hdata = polyjs.data data:jshdata
+  vdata = polyjs.data data:jsvdata
   htooltip = (item) ->
     date = if item.index < 24 then "6. Oct 2009, " else "7. Oct 2009, "
     indexTime = if (item.index % 24) > 9 then (item.index % 24) + ":00" else "0" + (item.index % 24) + ":00"
@@ -226,7 +226,7 @@
 
 @examples.spline_polar = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'spline', x : 'index', y : 'value'}
@@ -244,14 +244,14 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
 @examples.spline_polar_log = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [1..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'spline', x : 'index', y : 'value'}
@@ -271,14 +271,14 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
 @examples.spline_polar_flip = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'spline', x : 'index', y : 'value'}
@@ -296,14 +296,14 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
 @examples.spline_tooltip = (dom) ->
   jsondata = ({index:i, value:Math.sin(Math.random() * Math.PI)} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spline_tool = (item) ->
     square = item.value *  item.value
     tooltip = "The square of this value is " + square
@@ -318,7 +318,7 @@
 
 @examples.step = (dom) ->
   jsondata = ({index: i, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'step', x : 'index', y : 'value'}
@@ -335,7 +335,7 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw,1000)
   setTimeout(redraw, 1000)

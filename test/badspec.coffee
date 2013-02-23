@@ -1,6 +1,6 @@
 module "Bad Spec"
 
-data = polyjs.data json: [{a:2, b:1}]
+data = polyjs.data data: [{a:2, b:1}]
 
 test "no data", ->
   try

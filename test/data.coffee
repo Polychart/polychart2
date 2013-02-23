@@ -10,12 +10,12 @@ test "smoke test", ->
     {x: 2, y: 4},
     {x: 2, y: 4}
   ]
-  data = polyjs.data (json: jsondata)
+  data = polyjs.data (data: jsondata)
   deepEqual data.raw, jsondata
 
 test "transforms -- numeric binning", ->
   data = polyjs.data
-    json: [
+    data: [
       {x: 12, y: 42},
       {x: 33, y: 56},
     ]
@@ -30,7 +30,7 @@ test "transforms -- numeric binning", ->
     ]
 
   data = polyjs.data
-    json: [
+    data: [
       {x: 1.2, y: 1},
       {x: 3.3, y: 2},
       {x: 3.3, y: 3},
@@ -47,7 +47,7 @@ test "transforms -- numeric binning", ->
     ]
 
   data = polyjs.data
-    json: [
+    data: [
       {x: 1.2, y: 1},
       {x: 3.3, y: 2},
       {x: 3.3, y: 3},
@@ -66,7 +66,7 @@ test "transforms -- numeric binning", ->
 test "transforms -- dates binning", ->
 
 test "filtering", ->
-  data = polyjs.data json: [
+  data = polyjs.data data: [
     {x: 1.2, y: 1},
     {x: 3.3, y: 2},
     {x: 3.4, y: 3},
@@ -111,7 +111,7 @@ test "filtering", ->
       {x: 3.3, y: 2, 'bin(x, 1)': 3, 'lag(y, 1)': 1},
     ]
 
-  data = polyjs.data json:[
+  data = polyjs.data data:[
     {x: 1.2, y: 1, z: 'A'},
     {x: 3.3, y: 2, z: 'B'},
     {x: 3.4, y: 3, z: 'B'},
@@ -132,7 +132,7 @@ test "filtering", ->
     ]
 
 test "statistics - count", ->
-  data = polyjs.data json:[
+  data = polyjs.data data:[
     {x: 'A', y: 1, z:1}
     {x: 'A', y: 1, z:2}
     {x: 'A', y: 1, z:1}
@@ -197,7 +197,7 @@ test "statistics - count", ->
       {x: 'B', z:2, 'count(y)':2, 'uniq(y)': 1}
     ]
 
-  data = polyjs.data json:[
+  data = polyjs.data data:[
     {x: 'A', y: 1, z:1}
     {x: 'A', y: 2, z:2}
     {x: 'A', y: 3, z:1}
@@ -221,7 +221,7 @@ test "statistics - count", ->
       {x: 'B', 'min(y)': 1, 'max(y)': 4, 'median(y)': 2.5}
     ]
 
-  data = polyjs.data json:[
+  data = polyjs.data data:[
     {x: 'A', y: 15, z:1}
     {x: 'A', y: 3, z:2}
     {x: 'A', y: 4, z:1}
@@ -246,7 +246,7 @@ test "statistics - count", ->
     ]
 
 test "meta sorting", ->
-  data = polyjs.data json:[
+  data = polyjs.data data:[
     {x: 'A', y: 3}
     {x: 'B', y: 1}
     {x: 'C', y: 2}
@@ -266,7 +266,7 @@ test "meta sorting", ->
       x: {sort: 'y', asc: false, limit: 1}
   deepEqual _.pluck(trans, 'x'), ['A']
 
-  data = polyjs.data json:[
+  data = polyjs.data data:[
     {x: 'A', y: 3}
     {x: 'B', y: 1}
     {x: 'C', y: 2}
@@ -280,7 +280,7 @@ test "meta sorting", ->
       limit: 1
   deepEqual _.pluck(trans, 'x'), ['C', 'C']
 
-  data = polyjs.data json:[
+  data = polyjs.data data:[
     {x: 'A', y: 3}
     {x: 'B', y: 1}
     {x: 'C', y: 2}

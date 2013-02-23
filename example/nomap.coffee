@@ -5,7 +5,7 @@
     {a:1,b:5,c:'A'},{a:3,b:4,c:'A'},{a:2,b:3,c:'A'}
     {a:2,b:2,c:'B'},{a:1,b:4,c:'B'},{a:2.2,b:3,c:'B'},{a:3,b:3,c:'B'}
   ]
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   polyjs.chart
     layers: [
       { data: data, type: 'bar', y : 'sum(a)', color: 'c'}
@@ -17,7 +17,7 @@
     {a:1,b:5,c:'A'},{a:3,b:4,c:'A'},{a:2,b:3,c:'A'}
     {a:2,b:2,c:'B'},{a:1,b:4,c:'B'},{a:2.2,b:3,c:'B'},{a:3,b:3,c:'B'}
   ]
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   polyjs.chart
     layers: [
       { data: data, type: 'point', y : 'a'}
@@ -29,7 +29,7 @@
     {a:1,b:5,c:'A'},{a:3,b:4,c:'A'},{a:2,b:3,c:'A'}
     {a:2,b:2,c:'B'},{a:1,b:4,c:'B'},{a:2.2,b:3,c:'B'},{a:3,b:3,c:'B'}
   ]
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   polyjs.chart
     layers: [
       { data: data, type: 'bar', y : 'sum(a)', color:'c'}
@@ -46,7 +46,7 @@
     {a:1,b:5,c:'A'},{a:3,b:4,c:'A'},{a:2,b:3,c:'A'}
     {a:2,b:2,c:'B'},{a:1,b:4,c:'B'},{a:2.2,b:3,c:'B'},{a:3,b:3,c:'B'}
   ]
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   polyjs.chart
     layers: [
       { data: data, type: 'point', x : 'a'}

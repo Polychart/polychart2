@@ -6,11 +6,24 @@ required for poly.chart().  Data object that either contains JSON format
 of a dataset, or knows how to retrieve data from some source.
 ###
 
-poly.data = (params) ->
-  if params.url
-    new BackendData params
+poly.data = (blob) ->
+  type = undefined
+  data = undefined
+  meta = undefined
+  if _.isObject(blob) and _.keys(blob).length < 4 and 'data' of blob
+    data = blob.data
+    meta = blob.meta
   else
-    new FrontendData params
+    data = blob
+  if _.isObject data or _.isArray data
+    poly.data.json(data, meta)
+  else if _.isString data
+    if poly.isURL data
+      poly.data.csv(data, meta)
+    else
+      poly.data.csv(data, meta)
+  else
+    poly.error.data "Unknown data format."
 
 poly.data.json = (data, meta) ->
   new FrontendData json: data, meta:meta
@@ -70,7 +83,7 @@ Classes
 class AbstractData
   isData: true
   constructor: () ->
-    @raw = {}
+    @raw = null
     @meta = {}
     @key = []
     @subscribed = []
@@ -213,10 +226,11 @@ class BackendData extends AbstractData
   constructor: (params) ->
     super()
     {@url} = params
-  getData: (callback) ->
+  getData: (callback) =>
     if @raw? then return callback @
-    poly.csv @url, (csv) ->
-      {@key, @raw, @meta} = _getCSV csv
+    poly.csv @url, (csv) =>
+      debugger
+      {@key, @raw, @meta} = _getArray csv, {}
       callback @
   update: (params) ->
     @raw = null

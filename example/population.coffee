@@ -7,7 +7,7 @@ data = {
 @examples ?= {}
 
 @examples.population = (dom, dom2, dom3) ->
-  polyd = polyjs.data json: data
+  polyd = polyjs.data data: data
   polyd.derive ((x) -> if x.year < 2012 then 'actual' else 'estimate'), 'type'
   today_spec =
     layer:

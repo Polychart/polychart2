@@ -2,7 +2,7 @@
 
 @examples.line = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'line', x : 'index', y : 'value'}
@@ -19,13 +19,13 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
 @examples.line_missing2 = (dom) ->
-  data = polyjs.data json: [
+  data = polyjs.data data: [
     {a: 2, b: null}
     {a: undefined, b: 7}
     {a: 9, b: null}
@@ -40,7 +40,7 @@
 
 
 @examples.line_missing = (dom) ->
-  data = polyjs.data json: [
+  data = polyjs.data data: [
     {a: 2, b: 4}
     {a: 3, b: 7}
     {a: 9, b: 10}
@@ -61,7 +61,7 @@
     s += v
     {index:i++, value:v, total:s}
   jsondata = (next() for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'line', x : 'index', y : 'total'}
@@ -76,14 +76,14 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push(next())
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
 @examples.line_flip = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'line', x : 'index', y : 'value'}
@@ -103,14 +103,14 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
 @examples.line_polar = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'line', x : 'index', y : 'value'}
@@ -128,14 +128,14 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
 @examples.line_polar_log = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [1..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'line', x : 'index', y : 'value'}
@@ -155,14 +155,14 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
 @examples.line_polar_flip = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'line', x : 'index', y : 'value'}
@@ -180,7 +180,7 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
@@ -190,7 +190,7 @@
     {a:1,b:5,c:'A'},{a:3,b:4,c:'A'},{a:2,b:3,c:'A'}
     {a:2,b:2,c:'B'},{a:1,b:4,c:'B'},{a:2.2,b:3,c:'B'},{a:3,b:3,c:'B'}
   ]
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'line', x : 'a', y : 'b', color:'c'}
@@ -209,7 +209,7 @@
     {a:'2012-01-06',b:3,c:'B'},
     {a:'2012-01-07',b:3,c:'B'}
   ]
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'path', x : 'a', y : 'b'}
@@ -223,7 +223,7 @@
     {a:1,b:5,c:'A'},{a:3,b:4,c:'A'},{a:2,b:3,c:'A'}
     {a:2,b:2,c:'B'},{a:1,b:4,c:'B'},{a:2.2,b:3,c:'B'},{a:3,b:3,c:'B'}
   ]
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'path', x : 'a', y : 'b', color:'c'}

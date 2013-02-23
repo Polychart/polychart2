@@ -40,7 +40,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -73,7 +73,7 @@
   this.examples.area_missing = function(dom) {
     var data;
     data = polyjs.data({
-      json: [
+      data: [
         {
           a: 4,
           b: 2,
@@ -157,7 +157,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -192,7 +192,7 @@
         value: Math.random() * 10
       });
       data.update({
-        json: jsondata
+        data: jsondata
       });
       return setTimeout(update, 1000);
     };
@@ -232,7 +232,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -272,7 +272,7 @@
         i++;
       }
       data.update({
-        json: jsondata
+        data: jsondata
       });
       return setTimeout(update, 1000);
     };
@@ -307,7 +307,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -350,7 +350,7 @@
           value: Math.random() * 10
         });
         spec.layers[0].data.update({
-          json: jsondata
+          data: jsondata
         });
         c.make(spec);
       }
@@ -365,7 +365,7 @@
   this.examples.bar_missing = function(dom) {
     var data;
     data = polyjs.data({
-      json: [
+      data: [
         {
           a: 4,
           b: 2,
@@ -449,7 +449,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -494,7 +494,7 @@
         value: Math.random() * 10
       });
       data.update({
-        json: jsondata
+        data: jsondata
       });
       return setTimeout(update, 1000);
     };
@@ -520,7 +520,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -564,7 +564,7 @@
         value: Math.random() * 10
       });
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -586,7 +586,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -643,7 +643,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -676,7 +676,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -719,7 +719,7 @@
         value: Math.random() * 10
       });
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -742,7 +742,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -779,7 +779,7 @@
         value: Math.random() * 10
       });
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -789,9 +789,7 @@
 
   this.examples.bar_ajax_csv = function(dom) {
     var c, data, spec;
-    data = polyjs.data({
-      url: "data/test.csv"
-    });
+    data = polyjs.data.url("data/test.csv");
     spec = {
       layers: [
         {
@@ -820,7 +818,7 @@
       };
     };
     data = polyjs.data({
-      json: (function() {
+      data: (function() {
         var _i, _results;
         _results = [];
         for (i = _i = 0; _i <= 5000; i = ++_i) {
@@ -858,7 +856,7 @@
       };
     };
     data = polyjs.data({
-      json: (function() {
+      data: (function() {
         var _i, _results;
         _results = [];
         for (i = _i = 0; _i <= 500; i = ++_i) {
@@ -904,7 +902,7 @@
       };
     };
     data = polyjs.data({
-      json: (function() {
+      data: (function() {
         var _i, _results;
         _results = [];
         for (i = _i = 0; _i <= 5000; i = ++_i) {
@@ -960,7 +958,7 @@
   this.examples.box = function(dom) {
     var data;
     data = polyjs.data({
-      json: datafn2(100)
+      data: datafn2(100)
     });
     return polyjs.chart({
       layers: [
@@ -978,7 +976,7 @@
   this.examples.box_polar = function(dom) {
     var data;
     data = polyjs.data({
-      json: datafn2(100)
+      data: datafn2(100)
     });
     return polyjs.chart({
       layers: [
@@ -999,7 +997,7 @@
   this.examples.box_small = function(dom) {
     var data;
     data = polyjs.data({
-      json: datafn2(8)
+      data: datafn2(8)
     });
     return polyjs.chart({
       layers: [
@@ -1047,7 +1045,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -1103,7 +1101,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -1145,7 +1143,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -1190,7 +1188,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -1236,7 +1234,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -1281,7 +1279,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -1321,7 +1319,7 @@
   this.examples.funnel = function(dom) {
     var c, data;
     data = polyjs.data({
-      json: {
+      data: {
         segment: ["FirstTime", "FirstTime", "FirstTime", "Return", "Return", "Return", "4+", "4+", "4+"],
         source: ["Referral", "LinkedIn", "Cold Call", "Referral", "LinkedIn", "Cold Call", "Referral", "LinkedIn", "Cold Call"],
         value: [10, 15, 20, 5, 10, 18, 3, 5, 8]
@@ -1385,7 +1383,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -1449,7 +1447,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -1486,7 +1484,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -1524,7 +1522,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -1574,7 +1572,7 @@
       return _results;
     };
     data = polyjs.data({
-      json: datafn()
+      data: datafn()
     });
     spec = {
       layers: [
@@ -1594,7 +1592,7 @@
   this.examples.interact_twocharts = function(dom, dom2) {
     var c1, c2, data1, data2, spec1, spec2;
     data1 = polyjs.data({
-      json: [
+      data: [
         {
           city: 'tomato',
           area: 235
@@ -1608,7 +1606,7 @@
       ]
     });
     data2 = polyjs.data({
-      json: [
+      data: [
         {
           city: 'tomato',
           month: 1,
@@ -1757,7 +1755,7 @@
   this.examples.interact_drilldown = function(dom) {
     var c, data;
     data = polyjs.data({
-      json: [
+      data: [
         {
           country: 'Canada',
           region: 'Ontario',
@@ -1843,7 +1841,7 @@
   }
 
   data = polyjs.data({
-    json: (function() {
+    data: (function() {
       var _i, _results;
       _results = [];
       for (i = _i = 0; _i <= 10; i = ++_i) {
@@ -2046,7 +2044,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -2087,7 +2085,7 @@
         value: Math.random() * 10
       });
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -2098,7 +2096,7 @@
   this.examples.line_missing2 = function(dom) {
     var data;
     data = polyjs.data({
-      json: [
+      data: [
         {
           a: 2,
           b: null
@@ -2133,7 +2131,7 @@
   this.examples.line_missing = function(dom) {
     var data;
     data = polyjs.data({
-      json: [
+      data: [
         {
           a: 2,
           b: 4
@@ -2188,7 +2186,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -2217,7 +2215,7 @@
       jsondata.shift();
       jsondata.push(next());
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -2239,7 +2237,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -2284,7 +2282,7 @@
         value: Math.random() * 10
       });
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -2306,7 +2304,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -2350,7 +2348,7 @@
         value: Math.random() * 10
       });
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -2372,7 +2370,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -2421,7 +2419,7 @@
         value: Math.random() * 10
       });
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -2443,7 +2441,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -2488,7 +2486,7 @@
         value: Math.random() * 10
       });
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -2530,7 +2528,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -2581,7 +2579,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -2631,7 +2629,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -2697,7 +2695,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     return polyjs.chart({
       layers: [
@@ -2746,7 +2744,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     return polyjs.chart({
       layers: [
@@ -2794,7 +2792,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     return polyjs.chart({
       layers: [
@@ -2856,7 +2854,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     return polyjs.chart({
       layers: [
@@ -2900,7 +2898,7 @@
         return _results;
       })();
       data = polyjs.data({
-        json: jsondata
+        data: jsondata
       });
       sampleLayer = {
         data: data,
@@ -2981,7 +2979,7 @@
       var newspec;
       newspec = spec();
       initspec.layers[0].data.update({
-        json: newspec.data
+        data: newspec.data
       });
       c.make(newspec.spec);
       return setTimeout(redraw, 1000);
@@ -2992,7 +2990,7 @@
   this.examples.point_missing = function(dom) {
     var data;
     data = polyjs.data({
-      json: [
+      data: [
         {
           a: 2,
           b: 4
@@ -3039,7 +3037,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     c = polyjs.chart({
       layer: {
@@ -3073,7 +3071,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     sampleLayer = {
       dom: dom,
@@ -3109,7 +3107,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     sampleLayer = {
       data: data,
@@ -3142,7 +3140,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     sampleLayer = {
       data: data,
@@ -3202,7 +3200,7 @@
   this.examples.population = function(dom, dom2, dom3) {
     var breakdown, breakdown_spec, polyd, show_breakdown, show_country, today, today_spec, yearly, yearly_spec, yscale_toggle;
     polyd = polyjs.data({
-      json: data
+      data: data
     });
     polyd.derive((function(x) {
       if (x.year < 2012) {
@@ -3428,7 +3426,7 @@
   this.examples.popy_polar = function(dom) {
     var c, data;
     data = polyjs.data({
-      json: [
+      data: [
         {
           gr: "Overall",
           p: 60,
@@ -3494,7 +3492,7 @@
   this.examples.popy_gr = function(dom) {
     var c, data;
     data = polyjs.data({
-      json: [
+      data: [
         {
           gr: "Grade 9",
           p: 10
@@ -3561,7 +3559,7 @@
   this.examples.popy_interests = function(dom) {
     var c, data;
     data = polyjs.data({
-      json: [
+      data: [
         {
           gr: "Health Care",
           num: 500
@@ -3628,7 +3626,7 @@
   this.examples.popy_intexp = function(dom) {
     var c, data;
     data = polyjs.data({
-      json: [
+      data: [
         {
           gr: "Health Care",
           num: 500,
@@ -3727,7 +3725,7 @@
   this.examples.popy_rating = function(dom) {
     var c, data;
     data = polyjs.data({
-      json: [
+      data: [
         {
           gr: "Excellent",
           num: 500
@@ -3776,7 +3774,7 @@
   this.examples.popy_rating_pie = function(dom) {
     var c, data;
     data = polyjs.data({
-      json: [
+      data: [
         {
           gr: "Excellent",
           num: 500
@@ -3848,7 +3846,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -3889,7 +3887,7 @@
         value: Math.random() * 10
       });
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -3900,7 +3898,7 @@
   this.examples.spline_missing2 = function(dom) {
     var data;
     data = polyjs.data({
-      json: [
+      data: [
         {
           a: 2,
           b: null
@@ -3935,7 +3933,7 @@
   this.examples.spline_missing = function(dom) {
     var data;
     data = polyjs.data({
-      json: [
+      data: [
         {
           a: 2,
           b: 4
@@ -3990,7 +3988,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -4019,7 +4017,7 @@
       jsondata.shift();
       jsondata.push(next());
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -4041,7 +4039,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -4086,7 +4084,7 @@
         value: Math.random() * 10
       });
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -4128,7 +4126,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -4179,7 +4177,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -4229,7 +4227,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -4281,10 +4279,10 @@
       return _results;
     })();
     hdata = polyjs.data({
-      json: jshdata
+      data: jshdata
     });
     vdata = polyjs.data({
-      json: jsvdata
+      data: jsvdata
     });
     htooltip = function(item) {
       var date, indexTime, windValue;
@@ -4370,7 +4368,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -4414,7 +4412,7 @@
         value: Math.random() * 10
       });
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -4436,7 +4434,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -4485,7 +4483,7 @@
         value: Math.random() * 10
       });
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -4507,7 +4505,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -4552,7 +4550,7 @@
         value: Math.random() * 10
       });
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -4574,7 +4572,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spline_tool = function(item) {
       var square, tooltip;
@@ -4615,7 +4613,7 @@
       return _results;
     })();
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     spec = {
       layers: [
@@ -4656,7 +4654,7 @@
         value: Math.random() * 10
       });
       spec.layers[0].data.update({
-        json: jsondata
+        data: jsondata
       });
       c.make(spec);
       return setTimeout(redraw, 1000);
@@ -4688,7 +4686,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     sampleLayer = {
       data: data,
@@ -4732,7 +4730,7 @@
       }
     ];
     data = polyjs.data({
-      json: jsondata
+      data: jsondata
     });
     sampleLayer = {
       data: data,
@@ -4798,7 +4796,7 @@
   this.examples.tiles = function(dom) {
     var c, data, spec;
     data = polyjs.data({
-      json: datafn()
+      data: datafn()
     });
     spec = {
       layers: [
@@ -4818,7 +4816,7 @@
   this.examples.tiles_bw = function(dom) {
     var c, data, spec;
     data = polyjs.data({
-      json: datafn()
+      data: datafn()
     });
     spec = {
       layers: [
@@ -4847,7 +4845,7 @@
   this.examples.tiles_g2 = function(dom) {
     var c, data, spec;
     data = polyjs.data({
-      json: datafn()
+      data: datafn()
     });
     spec = {
       layers: [
@@ -4877,7 +4875,7 @@
   this.examples.tiles_custom = function(dom) {
     var c, data, spec;
     data = polyjs.data({
-      json: datafn()
+      data: datafn()
     });
     spec = {
       layers: [

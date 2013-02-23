@@ -2,7 +2,7 @@
 
 @examples.popy_polar = (dom) ->
   data = polyjs.data
-    json:
+    data:
       [
         {gr: "Overall", p: 60, colgrp: '1'},
         {gr: "Grade 9", p: 10, colgrp: '2'},
@@ -32,7 +32,7 @@
 
 @examples.popy_gr = (dom) ->
   data = polyjs.data
-    json:
+    data:
       [
         {gr: "Grade 9", p: 10},
         {gr: "Grade 10", p: 40},
@@ -58,7 +58,7 @@
 
 @examples.popy_interests = (dom) ->
   data = polyjs.data
-    json:
+    data:
       [
         {gr: "Health Care", num: 500}
         {gr: "Events", num: 400}
@@ -84,7 +84,7 @@
 
 @examples.popy_intexp = (dom) ->
   data = polyjs.data
-    json:
+    data:
       [
         {gr: "Health Care", num: 500, type: 'Interest'}
         {gr: "Events", num: 400, type: 'Interest'}
@@ -116,7 +116,7 @@
 
 @examples.popy_rating = (dom) ->
   data = polyjs.data
-    json:
+    data:
       [
         {gr: "Excellent", num: 500}
         {gr: "Very Good", num: 400}
@@ -137,7 +137,7 @@
 
 @examples.popy_rating_pie = (dom) ->
   data = polyjs.data
-    json:
+    data:
       [
         {gr: "Excellent", num: 500}
         {gr: "Very Good", num: 400}

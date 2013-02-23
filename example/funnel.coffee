@@ -2,7 +2,7 @@
 
 @examples.funnel = (dom) ->
   data = polyjs.data
-    json:
+    data:
       segment: ["FirstTime", "FirstTime", "FirstTime", "Return", "Return", "Return", "4+", "4+", "4+"],
       source: ["Referral", "LinkedIn", "Cold Call","Referral", "LinkedIn", "Cold Call","Referral", "LinkedIn", "Cold Call"],
       value: [10,15,20,5,10,18,3,5,8]

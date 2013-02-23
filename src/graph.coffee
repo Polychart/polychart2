@@ -70,7 +70,8 @@ class Graph
     merge = _.after(spec.layers.length, @merge)
     @dataprocess = {}
     @processedData = {}
-    for layerSpec, id in spec.layers
+    _.each spec.layers, (layerSpec, id) =>
+      # using _ instead of a for loop to scope the id
       spec = @spec.layers[id] #repeated
       @dataprocess[id] = new poly.DataProcess spec, @facet.specgroups, spec.strict
       @dataprocess[id].make spec, @facet.specgroups, (statData, metaData) =>

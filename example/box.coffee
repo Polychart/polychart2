@@ -7,7 +7,7 @@ datafn2 = (lim) ->
   (item(i) for i in [0..lim])
 
 @examples.box = (dom) ->
-  data = polyjs.data json:datafn2(100)
+  data = polyjs.data data:datafn2(100)
   polyjs.chart
     layers: [
       data: data
@@ -18,7 +18,7 @@ datafn2 = (lim) ->
     dom: dom
 
 @examples.box_polar = (dom) ->
-  data = polyjs.data json:datafn2(100)
+  data = polyjs.data data:datafn2(100)
   polyjs.chart
     layers: [
       data: data
@@ -30,7 +30,7 @@ datafn2 = (lim) ->
     coord: { type: 'polar' }
 
 @examples.box_small = (dom) ->
-  data = polyjs.data json:datafn2(8)
+  data = polyjs.data data:datafn2(8)
   polyjs.chart
     layers: [
       data: data

@@ -2,7 +2,7 @@
 
 @examples.bar = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'bar', x : 'index', y : 'value', id: 'index', opacity:'value'}
@@ -21,7 +21,7 @@
     if type == 'reset'
       jsondata.shift()
       jsondata.push({index:i++, value:Math.random()*10})
-      spec.layers[0].data.update json: jsondata
+      spec.layers[0].data.update data: jsondata
       c.make spec
     if type == 'click'
       debugger
@@ -30,7 +30,7 @@
   window.c = c
  
 @examples.bar_missing = (dom) ->
-  data = polyjs.data json: [
+  data = polyjs.data data: [
     {a: 4, b: 2, c: 'B'}
     {a: 5, b: 7, c: 'B'}
     {a: 10, b: 2, c: 'B'}
@@ -53,7 +53,7 @@
 
 @examples.bar_flip = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'bar', x : 'index', y : 'value', id: 'index', opacity:'value'}
@@ -71,7 +71,7 @@
   update = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    data.update json:jsondata
+    data.update data:jsondata
     setTimeout(update, 1000)
   setTimeout(update, 1000)
 
@@ -81,7 +81,7 @@
 
 @examples.bar_polar = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'bar', x : 'index', y : 'value', id: 'index'}
@@ -99,14 +99,14 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
 @examples.bar_static = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       { data: data, type: 'bar', x : 'index', y : 'value', id: 'index'}
@@ -123,7 +123,7 @@
 @examples.bar_dodge = (dom) ->
   o = (i) -> if i%2 is 0 then 'yay' else 'no'
   jsondata = ({index:i%3, value:Math.random()*10, o: o(i)} for i in [0..10])
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       data: data, type: 'bar',
@@ -138,7 +138,7 @@
   jsondata = (
     {index:i, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10} for i in [0..5]
   )
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       data: data
@@ -159,7 +159,7 @@
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10})
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
@@ -168,7 +168,7 @@
   jsondata = (
     {index:i, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10} for i in [0..10]
   )
-  data = polyjs.data json:jsondata
+  data = polyjs.data data:jsondata
   spec = {
     layers: [
       data: data
@@ -186,13 +186,13 @@
 
   redraw = () ->
     jsondata.push({index:i++, two:(if i%2 is 0 then 'a' else 'b'), value:Math.random()*10})
-    spec.layers[0].data.update json:jsondata
+    spec.layers[0].data.update data:jsondata
     c.make spec
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
 @examples.bar_ajax_csv = (dom) ->
-  data = polyjs.data url:"data/test.csv"
+  data = polyjs.data.url "data/test.csv"
   spec = {
     layers: [
       data: data
@@ -211,7 +211,7 @@
     time: moment().add('minutes', Math.random()*206232).unix()
     value: Math.random()*2
   data = polyjs.data
-    json:(point() for i in [0..5000])
+    data:(point() for i in [0..5000])
     meta: { time: { type: 'date', format: 'unix' } }
   spec = {
     layers: [
@@ -229,7 +229,7 @@
     time: moment().add('minutes', Math.random()*23803).unix()
     value: Math.random()
   data = polyjs.data
-    json:(point() for i in [0..500])
+    data:(point() for i in [0..500])
     meta: { time: { type: 'date', format: 'unix' } }
   spec = {
     layers: [ {
@@ -254,7 +254,7 @@
     time: moment().add('minutes', Math.random()*206232*4).unix()
     value: Math.random()*2
   data = polyjs.data
-    json:(point() for i in [0..5000])
+    data:(point() for i in [0..5000])
     meta: { time: { type: 'date', format: 'unix' } }
   spec = {
     layers: [

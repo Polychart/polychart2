@@ -1,6 +1,6 @@
 @examples ?= {}
 
-data = polyjs.data json:({index:i, k:""+i%2, value:Math.random()*10} for i in [0..10])
+data = polyjs.data data:({index:i, k:""+i%2, value:Math.random()*10} for i in [0..10])
 
 @examples.test_layerchange = (dom) ->
   spec1 = {

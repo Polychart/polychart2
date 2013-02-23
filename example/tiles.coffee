@@ -11,7 +11,7 @@ datafn = () ->
   (item(i) for i in [0..24])
 
 @examples.tiles = (dom) ->
-  data = polyjs.data json:datafn()
+  data = polyjs.data data:datafn()
   spec = {
     layers: [
       data: data
@@ -25,7 +25,7 @@ datafn = () ->
   c = polyjs.chart spec
 
 @examples.tiles_bw = (dom) ->
-  data = polyjs.data json:datafn()
+  data = polyjs.data data:datafn()
   spec = {
     layers: [
       data: data
@@ -41,7 +41,7 @@ datafn = () ->
   c = polyjs.chart spec
 
 @examples.tiles_g2 = (dom) ->
-  data = polyjs.data json:datafn()
+  data = polyjs.data data:datafn()
   spec = {
     layers: [
       data: data
@@ -57,7 +57,7 @@ datafn = () ->
   c = polyjs.chart spec
 
 @examples.tiles_custom = (dom) ->
-  data = polyjs.data json:datafn()
+  data = polyjs.data data:datafn()
   spec = {
     layers: [
       data: data
