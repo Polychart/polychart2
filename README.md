@@ -63,6 +63,18 @@ Polychart2.js uses the following libraries internally.
 Other libraries in the lib/ directory are included for the test and example
 scripts.
 
+Testing
+-------
+When developing locally, note that your browser may enforce strict permissions
+for reading files out of the local file system. Thus to run the examples that
+fetches data from the backend, run Python's built-in web server:
+
+```
+python -m SimpleHTTPServer 8888
+```
+
+Once this is running, go to http://localhost:8888/.
+
 License
 -------
 
