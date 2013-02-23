@@ -11,7 +11,7 @@ test "point", ->
       data: data, type: 'point', x: 'x', y: 'y'
     ]
   graph = polyjs.debug.chart spec
-  layer = graph.panes[""].layers[0]
+  layer = graph.facet.panes[""].layers[0]
 
   equal layer.geoms[0].marks[0].type, 'circle'
   equal layer.geoms[0].marks[0].x, 2
@@ -40,7 +40,7 @@ test "lines", ->
       data: data, type: 'line', x: 'x', y: 'y'
     ]
   graph = polyjs.debug.chart spec
-  layer = graph.panes[""].layers[0]
+  layer = graph.facet.panes[""].layers[0]
 
   equal layer.geoms[0].marks[0].type, 'line'
   deepEqual layer.geoms[0].marks[0].x, [2, 3]
@@ -62,7 +62,7 @@ test "lines", ->
       data: data, type: 'line', x: 'x', y: 'y', color: 'z'
     ]
   graph = polyjs.debug.chart spec
-  layer = graph.panes[""].layers[0]
+  layer = graph.facet.panes[""].layers[0]
 
   equal layer.geoms[0].marks[0].type, 'line'
   deepEqual layer.geoms[0].marks[0].x, [2, 3, 1, 5]
@@ -86,7 +86,7 @@ test "bars", ->
       data: data, type: 'bar', x: 'x', y: 'y', id: 'z'
     ]
   graph = polyjs.debug.chart spec
-  layer = graph.panes[""].layers[0]
+  layer = graph.facet.panes[""].layers[0]
 
   equal layer.geoms['foo'].marks[0].type, 'rect'
   deepEqual layer.geoms['foo'].marks[0].x[0] , polyjs.debug.const.scaleFns.lower 'A'

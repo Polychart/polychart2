@@ -47,10 +47,10 @@ test "flatten", ->
 
 test "strSize", ->
   deepEqual polyjs.debug.strSize(''), 0
-  deepEqual polyjs.debug.strSize('a'), 7
-  deepEqual polyjs.debug.strSize('   '), 21
-  deepEqual polyjs.debug.strSize('foo bar'), 49
-  deepEqual polyjs.debug.strSize('\'"'), 14
+  deepEqual polyjs.debug.strSize('a'), 6
+  deepEqual polyjs.debug.strSize('   '), 18
+  deepEqual polyjs.debug.strSize('foo bar'), 42
+  deepEqual polyjs.debug.strSize('\'"'), 12
 
 test "sortArrays", ->
   numcomp = polyjs.debug.type.compare('num')

@@ -16,7 +16,7 @@ test "domain: strict mode num & cat", ->
       x: { type: 'num', min: 2, max: 4, bw : 3 }
       y: { type: 'cat', levels: [1,2,3], labels: {1: 'One', 2: 'Five'} }
   graph = polyjs.debug.chart spec
-  domains = graph.panes[""].domains
+  domains = graph.facet.panes[""].domains
   equal domains.x.type, 'num'
   equal domains.x.min , 2
   equal domains.x.max, 4
@@ -40,7 +40,7 @@ test "scale: x and v:", ->
       x: { type: 'num', min: 2, max: 4, bw : 3 }
       y: { type: 'num', min: 1, max: 3 }
   graph = polyjs.debug.chart spec
-  domains = graph.panes[""].domains
+  domains = graph.facet.panes[""].domains
 
   equal domains.x.type, 'num'
   equal domains.x.min , 2
