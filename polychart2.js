@@ -5310,7 +5310,7 @@ of a dataset, or knows how to retrieve data from some source.
   };
 
   _getCSV = function(str, meta) {
-    return _getObject(poly.csv.parse(str));
+    return _getArray(poly.csv.parse(str), meta);
   };
 
   /*
@@ -5645,10 +5645,29 @@ of a dataset, or knows how to retrieve data from some source.
       if (this.raw != null) {
         return callback(this);
       }
-      return poly.csv(this.url, function(csv) {
-        debugger;
-        var _ref;
-        _ref = _getArray(csv, {}), _this.key = _ref.key, _this.raw = _ref.raw, _this.meta = _ref.meta;
+      return poly.text(this.url, function(blob) {
+        var data, meta, _ref, _ref1, _ref2;
+        try {
+          blob = JSON.parse(blob);
+        } catch (e) {
+
+        }
+        if (_.isObject(blob) && _.keys(blob).length < 4 && 'data' in blob) {
+          data = blob.data;
+          meta = blob.meta;
+        } else {
+          data = blob;
+          meta = {};
+        }
+        if (_.isString(data)) {
+          _ref = _getCSV(data, meta), _this.key = _ref.key, _this.raw = _ref.raw, _this.meta = _ref.meta;
+        } else if (_.isArray(data)) {
+          _ref1 = _getArray(data, meta), _this.key = _ref1.key, _this.raw = _ref1.raw, _this.meta = _ref1.meta;
+        } else if (_.isObject(data)) {
+          _ref2 = _getObject(data, meta), _this.key = _ref2.key, _this.raw = _ref2.raw, _this.meta = _ref2.meta;
+        } else {
+          poly.error.data("Unknown data format.");
+        }
         return callback(_this);
       });
     };

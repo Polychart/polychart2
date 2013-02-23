@@ -191,6 +191,21 @@
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
+@examples.bar_ajax_js= (dom) ->
+  data = polyjs.data.url "data/test.json"
+  spec = {
+    layers: [
+      data: data
+      type: 'bar'
+      x: 'A'
+      y: 'B'
+    ]
+    dom: dom
+    guide:
+      y: {type: 'num'}
+  }
+  c = polyjs.chart spec
+
 @examples.bar_ajax_csv = (dom) ->
   data = polyjs.data.url "data/test.csv"
   spec = {

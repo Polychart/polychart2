@@ -75,7 +75,7 @@ _getObject = (json, meta) ->
   {key, raw, meta}
 
 _getCSV = (str, meta) ->
-  _getObject poly.csv.parse str
+  _getArray poly.csv.parse(str), meta
 
 ###
 Classes
@@ -228,9 +228,26 @@ class BackendData extends AbstractData
     {@url} = params
   getData: (callback) =>
     if @raw? then return callback @
-    poly.csv @url, (csv) =>
-      debugger
-      {@key, @raw, @meta} = _getArray csv, {}
+    poly.text @url, (blob) =>
+      try
+        blob = JSON.parse(blob)
+      catch e
+        # Guess "e" is not a JSON object!
+      # TODO: refactor this. repeat code from poly.data
+      if _.isObject(blob) and _.keys(blob).length < 4 and 'data' of blob
+        data = blob.data
+        meta = blob.meta
+      else
+        data = blob
+        meta = {}
+      if _.isString(data)
+        {@key, @raw, @meta} = _getCSV data, meta
+      else if _.isArray(data)
+        {@key, @raw, @meta} = _getArray data, meta
+      else if _.isObject(data)
+        {@key, @raw, @meta} = _getObject data, meta
+      else
+        poly.error.data "Unknown data format."
       callback @
   update: (params) ->
     @raw = null

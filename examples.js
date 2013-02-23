@@ -787,6 +787,28 @@
     return setTimeout(redraw, 1000);
   };
 
+  this.examples.bar_ajax_js = function(dom) {
+    var c, data, spec;
+    data = polyjs.data.url("data/test.json");
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: 'A',
+          y: 'B'
+        }
+      ],
+      dom: dom,
+      guide: {
+        y: {
+          type: 'num'
+        }
+      }
+    };
+    return c = polyjs.chart(spec);
+  };
+
   this.examples.bar_ajax_csv = function(dom) {
     var c, data, spec;
     data = polyjs.data.url("data/test.csv");
