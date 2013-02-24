@@ -5228,9 +5228,10 @@ of a dataset, or knows how to retrieve data from some source.
     });
   };
 
-  poly.data.url = function(url) {
+  poly.data.url = function(url, computeBackend) {
     return new BackendData({
-      url: url
+      url: url,
+      computeBackend: computeBackend
     });
   };
 
@@ -5327,6 +5328,7 @@ of a dataset, or knows how to retrieve data from some source.
       this.meta = {};
       this.key = [];
       this.subscribed = [];
+      this.computeBackend = false;
     }
 
     AbstractData.prototype.update = function() {
@@ -5636,16 +5638,23 @@ of a dataset, or knows how to retrieve data from some source.
 
     function BackendData(params) {
       this.getData = __bind(this.getData, this);
+
+      var _ref;
       BackendData.__super__.constructor.call(this);
-      this.url = params.url;
+      this.url = params.url, this.computeBackend = params.computeBackend;
+      if ((_ref = this.computeBackend) == null) {
+        this.computeBackend = false;
+      }
     }
 
-    BackendData.prototype.getData = function(callback) {
-      var _this = this;
+    BackendData.prototype.getData = function(callback, dataSpec) {
+      var chr, url,
+        _this = this;
       if (this.raw != null) {
         return callback(this);
       }
-      return poly.text(this.url, function(blob) {
+      url = dataSpec ? (chr = _.indexOf("?") === -1 ? '?' : '&', this.url + ("" + chr + "spec=" + (JSON.dumps(dataSpec)))) : this.url;
+      return poly.text(url, function(blob) {
         var data, meta, _ref, _ref1, _ref2;
         try {
           blob = JSON.parse(blob);
@@ -6140,8 +6149,8 @@ data processing to be done.
   */
 
 
-  backendProcess = function(dataSpec, rawData, callback) {
-    return console.log('backendProcess');
+  backendProcess = function(dataSpec, dataObj, callback) {
+    return dataObj.getData(callback, dataSpec);
   };
 
   /*

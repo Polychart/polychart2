@@ -257,9 +257,8 @@ frontendProcess = (dataSpec, data, callback) ->
 ###
 Perform the necessary computation in the backend
 ###
-backendProcess = (dataSpec, rawData, callback) ->
-  # computation
-  console.log 'backendProcess'
+backendProcess = (dataSpec, dataObj, callback) ->
+  dataObj.getData callback, dataSpec
 
 ###
 For debug purposes only

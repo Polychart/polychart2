@@ -31,8 +31,8 @@ poly.data.json = (data, meta) ->
 poly.data.csv = (data, meta) ->
   new FrontendData csv: data, meta:meta
 
-poly.data.url = (url) ->
-  new BackendData {url}
+poly.data.url = (url, computeBackend) ->
+  new BackendData {url, computeBackend}
 
 ###
 Helper functions
@@ -87,6 +87,7 @@ class AbstractData
     @meta = {}
     @key = []
     @subscribed = []
+    @computeBackend = false
   update: () ->
     fn() for fn in @subscribed
   subscribe: (h) ->
@@ -225,10 +226,21 @@ class FrontendData extends AbstractData
 class BackendData extends AbstractData
   constructor: (params) ->
     super()
-    {@url} = params
-  getData: (callback) =>
+    {@url, @computeBackend} = params
+    @computeBackend ?= false
+
+  # retrieve data from backend
+  #   @callback - the callback function once data is retrieved
+  #   @params - additional parameters to send to the backend
+  getData: (callback, dataSpec) =>
     if @raw? then return callback @
-    poly.text @url, (blob) =>
+    url =
+      if dataSpec
+        chr = if _.indexOf("?") is -1 then '?' else '&'
+        @url+"#{chr}spec=#{JSON.dumps(dataSpec)}"
+      else
+        @url
+    poly.text url, (blob) =>
       try
         blob = JSON.parse(blob)
       catch e
