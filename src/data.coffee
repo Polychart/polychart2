@@ -38,6 +38,7 @@ poly.data.url = (url, computeBackend) ->
 Helper functions
 ###
 _getArray = (json, meta) ->
+  # array of objects [{foo:2, bar:4}, {foo:2, bar:3}, ...]
   if json.length > 0
     keys = _.union _.keys(meta), _.keys(json[0])
     first100 = json[0..99]
@@ -47,10 +48,41 @@ _getArray = (json, meta) ->
         meta[key].type = poly.type.impute _.pluck(first100, key)
     for item in json
       for key in keys
-        if _.isString item[key]
-          item[key] = poly.type.coerce item[key], meta[key]
+        item[key] = poly.type.coerce item[key], meta[key]
     key = keys
     raw = json
+  else
+    key = _.keys(meta)
+    raw = []
+  {key, raw, meta}
+
+_getArrayOfArrays = (json, meta) ->
+  # array of arrays [[1,2,3],[1,2,3],...]
+  retobj = []
+  if json.length > 0
+    keys =
+      if meta and _.isArray(meta)
+        meta
+      else if meta and _.isObject(meta)
+        _.keys(meta)
+      else
+        _.keys(json[0])
+    if _.isArray(meta) or not _.isObject(meta)
+      meta = {}
+    first100 = json[0..99]
+    debugger
+    for key, i in keys
+      meta[key] ?= {}
+      if not meta[key].type
+        meta[key].type = poly.type.impute _.pluck(first100, i)
+    for item in json
+      newitem = {}
+      for value, i in item
+        key = keys[i]
+        newitem[key] = poly.type.coerce value, meta[key]
+      retobj.push(newitem)
+    key = keys
+    raw = retobj
   else
     key = _.keys(meta)
     raw = []
@@ -129,7 +161,10 @@ class FrontendData extends AbstractData
       if csv
         _getCSV csv, meta
       else if _.isArray json
-        _getArray json, meta
+        if json[0] and _.isArray(json[0])
+          _getArrayOfArrays json, meta
+        else
+          _getArray json, meta
       else if _.isObject json
         _getObject json, meta
   _checkRename: (from, to) ->
@@ -236,15 +271,16 @@ class BackendData extends AbstractData
     if @raw? then return callback @
     url =
       if dataSpec
-        chr = if _.indexOf("?") is -1 then '?' else '&'
-        @url+"#{chr}spec=#{JSON.dumps(dataSpec)}"
+        chr = if _.indexOf(@url, "?") is -1 then '?' else '&'
+        @url+"#{chr}spec=#{encodeURIComponent(JSON.stringify(dataSpec))}"
       else
         @url
     poly.text url, (blob) =>
       try
         blob = JSON.parse(blob)
       catch e
-        # Guess "e" is not a JSON object!
+        # Guess "blob" is not a JSON object!
+        throw poly.error.data("Unknown object returned from server!")
       # TODO: refactor this. repeat code from poly.data
       if _.isObject(blob) and _.keys(blob).length < 4 and 'data' of blob
         data = blob.data
@@ -255,11 +291,15 @@ class BackendData extends AbstractData
       if _.isString(data)
         {@key, @raw, @meta} = _getCSV data, meta
       else if _.isArray(data)
-        {@key, @raw, @meta} = _getArray data, meta
+        if data[0] and _.isArray(data[0])
+          {@key, @raw, @meta} = _getArrayOfArrays data, meta
+        else
+          {@key, @raw, @meta} = _getArray data, meta
       else if _.isObject(data)
         {@key, @raw, @meta} = _getObject data, meta
       else
         poly.error.data "Unknown data format."
+      @data = @raw # hack?
       callback @
   update: (params) ->
     @raw = null

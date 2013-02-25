@@ -26,10 +26,11 @@ class DataProcess
       @dataObj.getData (data) ->
         frontendProcess(dataSpec, data, wrappedCallback)
 
-  _wrap : (callback) => (data, metaData) =>
+  _wrap : (callback) => (params) =>
     # save a copy of the data/meta before going to callback
+    {data, meta} = params
     @statData = data
-    @metaData = metaData
+    @metaData = meta
     callback @statData, @metaData
 
 poly.DataProcess = DataProcess
@@ -252,7 +253,7 @@ frontendProcess = (dataSpec, data, callback) ->
     if not metaData[key]?
       throw poly.error.defn ("You referenced a data column #{key} that doesn't exist.")
   # done
-  callback(data, metaData)
+  callback(data:data, meta:meta)
 
 ###
 Perform the necessary computation in the backend

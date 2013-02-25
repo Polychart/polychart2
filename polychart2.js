@@ -5184,7 +5184,7 @@ of a dataset, or knows how to retrieve data from some source.
 
 
 (function() {
-  var AbstractData, BackendData, FrontendData, _getArray, _getCSV, _getObject,
+  var AbstractData, BackendData, FrontendData, _getArray, _getArrayOfArrays, _getCSV, _getObject,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
@@ -5258,13 +5258,53 @@ of a dataset, or knows how to retrieve data from some source.
         item = json[_j];
         for (_k = 0, _len2 = keys.length; _k < _len2; _k++) {
           key = keys[_k];
-          if (_.isString(item[key])) {
-            item[key] = poly.type.coerce(item[key], meta[key]);
-          }
+          item[key] = poly.type.coerce(item[key], meta[key]);
         }
       }
       key = keys;
       raw = json;
+    } else {
+      key = _.keys(meta);
+      raw = [];
+    }
+    return {
+      key: key,
+      raw: raw,
+      meta: meta
+    };
+  };
+
+  _getArrayOfArrays = function(json, meta) {
+    var first100, i, item, key, keys, newitem, raw, retobj, value, _i, _j, _k, _len, _len1, _len2, _ref;
+    retobj = [];
+    if (json.length > 0) {
+      keys = meta && _.isArray(meta) ? meta : meta && _.isObject(meta) ? _.keys(meta) : _.keys(json[0]);
+      if (_.isArray(meta) || !_.isObject(meta)) {
+        meta = {};
+      }
+      first100 = json.slice(0, 100);
+      debugger;
+      for (i = _i = 0, _len = keys.length; _i < _len; i = ++_i) {
+        key = keys[i];
+        if ((_ref = meta[key]) == null) {
+          meta[key] = {};
+        }
+        if (!meta[key].type) {
+          meta[key].type = poly.type.impute(_.pluck(first100, i));
+        }
+      }
+      for (_j = 0, _len1 = json.length; _j < _len1; _j++) {
+        item = json[_j];
+        newitem = {};
+        for (i = _k = 0, _len2 = item.length; _k < _len2; i = ++_k) {
+          value = item[i];
+          key = keys[i];
+          newitem[key] = poly.type.coerce(value, meta[key]);
+        }
+        retobj.push(newitem);
+      }
+      key = keys;
+      raw = retobj;
     } else {
       key = _.keys(meta);
       raw = [];
@@ -5449,7 +5489,7 @@ of a dataset, or knows how to retrieve data from some source.
       if (meta == null) {
         meta = {};
       }
-      return _ref = csv ? _getCSV(csv, meta) : _.isArray(json) ? _getArray(json, meta) : _.isObject(json) ? _getObject(json, meta) : void 0, this.key = _ref.key, this.raw = _ref.raw, this.meta = _ref.meta, _ref;
+      return _ref = csv ? _getCSV(csv, meta) : _.isArray(json) ? json[0] && _.isArray(json[0]) ? _getArrayOfArrays(json, meta) : _getArray(json, meta) : _.isObject(json) ? _getObject(json, meta) : void 0, this.key = _ref.key, this.raw = _ref.raw, this.meta = _ref.meta, _ref;
     };
 
     FrontendData.prototype._checkRename = function(from, to) {
@@ -5653,13 +5693,13 @@ of a dataset, or knows how to retrieve data from some source.
       if (this.raw != null) {
         return callback(this);
       }
-      url = dataSpec ? (chr = _.indexOf("?") === -1 ? '?' : '&', this.url + ("" + chr + "spec=" + (JSON.dumps(dataSpec)))) : this.url;
+      url = dataSpec ? (chr = _.indexOf(this.url, "?") === -1 ? '?' : '&', this.url + ("" + chr + "spec=" + (encodeURIComponent(JSON.stringify(dataSpec))))) : this.url;
       return poly.text(url, function(blob) {
-        var data, meta, _ref, _ref1, _ref2;
+        var data, meta, _ref, _ref1, _ref2, _ref3;
         try {
           blob = JSON.parse(blob);
         } catch (e) {
-
+          throw poly.error.data("Unknown object returned from server!");
         }
         if (_.isObject(blob) && _.keys(blob).length < 4 && 'data' in blob) {
           data = blob.data;
@@ -5671,12 +5711,17 @@ of a dataset, or knows how to retrieve data from some source.
         if (_.isString(data)) {
           _ref = _getCSV(data, meta), _this.key = _ref.key, _this.raw = _ref.raw, _this.meta = _ref.meta;
         } else if (_.isArray(data)) {
-          _ref1 = _getArray(data, meta), _this.key = _ref1.key, _this.raw = _ref1.raw, _this.meta = _ref1.meta;
+          if (data[0] && _.isArray(data[0])) {
+            _ref1 = _getArrayOfArrays(data, meta), _this.key = _ref1.key, _this.raw = _ref1.raw, _this.meta = _ref1.meta;
+          } else {
+            _ref2 = _getArray(data, meta), _this.key = _ref2.key, _this.raw = _ref2.raw, _this.meta = _ref2.meta;
+          }
         } else if (_.isObject(data)) {
-          _ref2 = _getObject(data, meta), _this.key = _ref2.key, _this.raw = _ref2.raw, _this.meta = _ref2.meta;
+          _ref3 = _getObject(data, meta), _this.key = _ref3.key, _this.raw = _ref3.raw, _this.meta = _ref3.meta;
         } else {
           poly.error.data("Unknown data format.");
         }
+        _this.data = _this.raw;
         return callback(_this);
       });
     };
@@ -5738,9 +5783,11 @@ data processing to be done.
 
     DataProcess.prototype._wrap = function(callback) {
       var _this = this;
-      return function(data, metaData) {
+      return function(params) {
+        var data, meta;
+        data = params.data, meta = params.meta;
         _this.statData = data;
-        _this.metaData = metaData;
+        _this.metaData = meta;
         return callback(_this.statData, _this.metaData);
       };
     };
@@ -6141,7 +6188,10 @@ data processing to be done.
         throw poly.error.defn("You referenced a data column " + key + " that doesn't exist.");
       }
     }
-    return callback(data, metaData);
+    return callback({
+      data: data,
+      meta: meta
+    });
   };
 
   /*
