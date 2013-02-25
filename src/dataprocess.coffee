@@ -253,7 +253,7 @@ frontendProcess = (dataSpec, data, callback) ->
     if not metaData[key]?
       throw poly.error.defn ("You referenced a data column #{key} that doesn't exist.")
   # done
-  callback(data:data, meta:meta)
+  callback(data:data, meta:metaData)
 
 ###
 Perform the necessary computation in the backend

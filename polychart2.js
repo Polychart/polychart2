@@ -5283,7 +5283,6 @@ of a dataset, or knows how to retrieve data from some source.
         meta = {};
       }
       first100 = json.slice(0, 100);
-      debugger;
       for (i = _i = 0, _len = keys.length; _i < _len; i = ++_i) {
         key = keys[i];
         if ((_ref = meta[key]) == null) {
@@ -6190,7 +6189,7 @@ data processing to be done.
     }
     return callback({
       data: data,
-      meta: meta
+      meta: metaData
     });
   };
 

@@ -70,7 +70,6 @@ _getArrayOfArrays = (json, meta) ->
     if _.isArray(meta) or not _.isObject(meta)
       meta = {}
     first100 = json[0..99]
-    debugger
     for key, i in keys
       meta[key] ?= {}
       if not meta[key].type
