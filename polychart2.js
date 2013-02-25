@@ -5206,7 +5206,7 @@ of a dataset, or knows how to retrieve data from some source.
     if (_.isObject(data || _.isArray(data))) {
       return poly.data.json(data, meta);
     } else if (_.isString(data)) {
-      if (poly.isURL(data)) {
+      if (poly.isURI(data)) {
         return poly.data.csv(data, meta);
       } else {
         return poly.data.csv(data, meta);
