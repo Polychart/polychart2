@@ -31,8 +31,8 @@ poly.data.json = (data, meta) ->
 poly.data.csv = (data, meta) ->
   new FrontendData csv: data, meta:meta
 
-poly.data.url = (url, computeBackend) ->
-  new BackendData {url, computeBackend}
+poly.data.url = (url, computeBackend, limit) ->
+  new BackendData {url, computeBackend, limit}
 
 ###
 Helper functions
@@ -215,7 +215,7 @@ class FrontendData extends AbstractData
     for item in @raw
       if fn item
         newdata.push item
-    newobj = poly.data json: newdata, meta: @meta
+    newobj = poly.data.json newdata, @meta
     newobj
   sort: (key, desc) ->
     type = @type key
@@ -223,7 +223,7 @@ class FrontendData extends AbstractData
     sortfn = poly.type.compare(type)
     newdata.sort (a,b) -> sortfn a[key], b[key]
     if desc then newdata.reverse()
-    newobj = poly.data json: newdata, meta: @meta
+    newobj = poly.data.json newdata, @meta
     newobj
   derive: (fnstr, key, opts) ->
     opts ?= {}
@@ -260,7 +260,8 @@ class FrontendData extends AbstractData
 class BackendData extends AbstractData
   constructor: (params) ->
     super()
-    {@url, @computeBackend} = params
+    {@url, @computeBackend, @limit} = params
+    @limit ?= 1000
     @computeBackend ?= false
 
   # retrieve data from backend
@@ -268,12 +269,10 @@ class BackendData extends AbstractData
   #   @params - additional parameters to send to the backend
   getData: (callback, dataSpec) =>
     if @raw? then return callback @
-    url =
-      if dataSpec
-        chr = if _.indexOf(@url, "?") is -1 then '?' else '&'
-        @url+"#{chr}spec=#{encodeURIComponent(JSON.stringify(dataSpec))}"
-      else
-        @url
+    chr = if _.indexOf(@url, "?") is -1 then '?' else '&'
+    url = @url +"#{chr}limit=#{limit}"
+    if dataSpec
+      url += "&spec=#{encodeURIComponent(JSON.stringify(dataSpec))}"
     poly.text url, (blob) =>
       try
         blob = JSON.parse(blob)

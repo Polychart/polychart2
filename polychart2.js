@@ -5230,10 +5230,11 @@ of a dataset, or knows how to retrieve data from some source.
     });
   };
 
-  poly.data.url = function(url, computeBackend) {
+  poly.data.url = function(url, computeBackend, limit) {
     return new BackendData({
       url: url,
-      computeBackend: computeBackend
+      computeBackend: computeBackend,
+      limit: limit
     });
   };
 
@@ -5577,10 +5578,7 @@ of a dataset, or knows how to retrieve data from some source.
           newdata.push(item);
         }
       }
-      newobj = poly.data({
-        json: newdata,
-        meta: this.meta
-      });
+      newobj = poly.data.json(newdata, this.meta);
       return newobj;
     };
 
@@ -5595,10 +5593,7 @@ of a dataset, or knows how to retrieve data from some source.
       if (desc) {
         newdata.reverse();
       }
-      newobj = poly.data({
-        json: newdata,
-        meta: this.meta
-      });
+      newobj = poly.data.json(newdata, this.meta);
       return newobj;
     };
 
@@ -5680,10 +5675,13 @@ of a dataset, or knows how to retrieve data from some source.
     function BackendData(params) {
       this.getData = __bind(this.getData, this);
 
-      var _ref;
+      var _ref, _ref1;
       BackendData.__super__.constructor.call(this);
-      this.url = params.url, this.computeBackend = params.computeBackend;
-      if ((_ref = this.computeBackend) == null) {
+      this.url = params.url, this.computeBackend = params.computeBackend, this.limit = params.limit;
+      if ((_ref = this.limit) == null) {
+        this.limit = 1000;
+      }
+      if ((_ref1 = this.computeBackend) == null) {
         this.computeBackend = false;
       }
     }
@@ -5694,7 +5692,11 @@ of a dataset, or knows how to retrieve data from some source.
       if (this.raw != null) {
         return callback(this);
       }
-      url = dataSpec ? (chr = _.indexOf(this.url, "?") === -1 ? '?' : '&', this.url + ("" + chr + "spec=" + (encodeURIComponent(JSON.stringify(dataSpec))))) : this.url;
+      chr = _.indexOf(this.url, "?") === -1 ? '?' : '&';
+      url = this.url(+("" + chr + "limit=" + limit));
+      if (dataSpec) {
+        url += "&spec=" + (encodeURIComponent(JSON.stringify(dataSpec)));
+      }
       return poly.text(url, function(blob) {
         var data, meta, _ref, _ref1, _ref2, _ref3;
         try {
