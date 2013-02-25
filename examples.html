@@ -43,21 +43,27 @@
         padding-top: 300px;
         display: none;
       }
-      div#footer {
+      div#header {
         display: block;
-        width: 400px;
-        position: absolute;
-        top: 700px;
-        left: 500px;
+        width: 900px;
       }
       a {
         text-decoration: none;
       }
-      div#footer a:visited {
-        color: blue;
+      div#header a {
+        color:green;
       }
-      div#footer a:last-child {
+      div#header #curr {
+        padding-left: 250px;
+        color: black;
+      }
+      div#header a:visited {
+        color: green;
+        float: left;
+      }
+      div#header a:last-child {
         margin-left: 20px;
+        float: right;
       }
     </style>
   </head>
@@ -73,6 +79,11 @@
       </table>
     </div>
     <div id="wrapper">
+      <div id="header">
+        <a id="prev">PREV</a>
+        <a id="curr"></a>
+        <a id="next">NEXT</a>
+      </div>
       <div id="main">
         <div id="chart" ></div>
         <div id="chart2"></div>
@@ -80,10 +91,6 @@
       </div>
       <div id="error">
         <p>YOU HAVE FAILED ME, YOUNG PADAWAN!</p>
-      </div>
-      <div id="footer">
-        <a id="prev">PREV</a>
-        <a id="next">NEXT</a>
       </div>
     </div>
     <script type="text/javascript">
@@ -116,16 +123,18 @@
           break;
         }
       }
+  
+      $("#curr").text(selection);
 
       if (prev !== undefined) {
         $("#prev").attr("href", "?"+prev)
-                  .text("("+prev+") PREV");
+                  .text("PREV ("+prev+")");
       } else {
         $("#prev").hide();
       }
       if (next !== undefined) {
         $("#next").attr("href", "?"+next)
-                  .text("NEXT ("+next+")");
+                  .text("("+next+")"+" NEXT");
       } else {
         $("#next").hide();
       }
