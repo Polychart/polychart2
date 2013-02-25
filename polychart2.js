@@ -5422,24 +5422,36 @@ of a dataset, or knows how to retrieve data from some source.
       return false;
     };
 
-    AbstractData.prototype.get = function() {
-      throw poly.error.data("Data has not been fetched or is undefined.");
+    AbstractData.prototype.get = function(key) {
+      if (this.raw) {
+        return _.pluck(this.raw, key);
+      } else {
+        throw poly.error.data("Data has not been fetched or is undefined.");
+      }
     };
 
     AbstractData.prototype.len = function() {
-      throw poly.error.data("Data has not been fetched or is undefined.");
+      if (this.raw) {
+        return this.raw.length;
+      } else {
+        throw poly.error.data("Data has not been fetched or is undefined.");
+      }
     };
 
-    AbstractData.prototype.getObject = function() {
-      throw poly.error.data("Data has not been fetched or is undefined.");
+    AbstractData.prototype.getObject = function(i) {
+      if (this.raw) {
+        return this.raw[i];
+      } else {
+        throw poly.error.data("Data has not been fetched or is undefined.");
+      }
     };
 
-    AbstractData.prototype.max = function() {
-      throw poly.error.data("Data has not been fetched or is undefined.");
+    AbstractData.prototype.max = function(key) {
+      return _.max(this.get(key));
     };
 
-    AbstractData.prototype.min = function() {
-      throw poly.error.data("Data has not been fetched or is undefined.");
+    AbstractData.prototype.min = function(key) {
+      return _.min(this.get(key));
     };
 
     AbstractData.prototype.getMeta = function(key) {
@@ -5642,26 +5654,6 @@ of a dataset, or knows how to retrieve data from some source.
         this.meta[key].formula = fnstr;
       }
       return key;
-    };
-
-    FrontendData.prototype.get = function(key) {
-      return _.pluck(this.raw, key);
-    };
-
-    FrontendData.prototype.len = function() {
-      return this.raw.length;
-    };
-
-    FrontendData.prototype.getObject = function(i) {
-      return this.raw[i];
-    };
-
-    FrontendData.prototype.max = function(key) {
-      return _.max(this.get(key));
-    };
-
-    FrontendData.prototype.min = function(key) {
-      return _.min(this.get(key));
     };
 
     return FrontendData;

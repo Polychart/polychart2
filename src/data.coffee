@@ -133,11 +133,25 @@ class AbstractData
   filter: () -> false # throw not implemented?
   sort: () -> false # throw not implemented?
   derive: () -> false # throw not implemented?
-  get: () -> throw poly.error.data "Data has not been fetched or is undefined."
-  len: () -> throw poly.error.data "Data has not been fetched or is undefined."
-  getObject: () -> throw poly.error.data "Data has not been fetched or is undefined."
-  max: () -> throw poly.error.data "Data has not been fetched or is undefined."
-  min: () -> throw poly.error.data "Data has not been fetched or is undefined."
+
+  get: (key) ->
+    if @raw
+      _.pluck @raw, key
+    else
+      throw poly.error.data "Data has not been fetched or is undefined."
+  len: () ->
+    if @raw
+      @raw.length
+    else
+      throw poly.error.data "Data has not been fetched or is undefined."
+  getObject: (i) ->
+    if @raw
+      @raw[i]
+    else
+      throw poly.error.data "Data has not been fetched or is undefined."
+  max: (key) -> _.max @get(key)
+  min: (key) -> _.min @get(key)
+
   getMeta: (key) -> if @meta then @meta[key] else undefined
   type: (key) ->
     if key of @meta
@@ -251,11 +265,6 @@ class FrontendData extends AbstractData
       derived: true
     if hasFnStr then @meta[key].formula = fnstr
     key
-  get: (key) -> _.pluck @raw, key
-  len: () -> @raw.length
-  getObject: (i) -> @raw[i]
-  max: (key) -> _.max @get(key)
-  min: (key) -> _.min @get(key)
 
 class BackendData extends AbstractData
   constructor: (params) ->
