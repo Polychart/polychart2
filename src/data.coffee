@@ -270,7 +270,7 @@ class BackendData extends AbstractData
   getData: (callback, dataSpec) =>
     if @raw? then return callback @
     chr = if _.indexOf(@url, "?") is -1 then '?' else '&'
-    url = @url +"#{chr}limit=#{@limit}"
+    url = @url+"#{chr}limit=#{@limit}"
     if dataSpec
       url += "&spec=#{encodeURIComponent(JSON.stringify(dataSpec))}"
     poly.text url, (blob) =>

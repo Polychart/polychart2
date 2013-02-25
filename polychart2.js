@@ -5693,7 +5693,7 @@ of a dataset, or knows how to retrieve data from some source.
         return callback(this);
       }
       chr = _.indexOf(this.url, "?") === -1 ? '?' : '&';
-      url = this.url(+("" + chr + "limit=" + this.limit));
+      url = this.url + ("" + chr + "limit=" + this.limit);
       if (dataSpec) {
         url += "&spec=" + (encodeURIComponent(JSON.stringify(dataSpec)));
       }
