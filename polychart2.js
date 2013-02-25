@@ -1016,7 +1016,9 @@ Impute types from values
 
 
   poly.type.coerce = function(value, meta) {
-    if (meta.type === 'cat') {
+    if (_.isUndefined(value) || _.isNull(value)) {
+      return value;
+    } else if (meta.type === 'cat') {
       return value;
     } else if (meta.type === 'num') {
       if (!isNaN(value)) {

@@ -30,7 +30,9 @@ poly.type.impute = (values) ->
 Parse values into correct types
 ###
 poly.type.coerce = (value, meta) ->
-  if meta.type is 'cat'
+  if _.isUndefined(value) or _.isNull(value)
+    value
+  else if meta.type is 'cat'
     value
   else if meta.type is 'num'
     if not isNaN value
