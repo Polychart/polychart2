@@ -66,11 +66,14 @@ scripts.
 Testing
 -------
 When developing locally, note that your browser may enforce strict permissions
-for reading files out of the local file system. Thus to run the examples that
-fetches data from the backend, run Python's built-in web server:
+for reading files out of the local file system. Additionally for testing
+backend data processing functionalities, server database querying
+functionalities are used. For those examples, a tornado server and a
+sqlite3 database is included. To run the server run:
+
 
 ```
-python -m SimpleHTTPServer 8888
+python server.py
 ```
 
 Once this is running, go to http://localhost:8888/.
