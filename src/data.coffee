@@ -18,7 +18,7 @@ poly.data = (blob) ->
   if _.isObject data or _.isArray data
     poly.data.json(data, meta)
   else if _.isString data
-    if poly.isURL data
+    if poly.isURI data
       poly.data.csv(data, meta)
     else
       poly.data.csv(data, meta)
