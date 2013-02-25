@@ -5517,7 +5517,7 @@ of a dataset, or knows how to retrieve data from some source.
         return true;
       }
       if (!checked) {
-        this.checkRename(from, to);
+        this._checkRename(from, to);
       }
       _ref = this.raw;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -5537,7 +5537,7 @@ of a dataset, or knows how to retrieve data from some source.
       for (from in map) {
         to = map[from];
         if (from !== to) {
-          this.checkRename(from, to);
+          this._checkRename(from, to);
         }
       }
       for (from in map) {

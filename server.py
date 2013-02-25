@@ -21,7 +21,7 @@ def _execute(query):
 class AJAX(tornado.web.RequestHandler):
   def get(self):
     # NOTE:
-    #  DO NOT USE THIS CODE IN PRODUCTION OR ANYWHERE CLOSE TO PRODUCTION
+    #   DO NOT USE THIS CODE IN PRODUCTION OR ANYWHERE CLOSE TO PRODUCTION
     TABLE = self.get_argument("table", None)
     LIMIT = self.get_argument("limit", "1000")
     spec = self.get_argument("spec", None)
