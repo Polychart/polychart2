@@ -5675,13 +5675,10 @@ of a dataset, or knows how to retrieve data from some source.
     function BackendData(params) {
       this.getData = __bind(this.getData, this);
 
-      var _ref, _ref1;
+      var _ref;
       BackendData.__super__.constructor.call(this);
       this.url = params.url, this.computeBackend = params.computeBackend, this.limit = params.limit;
-      if ((_ref = this.limit) == null) {
-        this.limit = 1000;
-      }
-      if ((_ref1 = this.computeBackend) == null) {
+      if ((_ref = this.computeBackend) == null) {
         this.computeBackend = false;
       }
     }
@@ -5693,7 +5690,10 @@ of a dataset, or knows how to retrieve data from some source.
         return callback(this);
       }
       chr = _.indexOf(this.url, "?") === -1 ? '?' : '&';
-      url = this.url + ("" + chr + "limit=" + this.limit);
+      url = this.url;
+      if (this.limit) {
+        url += "" + chr + "limit=" + this.limit;
+      }
       if (dataSpec) {
         url += "&spec=" + (encodeURIComponent(JSON.stringify(dataSpec)));
       }
@@ -5732,6 +5732,10 @@ of a dataset, or knows how to retrieve data from some source.
     BackendData.prototype.update = function(params) {
       this.raw = null;
       return BackendData.__super__.update.call(this);
+    };
+
+    BackendData.prototype.renameMany = function(obj) {
+      return _.keys(obj).length === 0;
     };
 
     return BackendData;

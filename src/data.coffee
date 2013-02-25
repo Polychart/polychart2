@@ -261,7 +261,6 @@ class BackendData extends AbstractData
   constructor: (params) ->
     super()
     {@url, @computeBackend, @limit} = params
-    @limit ?= 1000
     @computeBackend ?= false
 
   # retrieve data from backend
@@ -270,7 +269,9 @@ class BackendData extends AbstractData
   getData: (callback, dataSpec) =>
     if @raw? then return callback @
     chr = if _.indexOf(@url, "?") is -1 then '?' else '&'
-    url = @url+"#{chr}limit=#{@limit}"
+    url = @url
+    if @limit
+      url += "#{chr}limit=#{@limit}"
     if dataSpec
       url += "&spec=#{encodeURIComponent(JSON.stringify(dataSpec))}"
     poly.text url, (blob) =>
@@ -302,3 +303,5 @@ class BackendData extends AbstractData
   update: (params) ->
     @raw = null
     super()
+  renameMany: (obj) ->  _.keys(obj).length == 0
+
