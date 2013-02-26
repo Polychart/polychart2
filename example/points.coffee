@@ -19,6 +19,7 @@ one = () -> Math.random()*10
     spec:
       layers: [sampleLayer]
       title:'This is another title'
+      legendPosition:'right'
       guides:
         y :
           title:'This is another long title'
@@ -30,6 +31,13 @@ one = () -> Math.random()*10
           position: 'top'
           type:'num', min:0, max:10, ticks:[2,4,6,8],
           labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
+        color:
+          title:'Even longer title'
+          type:'cat', min:0, max:40, ticks:[2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40]
+          labels:{2:'Two',4:'Four',6:'six',8:'Eight',10:'jhasdjasdfjjhjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj this is some stuff at the end of it',12,14,16,18,20}
+        size:
+          title:'asd'
+          type:'num', min:0,max:10, ticks:[2,4,6,8], labels:{2:'Two',4:'Four',6:'Six'}
       dom: dom
 
 
