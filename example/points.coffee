@@ -18,7 +18,6 @@ one = () -> Math.random()*10
     data:jsondata
     spec:
       layers: [sampleLayer]
-      legendPosition: 'top'
       title:'This is another title'
       guides:
         y :
@@ -29,14 +28,6 @@ one = () -> Math.random()*10
         x :
           title:'a'
           position: 'top'
-          type:'num', min:0, max:10, ticks:[2,4,6,8],
-          labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
-        color :
-          title:'even lonjiahdfd this title can also overlap with the other title'
-          type:'cat', min:0, max:20, ticks:[2,4,6,8,10,12,14,16,18,20],
-          labels:{2: 'Two', 4:'Four', 6:'sdSix', 8:'Eighjha', 10:'tejkdsajhfklThis should be displayed even though this is a really reall long element that doesnt fit',12,14,16,18,20,22,24,26}
-        size :
-          title:'asd'
           type:'num', min:0, max:10, ticks:[2,4,6,8],
           labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
       dom: dom
