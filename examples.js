@@ -331,7 +331,10 @@
       layer: {
         data: data,
         type: 'bar',
-        x: 'grp',
+        x: {
+          "var": 'grp',
+          sort: 'sum(val1)'
+        },
         y: 'sum(val1)'
       },
       dom: dom

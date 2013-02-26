@@ -3,7 +3,10 @@ import copy
 class Parser:
   @staticmethod
   def parse_select(select):
-    return ', '.join(select) if select != [] else None
+    if type(select) is list:
+      return ', '.join(select) if select != [] else None
+    else:
+      return select
 
   @staticmethod
   def parse_where(where):
@@ -22,15 +25,17 @@ class Parser:
         elif quantifier is "le":
           result.append("%s <= %s" % (key, v[quantifier]))
         elif quantifier is "in":
-          result.append("%s in %s" % (key, (', ').join(v[quantifier])))
+          result.append("%s in (%s)" % (key, (', ').join(["'%s'" % col   for col in v[quantifier]])))
         else:
           raise NameError("Unrecognized filter quantifier: %s" % quantifier)
     return result
 
   @staticmethod
-  def parse_group(groups):
-    ret = ', '.join(groups) if groups != [] else None
-    return ret
+  def parse_group(group):
+    if type(group) is list:
+      return ', '.join(group) if group != [] else None
+    else:
+      return group
 
   @staticmethod
   def parse_order(order):
@@ -61,7 +66,7 @@ class QueryBuilder:
     self.where = Parser.parse_where(raw_where)
 
   def set_groupby(self, raw_group):
-    assert type(raw_group) is str or type(raw_group) is list
+    #assert type(raw_group) is str or type(raw_group) is list
     self.groupby = Parser.parse_group(raw_group)
 
   def set_orderby(self, raw_order):
@@ -79,93 +84,59 @@ class QueryBuilder:
     #assert self.select is not None
     query = 'SELECT %s FROM %s ' % (self.select, self.table)
     if self.where is not None:
-      query += 'WHERE % ' % self.where[0]
+      query += ('WHERE %s ' % self.where[0])
       for idx in range(1, len(self.where)):
         ' AND %s ' % self.where[idx]
-    if self.orderby is not None:
-      query += 'ORDER BY %s' % self.orderby
     if self.group is not None:
       query += 'GROUP BY %s ' % self.groupby
+    if self.orderby is not None:
+      query += 'ORDER BY %s ' % self.orderby
     if self.limit is not None:
       query += 'LIMIT %s' % self.limit
     return query
 
-def process_fn(execute):
-  def dataprocess2(table, limit=1000, spec={}):
-    querybuilder = QueryBuilder(table)
-    result = ''
+  @staticmethod
+  def build_sort_query(table, spec):
+    builder = QueryBuilder(table)
     meta = spec['meta']
-    if 'meta' in spec and spec['meta'] != {}:
+    category = meta.iterkeys().next()
+
+    builder.set_select(category)
+    builder.set_where(spec['filter'])
+    builder.set_orderby(meta[category])
+    builder.set_groupby(category)
+    if 'limit' in meta[builder.select]:
+      builder.set_limit(meta[builder.select]['limit'])
+    return builder.build()
+    
+  @staticmethod
+  def build_calc_query(table, spec, limit, categories=None):
+    builder = QueryBuilder(table)
+    meta = spec['meta']
+    
+    where = copy.deepcopy(spec['filter']) if spec['filter'] != {} else {}
+    if categories is not None:
       category = meta.iterkeys().next()
+      where[category] = { 'in' : [elem[0]  for elem in categories] } # Gets the first elem of the tuple
+    builder.set_select(spec['select'])
+    builder.set_where(where)
+    builder.set_groupby(spec['stats']['groups']);
+    builder.set_limit(limit)
+    return builder.build()
 
+def process_fn(execute):
+  def dataprocess(table, limit=1000, spec={}):
+    result = ''
+    if 'meta' in spec and spec['meta'] != {}:
       # Step 1:
-      querybuilder.reset()
-      querybuilder.set_select(category)
-      querybuilder.set_where(spec['filter'])
-      querybuilder.set_orderby(meta[category])
-      querybuilder.set_groupby(category)
-      querybuilder.set_limit(meta[querybuilder.select]['limit'])
-
-      query = querybuilder.build()
+      query = QueryBuilder.build_sort_query(table, spec)
       result = execute(query)
 
       # Step 2:
-      querybuilder.reset()
-      querybuilder.set_select(spec['select'])
-      where = copy.deepcopy(spec['filter'])
-      where[category] = result
-      querybuilder.set_where(where)
-      querybuilder.set_groupby(spec['stats']['groups']);
-      querybuilder.set_limit(limit)
-
-      query = querybuilder.build()
+      query = QueryBuilder.build_calc_query(table, spec, limit, result)
       result = execute(query)
     else: 
-      querybuilder.reset()
-      querybuilder.set_select(spec['select'])
-      querybuilder.set_where(spec['filter'])
-      querybuilder.set_groupby(spec['stats']['groups'])
-      querybuilder.set_limit(limit)
-      query = querybuilder.build()
+      query = QueryBuilder.build_calc_query(table, spec, limit)
       result = execute(query)
     return { 'data': result, 'meta': spec['select'] }
-
-  def dataprocess(table, limit=1000, spec={}):
-    TABLE = table
-    SELECT = ''
-    GROUP = ''
-    WHERE = ''
-    LIMIT = limit
-    def _add(v):
-      if WHERE:
-        WHERE += " and "+v
-      else:
-        WHERE = " where "+v
-
-    SELECT = ', '.join(spec['select'])
-    if len(spec['stats']) > 0:
-      GROUP = ' group by ' + ', '.join(spec['stats']['groups'])
-    for key in spec['filter']:
-      v = spec['filter']['key']
-      for quantifier in v:
-        if quantifier is 'ge':
-          _add(key + " >= " + v[quantifier])
-        elif quantifier is "gt":
-          _add(key + " > " + v[quantifier])
-        elif quantifier is "lt":
-          _add(key + " < " + v[quantifier])
-        elif quantifier is "le":
-          _add(key + " <= " + v[quantifier])
-        elif quantifier is "in":
-          _add(key + " in " + (', ').join(v[quantifier]))
-      WHERE = ''
-
-    #if 'meta' in spec
-    #  pass
-    query = "select %s from %s %s %s limit %s" % (SELECT, TABLE, WHERE, GROUP, LIMIT)
-    retobj = {
-      'data': execute(query),
-      'meta': spec['select']
-    }
-    return retobj
-  return dataprocess2
+  return dataprocess

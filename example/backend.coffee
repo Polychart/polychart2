@@ -29,7 +29,7 @@
     layer:
       data: data
       type: 'bar'
-      x: 'grp'
+      x: { var:'grp', sort:'sum(val1)', limit:2 }
       y: 'sum(val1)'
     dom: dom
   c = polyjs.chart spec
