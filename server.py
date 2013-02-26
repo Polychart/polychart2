@@ -3,7 +3,7 @@ import tornado.web
 import tornado.database
 import sqlite3
 import json
-from backend.sql import process_fn, QueryBuilder
+from backend.sql import process_fn
 from tornado.escape import json_encode
 
 def _execute(query):
@@ -31,14 +31,7 @@ class AJAX(tornado.web.RequestHandler):
     spec = json.loads(spec)
 
     retobj = dataprocess(TABLE, LIMIT, spec)
-    querybuilder = QueryBuilder()
-    query = querybuilder.get_query(TABLE, LIMIT, spec)
-    retobj2 = {
-      'data': _execute(query),
-      'meta': spec['select']
-    }
-    assert retobj == retobj2
-    self.write(json_encode(retobj2))
+    self.write(json_encode(retobj))
 
 application = tornado.web.Application([
   (r"/db",AJAX),
