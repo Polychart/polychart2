@@ -1,7 +1,5 @@
-@examples ?= {}
 
 one = () -> Math.random()*10
-
 @examples.point = (dom) ->
   spec = () ->
     jsondata = ({x:one(), y:one(), c:one()} for i in [0..10])
@@ -20,23 +18,28 @@ one = () -> Math.random()*10
     data:jsondata
     spec:
       layers: [sampleLayer]
-      legendPosition: 'bottom'
+      legendPosition: 'left'
       guides:
         y :
+          title:'This is another long title'
           position: 'right'
           type:'num', min:0, max:10, ticks:[2,4,6,8],
           labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
         x :
+          title:'a'
           position: 'top'
           type:'num', min:0, max:10, ticks:[2,4,6,8],
           labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
         color :
-          type:'num', min:0, max:10, ticks:[2,4,6,8],
-          labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
+          title:'even lonjiahdfd'
+          type:'cat', min:0, max:20, ticks:[2,4,6,8,10,12,14,16,18,20],
+          labels:{2: 'Two', 4:'Four', 6:'sdSix', 8:'Eighjha', 10:'tejkdsajhfklThis should be displayed even though this is a really really really really long title',12,14,16,18,20}
         size :
+          title:'asd'
           type:'num', min:0, max:10, ticks:[2,4,6,8],
           labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
       dom: dom
+
 
   initspec = spec().spec
   c = polyjs.chart(initspec)
