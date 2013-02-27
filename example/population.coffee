@@ -126,3 +126,123 @@ data = {
   yearly.addHandler show_breakdown
   breakdown.addHandler show_country
 
+  
+@examples.populationerr1 = (dom, dom2, dom3) ->
+  polyd = polyjs.data data: data
+  polyd.derive ((x) -> if x.year < 2012 then 'actual' else 'estimate'), 'type'
+  today_spec =
+    layer:
+      data: polyd
+      type: 'bar'
+      x : {var:'subcontinent', sort:'population', asc: false}
+      y : 'population'
+      color: 'subcontinent'
+      id: 'subcontinent'
+      filter: year: in: [2010]
+    legendPosition: 'top'
+    guides:
+      x: numticks: 50
+      color: scale: (x) -> 'steelblue'
+    coord: {type: 'cartesian', flip: true}
+    dom: dom
+    title: 'World Population By (Sub)continent 2010'
+    width: 400
+    height: 400
+  today = polyjs.chart today_spec
+  yearly_spec =
+    layers: [
+      {
+        data: polyd
+        type: 'line'
+        x: 'year'
+        y: 'sum(population)'
+        size: {const: 5}
+        color: {const: '#CCC'}
+      }, {
+        data: polyd
+        type: 'point'
+        x: 'year'
+        y: 'sum(population)'
+        color: 'type'
+      }
+    ]
+    guides:
+      x: formatter: (year) -> ""+year
+      y: min: 0, max: 12500000
+      color: scale: (t) -> if t is 'actual' then '#222' else 'brown'
+    title: "Population growth of the World (click chart to zoom)"
+    dom: dom2
+    width: 700
+    height: 400
+  yearly = polyjs.chart yearly_spec
+
+  breakdown_spec =
+    layer:
+      data: polyd
+      type: 'bar'
+      y: {var:'population', sort: 'population'}
+      color: {var:'subcontinent', sort:'population'}
+      filter: year: in: [2010]
+    guides:
+      x: position: 'none'
+      color: numticks: 50
+    coord: {type: 'cartesian', flip: 'true'}
+    title: 'Population Breakdown in 2010'
+    dom: dom3
+    width: 1100
+    height: 250
+    paddingLeft: 20
+  breakdown = polyjs.chart breakdown_spec
+
+  show_country = (type, e) ->
+    if type is 'click' or type is 'guide-click'
+      data = e.evtData
+      if not data.subcontinent then return
+      filter = subcontinent: data.subcontinent
+      for layer in yearly_spec.layers
+        layer.filter = filter
+      yearly_spec.title = "Population growth of #{data.subcontinent.in[0]} (click chart to zoom)"
+      yearly_spec.guides.y.min = 0
+      yearly_spec.guides.y.max = 5500000
+      yearly.make yearly_spec
+      today_spec.guides.color.scale = (x) -> if x is data.subcontinent.in[0] then 'red' else 'steelblue'
+      today.make today_spec
+    else if type is 'reset'
+      for layer in yearly_spec.layers
+        delete layer.filter
+      yearly_spec.title = "Population growth of the World (click chart to zoom)"
+      yearly_spec.guides.y.min = 0
+      yearly_spec.guides.y.max = 12500000
+      yearly.make yearly_spec
+
+      today_spec.guides.color.scale = (x) -> 'steelblue'
+      today.make today_spec
+
+  show_breakdown = (type, e) ->
+    if type is 'click'
+      data = e.evtData
+      if data.year
+        filter = year: data.year
+        breakdown_spec.title = "Population Breakdown in #{data.year.in[0]}"
+        breakdown_spec.layer.filter = filter
+        breakdown.make breakdown_spec
+
+  yscale_toggle = () ->
+    min = 0
+    max = 5500000
+    (type, e) ->
+      if type is 'reset'
+        if yearly_spec.guides.y.max?
+          min = yearly_spec.guides.y.min
+          delete yearly_spec.guides.y.min
+          max = yearly_spec.guides.y.max
+          delete yearly_spec.guides.y.max
+        else
+          yearly_spec.guides.y.min = min
+          yearly_spec.guides.y.max = max
+        yearly.make yearly_spec
+ 
+  today.addHandler show_country
+  yearly.addHandler yscale_toggle()
+  yearly.addHandler show_breakdown
+  breakdown.addHandler show_country
