@@ -15,21 +15,21 @@ poly.data = (blob) ->
     meta = blob.meta
   else
     data = blob
-  if _.isObject data or _.isArray data
-    poly.data.json(data, meta)
-  else if _.isString data
-    if poly.isURI data
+  switch _getDataType(data)
+    when 'json-object', 'json-grid', 'json-array'
+      poly.data.json(data, meta, type)
+    when 'url'
+      poly.data.url(data, meta, type)
+    when 'csv'
       poly.data.csv(data, meta)
     else
-      poly.data.csv(data, meta)
-  else
-    poly.error.data "Unknown data format."
+      throw poly.error.data "Unknown data format."
 
-poly.data.json = (data, meta) ->
-  new FrontendData json: data, meta:meta
+poly.data.json = (data, meta, type) ->
+  new FrontendData {data, meta, type}
 
 poly.data.csv = (data, meta) ->
-  new FrontendData csv: data, meta:meta
+  new FrontendData {data, meta, 'csv'}
 
 poly.data.url = (url, computeBackend, limit) ->
   new BackendData {url, computeBackend, limit}
@@ -37,6 +37,22 @@ poly.data.url = (url, computeBackend, limit) ->
 ###
 Helper functions
 ###
+_getDataType = (data) ->
+  if _.isArray data
+    if _.isArray data[0]
+      'json-grid'
+    else
+      'json-array'
+  else if _.isObject data
+    'json-object'
+  else if _.isString data
+    if poly.isURI data
+      'url'
+    else
+      'csv'
+  else
+    throw poly.error.data "Unknown data format."
+
 _getArray = (json, meta) ->
   # array of objects [{foo:2, bar:4}, {foo:2, bar:3}, ...]
   if json.length > 0
@@ -88,6 +104,7 @@ _getArrayOfArrays = (json, meta) ->
   {key, raw, meta}
 
 _getObject = (json, meta) ->
+  # assoc array { foo: [1,2,..], bar: [1,2,...] }
   keys = _.keys(json)
   raw = []
   for key in keys
@@ -167,19 +184,23 @@ class FrontendData extends AbstractData
   update: (params) ->
     @_setData params
     super()
-  _setData: (params) ->
-    {csv, json, meta} = params
-    meta ?= {}
+  _setData: (blob) ->
+    debugger
+    if _.isObject(blob) and _.keys(blob).length < 4 and 'data' of blob
+      data = blob.data
+      meta = blob.meta ? {}
+    else
+      data = blob
+      meta = {}
     {@key, @raw, @meta} =
-      if csv
-        _getCSV csv, meta
-      else if _.isArray json
-        if json[0] and _.isArray(json[0])
-          _getArrayOfArrays json, meta
+      switch blob.type ? _getDataType(data)
+        when 'json-object' then _getObject data, meta
+        when 'json-grid' then _getArrayOfArrays data, meta
+        when 'json-array' then _getArray data, meta
+        when 'csv' then _getCSV data, meta
         else
-          _getArray json, meta
-      else if _.isObject json
-        _getObject json, meta
+          throw poly.error.data "Unknown data format."
+    @data = @raw # hack?
   _checkRename: (from, to) ->
     if to is ''
       throw poly.error.defn "Column names cannot be an empty string"
@@ -292,21 +313,18 @@ class BackendData extends AbstractData
       # TODO: refactor this. repeat code from poly.data
       if _.isObject(blob) and _.keys(blob).length < 4 and 'data' of blob
         data = blob.data
-        meta = blob.meta
+        meta = blob.meta ? {}
       else
         data = blob
         meta = {}
-      if _.isString(data)
-        {@key, @raw, @meta} = _getCSV data, meta
-      else if _.isArray(data)
-        if data[0] and _.isArray(data[0])
-          {@key, @raw, @meta} = _getArrayOfArrays data, meta
-        else
-          {@key, @raw, @meta} = _getArray data, meta
-      else if _.isObject(data)
-        {@key, @raw, @meta} = _getObject data, meta
-      else
-        poly.error.data "Unknown data format."
+      {@key, @raw, @meta} =
+        switch _getDataType(data)
+          when 'json-object' then _getObject data, meta
+          when 'json-grid' then _getArrayOfArrays data, meta
+          when 'json-array' then _getArray data, meta
+          when 'csv' then _getCSV data, meta
+          else
+            throw poly.error.data "Unknown data format."
       @data = @raw # hack?
       callback @
   update: (params) ->
