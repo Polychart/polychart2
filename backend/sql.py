@@ -1,11 +1,53 @@
 import copy
+import re
+
+class Validate:
+  @staticmethod
+  def word(w):
+    def check_not_keywords(w):
+      keywords = ['SELECT', 'DELETE', 'FROM', 'JOIN', 'WHERE', 'ORDER BY', 'GROUP BY']
+      assert all(w.upper() != k  for k in keywords)
+    def check_func(w):
+      """Checks for function format: func(param1, param2, ...)"""
+      match = re.search(r'(\w+)\((\w+)\)(.*)', w)
+      assert match is not None
+      assert match.group(3) == ''
+      name = match.group(1)
+      params = match.group(2)
+      check_not_keywords(name)
+      if params == '':
+        return
+      params = params.split(',')
+      for p in params:
+        check_not_keywords(p)
+        assert '(' not in p and ')' not in p
+
+    assert ';' not in w
+    check_not_keywords(w)
+    if '(' in w or ')' in w:
+      assert '(' in w and ')' in w
+      check_func(w)
+
+  @staticmethod
+  def list_of_words(lst):
+    for w in lst:
+      Validate.word(w)
+
+  @staticmethod
+  def num(n):
+    if type(n) is int:
+      return
+    if type(n) is str or type(n) is unicode:
+      assert n.isdigit()
 
 class Parser:
   @staticmethod
   def parse_select(select):
     if type(select) is list:
+      Validate.list_of_words(select)
       return ', '.join(select) if select != [] else None
     else:
+      Validate.word(select)
       return select
 
   @staticmethod
@@ -13,19 +55,22 @@ class Parser:
     if where == {}:
       return None
     result = []
-    for key in where:
-      v = where[key]
-      for quantifier in v:
+    for category in where:
+      dict_of_quant = where[category]
+      Validate.word(category)
+      for quantifier in dict_of_quant:
+        val = dict_of_quant[quantifier]
+        Validate.num(val) if type(val) != [] else Validate.list_of_words(val)
         if quantifier is 'ge':
-          result.append("%s >= %s" % (key, v[quantifier]))
+          result.append("%s >= %s" % (category, val))
         elif quantifier is "gt":
-          result.append("%s > %s" % (key, v[quantifier]))
+          result.append("%s > %s" % (category, val))
         elif quantifier is "lt":
-          result.append("%s < %s" % (key, v[quantifier]))
+          result.append("%s < %s" % (category, val))
         elif quantifier is "le":
-          result.append("%s <= %s" % (key, v[quantifier]))
+          result.append("%s <= %s" % (category, val))
         elif quantifier is "in":
-          result.append("%s in (%s)" % (key, (', ').join(["'%s'" % col   for col in v[quantifier]])))
+          result.append("%s in (%s)" % (category, (', ').join(["'%s'" % col   for col in val])))
         else:
           raise NameError("Unrecognized filter quantifier: %s" % quantifier)
     return result
@@ -33,32 +78,37 @@ class Parser:
   @staticmethod
   def parse_group(group):
     if type(group) is list:
+      Validate.list_of_words(group)
       return ', '.join(group) if group != [] else None
     else:
+      Validate.word(group)
       return group
 
   @staticmethod
   def parse_order(order):
-    return '%s %s' % (order['sort'], 'ASC' if order['asc'] == 'true' else 'DESC')
+    assert 'sort' in order
+    Validate.word(order['sort'])
+    if 'asc' in order:
+      assert type(order['asc']) is bool
+    return '%s %s' % (order['sort'], 'ASC' if 'asc' in order and order['asc'] is True else 'DESC')
 
 class QueryBuilder:
   def __init__(self, raw_table):
-    self.reset()
+    self.select = None
+    self.table = None
+    self.where = None
+    self.groupby = None
+    self.orderby = None
+    self.limit = None
+
     self.set_table(raw_table)
 
-  def reset(self):
-    self.select = ''
-    self.where = None
-    self.group = ''
-    self.limit = None
-    self.orderby = None
-
   def set_select(self, raw_select):
-    #assert type(raw_select) is str
+    assert type(raw_select) is str or type(raw_select) is unicode or type(raw_select) is list
     self.select = Parser.parse_select(raw_select)
 
   def set_table(self, raw_table):
-    #assert type(raw_table) is str
+    assert type(raw_table) is str or type(raw_table) is unicode
     self.table = raw_table
 
   def set_where(self, raw_where):
@@ -66,7 +116,7 @@ class QueryBuilder:
     self.where = Parser.parse_where(raw_where)
 
   def set_groupby(self, raw_group):
-    #assert type(raw_group) is str or type(raw_group) is list
+    assert type(raw_group) is str or type(raw_group) is unicode or type(raw_group) is list
     self.groupby = Parser.parse_group(raw_group)
 
   def set_orderby(self, raw_order):
@@ -75,19 +125,19 @@ class QueryBuilder:
     self.orderby = Parser.parse_order(raw_order)
 
   def set_limit(self, raw_limit):
-    #assert type(raw_limit) is str
-    #assert raw_limit.isdigit()
+    assert type(raw_limit) is str or type(raw_limit) is unicode
+    assert raw_limit.isdigit()
     self.limit = raw_limit
 
   def build(self):
-    #assert self.table is not None
-    #assert self.select is not None
+    assert self.table is not None
+    assert self.select is not None
     query = 'SELECT %s FROM %s ' % (self.select, self.table)
     if self.where is not None:
       query += ('WHERE %s ' % self.where[0])
       for idx in range(1, len(self.where)):
         ' AND %s ' % self.where[idx]
-    if self.group is not None:
+    if self.groupby is not None:
       query += 'GROUP BY %s ' % self.groupby
     if self.orderby is not None:
       query += 'ORDER BY %s ' % self.orderby
