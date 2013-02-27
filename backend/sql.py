@@ -3,30 +3,34 @@ import re
 
 class Validate:
   @staticmethod
-  def word(w):
-    def check_not_keywords(w):
-      keywords = ['SELECT', 'DELETE', 'FROM', 'JOIN', 'WHERE', 'ORDER BY', 'GROUP BY']
-      assert all(w.upper() != k  for k in keywords)
-    def check_func(w):
-      """Checks for function format: func(param1, param2, ...)"""
-      match = re.search(r'(\w+)\((\w+)\)(.*)', w)
-      assert match is not None
-      assert match.group(3) == ''
-      name = match.group(1)
-      params = match.group(2)
-      check_not_keywords(name)
-      if params == '':
-        return
-      params = params.split(',')
-      for p in params:
-        check_not_keywords(p)
-        assert '(' not in p and ')' not in p
+  def check_not_keywords(w):
+    keywords = ['SELECT', 'DELETE', 'FROM', 'JOIN', 'WHERE', 'ORDER BY', 'GROUP BY']
+    assert all(w.upper() != k  for k in keywords)
 
+  @staticmethod
+  def check_func(w):
+    """Checks for function format: func(param1, param2, ...)"""
+    match = re.search(r'(\w+)\((.*)\)(.*)', w)
+    assert match is not None
+    assert match.group(3) == ''
+    name = match.group(1)
+    params = match.group(2)
+    Validate.check_not_keywords(name)
+    if params == '':
+      return
+    params = params.split(',')
+    for p in params:
+      p = p.strip()
+      Validate.check_not_keywords(p)
+      assert '(' not in p and ')' not in p
+
+  @staticmethod
+  def word(w):
     assert ';' not in w
-    check_not_keywords(w)
+    Validate.check_not_keywords(w)
     if '(' in w or ')' in w:
       assert '(' in w and ')' in w
-      check_func(w)
+      Validate.check_func(w)
 
   @staticmethod
   def list_of_words(lst):
@@ -77,12 +81,8 @@ class Parser:
 
   @staticmethod
   def parse_group(group):
-    if type(group) is list:
-      Validate.list_of_words(group)
-      return ', '.join(group) if group != [] else None
-    else:
-      Validate.word(group)
-      return group
+    # Does same thing as parse_select
+    return Parser.parse_select(group)
 
   @staticmethod
   def parse_order(order):
@@ -125,9 +125,12 @@ class QueryBuilder:
     self.orderby = Parser.parse_order(raw_order)
 
   def set_limit(self, raw_limit):
-    assert type(raw_limit) is str or type(raw_limit) is unicode
-    assert raw_limit.isdigit()
-    self.limit = raw_limit
+    assert type(raw_limit) is str or type(raw_limit) is unicode or type(raw_limit) is int
+    if type(raw_limit) is int:
+      self.limit = str(raw_limit)
+    else:
+      assert raw_limit.isdigit()
+      self.limit = raw_limit
 
   def build(self):
     assert self.table is not None
