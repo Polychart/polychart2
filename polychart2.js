@@ -7584,15 +7584,15 @@ Dimension object has the following elements (all numeric in pixels):
       if (mayflip == null) {
         mayflip = true;
       }
+      if (!(coord.type != null)) {
+        throw poly.error.unknown("Coordinate don't have at type?");
+      }
+      if (!(renderer[coord.type] != null)) {
+        throw poly.error.input("Unknown coordinate type " + coord.type);
+      }
       return {
         add: function(mark, evtData, tooltip, type) {
           var pt;
-          if (!(coord.type != null)) {
-            throw poly.error.unknown("Coordinate don't have at type?");
-          }
-          if (!(renderer[coord.type] != null)) {
-            throw poly.error.input("Unknown coordinate type " + coord.type);
-          }
           if (!(renderer[coord.type][mark.type] != null)) {
             throw poly.error.input("Coord " + coord.type + " has no mark " + mark.type);
           }

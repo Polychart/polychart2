@@ -27,14 +27,14 @@ poly.paper = (dom, w, h, handleEvent) ->
 Helper function for rendering all the geoms of an object
 ###
 poly.render = (handleEvent, paper, scales, coord) -> (offset={}, clipping=false, mayflip=true) ->
+  if not coord.type?
+    throw poly.error.unknown "Coordinate don't have at type?"
+  if not renderer[coord.type]?
+    throw poly.error.input "Unknown coordinate type #{coord.type}"
+
   add: (mark, evtData, tooltip, type) ->
-    if not coord.type?
-      throw poly.error.unknown "Coordinate don't have at type?"
-    if not renderer[coord.type]?
-      throw poly.error.input "Unknown coordinate type #{coord.type}"
     if not renderer[coord.type][mark.type]?
       throw poly.error.input "Coord #{coord.type} has no mark #{mark.type}"
-
     pt = renderer[coord.type][mark.type].render paper, scales, coord, offset, mark, mayflip
     pt.data 'm', mark
     if clipping? then pt.attr('clip-rect', clipping)
