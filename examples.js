@@ -333,7 +333,8 @@
         type: 'bar',
         x: {
           "var": 'grp',
-          sort: 'sum(val1)'
+          sort: 'sum(val1)',
+          limit: 2
         },
         y: 'sum(val1)'
       },

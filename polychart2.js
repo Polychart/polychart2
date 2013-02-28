@@ -5186,7 +5186,7 @@ of a dataset, or knows how to retrieve data from some source.
 
 
 (function() {
-  var AbstractData, BackendData, FrontendData, _getArray, _getArrayOfArrays, _getCSV, _getObject,
+  var AbstractData, BackendData, FrontendData, _getArray, _getArrayOfArrays, _getCSV, _getDataType, _getObject,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
@@ -5203,30 +5203,33 @@ of a dataset, or knows how to retrieve data from some source.
     } else {
       data = blob;
     }
-    if (_.isObject(data || _.isArray(data))) {
-      return poly.data.json(data, meta);
-    } else if (_.isString(data)) {
-      if (poly.isURI(data)) {
+    switch (_getDataType(data)) {
+      case 'json-object':
+      case 'json-grid':
+      case 'json-array':
+        return poly.data.json(data, meta, type);
+      case 'url':
+        return poly.data.url(data, meta, type);
+      case 'csv':
         return poly.data.csv(data, meta);
-      } else {
-        return poly.data.csv(data, meta);
-      }
-    } else {
-      return poly.error.data("Unknown data format.");
+      default:
+        throw poly.error.data("Unknown data format.");
     }
   };
 
-  poly.data.json = function(data, meta) {
+  poly.data.json = function(data, meta, type) {
     return new FrontendData({
-      json: data,
-      meta: meta
+      data: data,
+      meta: meta,
+      type: type
     });
   };
 
   poly.data.csv = function(data, meta) {
     return new FrontendData({
-      csv: data,
-      meta: meta
+      data: data,
+      meta: meta,
+      'csv': 'csv'
     });
   };
 
@@ -5242,6 +5245,26 @@ of a dataset, or knows how to retrieve data from some source.
   Helper functions
   */
 
+
+  _getDataType = function(data) {
+    if (_.isArray(data)) {
+      if (_.isArray(data[0])) {
+        return 'json-grid';
+      } else {
+        return 'json-array';
+      }
+    } else if (_.isObject(data)) {
+      return 'json-object';
+    } else if (_.isString(data)) {
+      if (poly.isURI(data)) {
+        return 'url';
+      } else {
+        return 'csv';
+      }
+    } else {
+      throw poly.error.data("Unknown data format.");
+    }
+  };
 
   _getArray = function(json, meta) {
     var first100, item, key, keys, raw, _i, _j, _k, _len, _len1, _len2, _ref;
@@ -5497,13 +5520,32 @@ of a dataset, or knows how to retrieve data from some source.
       return FrontendData.__super__.update.call(this);
     };
 
-    FrontendData.prototype._setData = function(params) {
-      var csv, json, meta, _ref;
-      csv = params.csv, json = params.json, meta = params.meta;
-      if (meta == null) {
+    FrontendData.prototype._setData = function(blob) {
+      debugger;
+      var data, meta, _ref, _ref1;
+      if (_.isObject(blob) && _.keys(blob).length < 4 && 'data' in blob) {
+        data = blob.data;
+        meta = (_ref = blob.meta) != null ? _ref : {};
+      } else {
+        data = blob;
         meta = {};
       }
-      return _ref = csv ? _getCSV(csv, meta) : _.isArray(json) ? json[0] && _.isArray(json[0]) ? _getArrayOfArrays(json, meta) : _getArray(json, meta) : _.isObject(json) ? _getObject(json, meta) : void 0, this.key = _ref.key, this.raw = _ref.raw, this.meta = _ref.meta, _ref;
+      _ref1 = (function() {
+        var _ref1;
+        switch ((_ref1 = blob.type) != null ? _ref1 : _getDataType(data)) {
+          case 'json-object':
+            return _getObject(data, meta);
+          case 'json-grid':
+            return _getArrayOfArrays(data, meta);
+          case 'json-array':
+            return _getArray(data, meta);
+          case 'csv':
+            return _getCSV(data, meta);
+          default:
+            throw poly.error.data("Unknown data format.");
+        }
+      })(), this.key = _ref1.key, this.raw = _ref1.raw, this.meta = _ref1.meta;
+      return this.data = this.raw;
     };
 
     FrontendData.prototype._checkRename = function(from, to) {
@@ -5690,7 +5732,7 @@ of a dataset, or knows how to retrieve data from some source.
         url += "&spec=" + (encodeURIComponent(JSON.stringify(dataSpec)));
       }
       return poly.text(url, function(blob) {
-        var data, meta, _ref, _ref1, _ref2, _ref3;
+        var data, meta, _ref, _ref1;
         try {
           blob = JSON.parse(blob);
         } catch (e) {
@@ -5698,24 +5740,25 @@ of a dataset, or knows how to retrieve data from some source.
         }
         if (_.isObject(blob) && _.keys(blob).length < 4 && 'data' in blob) {
           data = blob.data;
-          meta = blob.meta;
+          meta = (_ref = blob.meta) != null ? _ref : {};
         } else {
           data = blob;
           meta = {};
         }
-        if (_.isString(data)) {
-          _ref = _getCSV(data, meta), _this.key = _ref.key, _this.raw = _ref.raw, _this.meta = _ref.meta;
-        } else if (_.isArray(data)) {
-          if (data[0] && _.isArray(data[0])) {
-            _ref1 = _getArrayOfArrays(data, meta), _this.key = _ref1.key, _this.raw = _ref1.raw, _this.meta = _ref1.meta;
-          } else {
-            _ref2 = _getArray(data, meta), _this.key = _ref2.key, _this.raw = _ref2.raw, _this.meta = _ref2.meta;
+        _ref1 = (function() {
+          switch (_getDataType(data)) {
+            case 'json-object':
+              return _getObject(data, meta);
+            case 'json-grid':
+              return _getArrayOfArrays(data, meta);
+            case 'json-array':
+              return _getArray(data, meta);
+            case 'csv':
+              return _getCSV(data, meta);
+            default:
+              throw poly.error.data("Unknown data format.");
           }
-        } else if (_.isObject(data)) {
-          _ref3 = _getObject(data, meta), _this.key = _ref3.key, _this.raw = _ref3.raw, _this.meta = _ref3.meta;
-        } else {
-          poly.error.data("Unknown data format.");
-        }
+        })(), _this.key = _ref1.key, _this.raw = _ref1.raw, _this.meta = _ref1.meta;
         _this.data = _this.raw;
         return callback(_this);
       });
@@ -7541,15 +7584,15 @@ Dimension object has the following elements (all numeric in pixels):
       if (mayflip == null) {
         mayflip = true;
       }
+      if (!(coord.type != null)) {
+        throw poly.error.unknown("Coordinate don't have at type?");
+      }
+      if (!(renderer[coord.type] != null)) {
+        throw poly.error.input("Unknown coordinate type " + coord.type);
+      }
       return {
         add: function(mark, evtData, tooltip, type) {
           var pt;
-          if (!(coord.type != null)) {
-            throw poly.error.unknown("Coordinate don't have at type?");
-          }
-          if (!(renderer[coord.type] != null)) {
-            throw poly.error.input("Unknown coordinate type " + coord.type);
-          }
           if (!(renderer[coord.type][mark.type] != null)) {
             throw poly.error.input("Coord " + coord.type + " has no mark " + mark.type);
           }
