@@ -31,17 +31,19 @@ poly.render = (handleEvent, paper, scales, coord) -> (offset={}, clipping=false,
     throw poly.error.unknown "Coordinate don't have at type?"
   if not renderer[coord.type]?
     throw poly.error.input "Unknown coordinate type #{coord.type}"
-
   add: (mark, evtData, tooltip, type) ->
     if not renderer[coord.type][mark.type]?
       throw poly.error.input "Coord #{coord.type} has no mark #{mark.type}"
     pt = renderer[coord.type][mark.type].render paper, scales, coord, offset, mark, mayflip
+    # data
     pt.data 'm', mark
-    if clipping? then pt.attr('clip-rect', clipping)
     if evtData and _.keys(evtData).length > 0
       pt.data 'e', evtData
     if tooltip
       pt.data 't', tooltip
+    # clipping
+    if clipping? then pt.attr('clip-rect', clipping)
+    # handlers
     if type is 'guide'
       pt.click handleEvent('guide-click')
     else
@@ -56,6 +58,7 @@ poly.render = (handleEvent, paper, scales, coord) -> (offset={}, clipping=false,
       pt.data 'e', evtData
     if tooltip
       pt.data 't', tooltip
+    pt.data 'm', mark
     pt
 
 class Renderer
@@ -149,7 +152,7 @@ class Path extends Renderer # for both cartesian & polar?
       stroke: stroke
       'stroke-width': size
 
-class Line extends Renderer # for both cartesian & polar?
+class Line extends Renderer
   _make: (paper) -> paper.path()
   attr: (scales, coord, offset, mark, mayflip) ->
     [mark.x,mark.y] = poly.sortArrays scales.x.compare, [mark.x,mark.y]
@@ -167,10 +170,25 @@ class Line extends Renderer # for both cartesian & polar?
       path: @_makePath x, y
       stroke: stroke
       'stroke-width': size
+  # Path animations are atrocious. See http://bost.ocks.org/mike/path/ for
+  # why. As discussed there we need to interpolate the transform. We don't
+  # use SVG transforms so this creates some challenges.
+  animate: (pt, scales, coord, offset, mark, mayflip) ->
+    # we'll split the animation component into two if the set of x-coordinates
+    # have changed. otherwise do the animation in one shot.
+    oldmark = pt.data('m')
+    newattr = @attr(scales, coord, offset, mark, mayflip)
+    if not _.isEqual(oldmark.x, mark.x)
+      # first we "animate the transform": use the old mark & new scale
+      # then we change the attribute to those corresponding to the new mark
+      #   without animation.
+      scaleattr = @attr(scales, coord, offset, oldmark, mayflip)
+      pt.animate scaleattr, 300, () => pt.attr newattr
+    else
+      pt.animate newattr, 300
 
 # The difference between Line and PolarLine is that Polar Line MAY plot a circle
-class PolarLine extends Renderer
-  _make: (paper) -> paper.path()
+class PolarLine extends Line
   attr: (scales, coord, offset, mark, mayflip) ->
     {x, y, r, t} = coord.getXY mayflip, mark
     @_checkArrayUndefined(x, y, "Line")
@@ -272,8 +290,7 @@ class Text extends Renderer # for both cartesian & polar
       'text-anchor' : mark['text-anchor'] ? 'left'
       fill: @_maybeApply(scales, mark, 'color') or 'black'
 
-class Spline extends Renderer
-  _make: (paper) -> paper.path()
+class Spline extends Line
   attr: (scales, coord, offset, mark, mayflip) ->
     [mark.x,mark.y] = poly.sortArrays scales.x.compare, [mark.x,mark.y]
     {x, y} = coord.getXY mayflip, mark
@@ -291,7 +308,7 @@ class Spline extends Renderer
       stroke: stroke
       'stroke-width': size
 
-class Step extends Renderer
+class Step extends Line
   _make: (paper) -> paper.path()
   attr: (scales, coord, offset, mark, mayflip) ->
     [mark.x,mark.y] = poly.sortArrays scales.x.compare, [mark.x,mark.y]

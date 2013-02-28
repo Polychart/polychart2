@@ -5521,7 +5521,6 @@ of a dataset, or knows how to retrieve data from some source.
     };
 
     FrontendData.prototype._setData = function(blob) {
-      debugger;
       var data, meta, _ref, _ref1;
       if (_.isObject(blob) && _.keys(blob).length < 4 && 'data' in blob) {
         data = blob.data;
@@ -7598,14 +7597,14 @@ Dimension object has the following elements (all numeric in pixels):
           }
           pt = renderer[coord.type][mark.type].render(paper, scales, coord, offset, mark, mayflip);
           pt.data('m', mark);
-          if (clipping != null) {
-            pt.attr('clip-rect', clipping);
-          }
           if (evtData && _.keys(evtData).length > 0) {
             pt.data('e', evtData);
           }
           if (tooltip) {
             pt.data('t', tooltip);
+          }
+          if (clipping != null) {
+            pt.attr('clip-rect', clipping);
           }
           if (type === 'guide') {
             pt.click(handleEvent('guide-click'));
@@ -7626,6 +7625,7 @@ Dimension object has the following elements (all numeric in pixels):
           if (tooltip) {
             pt.data('t', tooltip);
           }
+          pt.data('m', mark);
           return pt;
         }
       };
@@ -7920,6 +7920,21 @@ Dimension object has the following elements (all numeric in pixels):
       });
     };
 
+    Line.prototype.animate = function(pt, scales, coord, offset, mark, mayflip) {
+      var newattr, oldmark, scaleattr,
+        _this = this;
+      oldmark = pt.data('m');
+      newattr = this.attr(scales, coord, offset, mark, mayflip);
+      if (!_.isEqual(oldmark.x, mark.x)) {
+        scaleattr = this.attr(scales, coord, offset, oldmark, mayflip);
+        return pt.animate(scaleattr, 300, function() {
+          return pt.attr(newattr);
+        });
+      } else {
+        return pt.animate(newattr, 300);
+      }
+    };
+
     return Line;
 
   })(Renderer);
@@ -7931,10 +7946,6 @@ Dimension object has the following elements (all numeric in pixels):
     function PolarLine() {
       return PolarLine.__super__.constructor.apply(this, arguments);
     }
-
-    PolarLine.prototype._make = function(paper) {
-      return paper.path();
-    };
 
     PolarLine.prototype.attr = function(scales, coord, offset, mark, mayflip) {
       var dir, i, large, path, r, stroke, t, x, y, _ref, _ref1;
@@ -7965,7 +7976,7 @@ Dimension object has the following elements (all numeric in pixels):
 
     return PolarLine;
 
-  })(Renderer);
+  })(Line);
 
   Area = (function(_super) {
 
@@ -8128,10 +8139,6 @@ Dimension object has the following elements (all numeric in pixels):
       return Spline.__super__.constructor.apply(this, arguments);
     }
 
-    Spline.prototype._make = function(paper) {
-      return paper.path();
-    };
-
     Spline.prototype.attr = function(scales, coord, offset, mark, mayflip) {
       var i, size, stroke, x, xi, y, yi, _i, _len, _ref, _ref1, _ref2, _ref3;
       _ref = poly.sortArrays(scales.x.compare, [mark.x, mark.y]), mark.x = _ref[0], mark.y = _ref[1];
@@ -8154,7 +8161,7 @@ Dimension object has the following elements (all numeric in pixels):
 
     return Spline;
 
-  })(Renderer);
+  })(Line);
 
   Step = (function(_super) {
 
@@ -8190,7 +8197,7 @@ Dimension object has the following elements (all numeric in pixels):
 
     return Step;
 
-  })(Renderer);
+  })(Line);
 
   renderer = {
     cartesian: {
