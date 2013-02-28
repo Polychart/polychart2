@@ -185,7 +185,6 @@ class FrontendData extends AbstractData
     @_setData params
     super()
   _setData: (blob) ->
-    debugger
     if _.isObject(blob) and _.keys(blob).length < 4 and 'data' of blob
       data = blob.data
       meta = blob.meta ? {}

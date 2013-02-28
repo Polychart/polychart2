@@ -180,7 +180,6 @@ class Line extends Layer
     'opacity': 0.9
     'shape': 1
   _calcGeoms: () ->
-    # @ys = if @mapping['y'] then _.uniq _.pluck @statData, @mapping['y'] else []
     all_x = _.uniq (@_getValue item, 'x' for item in @statData)
     group = (@mapping[k] for k in _.without(_.keys(@mapping), 'x', 'y'))
     datas = poly.groupBy @statData, group
