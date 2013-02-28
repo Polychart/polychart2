@@ -6,12 +6,12 @@ import json
 from backend.sql import process_fn
 from tornado.escape import json_encode
 
-def _execute(query):
+def _execute(query, params):
   dbPath = 'data/db'
   connection = sqlite3.connect(dbPath)
   cursorobj = connection.cursor()
   try:
-    cursorobj.execute(query)
+    cursorobj.execute(query, params)
     result = cursorobj.fetchall()
     connection.commit()
   except Exception:

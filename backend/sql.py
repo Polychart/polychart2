@@ -65,18 +65,20 @@ class Parser:
       for quantifier in dict_of_quant:
         val = dict_of_quant[quantifier]
         Validate.num(val) if type(val) != [] else Validate.list_of_words(val)
+        lhs, op, rhs = (category, '', val)
         if quantifier is 'ge':
-          result.append("%s >= %s" % (category, val))
+          op = '>='
         elif quantifier is "gt":
-          result.append("%s > %s" % (category, val))
+          op = '>'
         elif quantifier is "lt":
-          result.append("%s < %s" % (category, val))
+          op = '<'
         elif quantifier is "le":
-          result.append("%s <= %s" % (category, val))
+          op = '<='
         elif quantifier is "in":
-          result.append("%s in (%s)" % (category, (', ').join(["'%s'" % col   for col in val])))
+          op = 'in'
         else:
           raise NameError("Unrecognized filter quantifier: %s" % quantifier)
+        result.append((lhs, op, rhs))
     return result
 
   @staticmethod
@@ -90,7 +92,7 @@ class Parser:
     Validate.word(order['sort'])
     if 'asc' in order:
       assert type(order['asc']) is bool
-    return '%s %s' % (order['sort'], 'ASC' if 'asc' in order and order['asc'] is True else 'DESC')
+    return (order['sort'], 'ASC' if 'asc' in order and order['asc'] is True else 'DESC')
 
 class QueryBuilder:
   def __init__(self, raw_table):
@@ -136,17 +138,30 @@ class QueryBuilder:
     assert self.table is not None
     assert self.select is not None
     query = 'SELECT %s FROM %s ' % (self.select, self.table)
+    params = []
     if self.where is not None:
-      query += ('WHERE %s ' % self.where[0])
-      for idx in range(1, len(self.where)):
-        ' AND %s ' % self.where[idx]
+      for idx in range(0, len(self.where)):
+        lhs, op, rhs = self.where[idx]
+        if idx == 0:
+          query += 'WHERE %s %s ' % (lhs, op)
+        else:
+          query += 'AND %s %s ' % (lhs, op)
+        if op == 'in':
+          query += '(%s) ' % ('?' + ',?'*(len(rhs)-1))
+          params += rhs
+        else:
+          query += '? '
+          params.append(rhs)
     if self.groupby is not None:
       query += 'GROUP BY %s ' % self.groupby
     if self.orderby is not None:
-      query += 'ORDER BY %s ' % self.orderby
+      category, orientation = self.orderby
+      query += 'ORDER BY ? %s ' % orientation 
+      params.append(category)
     if self.limit is not None:
-      query += 'LIMIT %s' % self.limit
-    return query
+      query += 'LIMIT ?'
+      params.append(self.limit)
+    return (query, params)
 
   @staticmethod
   def build_sort_query(table, spec):
@@ -182,14 +197,14 @@ def process_fn(execute):
     result = ''
     if 'meta' in spec and spec['meta'] != {}:
       # Step 1:
-      query = QueryBuilder.build_sort_query(table, spec)
-      result = execute(query)
+      query, params = QueryBuilder.build_sort_query(table, spec)
+      result = execute(query, params)
 
       # Step 2:
-      query = QueryBuilder.build_calc_query(table, spec, limit, result)
-      result = execute(query)
+      query, params = QueryBuilder.build_calc_query(table, spec, limit, result)
+      result = execute(query, params)
     else: 
-      query = QueryBuilder.build_calc_query(table, spec, limit)
-      result = execute(query)
+      query, params = QueryBuilder.build_calc_query(table, spec, limit)
+      result = execute(query, params)
     return { 'data': result, 'meta': spec['select'] }
   return dataprocess
