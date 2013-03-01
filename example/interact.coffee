@@ -21,9 +21,11 @@
     if type == 'click'
       alert("You clicked on index: " + data.index.in[0])
     if type == 'select'
-      console.log data
       r = (x) -> Math.round(x*10)/10
-      alert "index: #{r(data.index.le)} - #{r(data.index.ge)}\nvalue: #{r(data.value.le)} - #{r(data.value.ge)}"
+      if data.index? and data.value?
+        alert "index: #{r(data.index.ge)} - #{r(data.index.le)}\nvalue: #{r(data.value.ge)} - #{r(data.value.le)}"
+      else
+        alert "You selected out of range! Please select within the graph."
 
 @examples.interact_point = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])

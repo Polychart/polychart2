@@ -92,16 +92,30 @@ class ScaleSet
     scales.text.make()
     scales
 
-  fromPixels: (start, end) ->
-    {x,y} = @coord.getAes start, end, @reverse
-    obj = {}
-    for map in @layerMapping.x
-      if map.type? and map.type == 'map'
-        obj[map.value] = x
-    for map in @layerMapping.y
-      if map.type? and map.type == 'map'
-        obj[map.value] = y
-    obj
+  fromPixels: (start, end, getFacetInfo) ->
+    startInfo = getFacetInfo start.x, start.y
+    endInfo = getFacetInfo end.x, end.y
+    if startInfo? and endInfo?
+      startPrime ={x:start.x-startInfo.offset.x,y:start.y-startInfo.offset.y}
+      endPrime = {x: end.x-endInfo.offset.x,y: end.y-endInfo.offset.y}
+      {x,y} = @coord.getAes startPrime, endPrime, @reverse
+      obj = {}
+      for map in @layerMapping.x
+        if map.type? and map.type == 'map'
+          obj[map.value] = x
+      for map in @layerMapping.y
+        if map.type? and map.type == 'map'
+          obj[map.value] = y
+      obj
+    else
+      obj = {}
+      for map in @layerMapping.x
+        if map.type? and map.type == 'map'
+          obj[map.value] = null
+      for map in @layerMapping.y
+        if map.type? and map.type == 'map'
+          obj[map.value] = null
+      obj
 
   getSpec : (a) -> if @guideSpec? and @guideSpec[a]? then @guideSpec[a] else {}
 

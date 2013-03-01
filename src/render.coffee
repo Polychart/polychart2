@@ -10,17 +10,6 @@ poly.paper = (dom, w, h, handleEvent) ->
     fill: 'white' # for FireFox
     opacity: 0    # for not showing background
     'stroke-width': 0
-  bg.click handleEvent('reset')
-  # add dragging handle for selecting
-  handler = handleEvent('select')
-  offset = poly.offset dom
-  applyOffset = (x,y) -> x:x-offset.left, y:y-offset.top
-  start = end = null
-  onstart = () -> start = null; end = null
-  onmove = (dx, dy, y, x) ->
-    if start? then end = applyOffset(x,y) else start = applyOffset(x,y)
-  onend = () -> if start? and end? then handler start:start, end:end
-  bg.drag onmove, onstart, onend
   paper
 
 ###

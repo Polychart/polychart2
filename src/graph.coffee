@@ -12,7 +12,7 @@ class Graph
   constructor: (spec) ->
     if not spec?
       throw poly.error.defn "No graph specification is passed in!"
-    @handlers = []
+    @handlers = [poly.handler.zoom(spec)]
     @scaleSet = null
     @axes = null
     @legends = null
@@ -20,16 +20,17 @@ class Graph
     @paper = null
     @coord = null
     @facet = poly.facet.make()
-    @initial_spec = spec
+    @initial_spec = _.clone spec
     @dataSubscribed = []
     @make spec
+    poly.mouseEvents this
   ###
   Reset the graph to its initial specification.
   ###
   reset : () =>
     if not @initial_spec?
       throw poly.error.defn "No graph specification is passed in!"
-    @dispose()
+    @maybeDispose @spec
     @make @initial_spec
   ###
   Remove all existing items on the graph, if necessary
@@ -138,8 +139,7 @@ class Graph
       obj = @
       if type == 'select'
         {start, end} = event
-        #graph.paper.rect(start.y, start.x, end.y-start.y, end.x-start.x)
-        obj.evtData = graph.scaleSet.fromPixels start, end
+        obj.evtData = graph.scaleSet.fromPixels start, end, (x, y) -> graph.facet.getFacetInfo(graph.dims, x, y)
       else if type == 'data'
         obj.evtData = {}
       else if type in ['reset', 'click', 'mover', 'mout', 'guide-click']

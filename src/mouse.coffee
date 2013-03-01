@@ -26,3 +26,57 @@ poly.getXY = (offset, e) ->
   scrollX = document.documentElement.scrollLeft ? document.body.scrollLeft
   x: x + scrollX - offset.left
   y: y + scrollY - offset.top
+###
+Mouse Event Handlers
+###
+poly.mouseEvents = (graph) ->
+  bg = graph.paper.getById(0)
+  offset = poly.offset(graph.dom)
+
+  # Reset event
+  bg.click graph.handleEvent('reset')
+
+  # Mouse movement handler
+  mouseText = graph.paper.text(20, 20, "x:\ny:")
+  showMousePosition = (e) ->
+    mousePos = poly.getXY offset, e
+    mouseText.attr({text: "x: " + mousePos.x + "\ny:" + mousePos.y})
+  bg.mousemove showMousePosition
+
+  # Mouse selection drag rectangle
+  handler = graph.handleEvent('select')
+  dragRect = null
+  start = end = null
+  startInfo = endInfo = null
+  onstart = () -> start = null; end = null
+  onmove = (dx, dy, x, y) ->
+    if start?
+      end = x: start.x + dx, y: start.y + dy
+      endInfo = graph.facet.getFacetInfo graph.dims, end.x, end.y
+      # Update drag rect if within border
+      if startInfo? and endInfo?
+        dragRect.attr({
+          x: Math.min(start.x, end.x)
+          y: Math.min(start.y, end.y)
+          width: Math.abs(start.x - end.x)
+          height: Math.abs(start.y - end.y)
+        })
+    else
+      start = x: x - offset.left, y: y - offset.top
+      startInfo = graph.facet.getFacetInfo graph.dims, start.x, start.y
+      # Initalized drag rectangle if start within border
+      if startInfo?
+        dragRect = graph.paper.rect(start.x, start.y, 0, 0, 2)
+        dragRect.attr({
+          fill: 'black'
+          opacity: 0.2
+        })
+  onend = () -> if start? and end?
+    if dragRect?
+      # Clean up drag rectangle
+      dragRect.attr
+        width: 0
+        height: 0
+      dragRect.remove()
+    handler start:start, end:end
+  bg.drag onmove, onstart, onend
