@@ -65,12 +65,22 @@ poly.mouseEvents = (graph, debug) ->
           opacity: 0.2
         })
   onend = () -> if start? and end?
+    # Clean up drag rectangle
     if dragRect?
-      # Clean up drag rectangle
       dragRect.attr
         width: 0
         height: 0
       dragRect.remove()
+
+    # For convenience, make start on top left and end at bottom right
+    if start.y > end.y
+      start.x = start.x + end.x
+      end.x = start.x - end.x
+      start.x = start.x - end.x
+      start.y = start.y + end.y
+      end.y = start.y - end.y
+      start.y = start.y - end.y
+    
     handler start:start, end:end
   bg.drag onmove, onstart, onend
 

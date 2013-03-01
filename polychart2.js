@@ -832,20 +832,11 @@ Get the offset of the element
   */
 
 
-  poly.mouseEvents = function(graph) {
+  poly.mouseEvents = function(graph, debug) {
     var bg, dragRect, end, endInfo, handler, mouseText, offset, onend, onmove, onstart, showMousePosition, start, startInfo;
     bg = graph.paper.getById(0);
     offset = poly.offset(graph.dom);
     bg.click(graph.handleEvent('reset'));
-    mouseText = graph.paper.text(20, 20, "x:\ny:");
-    showMousePosition = function(e) {
-      var mousePos;
-      mousePos = poly.getXY(offset, e);
-      return mouseText.attr({
-        text: "x: " + mousePos.x + "\ny:" + mousePos.y
-      });
-    };
-    bg.mousemove(showMousePosition);
     handler = graph.handleEvent('select');
     dragRect = null;
     start = end = null;
@@ -893,13 +884,32 @@ Get the offset of the element
           });
           dragRect.remove();
         }
+        if (start.y > end.y) {
+          start.x = start.x + end.x;
+          end.x = start.x - end.x;
+          start.x = start.x - end.x;
+          start.y = start.y + end.y;
+          end.y = start.y - end.y;
+          start.y = start.y - end.y;
+        }
         return handler({
           start: start,
           end: end
         });
       }
     };
-    return bg.drag(onmove, onstart, onend);
+    bg.drag(onmove, onstart, onend);
+    if (debug) {
+      mouseText = graph.paper.text(20, 20, "x:\ny:");
+      showMousePosition = function(e) {
+        var mousePos;
+        mousePos = poly.getXY(offset, e);
+        return mouseText.attr({
+          text: "x: " + mousePos.x + "\ny:" + mousePos.y
+        });
+      };
+      return bg.mousemove(showMousePosition);
+    }
   };
 
 }).call(this);
@@ -5067,7 +5077,7 @@ attribute of that value.
     };
 
     ScaleSet.prototype.fromPixels = function(start, end, getFacetInfo) {
-      var endInfo, endPrime, map, obj, startInfo, startPrime, x, y, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3, _ref4;
+      var endInfo, endPrime, map, obj, startInfo, startPrime, x, y, _i, _j, _len, _len1, _ref, _ref1, _ref2;
       startInfo = getFacetInfo(start.x, start.y);
       endInfo = getFacetInfo(end.x, end.y);
       if ((startInfo != null) && (endInfo != null)) {
@@ -5080,40 +5090,23 @@ attribute of that value.
           y: end.y - endInfo.offset.y
         };
         _ref = this.coord.getAes(startPrime, endPrime, this.reverse), x = _ref.x, y = _ref.y;
-        obj = {};
-        _ref1 = this.layerMapping.x;
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          map = _ref1[_i];
-          if ((map.type != null) && map.type === 'map') {
-            obj[map.value] = x;
-          }
-        }
-        _ref2 = this.layerMapping.y;
-        for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-          map = _ref2[_j];
-          if ((map.type != null) && map.type === 'map') {
-            obj[map.value] = y;
-          }
-        }
-        return obj;
-      } else {
-        obj = {};
-        _ref3 = this.layerMapping.x;
-        for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
-          map = _ref3[_k];
-          if ((map.type != null) && map.type === 'map') {
-            obj[map.value] = null;
-          }
-        }
-        _ref4 = this.layerMapping.y;
-        for (_l = 0, _len3 = _ref4.length; _l < _len3; _l++) {
-          map = _ref4[_l];
-          if ((map.type != null) && map.type === 'map') {
-            obj[map.value] = null;
-          }
-        }
-        return obj;
       }
+      obj = {};
+      _ref1 = this.layerMapping.x;
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        map = _ref1[_i];
+        if ((map.type != null) && map.type === 'map') {
+          obj[map.value] = x != null ? x : null;
+        }
+      }
+      _ref2 = this.layerMapping.y;
+      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+        map = _ref2[_j];
+        if ((map.type != null) && map.type === 'map') {
+          obj[map.value] = y != null ? y : null;
+        }
+      }
+      return obj;
     };
 
     ScaleSet.prototype.getSpec = function(a) {
@@ -8440,22 +8433,22 @@ The functions here makes it easier to create common types of interactions.
 
 
   poly.handler.zoom = function(init_spec) {
-    var xGuides, yGuides, zoomed, _ref, _ref1;
-    xGuides = _.clone((_ref = init_spec.guides.x) != null ? _ref : void 0);
-    yGuides = _.clone((_ref1 = init_spec.guides.y) != null ? _ref1 : void 0);
+    var xGuides, yGuides, zoomed, _ref, _ref1, _ref2, _ref3;
+    xGuides = _.clone((_ref = (_ref1 = init_spec.guides) != null ? _ref1.x : void 0) != null ? _ref : void 0);
+    yGuides = _.clone((_ref2 = (_ref3 = init_spec.guides) != null ? _ref3.y : void 0) != null ? _ref2 : void 0);
     zoomed = false;
     return function(type, obj, event, graph) {
-      var data, layer, spec, xVar, yVar, _base, _base1, _i, _len, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
+      var data, layer, spec, xVar, yVar, _base, _base1, _i, _len, _ref10, _ref11, _ref12, _ref13, _ref14, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
       data = obj.evtData;
       if (type === 'reset' && zoomed) {
         spec = graph.spec;
         zoomed = false;
-        if ((xGuides != null) && (spec.guides.x != null)) {
+        if (xGuides && ((_ref4 = spec.guides) != null ? _ref4.x : void 0)) {
           spec.guides.x = _.clone(xGuides);
         } else {
           delete spec.guides.x;
         }
-        if ((yGuides != null) && (spec.guides.y != null)) {
+        if (yGuides && ((_ref5 = spec.guides) != null ? _ref5.y : void 0)) {
           spec.guides.y = _.clone(yGuides);
         } else {
           delete spec.guides.y;
@@ -8465,13 +8458,17 @@ The functions here makes it easier to create common types of interactions.
       if (type === 'select') {
         spec = graph.spec;
         zoomed = true;
-        _ref2 = spec.layers;
-        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-          layer = _ref2[_i];
-          xVar = layer.x["var"];
-          yVar = layer.y["var"];
-          if (((_ref3 = data[xVar]) != null ? _ref3.ge : void 0) && ((_ref4 = data[xVar]) != null ? _ref4.le : void 0)) {
-            if ((_ref5 = (_base = spec.guides).x) == null) {
+        console.log(data);
+        _ref6 = spec.layers;
+        for (_i = 0, _len = _ref6.length; _i < _len; _i++) {
+          layer = _ref6[_i];
+          console.log("I got in here!");
+          xVar = (_ref7 = layer.x) != null ? _ref7["var"] : void 0;
+          yVar = (_ref8 = layer.y) != null ? _ref8["var"] : void 0;
+          if (((_ref9 = data[xVar]) != null ? _ref9.ge : void 0) && ((_ref10 = data[xVar]) != null ? _ref10.le : void 0)) {
+            console.log("Time to change these guide specs! x here");
+            console.log(data[xVar]);
+            if ((_ref11 = (_base = spec.guides).x) == null) {
               _base.x = {
                 min: data[xVar].ge,
                 max: data[xVar].le
@@ -8480,8 +8477,10 @@ The functions here makes it easier to create common types of interactions.
             spec.guides.x.min = data[xVar].ge;
             spec.guides.x.max = data[xVar].le;
           }
-          if (((_ref6 = data[yVar]) != null ? _ref6.ge : void 0) && ((_ref7 = data[yVar]) != null ? _ref7.le : void 0)) {
-            if ((_ref8 = (_base1 = spec.guides).y) == null) {
+          if (((_ref12 = data[yVar]) != null ? _ref12.ge : void 0) && ((_ref13 = data[yVar]) != null ? _ref13.le : void 0)) {
+            console.log("Time to change these guide specs! y this time");
+            console.log(data[yVar]);
+            if ((_ref14 = (_base1 = spec.guides).y) == null) {
               _base1.y = {
                 min: data[yVar].ge,
                 max: data[yVar].le
@@ -8490,6 +8489,8 @@ The functions here makes it easier to create common types of interactions.
             spec.guides.y.min = data[yVar].ge;
             spec.guides.y.max = data[yVar].le;
           }
+          console.log("Here are the guide specs!");
+          console.log(spec.guides);
         }
         return graph.make(spec);
       }
@@ -8931,6 +8932,8 @@ The functions here makes it easier to create common types of interactions.
       this.maybeDispose = __bind(this.maybeDispose, this);
 
       this.reset = __bind(this.reset, this);
+
+      var debug;
       if (!(spec != null)) {
         throw poly.error.defn("No graph specification is passed in!");
       }
@@ -8945,7 +8948,7 @@ The functions here makes it easier to create common types of interactions.
       this.initial_spec = _.clone(spec);
       this.dataSubscribed = [];
       this.make(spec);
-      poly.mouseEvents(this);
+      poly.mouseEvents(this, debug = false);
     }
 
     /*

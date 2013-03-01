@@ -107,7 +107,6 @@ class ScaleSet
       if map.type? and map.type == 'map'
         obj[map.value] = y ? null
     obj
-    else
 
   getSpec : (a) -> if @guideSpec? and @guideSpec[a]? then @guideSpec[a] else {}
 
