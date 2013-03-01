@@ -23,7 +23,7 @@ class Graph
     @initial_spec = _.clone spec
     @dataSubscribed = []
     @make spec
-    poly.mouseEvents this
+    poly.mouseEvents(this, debug = false)
   ###
   Reset the graph to its initial specification.
   ###

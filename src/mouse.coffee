@@ -29,19 +29,12 @@ poly.getXY = (offset, e) ->
 ###
 Mouse Event Handlers
 ###
-poly.mouseEvents = (graph) ->
+poly.mouseEvents = (graph, debug) ->
   bg = graph.paper.getById(0)
   offset = poly.offset(graph.dom)
 
   # Reset event
   bg.click graph.handleEvent('reset')
-
-  # Mouse movement handler
-  mouseText = graph.paper.text(20, 20, "x:\ny:")
-  showMousePosition = (e) ->
-    mousePos = poly.getXY offset, e
-    mouseText.attr({text: "x: " + mousePos.x + "\ny:" + mousePos.y})
-  bg.mousemove showMousePosition
 
   # Mouse selection drag rectangle
   handler = graph.handleEvent('select')
@@ -80,3 +73,12 @@ poly.mouseEvents = (graph) ->
       dragRect.remove()
     handler start:start, end:end
   bg.drag onmove, onstart, onend
+
+  # Mouse movement handler --- debugging purposes
+  if debug
+    mouseText = graph.paper.text(20, 20, "x:\ny:")
+    showMousePosition = (e) ->
+      mousePos = poly.getXY offset, e
+      mouseText.attr({text: "x: " + mousePos.x + "\ny:" + mousePos.y})
+    bg.mousemove showMousePosition
+

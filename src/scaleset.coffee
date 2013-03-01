@@ -99,23 +99,15 @@ class ScaleSet
       startPrime ={x:start.x-startInfo.offset.x,y:start.y-startInfo.offset.y}
       endPrime = {x: end.x-endInfo.offset.x,y: end.y-endInfo.offset.y}
       {x,y} = @coord.getAes startPrime, endPrime, @reverse
-      obj = {}
-      for map in @layerMapping.x
-        if map.type? and map.type == 'map'
-          obj[map.value] = x
-      for map in @layerMapping.y
-        if map.type? and map.type == 'map'
-          obj[map.value] = y
-      obj
+    obj = {}
+    for map in @layerMapping.x
+      if map.type? and map.type == 'map'
+        obj[map.value] = x ? null
+    for map in @layerMapping.y
+      if map.type? and map.type == 'map'
+        obj[map.value] = y ? null
+    obj
     else
-      obj = {}
-      for map in @layerMapping.x
-        if map.type? and map.type == 'map'
-          obj[map.value] = null
-      for map in @layerMapping.y
-        if map.type? and map.type == 'map'
-          obj[map.value] = null
-      obj
 
   getSpec : (a) -> if @guideSpec? and @guideSpec[a]? then @guideSpec[a] else {}
 
