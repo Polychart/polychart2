@@ -1,4 +1,5 @@
 ##
+#
 # Graph Object And Entry Point: poly.chart()
 # ------------------------------------------
 # This is the main graph object and controls the main visualization workflow.
@@ -12,7 +13,7 @@ class Graph
   constructor: (spec) ->
     if not spec?
       throw poly.error.defn "No graph specification is passed in!"
-    @handlers = [poly.handler.zoom(spec)]
+    @handlers = []
     @scaleSet = null
     @axes = null
     @legends = null
@@ -23,7 +24,12 @@ class Graph
     @initial_spec = _.clone spec
     @dataSubscribed = []
     @make spec
-    poly.mouseEvents(this, debug = false)
+
+    # Post make work, things that do not have to be updated
+    poly.mouseEvents(this, false)
+    # Default handlers
+    @addHandler poly.handler.tooltip()
+    @addHandler poly.handler.zoom(spec)
   ###
   Reset the graph to its initial specification.
   ###
@@ -80,8 +86,6 @@ class Graph
           statData: statData
           metaData: metaData
         merge()
-    # default handlers
-    @addHandler poly.handler.tooltip()
   ###
   Complete work to plot the graph. This includes three stages:
     1) Create each "pane". Each "pane" is a facet containing a smallversion
@@ -128,7 +132,7 @@ class Graph
     if @callback
       @callback()
 
-  addHandler : (h) -> @handlers.push h
+  addHandler : (h) -> if h not in @handlers then @handlers.push h
   removeHandler: (h) ->
     @handlers.splice _.indexOf(@handlers, h), 1
 
@@ -139,7 +143,16 @@ class Graph
       obj = @
       if type == 'select'
         {start, end} = event
-        obj.evtData = graph.scaleSet.fromPixels start, end, (x, y) -> graph.facet.getFacetInfo(graph.dims, x, y)
+        f1 = graph.facet.getFacetInfo(graph.dims, start.x, start.y)
+        if not f1 then return # Did not start in a facet
+        {col, row, evtData, adjusted} = f1
+        adjStart = _.clone adjusted
+        {adjusted} = graph.facet.getFacetInfo(graph.dims, end.x, end.y, {col, row})
+        adjEnd = _.clone adjusted
+        if graph.coord.type is 'cartesian'
+          obj.evtData = graph.scaleSet.fromPixels adjStart, adjEnd
+        else
+          obj.evtData = null
       else if type == 'data'
         obj.evtData = {}
       else if type in ['reset', 'click', 'mover', 'mout', 'guide-click']

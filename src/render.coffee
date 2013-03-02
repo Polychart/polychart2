@@ -5,12 +5,35 @@ poly.paper = (dom, w, h, handleEvent) ->
   if not Raphael?
     throw poly.error.depn "The dependency Raphael is not included."
   paper = Raphael(dom, w, h)
-  # add click handler for clicking outside of things
+  # Handlers and events for clicking outside of graph geometry
   bg = paper.rect(0,0,w,h).attr
     fill: 'white' # for FireFox
     opacity: 0    # for not showing background
     'stroke-width': 0
   paper
+
+###
+Drawing utilities for mouse events
+###
+poly.drawRect = (paper, attr, rect = null) ->
+  if attr is 'remove' and rect?
+    rect.hide()
+    rect.remove()
+    null
+  else if attr? and rect?
+    rect.attr attr
+  else
+    paper.rect(attr.x, attr.y, attr.w, attr.h, attr.r)
+
+poly.drawText = (paper, attr, text = null) ->
+  if attr is 'remove' and text?
+    text.hide()
+    text.remove()
+    null
+  else if attr? and text?
+    text.attr attr
+  else
+    paper.text(attr.x, attr.y, attr.text)
 
 ###
 Helper function for rendering all the geoms of an object

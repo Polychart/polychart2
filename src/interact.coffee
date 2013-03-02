@@ -85,29 +85,41 @@ Zooming and Resetting. Whenever click and drag on range, set to that range.
   * Reset event, that is, restoring to previous values, when click blank spot
 ###
 poly.handler.zoom = (init_spec) ->
+  if not init_spec?
+    throw poly.error.input "Initial specification missing."
   xGuides = _.clone init_spec.guides?.x ? undefined
   yGuides = _.clone init_spec.guides?.y ? undefined
   zoomed = false
   (type, obj, event, graph) ->
     data = obj.evtData
-    if type is 'reset' and zoomed
-      spec = graph.spec
-      zoomed = false
-      if xGuides and spec.guides?.x then spec.guides.x = _.clone xGuides else delete spec.guides.x
-      if yGuides and spec.guides?.y then spec.guides.y = _.clone yGuides else delete spec.guides.y
-      graph.make graph.spec
-    if type is 'select'
-      spec = graph.spec
-      zoomed = true
-      for layer in spec.layers
-        xVar = layer.x?.var
-        yVar = layer.y?.var
-        if data[xVar]?.ge and data[xVar]?.le
-          spec.guides.x ?= {min: data[xVar].ge, max: data[xVar].le}
-          spec.guides.x.min = data[xVar].ge
-          spec.guides.x.max = data[xVar].le
-        if data[yVar]?.ge and data[yVar]?.le
-          spec.guides.y ?= {min: data[yVar].ge, max: data[yVar].le}
-          spec.guides.y.min = data[yVar].ge
-          spec.guides.y.max = data[yVar].le
-      graph.make spec
+    if graph.coord.type is 'cartesian'
+      if type is 'reset' and zoomed
+        spec = graph.spec
+        zoomed = false
+        if xGuides? and spec.guides?.x?
+          spec.guides.x = _.clone xGuides
+        else
+          if spec.guides.x?.min? then delete spec.guides.x.min
+          if spec.guides.x?.max? then delete spec.guides.x.max
+        if yGuides? and spec.guides?.y?
+          spec.guides.y = _.clone yGuides
+        else
+          if spec.guides.y?.min? then delete spec.guides.y.min
+          if spec.guides.y?.max? then delete spec.guides.y.max
+        graph.make graph.spec
+      if type is 'select'
+        spec = graph.spec
+        zoomed = true
+        for layer in spec.layers
+          xVar = layer.x?.var
+          yVar = layer.y?.var
+          if spec.coord.type is 'polar' then xVar = null
+          if data[xVar]?.ge and data[xVar]?.le and (data[xVar].le - data[xVar].ge) > poly.const.epsilon
+            spec.guides.x ?= {min: data[xVar].ge, max: data[xVar].le}
+            spec.guides.x.min = data[xVar].ge
+            spec.guides.x.max = data[xVar].le
+          if data[yVar]?.ge and data[yVar]?.le and (data[yVar].le - data[yVar].ge) > poly.const.epsilon
+            spec.guides.y ?= {min: data[yVar].ge, max: data[yVar].le}
+            spec.guides.y.min = data[yVar].ge
+            spec.guides.y.max = data[yVar].le
+          graph.make spec

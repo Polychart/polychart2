@@ -41,7 +41,6 @@ class ScaleSet
   _makeYScale: () -> @scales.y.make @domainy, @ranges.y, @getSpec('y').padding
   _makeScales : (guideSpec, domains, ranges) ->
     # this function contains information about default scales!
-    # TODO: Add some sort of typechecking for custom scales?
     specScale = (a) ->
       if guideSpec and guideSpec[a]? and guideSpec[a].scale?
         if _.isFunction(guideSpec[a].scale)
@@ -92,13 +91,9 @@ class ScaleSet
     scales.text.make()
     scales
 
-  fromPixels: (start, end, getFacetInfo) ->
-    startInfo = getFacetInfo start.x, start.y
-    endInfo = getFacetInfo end.x, end.y
-    if startInfo? and endInfo?
-      startPrime ={x:start.x-startInfo.offset.x,y:start.y-startInfo.offset.y}
-      endPrime = {x: end.x-endInfo.offset.x,y: end.y-endInfo.offset.y}
-      {x,y} = @coord.getAes startPrime, endPrime, @reverse
+  fromPixels: (start, end) ->
+    if start? and end?
+      {x, y} = @coord.getAes start, end, @reverse
     obj = {}
     for map in @layerMapping.x
       if map.type? and map.type == 'map'

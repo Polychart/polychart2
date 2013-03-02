@@ -29,7 +29,7 @@ poly.getXY = (offset, e) ->
 ###
 Mouse Event Handlers
 ###
-poly.mouseEvents = (graph, debug) ->
+poly.mouseEvents = (graph, debug = false) ->
   bg = graph.paper.getById(0)
   offset = poly.offset(graph.dom)
 
@@ -39,56 +39,45 @@ poly.mouseEvents = (graph, debug) ->
   # Mouse selection drag rectangle
   handler = graph.handleEvent('select')
   dragRect = null
+  rect = null
   start = end = null
   startInfo = endInfo = null
+  col = row = null
   onstart = () -> start = null; end = null
   onmove = (dx, dy, x, y) ->
-    if start?
+    if startInfo? and start?
       end = x: start.x + dx, y: start.y + dy
       endInfo = graph.facet.getFacetInfo graph.dims, end.x, end.y
       # Update drag rect if within border
-      if startInfo? and endInfo?
-        dragRect.attr({
-          x: Math.min(start.x, end.x)
-          y: Math.min(start.y, end.y)
+      if endInfo? and endInfo.col is startInfo.col and endInfo.row is startInfo.row
+        attr =
+          x: Math.min start.x, end.x
+          y: Math.min start.y, end.y
           width: Math.abs(start.x - end.x)
           height: Math.abs(start.y - end.y)
-        })
+        rect = poly.drawRect(graph.paper, attr, rect)
     else
       start = x: x - offset.left, y: y - offset.top
       startInfo = graph.facet.getFacetInfo graph.dims, start.x, start.y
       # Initalized drag rectangle if start within border
       if startInfo?
-        dragRect = graph.paper.rect(start.x, start.y, 0, 0, 2)
-        dragRect.attr({
-          fill: 'black'
-          opacity: 0.2
-        })
+        attr = {x: start.x, y: start.y, w: 0, h: 0, r: 2}
+        rect = poly.drawRect(graph.paper, attr)
+        rect = poly.drawRect(graph.paper, {fill: 'black', opacity: 0.2}, rect)
   onend = () -> if start? and end?
     # Clean up drag rectangle
-    if dragRect?
-      dragRect.attr
-        width: 0
-        height: 0
-      dragRect.remove()
-
-    # For convenience, make start on top left and end at bottom right
-    if start.y > end.y
-      start.x = start.x + end.x
-      end.x = start.x - end.x
-      start.x = start.x - end.x
-      start.y = start.y + end.y
-      end.y = start.y - end.y
-      start.y = start.y - end.y
-    
+    if rect?
+      rect = poly.drawRect(graph.paper, 'remove', rect)
     handler start:start, end:end
   bg.drag onmove, onstart, onend
 
   # Mouse movement handler --- debugging purposes
   if debug
-    mouseText = graph.paper.text(20, 20, "x:\ny:")
+    attr = {x: 20, y: 20, text: "x:\ny:"}
+    mouseText = poly.drawText(graph.paper, attr)
     showMousePosition = (e) ->
       mousePos = poly.getXY offset, e
-      mouseText.attr({text: "x: " + mousePos.x + "\ny:" + mousePos.y})
+      attr = {text: "x: " + mousePos.x + "\ny: " + mousePos.y}
+      mouseText = poly.drawText(graph.paper, attr, mouseText)
     bg.mousemove showMousePosition
 

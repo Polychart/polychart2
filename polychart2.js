@@ -833,32 +833,39 @@ Get the offset of the element
 
 
   poly.mouseEvents = function(graph, debug) {
-    var bg, dragRect, end, endInfo, handler, mouseText, offset, onend, onmove, onstart, showMousePosition, start, startInfo;
+    var attr, bg, col, dragRect, end, endInfo, handler, mouseText, offset, onend, onmove, onstart, rect, row, showMousePosition, start, startInfo;
+    if (debug == null) {
+      debug = false;
+    }
     bg = graph.paper.getById(0);
     offset = poly.offset(graph.dom);
     bg.click(graph.handleEvent('reset'));
     handler = graph.handleEvent('select');
     dragRect = null;
+    rect = null;
     start = end = null;
     startInfo = endInfo = null;
+    col = row = null;
     onstart = function() {
       start = null;
       return end = null;
     };
     onmove = function(dx, dy, x, y) {
-      if (start != null) {
+      var attr;
+      if ((startInfo != null) && (start != null)) {
         end = {
           x: start.x + dx,
           y: start.y + dy
         };
         endInfo = graph.facet.getFacetInfo(graph.dims, end.x, end.y);
-        if ((startInfo != null) && (endInfo != null)) {
-          return dragRect.attr({
+        if ((endInfo != null) && endInfo.col === startInfo.col && endInfo.row === startInfo.row) {
+          attr = {
             x: Math.min(start.x, end.x),
             y: Math.min(start.y, end.y),
             width: Math.abs(start.x - end.x),
             height: Math.abs(start.y - end.y)
-          });
+          };
+          return rect = poly.drawRect(graph.paper, attr, rect);
         }
       } else {
         start = {
@@ -867,30 +874,25 @@ Get the offset of the element
         };
         startInfo = graph.facet.getFacetInfo(graph.dims, start.x, start.y);
         if (startInfo != null) {
-          dragRect = graph.paper.rect(start.x, start.y, 0, 0, 2);
-          return dragRect.attr({
+          attr = {
+            x: start.x,
+            y: start.y,
+            w: 0,
+            h: 0,
+            r: 2
+          };
+          rect = poly.drawRect(graph.paper, attr);
+          return rect = poly.drawRect(graph.paper, {
             fill: 'black',
             opacity: 0.2
-          });
+          }, rect);
         }
       }
     };
     onend = function() {
       if ((start != null) && (end != null)) {
-        if (dragRect != null) {
-          dragRect.attr({
-            width: 0,
-            height: 0
-          });
-          dragRect.remove();
-        }
-        if (start.y > end.y) {
-          start.x = start.x + end.x;
-          end.x = start.x - end.x;
-          start.x = start.x - end.x;
-          start.y = start.y + end.y;
-          end.y = start.y - end.y;
-          start.y = start.y - end.y;
+        if (rect != null) {
+          rect = poly.drawRect(graph.paper, 'remove', rect);
         }
         return handler({
           start: start,
@@ -900,13 +902,19 @@ Get the offset of the element
     };
     bg.drag(onmove, onstart, onend);
     if (debug) {
-      mouseText = graph.paper.text(20, 20, "x:\ny:");
+      attr = {
+        x: 20,
+        y: 20,
+        text: "x:\ny:"
+      };
+      mouseText = poly.drawText(graph.paper, attr);
       showMousePosition = function(e) {
         var mousePos;
         mousePos = poly.getXY(offset, e);
-        return mouseText.attr({
-          text: "x: " + mousePos.x + "\ny:" + mousePos.y
-        });
+        attr = {
+          text: "x: " + mousePos.x + "\ny: " + mousePos.y
+        };
+        return mouseText = poly.drawText(graph.paper, attr, mouseText);
       };
       return bg.mousemove(showMousePosition);
     }
@@ -5076,20 +5084,10 @@ attribute of that value.
       return scales;
     };
 
-    ScaleSet.prototype.fromPixels = function(start, end, getFacetInfo) {
-      var endInfo, endPrime, map, obj, startInfo, startPrime, x, y, _i, _j, _len, _len1, _ref, _ref1, _ref2;
-      startInfo = getFacetInfo(start.x, start.y);
-      endInfo = getFacetInfo(end.x, end.y);
-      if ((startInfo != null) && (endInfo != null)) {
-        startPrime = {
-          x: start.x - startInfo.offset.x,
-          y: start.y - startInfo.offset.y
-        };
-        endPrime = {
-          x: end.x - endInfo.offset.x,
-          y: end.y - endInfo.offset.y
-        };
-        _ref = this.coord.getAes(startPrime, endPrime, this.reverse), x = _ref.x, y = _ref.y;
+    ScaleSet.prototype.fromPixels = function(start, end) {
+      var map, obj, x, y, _i, _j, _len, _len1, _ref, _ref1, _ref2;
+      if ((start != null) && (end != null)) {
+        _ref = this.coord.getAes(start, end, this.reverse), x = _ref.x, y = _ref.y;
       }
       obj = {};
       _ref1 = this.layerMapping.x;
@@ -7655,6 +7653,41 @@ Dimension object has the following elements (all numeric in pixels):
   };
 
   /*
+  Drawing utilities for mouse events
+  */
+
+
+  poly.drawRect = function(paper, attr, rect) {
+    if (rect == null) {
+      rect = null;
+    }
+    if (attr === 'remove' && (rect != null)) {
+      rect.hide();
+      rect.remove();
+      return null;
+    } else if ((attr != null) && (rect != null)) {
+      return rect.attr(attr);
+    } else {
+      return paper.rect(attr.x, attr.y, attr.w, attr.h, attr.r);
+    }
+  };
+
+  poly.drawText = function(paper, attr, text) {
+    if (text == null) {
+      text = null;
+    }
+    if (attr === 'remove' && (text != null)) {
+      text.hide();
+      text.remove();
+      return null;
+    } else if ((attr != null) && (text != null)) {
+      return text.attr(attr);
+    } else {
+      return paper.text(attr.x, attr.y, attr.text);
+    }
+  };
+
+  /*
   Helper function for rendering all the geoms of an object
   */
 
@@ -8434,65 +8467,77 @@ The functions here makes it easier to create common types of interactions.
 
   poly.handler.zoom = function(init_spec) {
     var xGuides, yGuides, zoomed, _ref, _ref1, _ref2, _ref3;
+    if (!(init_spec != null)) {
+      throw poly.error.input("Initial specification missing.");
+    }
     xGuides = _.clone((_ref = (_ref1 = init_spec.guides) != null ? _ref1.x : void 0) != null ? _ref : void 0);
     yGuides = _.clone((_ref2 = (_ref3 = init_spec.guides) != null ? _ref3.y : void 0) != null ? _ref2 : void 0);
     zoomed = false;
     return function(type, obj, event, graph) {
-      var data, layer, spec, xVar, yVar, _base, _base1, _i, _len, _ref10, _ref11, _ref12, _ref13, _ref14, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+      var data, layer, spec, xVar, yVar, _base, _base1, _i, _len, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results;
       data = obj.evtData;
-      if (type === 'reset' && zoomed) {
-        spec = graph.spec;
-        zoomed = false;
-        if (xGuides && ((_ref4 = spec.guides) != null ? _ref4.x : void 0)) {
-          spec.guides.x = _.clone(xGuides);
-        } else {
-          delete spec.guides.x;
-        }
-        if (yGuides && ((_ref5 = spec.guides) != null ? _ref5.y : void 0)) {
-          spec.guides.y = _.clone(yGuides);
-        } else {
-          delete spec.guides.y;
-        }
-        graph.make(graph.spec);
-      }
-      if (type === 'select') {
-        spec = graph.spec;
-        zoomed = true;
-        console.log(data);
-        _ref6 = spec.layers;
-        for (_i = 0, _len = _ref6.length; _i < _len; _i++) {
-          layer = _ref6[_i];
-          console.log("I got in here!");
-          xVar = (_ref7 = layer.x) != null ? _ref7["var"] : void 0;
-          yVar = (_ref8 = layer.y) != null ? _ref8["var"] : void 0;
-          if (((_ref9 = data[xVar]) != null ? _ref9.ge : void 0) && ((_ref10 = data[xVar]) != null ? _ref10.le : void 0)) {
-            console.log("Time to change these guide specs! x here");
-            console.log(data[xVar]);
-            if ((_ref11 = (_base = spec.guides).x) == null) {
-              _base.x = {
-                min: data[xVar].ge,
-                max: data[xVar].le
-              };
+      if (graph.coord.type === 'cartesian') {
+        if (type === 'reset' && zoomed) {
+          spec = graph.spec;
+          zoomed = false;
+          if ((xGuides != null) && (((_ref4 = spec.guides) != null ? _ref4.x : void 0) != null)) {
+            spec.guides.x = _.clone(xGuides);
+          } else {
+            if (((_ref5 = spec.guides.x) != null ? _ref5.min : void 0) != null) {
+              delete spec.guides.x.min;
             }
-            spec.guides.x.min = data[xVar].ge;
-            spec.guides.x.max = data[xVar].le;
-          }
-          if (((_ref12 = data[yVar]) != null ? _ref12.ge : void 0) && ((_ref13 = data[yVar]) != null ? _ref13.le : void 0)) {
-            console.log("Time to change these guide specs! y this time");
-            console.log(data[yVar]);
-            if ((_ref14 = (_base1 = spec.guides).y) == null) {
-              _base1.y = {
-                min: data[yVar].ge,
-                max: data[yVar].le
-              };
+            if (((_ref6 = spec.guides.x) != null ? _ref6.max : void 0) != null) {
+              delete spec.guides.x.max;
             }
-            spec.guides.y.min = data[yVar].ge;
-            spec.guides.y.max = data[yVar].le;
           }
-          console.log("Here are the guide specs!");
-          console.log(spec.guides);
+          if ((yGuides != null) && (((_ref7 = spec.guides) != null ? _ref7.y : void 0) != null)) {
+            spec.guides.y = _.clone(yGuides);
+          } else {
+            if (((_ref8 = spec.guides.y) != null ? _ref8.min : void 0) != null) {
+              delete spec.guides.y.min;
+            }
+            if (((_ref9 = spec.guides.y) != null ? _ref9.max : void 0) != null) {
+              delete spec.guides.y.max;
+            }
+          }
+          graph.make(graph.spec);
         }
-        return graph.make(spec);
+        if (type === 'select') {
+          spec = graph.spec;
+          zoomed = true;
+          _ref10 = spec.layers;
+          _results = [];
+          for (_i = 0, _len = _ref10.length; _i < _len; _i++) {
+            layer = _ref10[_i];
+            xVar = (_ref11 = layer.x) != null ? _ref11["var"] : void 0;
+            yVar = (_ref12 = layer.y) != null ? _ref12["var"] : void 0;
+            if (spec.coord.type === 'polar') {
+              xVar = null;
+            }
+            if (((_ref13 = data[xVar]) != null ? _ref13.ge : void 0) && ((_ref14 = data[xVar]) != null ? _ref14.le : void 0) && (data[xVar].le - data[xVar].ge) > poly["const"].epsilon) {
+              if ((_ref15 = (_base = spec.guides).x) == null) {
+                _base.x = {
+                  min: data[xVar].ge,
+                  max: data[xVar].le
+                };
+              }
+              spec.guides.x.min = data[xVar].ge;
+              spec.guides.x.max = data[xVar].le;
+            }
+            if (((_ref16 = data[yVar]) != null ? _ref16.ge : void 0) && ((_ref17 = data[yVar]) != null ? _ref17.le : void 0) && (data[yVar].le - data[yVar].ge) > poly["const"].epsilon) {
+              if ((_ref18 = (_base1 = spec.guides).y) == null) {
+                _base1.y = {
+                  min: data[yVar].ge,
+                  max: data[yVar].le
+                };
+              }
+              spec.guides.y.min = data[yVar].ge;
+              spec.guides.y.max = data[yVar].le;
+            }
+            _results.push(graph.make(spec));
+          }
+          return _results;
+        }
       }
     };
   };
@@ -8716,29 +8761,43 @@ The functions here makes it easier to create common types of interactions.
       return obj;
     };
 
-    Facet.prototype.getFacetInfo = function(dims, x, y) {
-      var col, offsetX, offsetY, row;
-      col = (x - dims.paddingLeft - dims.guideLeft) / (dims.eachWidth + dims.horizontalSpacing);
-      col = Math.floor(col);
-      offsetX = dims.paddingLeft + dims.guideLeft + (dims.eachWidth + dims.horizontalSpacing) * col;
-      row = (y - dims.paddingTop - dims.guideTop - dims.verticalSpacing) / (dims.eachHeight + dims.verticalSpacing);
-      row = Math.floor(row);
-      offsetY = dims.paddingTop + dims.guideTop + (dims.eachHeight + dims.verticalSpacing) * row + dims.verticalSpacing;
+    Facet.prototype.getFacetInfo = function(dims, x, y, preset) {
+      var adjusted, col, offset, row;
+      if (preset) {
+        if (!((preset.col != null) && (preset.row != null))) {
+          throw poly.error.impl("Preset rows & columns are not present.");
+        }
+        col = preset.col;
+        row = preset.row;
+      } else {
+        col = (x - dims.paddingLeft - dims.guideLeft) / (dims.eachWidth + dims.horizontalSpacing);
+        col = Math.floor(col);
+        row = (y - dims.paddingTop - dims.guideTop - dims.verticalSpacing) / (dims.eachHeight + dims.verticalSpacing);
+        row = Math.floor(row);
+      }
       if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) {
         return null;
-      } else if (x - offsetX > dims.eachWidth || y - offsetY > dims.eachHeight) {
-        return null;
-      } else {
-        return {
-          col: col,
-          row: row,
-          evtData: this.getEvtData(col, row),
-          offset: {
-            x: offsetX,
-            y: offsetY
-          }
-        };
       }
+      offset = {
+        x: dims.paddingLeft + dims.guideLeft + (dims.eachWidth + dims.horizontalSpacing) * col,
+        y: dims.paddingTop + dims.guideTop + (dims.eachHeight + dims.verticalSpacing) * row + dims.verticalSpacing
+      };
+      adjusted = {
+        x: x - offset.x,
+        y: y - offset.y
+      };
+      if (!preset && (adjusted.x > dims.eachWidth || adjusted.y > dims.eachHeight)) {
+        return null;
+      }
+      adjusted.x = Math.max(Math.min(adjusted.x, dims.eachWidth), 0);
+      adjusted.y = Math.max(Math.min(adjusted.y, dims.eachHeight), 0);
+      return {
+        row: row,
+        col: col,
+        offset: offset,
+        adjusted: adjusted,
+        evtData: this.getEvtData(col, row)
+      };
     };
 
     /*
@@ -8912,7 +8971,8 @@ The functions here makes it easier to create common types of interactions.
 // Generated by CoffeeScript 1.4.0
 (function() {
   var Graph,
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   Graph = (function() {
     /*
@@ -8932,12 +8992,10 @@ The functions here makes it easier to create common types of interactions.
       this.maybeDispose = __bind(this.maybeDispose, this);
 
       this.reset = __bind(this.reset, this);
-
-      var debug;
       if (!(spec != null)) {
         throw poly.error.defn("No graph specification is passed in!");
       }
-      this.handlers = [poly.handler.zoom(spec)];
+      this.handlers = [];
       this.scaleSet = null;
       this.axes = null;
       this.legends = null;
@@ -8948,7 +9006,9 @@ The functions here makes it easier to create common types of interactions.
       this.initial_spec = _.clone(spec);
       this.dataSubscribed = [];
       this.make(spec);
-      poly.mouseEvents(this, debug = false);
+      poly.mouseEvents(this, false);
+      this.addHandler(poly.handler.tooltip());
+      this.addHandler(poly.handler.zoom(spec));
     }
 
     /*
@@ -9027,7 +9087,7 @@ The functions here makes it easier to create common types of interactions.
       merge = _.after(spec.layers.length, this.merge);
       this.dataprocess = {};
       this.processedData = {};
-      _.each(spec.layers, function(layerSpec, id) {
+      return _.each(spec.layers, function(layerSpec, id) {
         spec = _this.spec.layers[id];
         _this.dataprocess[id] = new poly.DataProcess(spec, _this.facet.specgroups, spec.strict);
         return _this.dataprocess[id].make(spec, _this.facet.specgroups, function(statData, metaData) {
@@ -9038,7 +9098,6 @@ The functions here makes it easier to create common types of interactions.
           return merge();
         });
       });
-      return this.addHandler(poly.handler.tooltip());
     };
 
     /*
@@ -9102,7 +9161,9 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Graph.prototype.addHandler = function(h) {
-      return this.handlers.push(h);
+      if (__indexOf.call(this.handlers, h) < 0) {
+        return this.handlers.push(h);
+      }
     };
 
     Graph.prototype.removeHandler = function(h) {
@@ -9113,13 +9174,26 @@ The functions here makes it easier to create common types of interactions.
       var graph, handler;
       graph = this;
       handler = function(event) {
-        var end, f, h, obj, start, x, y, _i, _len, _ref, _ref1, _results;
+        var adjEnd, adjStart, adjusted, col, end, evtData, f, f1, h, obj, row, start, x, y, _i, _len, _ref, _ref1, _results;
         obj = this;
         if (type === 'select') {
           start = event.start, end = event.end;
-          obj.evtData = graph.scaleSet.fromPixels(start, end, function(x, y) {
-            return graph.facet.getFacetInfo(graph.dims, x, y);
-          });
+          f1 = graph.facet.getFacetInfo(graph.dims, start.x, start.y);
+          if (!f1) {
+            return;
+          }
+          col = f1.col, row = f1.row, evtData = f1.evtData, adjusted = f1.adjusted;
+          adjStart = _.clone(adjusted);
+          adjusted = graph.facet.getFacetInfo(graph.dims, end.x, end.y, {
+            col: col,
+            row: row
+          }).adjusted;
+          adjEnd = _.clone(adjusted);
+          if (graph.coord.type === 'cartesian') {
+            obj.evtData = graph.scaleSet.fromPixels(adjStart, adjEnd);
+          } else {
+            obj.evtData = null;
+          }
         } else if (type === 'data') {
           obj.evtData = {};
         } else if (type === 'reset' || type === 'click' || type === 'mover' || type === 'mout' || type === 'guide-click') {

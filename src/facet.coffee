@@ -119,26 +119,34 @@ class Facet
       else
         obj[key] = {in: @values[key][@rows*row + col]}
     obj
-  getFacetInfo: (dims, x, y) ->
-    col = (x - dims.paddingLeft - dims.guideLeft) / (dims.eachWidth + dims.horizontalSpacing)
-    col = Math.floor col
-    offsetX = dims.paddingLeft + dims.guideLeft + (dims.eachWidth + dims.horizontalSpacing) * col
-    row = (y - dims.paddingTop - dims.guideTop - dims.verticalSpacing) / (dims.eachHeight + dims.verticalSpacing)
-    row = Math.floor row
-    offsetY = dims.paddingTop + dims.guideTop + (dims.eachHeight + dims.verticalSpacing) * row + dims.verticalSpacing
-    if col < 0 or col >= @cols or row < 0 or row >= @rows
-      # outside of facet
-      null
-    else if x - offsetX > dims.eachWidth or y - offsetY > dims.eachHeight
-      # in between facets
-      null
+  getFacetInfo: (dims, x, y, preset) ->
+    if preset
+      if not (preset.col? and preset.row?)
+        throw poly.error.impl("Preset rows & columns are not present.")
+      col = preset.col
+      row = preset.row
     else
-      col: col
-      row: row
-      evtData: @getEvtData(col, row)
-      offset:
-        x : offsetX
-        y : offsetY
+      col = (x - dims.paddingLeft - dims.guideLeft) / (dims.eachWidth + dims.horizontalSpacing)
+      col = Math.floor col
+      row = (y - dims.paddingTop - dims.guideTop - dims.verticalSpacing) / (dims.eachHeight + dims.verticalSpacing)
+      row = Math.floor row
+    if col < 0 or col >= @cols or row < 0 or row >= @rows
+      # Outside of facet
+      return null
+    offset =
+      x: dims.paddingLeft + dims.guideLeft + (dims.eachWidth + dims.horizontalSpacing) * col
+      y: dims.paddingTop + dims.guideTop + (dims.eachHeight + dims.verticalSpacing) * row + dims.verticalSpacing
+    adjusted =
+      x: x - offset.x
+      y: y - offset.y
+
+    if not preset and (adjusted.x > dims.eachWidth or adjusted.y > dims.eachHeight)
+      # In between facets
+      return null
+    adjusted.x = Math.max(Math.min(adjusted.x, dims.eachWidth), 0)
+    adjusted.y = Math.max(Math.min(adjusted.y, dims.eachHeight), 0)
+
+    return {row, col, offset, adjusted, evtData: @getEvtData(col, row)}
   ###
   Helper functions
   ###
