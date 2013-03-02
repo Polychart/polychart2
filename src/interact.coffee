@@ -84,7 +84,7 @@ poly.handler.drilldown = (aes, levels, initial_filter = {}) ->
 Zooming and Resetting. Whenever click and drag on range, set to that range.
   * Reset event, that is, restoring to previous values, when click blank spot
 ###
-poly.handler.zoom = (init_spec) ->
+poly.handler.zoom = (init_spec, xZoom = true, yZoom = true) ->
   if not init_spec?
     throw poly.error.input "Initial specification missing."
   xGuides = _.clone init_spec.guides?.x ? undefined
@@ -111,9 +111,8 @@ poly.handler.zoom = (init_spec) ->
         spec = graph.spec
         zoomed = true
         for layer in spec.layers
-          xVar = layer.x?.var
-          yVar = layer.y?.var
-          if spec.coord.type is 'polar' then xVar = null
+          xVar = if xZoom then layer.x?.var else undefined
+          yVar = if yZoom then layer.y?.var else undefined
           if data[xVar]?.ge and data[xVar]?.le and (data[xVar].le - data[xVar].ge) > poly.const.epsilon
             spec.guides.x ?= {min: data[xVar].ge, max: data[xVar].le}
             spec.guides.x.min = data[xVar].ge

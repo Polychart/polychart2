@@ -8465,8 +8465,14 @@ The functions here makes it easier to create common types of interactions.
   */
 
 
-  poly.handler.zoom = function(init_spec) {
+  poly.handler.zoom = function(init_spec, xZoom, yZoom) {
     var xGuides, yGuides, zoomed, _ref, _ref1, _ref2, _ref3;
+    if (xZoom == null) {
+      xZoom = false;
+    }
+    if (yZoom == null) {
+      yZoom = true;
+    }
     if (!(init_spec != null)) {
       throw poly.error.input("Initial specification missing.");
     }
@@ -8509,11 +8515,8 @@ The functions here makes it easier to create common types of interactions.
           _results = [];
           for (_i = 0, _len = _ref10.length; _i < _len; _i++) {
             layer = _ref10[_i];
-            xVar = (_ref11 = layer.x) != null ? _ref11["var"] : void 0;
-            yVar = (_ref12 = layer.y) != null ? _ref12["var"] : void 0;
-            if (spec.coord.type === 'polar') {
-              xVar = null;
-            }
+            xVar = xZoom ? (_ref11 = layer.x) != null ? _ref11["var"] : void 0 : void 0;
+            yVar = yZoom ? (_ref12 = layer.y) != null ? _ref12["var"] : void 0 : void 0;
             if (((_ref13 = data[xVar]) != null ? _ref13.ge : void 0) && ((_ref14 = data[xVar]) != null ? _ref14.le : void 0) && (data[xVar].le - data[xVar].ge) > poly["const"].epsilon) {
               if ((_ref15 = (_base = spec.guides).x) == null) {
                 _base.x = {
