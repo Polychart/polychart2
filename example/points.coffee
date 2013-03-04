@@ -99,9 +99,152 @@ one = () -> Math.random()*10
     setTimeout(redraw, 1000)
   setTimeout(redraw, 1000)
 
+@examples.pointerr3_sizec = (dom) ->
+  spec = () ->
+    jsondata = ({x:one(), y:one(), c:one()} for i in [0..10])
+    data = polyjs.data data:jsondata
+    sampleLayer =
+      data: data
+      type: 'point'
+      x: 'x'
+      y: 'y'
+      color: 'c'
+      size: 'c'
+
+    data:jsondata
+    spec:
+      layers: [sampleLayer]
+      title:'Main Title'
+      legendPosition:'top'
+      guides:
+        y :
+          title:'Y axis Title'
+          position: 'right'
+          type:'num', min:0, max:10, ticks:[1,3,5,7],
+          labels:{1: 'OneY', 3:'ThreeY', 5:'FiveY', 7:'SevenY'}
+        x :
+          title:'X axis Title'
+          position: 'top'
+          type:'num', min:0, max:10, ticks:[2,4,6,8],
+          labels:{2: 'TwoX', 4:'FourX', 6:'SixX', 8:'EightX'}
+        color:
+          title:'Color title'
+          type:'cat', min:0, max:40, ticks:[2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40]
+          labels:{2:'Two',4:'Four',6:'six',8:'Eight',10:'jhasdjasdfjjhjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj this is some stuff at the end of it',12,14,16,18,20}
+        size:
+          title:'Size Title'
+          type:'num', min:0,max:10, ticks:[2,4,6,8], labels:{2:'Two',4:'Four',6:'Six'}
+      dom: dom
 
 
-@examples.pointerr3 = (dom) ->
+  initspec = spec().spec
+  c = polyjs.chart(initspec)
+
+  redraw = () ->
+    newspec = spec()
+    initspec.layers[0].data.update(data:newspec.data)
+    c.make(newspec.spec)
+    setTimeout(redraw, 1000)
+  setTimeout(redraw, 1000)
+
+@examples.pointerr3_sizenone = (dom) ->
+  spec = () ->
+    jsondata = ({x:one(), y:one(), c:one()} for i in [0..10])
+    data = polyjs.data data:jsondata
+    sampleLayer =
+      data: data
+      type: 'point'
+      x: 'x'
+      y: 'y'
+      color: 'c'
+
+    data:jsondata
+    spec:
+      layers: [sampleLayer]
+      title:'Main Title'
+      legendPosition:'top'
+      guides:
+        y :
+          title:'Y axis Title'
+          position: 'right'
+          type:'num', min:0, max:10, ticks:[1,3,5,7],
+          labels:{1: 'OneY', 3:'ThreeY', 5:'FiveY', 7:'SevenY'}
+        x :
+          title:'X axis Title'
+          position: 'top'
+          type:'num', min:0, max:10, ticks:[2,4,6,8],
+          labels:{2: 'TwoX', 4:'FourX', 6:'SixX', 8:'EightX'}
+        color:
+          title:'Color title'
+          type:'cat', min:0, max:40, ticks:[2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40]
+          labels:{2:'Two',4:'Four',6:'six',8:'Eight',10:'jhasdjasdfjjhjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj this is some stuff at the end of it',12,14,16,18,20}
+        size:
+          title:'Size Title'
+          type:'num', min:0,max:10, ticks:[2,4,6,8], labels:{2:'Two',4:'Four',6:'Six'}
+      dom: dom
+
+
+  initspec = spec().spec
+  c = polyjs.chart(initspec)
+
+  redraw = () ->
+    newspec = spec()
+    initspec.layers[0].data.update(data:newspec.data)
+    c.make(newspec.spec)
+    setTimeout(redraw, 1000)
+  setTimeout(redraw, 1000)
+
+
+@examples.pointerr3_sizex = (dom) ->
+  spec = () ->
+    jsondata = ({x:one(), y:one(), c:one()} for i in [0..10])
+    data = polyjs.data data:jsondata
+    sampleLayer =
+      data: data
+      type: 'point'
+      x: 'x'
+      y: 'y'
+      color: 'c'
+      size: 'x'
+
+    data:jsondata
+    spec:
+      layers: [sampleLayer]
+      title:'Main Title'
+      legendPosition:'top'
+      guides:
+        y :
+          title:'Y axis Title'
+          position: 'right'
+          type:'num', min:0, max:10, ticks:[1,3,5,7],
+          labels:{1: 'OneY', 3:'ThreeY', 5:'FiveY', 7:'SevenY'}
+        x :
+          title:'X axis Title'
+          position: 'top'
+          type:'num', min:0, max:10, ticks:[2,4,6,8],
+          labels:{2: 'TwoX', 4:'FourX', 6:'SixX', 8:'EightX'}
+        color:
+          title:'Color title'
+          type:'cat', min:0, max:40, ticks:[2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40]
+          labels:{2:'Two',4:'Four',6:'six',8:'Eight',10:'jhasdjasdfjjhjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj this is some stuff at the end of it',12,14,16,18,20}
+        size:
+          title:'Size Title'
+          type:'num', min:0,max:10, ticks:[2,4,6,8], labels:{2:'Two',4:'Four',6:'Six'}
+      dom: dom
+
+
+  initspec = spec().spec
+  c = polyjs.chart(initspec)
+
+  redraw = () ->
+    newspec = spec()
+    initspec.layers[0].data.update(data:newspec.data)
+    c.make(newspec.spec)
+    setTimeout(redraw, 1000)
+  setTimeout(redraw, 1000)
+
+
+@examples.pointerr3_sizerand = (dom) ->
   spec = () ->
     jsondata = ({x:one(), y:one(), c:one()} for i in [0..10])
     data = polyjs.data data:jsondata
@@ -119,25 +262,25 @@ one = () -> Math.random()*10
     data:jsondata
     spec:
       layers: [sampleLayer]
-      title:'This is another title'
+      title:'Main Title'
       legendPosition:'top'
       guides:
         y :
-          title:'This is another long title'
+          title:'Y axis Title'
           position: 'right'
-          type:'num', min:0, max:10, ticks:[2,4,6,8],
-          labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
+          type:'num', min:0, max:10, ticks:[1,3,5,7],
+          labels:{1: 'OneY', 3:'ThreeY', 5:'FiveY', 7:'SevenY'}
         x :
-          title:'a'
+          title:'X axis Title'
           position: 'top'
           type:'num', min:0, max:10, ticks:[2,4,6,8],
-          labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
+          labels:{2: 'TwoX', 4:'FourX', 6:'SixX', 8:'EightX'}
         color:
-          title:'Even longer title'
+          title:'Color title'
           type:'cat', min:0, max:40, ticks:[2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40]
           labels:{2:'Two',4:'Four',6:'six',8:'Eight',10:'jhasdjasdfjjhjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj this is some stuff at the end of it',12,14,16,18,20}
         size:
-          title:'asd'
+          title:'Size Title'
           type:'num', min:0,max:10, ticks:[2,4,6,8], labels:{2:'Two',4:'Four',6:'Six'}
       dom: dom
 
