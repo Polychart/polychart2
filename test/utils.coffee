@@ -202,3 +202,10 @@ test "stingify", ->
   equal y, "a:2;"
   y = polyjs.debug.stringify([]) {x:2, a:2, b:3}
   equal y, ""
+
+test "intersect", ->
+  result = polyjs.debug.intersect({ hour: {in: ['diran', 'was', 'here']} }, { hour: {in: ['diran', 'was', 'here', 'today']} })
+  deepEqual result.hour.in.length, 3
+  result = polyjs.debug.intersect({ hour: {gt: 3, le:5} }, { hour: {ge: 4, lt:8} })
+  deepEqual result.hour.ge, 4
+  deepEqual result.hour.le, 5

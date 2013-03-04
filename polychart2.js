@@ -22,6 +22,7 @@ Output:
 
 
 (function() {
+  var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   poly.groupBy = function(data, group) {
     return _.groupBy(data, poly.stringify(group));
@@ -72,6 +73,122 @@ Output:
       }
     }
     return newData;
+  };
+
+  /*
+  Intersets values when filter key is common to both objects, add all values otherwise.
+  
+    TODO: handle the case when no intersection exist from a given common key
+  */
+
+
+  poly.intersect = function(filter1, filter2) {
+    var intersectIneq, intersectList, key, newFilter, val;
+    intersectList = function(key) {
+      var elem, newList, _i, _len, _ref;
+      newList = [];
+      _ref = filter1[key]["in"];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        elem = _ref[_i];
+        if (__indexOf.call(filter2[key]["in"], elem) >= 0) {
+          newList.push(elem);
+        }
+      }
+      return {
+        "in": newList
+      };
+    };
+    intersectIneq = function(key) {
+      var addbound, getLowerBound, getUpperBound, lowers, newIneq, type, uppers, val, _ref, _ref1;
+      getUpperBound = function(filter) {
+        if (filter[key].lt) {
+          return {
+            type: "lt",
+            val: filter[key].lt
+          };
+        } else if (filter[key].le) {
+          return {
+            type: "le",
+            val: filter[key].le
+          };
+        } else {
+          return {
+            type: null,
+            val: null
+          };
+        }
+      };
+      getLowerBound = function(filter) {
+        if (filter[key].gt) {
+          return {
+            type: "gt",
+            val: filter[key].gt
+          };
+        } else if (filter[key].ge) {
+          return {
+            type: "ge",
+            val: filter[key].ge
+          };
+        } else {
+          return {
+            type: null,
+            val: null
+          };
+        }
+      };
+      addbound = function(bound) {
+        return newIneq[bound.type] = bound.val;
+      };
+      lowers = [getLowerBound(filter1), getLowerBound(filter2)];
+      uppers = [getUpperBound(filter1), getUpperBound(filter2)];
+      lowers.sort(function(a, b) {
+        return b.val - a.val;
+      });
+      uppers.sort(function(a, b) {
+        return a.val - b.val;
+      });
+      newIneq = {};
+      if (lowers[0].type && lowers[0].val) {
+        _ref = lowers[0], type = _ref.type, val = _ref.val;
+        if (lowers[0].val === lowers[1].val && lowers[0].type !== lowers[1].type) {
+          type = "lt";
+        }
+        newIneq[type] = val;
+      }
+      if (uppers[0].type && uppers[0].val) {
+        _ref1 = uppers[0], type = _ref1.type, val = _ref1.val;
+        if (uppers[0].val === uppers[1].val && uppers[0].type !== uppers[1].type) {
+          type = "lt";
+        }
+        newIneq[type] = val;
+      }
+      if (lowers[0].type && uppers[0].type) {
+        if (lowers[0].val > uppers[0].val || (lowers[0].val === uppers[0].val && (lowers[0].key === "lt" || uppers[0].key === "gt"))) {
+          throw "No intersection found!";
+        }
+      }
+      return newIneq;
+    };
+    newFilter = {};
+    for (key in filter1) {
+      val = filter1[key];
+      if (key in filter2) {
+        if ("in" in filter1[key]) {
+          newFilter[key] = intersectList(key);
+        } else {
+          newFilter[key] = intersectIneq(key);
+        }
+      } else {
+        newFilter[key] = val;
+      }
+    }
+    for (key in filter2) {
+      val = filter2[key];
+      if (!(key in newFilter)) {
+        newFilter[key] = val;
+      }
+    }
+    return newFilter;
   };
 
   /*

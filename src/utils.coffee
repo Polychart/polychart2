@@ -37,6 +37,82 @@ poly.filter = (statData, key, val) ->
   newData
 
 ###
+Intersets values when filter key is common to both objects, add all values otherwise.
+
+  TODO: handle the case when no intersection exist from a given common key
+###
+poly.intersect = (filter1, filter2) -> 
+  intersectList = (key) -> 
+    newList = []
+    for elem in filter1[key]["in"]
+      if elem in filter2[key]["in"]
+        newList.push elem
+    "in": newList
+  intersectIneq = (key) ->
+    getUpperBound = (filter) ->
+      if filter[key].lt
+        type: "lt"
+        val: filter[key].lt
+      else if filter[key].le
+        type: "le"
+        val: filter[key].le
+      else
+        type: null
+        val: null
+    getLowerBound = (filter) ->
+      if filter[key].gt
+        type: "gt"
+        val: filter[key].gt
+      else if filter[key].ge
+        type: "ge"
+        val: filter[key].ge
+      else
+        type: null
+        val: null
+    addbound = (bound) ->
+      newIneq[bound.type] = bound.val
+    lowers = [getLowerBound(filter1), getLowerBound(filter2)]
+    uppers = [getUpperBound(filter1), getUpperBound(filter2)]
+    lowers.sort (a,b) ->
+      b.val - a.val # descending order
+    uppers.sort (a,b) ->
+      a.val - b.val # ascending order
+    newIneq = {}
+    if lowers[0].type and lowers[0].val
+      {type, val} = lowers[0]
+      if lowers[0].val == lowers[1].val and lowers[0].type != lowers[1].type
+        type = "lt"
+      newIneq[type] = val
+    if uppers[0].type and uppers[0].val
+      {type, val} = uppers[0]
+      if uppers[0].val == uppers[1].val and uppers[0].type != uppers[1].type
+        type = "lt"
+      newIneq[type] = val
+
+    if lowers[0].type and uppers[0].type
+      # There exists a lower & upper bound 
+      if lowers[0].val > uppers[0].val or (lowers[0].val == uppers[0].val and (lowers[0].key is "lt" or uppers[0].key is "gt"))
+        # Seems like its not an intersection afterall
+        throw "No intersection found!"
+    newIneq
+
+  newFilter = {}
+  for key, val of filter1
+    if key of filter2
+      # Calculate intersection
+      if "in" of filter1[key]
+        newFilter[key] = intersectList(key)
+      else # gt, lt, ge, le
+        newFilter[key] = intersectIneq(key)
+    else
+      newFilter[key] = val
+
+  for key, val of filter2
+    unless key of newFilter
+      newFilter[key] = val
+  newFilter
+  
+###
 Produces a linear function that passes through two points.
 Input:
 - `x1`: x coordinate of the first point
