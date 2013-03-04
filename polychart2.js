@@ -8468,7 +8468,7 @@ The functions here makes it easier to create common types of interactions.
   poly.handler.zoom = function(init_spec, xZoom, yZoom) {
     var xGuides, yGuides, zoomed, _ref, _ref1, _ref2, _ref3;
     if (xZoom == null) {
-      xZoom = false;
+      xZoom = true;
     }
     if (yZoom == null) {
       yZoom = true;
@@ -9177,7 +9177,7 @@ The functions here makes it easier to create common types of interactions.
       var graph, handler;
       graph = this;
       handler = function(event) {
-        var adjEnd, adjStart, adjusted, col, end, evtData, f, f1, h, obj, row, start, x, y, _i, _len, _ref, _ref1, _results;
+        var adjEnd, adjStart, adjusted, col, end, evtData, f1, h, obj, row, start, _i, _len, _ref, _results;
         obj = this;
         if (type === 'select') {
           start = event.start, end = event.end;
@@ -9202,16 +9202,11 @@ The functions here makes it easier to create common types of interactions.
         } else if (type === 'reset' || type === 'click' || type === 'mover' || type === 'mout' || type === 'guide-click') {
           obj.tooltip = obj.data('t');
           obj.evtData = obj.data('e');
-          _ref = poly.getXY(poly.offset(graph.dom), event), x = _ref.x, y = _ref.y;
-          f = graph.facet.getFacetInfo(graph.dims, x, y);
-          if ((type === 'reset' || type === 'click') && !f) {
-            return;
-          }
         }
-        _ref1 = graph.handlers;
+        _ref = graph.handlers;
         _results = [];
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          h = _ref1[_i];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          h = _ref[_i];
           if (_.isFunction(h)) {
             _results.push(h(type, obj, event, graph));
           } else {

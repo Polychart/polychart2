@@ -158,9 +158,11 @@ class Graph
       else if type in ['reset', 'click', 'mover', 'mout', 'guide-click']
         obj.tooltip = obj.data('t')
         obj.evtData = obj.data('e')
-        {x, y} = poly.getXY(poly.offset(graph.dom), event)
-        f = graph.facet.getFacetInfo(graph.dims, x, y)
-        if type in ['reset', 'click'] and not f then return
+        # if type is 'reset'
+        #   {x, y} = poly.getXY(poly.offset(graph.dom), event)
+        #   f = graph.facet.getFacetInfo(graph.dims, x, y)
+        #   if not f then return
+
       for h in graph.handlers
         if _.isFunction(h)
           h(type, obj, event, graph)
