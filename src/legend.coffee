@@ -154,7 +154,11 @@ class Legends extends poly.GuideSet
           dims.height - dims.guideBottom - dims.paddingBottom
     realoffset =
       x: legendDim.left
-      y: offset.bottom + legendDim.top
+      y: 
+        if @position is 'top'
+          offset.top + legendDim.top
+        else
+          offset.bottom + legendDim.top
     for legend in @legends
       newdim = legend.getDimension(dims)
       legend.render(renderer(realoffset, false, false))
