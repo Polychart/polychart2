@@ -26,7 +26,6 @@ class Graph
     @make spec
 
     # Post make work, things that do not have to be updated
-    poly.mouseEvents(this, false)
     # Default handlers
     @addHandler poly.handler.tooltip()
     @addHandler poly.handler.zoom(spec)
@@ -124,7 +123,7 @@ class Graph
     {@axes, @titles, @legends} = @scaleSet.makeGuides(@spec, @dims)
 
     @dom = @spec.dom
-    @paper ?= @_makePaper @dom, @dims.width, @dims.height, @handleEvent
+    @paper ?= @_makePaper @dom, @dims.width, @dims.height, @
     renderer = poly.render @handleEvent, @paper, scales, @coord
 
     @facet.render(renderer, @dims, @coord)

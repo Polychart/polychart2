@@ -29,12 +29,8 @@ poly.getXY = (offset, e) ->
 ###
 Mouse Event Handlers
 ###
-poly.mouseEvents = (graph, debug = false) ->
-  bg = graph.paper.getById(0)
+poly.mouseEvents = (graph, bg, debug = false) ->
   offset = poly.offset(graph.dom)
-
-  # Reset event
-  bg.click graph.handleEvent('reset')
 
   # Mouse selection drag rectangle
   handler = graph.handleEvent('select')

@@ -1,7 +1,7 @@
 ###
 # GLOBALS
 ###
-poly.paper = (dom, w, h, handleEvent) ->
+poly.paper = (dom, w, h, graph) ->
   if not Raphael?
     throw poly.error.depn "The dependency Raphael is not included."
   paper = Raphael(dom, w, h)
@@ -10,6 +10,8 @@ poly.paper = (dom, w, h, handleEvent) ->
     fill: 'white' # for FireFox
     opacity: 0    # for not showing background
     'stroke-width': 0
+
+  poly.mouseEvents(graph, bg, false)
   paper
 
 ###

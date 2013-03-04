@@ -25,8 +25,8 @@ data = {
     coord: {type: 'cartesian', flip: true}
     dom: dom
     title: 'World Population By (Sub)continent 2010'
-    width: 400
-    height: 400
+    width: 300
+    height: 350
   today = polyjs.chart today_spec
   yearly_spec =
     layers: [
@@ -51,8 +51,8 @@ data = {
       color: scale: (t) -> if t is 'actual' then '#222' else 'brown'
     title: "Population growth of the World (click chart to zoom)"
     dom: dom2
-    width: 700
-    height: 400
+    width: 550
+    height: 350
   yearly = polyjs.chart yearly_spec
 
   breakdown_spec =
@@ -68,7 +68,7 @@ data = {
     coord: {type: 'cartesian', flip: 'true'}
     title: 'Population Breakdown in 2010'
     dom: dom3
-    width: 1100
+    width: 850
     height: 250
     paddingLeft: 20
   breakdown = polyjs.chart breakdown_spec

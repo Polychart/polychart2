@@ -832,14 +832,12 @@ Get the offset of the element
   */
 
 
-  poly.mouseEvents = function(graph, debug) {
-    var attr, bg, col, dragRect, end, endInfo, handler, mouseText, offset, onend, onmove, onstart, rect, row, showMousePosition, start, startInfo;
+  poly.mouseEvents = function(graph, bg, debug) {
+    var attr, col, dragRect, end, endInfo, handler, mouseText, offset, onend, onmove, onstart, rect, row, showMousePosition, start, startInfo;
     if (debug == null) {
       debug = false;
     }
-    bg = graph.paper.getById(0);
     offset = poly.offset(graph.dom);
-    bg.click(graph.handleEvent('reset'));
     handler = graph.handleEvent('select');
     dragRect = null;
     rect = null;
@@ -7638,7 +7636,7 @@ Dimension object has the following elements (all numeric in pixels):
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  poly.paper = function(dom, w, h, handleEvent) {
+  poly.paper = function(dom, w, h, graph) {
     var bg, paper;
     if (!(typeof Raphael !== "undefined" && Raphael !== null)) {
       throw poly.error.depn("The dependency Raphael is not included.");
@@ -7649,6 +7647,7 @@ Dimension object has the following elements (all numeric in pixels):
       opacity: 0,
       'stroke-width': 0
     });
+    poly.mouseEvents(graph, bg, false);
     return paper;
   };
 
@@ -9021,7 +9020,6 @@ The functions here makes it easier to create common types of interactions.
       this.initial_spec = _.clone(spec);
       this.dataSubscribed = [];
       this.make(spec);
-      poly.mouseEvents(this, false);
       this.addHandler(poly.handler.tooltip());
       this.addHandler(poly.handler.zoom(spec));
     }
@@ -9165,7 +9163,7 @@ The functions here makes it easier to create common types of interactions.
       _ref = this.scaleSet.makeGuides(this.spec, this.dims), this.axes = _ref.axes, this.titles = _ref.titles, this.legends = _ref.legends;
       this.dom = this.spec.dom;
       if ((_ref1 = this.paper) == null) {
-        this.paper = this._makePaper(this.dom, this.dims.width, this.dims.height, this.handleEvent);
+        this.paper = this._makePaper(this.dom, this.dims.width, this.dims.height, this);
       }
       renderer = poly.render(this.handleEvent, this.paper, scales, this.coord);
       this.facet.render(renderer, this.dims, this.coord);
