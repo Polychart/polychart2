@@ -131,6 +131,25 @@ class Renderer
     zs = _.map _.zip(xs, ys), (z,i) -> (if isNaN(z[0]) or isNaN(z[1]) then undefined else z)
     {x: (z[0] for z in zs when z?),  y: (z[1] for z in zs when z?)}
 
+# Path animations are atrocious. See http://bost.ocks.org/mike/path/ for
+# why. So, for a handful of geometries we need to interpolate the
+# transforms. But because we don't use SVG transforms, this creates
+# some challenges.
+class PathRenderer extends Renderer
+  animate: (pt, scales, coord, offset, mark, mayflip) ->
+    # we'll split the animation component into two if the set of x-coordinates
+    # have changed. otherwise do the animation in one shot.
+    oldmark = pt.data('m')
+    newattr = @attr(scales, coord, offset, mark, mayflip)
+    if not _.isEqual(oldmark.x, mark.x)
+      # first we "animate the transform": use the old mark & new scale
+      # then we change the attribute to those corresponding to the new mark
+      #   without animation.
+      scaleattr = @attr(scales, coord, offset, oldmark, mayflip)
+      pt.animate scaleattr, 300, () => pt.attr newattr
+    else
+      pt.animate newattr, 300
+
 class Circle extends Renderer # for both cartesian & polar
   _make: (paper) -> paper.circle()
   attr: (scales, coord, offset, mark, mayflip) ->
@@ -164,7 +183,7 @@ class Path extends Renderer # for both cartesian & polar?
       stroke: stroke
       'stroke-width': size
 
-class Line extends Renderer
+class Line extends PathRenderer
   _make: (paper) -> paper.path()
   attr: (scales, coord, offset, mark, mayflip) ->
     [mark.x,mark.y] = poly.sortArrays scales.x.compare, [mark.x,mark.y]
@@ -182,22 +201,6 @@ class Line extends Renderer
       path: @_makePath x, y
       stroke: stroke
       'stroke-width': size
-  # Path animations are atrocious. See http://bost.ocks.org/mike/path/ for
-  # why. As discussed there we need to interpolate the transform. We don't
-  # use SVG transforms so this creates some challenges.
-  animate: (pt, scales, coord, offset, mark, mayflip) ->
-    # we'll split the animation component into two if the set of x-coordinates
-    # have changed. otherwise do the animation in one shot.
-    oldmark = pt.data('m')
-    newattr = @attr(scales, coord, offset, mark, mayflip)
-    if not _.isEqual(oldmark.x, mark.x)
-      # first we "animate the transform": use the old mark & new scale
-      # then we change the attribute to those corresponding to the new mark
-      #   without animation.
-      scaleattr = @attr(scales, coord, offset, oldmark, mayflip)
-      pt.animate scaleattr, 300, () => pt.attr newattr
-    else
-      pt.animate newattr, 300
 
 # The difference between Line and PolarLine is that Polar Line MAY plot a circle
 class PolarLine extends Line
@@ -222,7 +225,7 @@ class PolarLine extends Line
       path: path
       stroke: stroke
 
-class Area extends Renderer # for both cartesian & polar?
+class Area extends PathRenderer # for both cartesian & polar?
   _make: (paper) -> paper.path()
   attr: (scales, coord, offset, mark, mayflip) ->
     [x, y] = poly.sortArrays scales.x.compare, [mark.x,mark.y.top]

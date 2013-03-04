@@ -7634,7 +7634,7 @@ Dimension object has the following elements (all numeric in pixels):
 
 
 (function() {
-  var Area, Circle, CircleRect, Line, Path, PolarLine, Rect, Renderer, Spline, Step, Text, renderer,
+  var Area, Circle, CircleRect, Line, Path, PathRenderer, PolarLine, Rect, Renderer, Spline, Step, Text, renderer,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -7943,6 +7943,33 @@ Dimension object has the following elements (all numeric in pixels):
 
   })();
 
+  PathRenderer = (function(_super) {
+
+    __extends(PathRenderer, _super);
+
+    function PathRenderer() {
+      return PathRenderer.__super__.constructor.apply(this, arguments);
+    }
+
+    PathRenderer.prototype.animate = function(pt, scales, coord, offset, mark, mayflip) {
+      var newattr, oldmark, scaleattr,
+        _this = this;
+      oldmark = pt.data('m');
+      newattr = this.attr(scales, coord, offset, mark, mayflip);
+      if (!_.isEqual(oldmark.x, mark.x)) {
+        scaleattr = this.attr(scales, coord, offset, oldmark, mayflip);
+        return pt.animate(scaleattr, 300, function() {
+          return pt.attr(newattr);
+        });
+      } else {
+        return pt.animate(newattr, 300);
+      }
+    };
+
+    return PathRenderer;
+
+  })(Renderer);
+
   Circle = (function(_super) {
 
     __extends(Circle, _super);
@@ -8040,24 +8067,9 @@ Dimension object has the following elements (all numeric in pixels):
       });
     };
 
-    Line.prototype.animate = function(pt, scales, coord, offset, mark, mayflip) {
-      var newattr, oldmark, scaleattr,
-        _this = this;
-      oldmark = pt.data('m');
-      newattr = this.attr(scales, coord, offset, mark, mayflip);
-      if (!_.isEqual(oldmark.x, mark.x)) {
-        scaleattr = this.attr(scales, coord, offset, oldmark, mayflip);
-        return pt.animate(scaleattr, 300, function() {
-          return pt.attr(newattr);
-        });
-      } else {
-        return pt.animate(newattr, 300);
-      }
-    };
-
     return Line;
 
-  })(Renderer);
+  })(PathRenderer);
 
   PolarLine = (function(_super) {
 
@@ -8138,7 +8150,7 @@ Dimension object has the following elements (all numeric in pixels):
 
     return Area;
 
-  })(Renderer);
+  })(PathRenderer);
 
   Rect = (function(_super) {
 
