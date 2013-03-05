@@ -11,32 +11,46 @@ poly.paper = (dom, w, h, graph) ->
     opacity: 0    # for not showing background
     'stroke-width': 0
   bg.click graph.handleEvent('reset')
-  poly.mouseEvents(graph, bg, false)
+  poly.mouseEvents(graph, bg)
   paper
 
 ###
-Drawing utilities for mouse events
+Mouse Events
 ###
-poly.drawRect = (paper, attr, rect = null) ->
-  if attr is 'remove' and rect?
-    rect.hide()
-    rect.remove()
-    null
-  else if attr? and rect?
-    rect.attr attr
-  else
-    paper.rect(attr.x, attr.y, attr.w, attr.h, attr.r)
-
-poly.drawText = (paper, attr, text = null) ->
-  if attr is 'remove' and text?
-    text.hide()
-    text.remove()
-    null
-  else if attr? and text?
-    text.attr attr
-  else
-    paper.text(attr.x, attr.y, attr.text)
-
+poly.mouseEvents = (graph, bg) ->
+  offset = poly.offset(graph.dom)
+  # Mouse selection drag rectangle
+  handler = graph.handleEvent('select')
+  rect = null
+  start = end = null
+  startInfo = endInfo = null
+  onstart = () -> start = null; end = null
+  onmove = (dx, dy, x, y) ->
+    if startInfo? and start?
+      end = x: start.x + dx, y: start.y + dy
+      endInfo = graph.facet.getFacetInfo graph.dims, end.x, end.y
+      # Update drag rect if within border
+      if rect? and endInfo? and endInfo.col is startInfo.col and endInfo.row is startInfo.row
+        attr =
+          x: Math.min start.x, end.x
+          y: Math.min start.y, end.y
+          width: Math.abs(start.x - end.x)
+          height: Math.abs(start.y - end.y)
+        rect = rect.attr attr
+    else
+      start = x: x - offset.left, y: y - offset.top
+      startInfo = graph.facet.getFacetInfo graph.dims, start.x, start.y
+      # Initalize drag rectangle if start within border
+      if startInfo?
+        rect = graph.paper.rect(start.x, start.y, 0, 0, 2)
+        rect = rect.attr {fill: 'black', opacity: 0.2}
+  onend = () -> if start? and end?
+    # Clean up drag rectangle
+    if rect?
+      rect = rect.hide()
+      rect.remove()
+    handler start:start, end:end
+  bg.drag onmove, onstart, onend
 ###
 Helper function for rendering all the geoms of an object
 ###
