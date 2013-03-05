@@ -4072,7 +4072,7 @@ Legends (GuideSet) object to determine the correct position of a legend.
       };
       realoffset = {
         x: legendDim.left,
-        y: this.position === 'top' ? offset.top + legendDim.top : offset.bottom + legendDim.top
+        y: this.position === 'top' ? offset.top + legendDim.top : offset.bottom + legendDim.top + 10
       };
       _ref = this.legends;
       _results = [];

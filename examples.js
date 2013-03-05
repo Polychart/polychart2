@@ -1500,7 +1500,6 @@
         flip: true
       },
       dom: dom,
-      paddingTop: 50,
       height: 300
     });
   };
