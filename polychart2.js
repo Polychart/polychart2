@@ -2931,7 +2931,7 @@ Helper functions to legends & axes for generating ticks
       };
     },
     'num-log': function(domain, numticks) {
-      var exp, i, lg, lgmax, lgmin, max, min, num, step, ticks, ticks0, ticks1, ticks2, tmp, _i, _len, _results;
+      var exp, lg, lgmax, lgmin, max, min, num, step, ticks, tmp;
       ticks = [];
       min = domain.min, max = domain.max;
       lg = function(v) {
@@ -2965,29 +2965,9 @@ Helper functions to legends & axes for generating ticks
         ticks.push(num);
         tmp += step;
       }
-      ({
+      return {
         ticks: ticks
-      });
-      poly.tick.make({
-        0: 0,
-        1000: 1000
-      }, null, 'num-log');
-      if (ticks[ticks.length] !== domain.max) {
-        throw poly.error.tick("The last value in ticks is not the max value specified in domains");
-      }
-      _results = [];
-      for (_i = 0, _len = ticks.length; _i < _len; _i++) {
-        i = ticks[_i];
-        ticks0 = ticks[i];
-        ticks1 = ticks[i + 1];
-        ticks2 = ticks[i + 2];
-        if (ticks1 / ticks0 !== ticks2 / ticks1) {
-          throw poly.error.tick("The numbers in the arrary do not increase by a constant factor");
-        } else {
-          _results.push(void 0);
-        }
-      }
-      return _results;
+      };
     },
     'date': function(domain, numticks) {
       var current, max, min, momentjsStep, step, ticks;

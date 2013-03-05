@@ -123,15 +123,6 @@ tickValues =
       ticks.push num
       tmp += step
     ticks: ticks
-    poly.tick.make({0,1000}, null, 'num-log')
-    if ticks[ticks.length] isnt domain.max
-      throw poly.error.tick "The last value in ticks is not the max value specified in domains"
-    for i in ticks
-      ticks0=ticks[i]
-      ticks1=ticks[i+1]
-      ticks2=ticks[i+2]
-      if ticks1/ticks0 isnt ticks2/ticks1
-        throw poly.error.tick "The numbers in the arrary do not increase by a constant factor"
   'date' : (domain, numticks) ->
     {min, max} = domain
     step = (max-min) / numticks
@@ -167,3 +158,5 @@ tickValues =
       current.add(momentjsStep[0], momentjsStep[1])
     ticks: ticks
     step: step
+#error testing
+
