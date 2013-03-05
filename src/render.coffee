@@ -10,7 +10,7 @@ poly.paper = (dom, w, h, graph) ->
     fill: 'white' # for FireFox
     opacity: 0    # for not showing background
     'stroke-width': 0
-
+  bg.click graph.handleEvent('reset')
   poly.mouseEvents(graph, bg, false)
   paper
 

@@ -7743,6 +7743,7 @@ Dimension object has the following elements (all numeric in pixels):
       opacity: 0,
       'stroke-width': 0
     });
+    bg.click(graph.handleEvent('reset'));
     poly.mouseEvents(graph, bg, false);
     return paper;
   };
