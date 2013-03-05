@@ -14,8 +14,6 @@ class ScaleSet
     @guideSpec = guideSpec
     @layers = layers
     @domains = domains
-    @domainx = @domains.x
-    @domainy = @domains.y
     @scales = @_makeScales(guideSpec, domains, @ranges)
     @reverse=
       x: @scales.x.finv
@@ -24,21 +22,8 @@ class ScaleSet
 
   setRanges: (ranges) ->
     @ranges = ranges
-    @_makeXScale()
-    @_makeYScale()
-  setXDomain: (d) ->
-    @domainx = d
-    @_makeXScale()
-  setYDomain: (d) ->
-    @domainy = d
-    @_makeYScale()
-  resetDomains: () ->
-    @domainx = @domains.x
-    @domainy = @domains.y
-    @_makeXScale()
-    @_makeYScale()
-  _makeXScale: () -> @scales.x.make @domainx, @ranges.x, @getSpec('x').padding
-  _makeYScale: () -> @scales.y.make @domainy, @ranges.y, @getSpec('y').padding
+    for aes in ['x', 'y']
+      @scales[aes].make @domains[aes], @ranges[aes], @getSpec(aes).padding
   _makeScales : (guideSpec, domains, ranges) ->
     # this function contains information about default scales!
     specScale = (a) ->
@@ -155,7 +140,7 @@ class ScaleSet
 
   makeAxes: () ->
     @axes.make
-      domains: {x: @domainx, y: @domainy}
+      domains: {x: @domains.x, y: @domains.y}
       coord : @coord
       scales : @scales
       specs: @guideSpec ? {}

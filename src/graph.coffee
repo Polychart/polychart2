@@ -29,14 +29,7 @@ class Graph
     # Default handlers
     @addHandler poly.handler.tooltip()
     @addHandler poly.handler.zoom(spec)
-  ###
-  Reset the graph to its initial specification.
-  ###
-  reset : () =>
-    if not @initial_spec?
-      throw poly.error.defn "No graph specification is passed in!"
-    @maybeDispose @spec
-    @make @initial_spec
+
   ###
   Remove all existing items on the graph, if necessary
   ###

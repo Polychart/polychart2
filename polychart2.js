@@ -5066,8 +5066,6 @@ attribute of that value.
       this.guideSpec = guideSpec;
       this.layers = layers;
       this.domains = domains;
-      this.domainx = this.domains.x;
-      this.domainy = this.domains.y;
       this.scales = this._makeScales(guideSpec, domains, this.ranges);
       this.reverse = {
         x: this.scales.x.finv,
@@ -5077,34 +5075,15 @@ attribute of that value.
     };
 
     ScaleSet.prototype.setRanges = function(ranges) {
+      var aes, _i, _len, _ref, _results;
       this.ranges = ranges;
-      this._makeXScale();
-      return this._makeYScale();
-    };
-
-    ScaleSet.prototype.setXDomain = function(d) {
-      this.domainx = d;
-      return this._makeXScale();
-    };
-
-    ScaleSet.prototype.setYDomain = function(d) {
-      this.domainy = d;
-      return this._makeYScale();
-    };
-
-    ScaleSet.prototype.resetDomains = function() {
-      this.domainx = this.domains.x;
-      this.domainy = this.domains.y;
-      this._makeXScale();
-      return this._makeYScale();
-    };
-
-    ScaleSet.prototype._makeXScale = function() {
-      return this.scales.x.make(this.domainx, this.ranges.x, this.getSpec('x').padding);
-    };
-
-    ScaleSet.prototype._makeYScale = function() {
-      return this.scales.y.make(this.domainy, this.ranges.y, this.getSpec('y').padding);
+      _ref = ['x', 'y'];
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        aes = _ref[_i];
+        _results.push(this.scales[aes].make(this.domains[aes], this.ranges[aes], this.getSpec(aes).padding));
+      }
+      return _results;
     };
 
     ScaleSet.prototype._makeScales = function(guideSpec, domains, ranges) {
@@ -5315,8 +5294,8 @@ attribute of that value.
       var _ref;
       return this.axes.make({
         domains: {
-          x: this.domainx,
-          y: this.domainy
+          x: this.domains.x,
+          y: this.domains.y
         },
         coord: this.coord,
         scales: this.scales,
@@ -9121,8 +9100,6 @@ The functions here makes it easier to create common types of interactions.
       this.merge = __bind(this.merge, this);
 
       this.maybeDispose = __bind(this.maybeDispose, this);
-
-      this.reset = __bind(this.reset, this);
       if (!(spec != null)) {
         throw poly.error.defn("No graph specification is passed in!");
       }
@@ -9140,19 +9117,6 @@ The functions here makes it easier to create common types of interactions.
       this.addHandler(poly.handler.tooltip());
       this.addHandler(poly.handler.zoom(spec));
     }
-
-    /*
-      Reset the graph to its initial specification.
-    */
-
-
-    Graph.prototype.reset = function() {
-      if (!(this.initial_spec != null)) {
-        throw poly.error.defn("No graph specification is passed in!");
-      }
-      this.maybeDispose(this.spec);
-      return this.make(this.initial_spec);
-    };
 
     /*
       Remove all existing items on the graph, if necessary
