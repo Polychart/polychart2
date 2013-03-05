@@ -8722,7 +8722,7 @@ The functions here makes it easier to create common types of interactions.
       }
       for (_j = 0, _len1 = added.length; _j < _len1; _j++) {
         key = added[_j];
-        name = key;
+        name = this.formatter ? this.formatter(this.indices[key]) : key;
         this.panes[key] = poly.pane.make(this.indices[key], name);
       }
       _ref2 = this.indices;

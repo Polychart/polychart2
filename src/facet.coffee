@@ -55,7 +55,7 @@ class Facet
       @deletedPanes.push @panes[key]
       delete @panes[key]
     for key in added
-      name = key #formatter(@indices[key])
+      name = if @formatter then @formatter(@indices[key]) else key
       @panes[key] = poly.pane.make(@indices[key], name)
     for key, multiindex of @indices
       @panes[key].make(@spec, @datas[key], layers)
