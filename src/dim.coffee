@@ -60,6 +60,14 @@ poly.dim.make = (spec, scaleSet, facetGrid) ->
   dim.guideBottom += bottom ? 0
   dim.guideTop += top ? 0
 
+  # maximum guide top,left,bottom,right
+  hMax = dim.width * 0.40
+  vMax = dim.height * 0.40
+  if dim.guideLeft > hMax then dim.guideLeft = hMax
+  if dim.guideRight > hMax then dim.guideRight = hMax
+  if dim.guideTop > vMax then dim.guideTop = vMax
+  if dim.guideBottom > vMax then dim.guideBottom = vMax
+
   dim.chartHeight =
     dim.height-dim.paddingTop-dim.paddingBottom-dim.guideTop-dim.guideBottom
   dim.chartWidth=

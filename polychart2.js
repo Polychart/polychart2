@@ -4017,11 +4017,12 @@ Legends (GuideSet) object to determine the correct position of a legend.
     };
 
     Legends.prototype.render = function(dims, renderer, offset) {
-      var legend, _i, _len, _ref;
+      var legend, r, _i, _len, _ref;
+      r = renderer();
       _ref = this.deletedLegends;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         legend = _ref[_i];
-        legend.dispose(renderer);
+        legend.dispose(r);
       }
       this.deletedLegends = [];
       if (this.position === 'left' || this.position === 'right') {
@@ -7621,7 +7622,7 @@ Dimension object has the following elements (all numeric in pixels):
   poly.dim = {};
 
   poly.dim.make = function(spec, scaleSet, facetGrid) {
-    var bottom, dim, left, right, top, _ref, _ref1, _ref10, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+    var bottom, dim, hMax, left, right, top, vMax, _ref, _ref1, _ref10, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
     dim = {
       width: (_ref = spec.width) != null ? _ref : 400,
       height: (_ref1 = spec.height) != null ? _ref1 : 400,
@@ -7651,6 +7652,20 @@ Dimension object has the following elements (all numeric in pixels):
     dim.guideRight += right != null ? right : 0;
     dim.guideBottom += bottom != null ? bottom : 0;
     dim.guideTop += top != null ? top : 0;
+    hMax = dim.width * 0.40;
+    vMax = dim.height * 0.40;
+    if (dim.guideLeft > hMax) {
+      dim.guideLeft = hMax;
+    }
+    if (dim.guideRight > hMax) {
+      dim.guideRight = hMax;
+    }
+    if (dim.guideTop > vMax) {
+      dim.guideTop = vMax;
+    }
+    if (dim.guideBottom > vMax) {
+      dim.guideBottom = vMax;
+    }
     dim.chartHeight = dim.height - dim.paddingTop - dim.paddingBottom - dim.guideTop - dim.guideBottom;
     dim.chartWidth = dim.width - dim.paddingLeft - dim.paddingRight - dim.guideLeft - dim.guideRight;
     if ((facetGrid.cols != null) && facetGrid.cols > 1) {
