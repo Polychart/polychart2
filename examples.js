@@ -4192,7 +4192,7 @@
       dom: dom,
       title: 'World Population By (Sub)continent 2010',
       width: 300,
-      height: 300
+      height: 350
     };
     today = polyjs.chart(today_spec);
     yearly_spec = {
@@ -4239,7 +4239,7 @@
       title: "Population growth of the World (click chart to zoom)",
       dom: dom2,
       width: 550,
-      height: 300
+      height: 350
     };
     yearly = polyjs.chart(yearly_spec);
     breakdown_spec = {
