@@ -308,7 +308,7 @@ class BackendData extends AbstractData
         blob = JSON.parse(blob)
       catch e
         # Guess "blob" is not a JSON object!
-        throw poly.error.data("Unknown object returned from server!")
+        # NOTE: DON'T THROW AN ERROR! COULD BE A STRING!
       # TODO: refactor this. repeat code from poly.data
       if _.isObject(blob) and _.keys(blob).length < 4 and 'data' of blob
         data = blob.data

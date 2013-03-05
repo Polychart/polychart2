@@ -5944,7 +5944,7 @@ of a dataset, or knows how to retrieve data from some source.
         try {
           blob = JSON.parse(blob);
         } catch (e) {
-          throw poly.error.data("Unknown object returned from server!");
+
         }
         if (_.isObject(blob) && _.keys(blob).length < 4 && 'data' in blob) {
           data = blob.data;
