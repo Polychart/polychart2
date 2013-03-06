@@ -12,6 +12,7 @@ Render a tooltip. This is actually included automatically for every graph.
 poly.handler.tooltip = () ->
   tooltip = {}
   offset = null
+  # Local handler function to update on mousemove
   update = (tooltip) -> (e) ->
     mousePos = poly.getXY offset, e
     if tooltip.text.getBBox()
@@ -25,6 +26,7 @@ poly.handler.tooltip = () ->
         y: Math.max(0, y - 5)
         width: width + 10
         height: height + 10
+  # Main handler for tooltip
   (type, obj, event, graph) ->
     offset = poly.offset graph.dom
     paper = obj.paper
@@ -53,6 +55,9 @@ poly.handler.tooltip = () ->
         tooltip.box.attr fill: '#213'
         # move the text to the front of the rectangle
         tooltip.text.toFront()
+        
+        # Add handler on to the object to move box/text on mousemove
+        # TODO: Add handler to object so will monitor data changes
         obj.mousemove update(tooltip)
       else
         obj.unmousemove null
@@ -100,42 +105,45 @@ poly.handler.drilldown = (aes, levels, initial_filter = {}) ->
 ###
 Zooming and Resetting. Whenever click and drag on range, set to that range.
   * Reset event, that is, restoring to previous values, when click blank spot
+  * TODO: Add a friendly interface to restrict zooms
 ###
 poly.handler.zoom = (init_spec, xZoom = true, yZoom = true) ->
   if not init_spec?
     throw poly.error.input "Initial specification missing."
-  xGuides = _.clone init_spec.guides?.x ? undefined
-  yGuides = _.clone init_spec.guides?.y ? undefined
+  aes = if init_spec.coord?.flip? then {x: 'y', y: 'x'} else {x: 'x', y: 'y'}
+  xGuides = _.clone init_spec.guides?[aes.x] ? undefined
+  yGuides = _.clone init_spec.guides?[aes.y] ? undefined
   zoomed = false
   (type, obj, event, graph) ->
     data = obj.evtData
+    console.log graph
     if graph.coord.type is 'cartesian'
       if type is 'reset' and zoomed
         spec = graph.spec
         zoomed = false
-        if xGuides? and spec.guides?.x?
-          spec.guides.x = _.clone xGuides
+        if xGuides? and spec.guides?[aes.x]?
+          spec.guides[aes.x] = _.clone xGuides
         else
-          if spec.guides.x?.min? then delete spec.guides.x.min
-          if spec.guides.x?.max? then delete spec.guides.x.max
-        if yGuides? and spec.guides?.y?
-          spec.guides.y = _.clone yGuides
+          if spec.guides[aes.x]?.min? then delete spec.guides[aes.x].min
+          if spec.guides[aes.x]?.max? then delete spec.guides[aes.x].max
+        if yGuides? and spec.guides?[aes.y]?
+          spec.guides[aes.y] = _.clone yGuides
         else
-          if spec.guides.y?.min? then delete spec.guides.y.min
-          if spec.guides.y?.max? then delete spec.guides.y.max
+          if spec.guides[aes.y]?.min? then delete spec.guides[aes.y].min
+          if spec.guides[aes.y]?.max? then delete spec.guides[aes.y].max
         graph.make graph.spec
       if type is 'select'
         spec = graph.spec
         zoomed = true
         for layer in spec.layers
-          xVar = if xZoom then layer.x?.var else undefined
-          yVar = if yZoom then layer.y?.var else undefined
+          xVar = if xZoom then layer[aes.x]?.var else undefined
+          yVar = if yZoom then layer[aes.y]?.var else undefined
           if data[xVar]?.ge and data[xVar]?.le and (data[xVar].le - data[xVar].ge) > poly.const.epsilon
-            spec.guides.x ?= {min: data[xVar].ge, max: data[xVar].le}
-            spec.guides.x.min = data[xVar].ge
-            spec.guides.x.max = data[xVar].le
+            spec.guides[aes.x] ?= {min: data[xVar].ge, max: data[xVar].le}
+            spec.guides[aes.x].min = data[xVar].ge
+            spec.guides[aes.x].max = data[xVar].le
           if data[yVar]?.ge and data[yVar]?.le and (data[yVar].le - data[yVar].ge) > poly.const.epsilon
-            spec.guides.y ?= {min: data[yVar].ge, max: data[yVar].le}
-            spec.guides.y.min = data[yVar].ge
-            spec.guides.y.max = data[yVar].le
+            spec.guides[aes.y] ?= {min: data[yVar].ge, max: data[yVar].le}
+            spec.guides[aes.y].min = data[yVar].ge
+            spec.guides[aes.y].max = data[yVar].le
           graph.make spec

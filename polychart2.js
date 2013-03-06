@@ -7767,6 +7767,9 @@ Dimension object has the following elements (all numeric in pixels):
         },
         animate: function(pt, mark, evtData, tooltip) {
           renderer[coord.type][mark.type].animate(pt, scales, coord, offset, mark, mayflip);
+          if (clipping != null) {
+            pt.attr('clip-rect', clipping);
+          }
           if (evtData && _.keys(evtData).length > 0) {
             pt.data('e', evtData);
           }
@@ -8528,11 +8531,12 @@ The functions here makes it easier to create common types of interactions.
   /*
   Zooming and Resetting. Whenever click and drag on range, set to that range.
     * Reset event, that is, restoring to previous values, when click blank spot
+    * TODO: Add a friendly interface to restrict zooms
   */
 
 
   poly.handler.zoom = function(init_spec, xZoom, yZoom) {
-    var xGuides, yGuides, zoomed, _ref, _ref1, _ref2, _ref3;
+    var aes, xGuides, yGuides, zoomed, _ref, _ref1, _ref2, _ref3, _ref4;
     if (xZoom == null) {
       xZoom = true;
     }
@@ -8542,34 +8546,42 @@ The functions here makes it easier to create common types of interactions.
     if (!(init_spec != null)) {
       throw poly.error.input("Initial specification missing.");
     }
-    xGuides = _.clone((_ref = (_ref1 = init_spec.guides) != null ? _ref1.x : void 0) != null ? _ref : void 0);
-    yGuides = _.clone((_ref2 = (_ref3 = init_spec.guides) != null ? _ref3.y : void 0) != null ? _ref2 : void 0);
+    aes = ((_ref = init_spec.coord) != null ? _ref.flip : void 0) != null ? {
+      x: 'y',
+      y: 'x'
+    } : {
+      x: 'x',
+      y: 'y'
+    };
+    xGuides = _.clone((_ref1 = (_ref2 = init_spec.guides) != null ? _ref2[aes.x] : void 0) != null ? _ref1 : void 0);
+    yGuides = _.clone((_ref3 = (_ref4 = init_spec.guides) != null ? _ref4[aes.y] : void 0) != null ? _ref3 : void 0);
     zoomed = false;
     return function(type, obj, event, graph) {
-      var data, layer, spec, xVar, yVar, _base, _base1, _i, _len, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results;
+      var data, layer, spec, xVar, yVar, _base, _base1, _i, _len, _name, _name1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref19, _ref5, _ref6, _ref7, _ref8, _ref9, _results;
       data = obj.evtData;
+      console.log(graph);
       if (graph.coord.type === 'cartesian') {
         if (type === 'reset' && zoomed) {
           spec = graph.spec;
           zoomed = false;
-          if ((xGuides != null) && (((_ref4 = spec.guides) != null ? _ref4.x : void 0) != null)) {
-            spec.guides.x = _.clone(xGuides);
+          if ((xGuides != null) && (((_ref5 = spec.guides) != null ? _ref5[aes.x] : void 0) != null)) {
+            spec.guides[aes.x] = _.clone(xGuides);
           } else {
-            if (((_ref5 = spec.guides.x) != null ? _ref5.min : void 0) != null) {
-              delete spec.guides.x.min;
+            if (((_ref6 = spec.guides[aes.x]) != null ? _ref6.min : void 0) != null) {
+              delete spec.guides[aes.x].min;
             }
-            if (((_ref6 = spec.guides.x) != null ? _ref6.max : void 0) != null) {
-              delete spec.guides.x.max;
+            if (((_ref7 = spec.guides[aes.x]) != null ? _ref7.max : void 0) != null) {
+              delete spec.guides[aes.x].max;
             }
           }
-          if ((yGuides != null) && (((_ref7 = spec.guides) != null ? _ref7.y : void 0) != null)) {
-            spec.guides.y = _.clone(yGuides);
+          if ((yGuides != null) && (((_ref8 = spec.guides) != null ? _ref8[aes.y] : void 0) != null)) {
+            spec.guides[aes.y] = _.clone(yGuides);
           } else {
-            if (((_ref8 = spec.guides.y) != null ? _ref8.min : void 0) != null) {
-              delete spec.guides.y.min;
+            if (((_ref9 = spec.guides[aes.y]) != null ? _ref9.min : void 0) != null) {
+              delete spec.guides[aes.y].min;
             }
-            if (((_ref9 = spec.guides.y) != null ? _ref9.max : void 0) != null) {
-              delete spec.guides.y.max;
+            if (((_ref10 = spec.guides[aes.y]) != null ? _ref10.max : void 0) != null) {
+              delete spec.guides[aes.y].max;
             }
           }
           graph.make(graph.spec);
@@ -8577,31 +8589,31 @@ The functions here makes it easier to create common types of interactions.
         if (type === 'select') {
           spec = graph.spec;
           zoomed = true;
-          _ref10 = spec.layers;
+          _ref11 = spec.layers;
           _results = [];
-          for (_i = 0, _len = _ref10.length; _i < _len; _i++) {
-            layer = _ref10[_i];
-            xVar = xZoom ? (_ref11 = layer.x) != null ? _ref11["var"] : void 0 : void 0;
-            yVar = yZoom ? (_ref12 = layer.y) != null ? _ref12["var"] : void 0 : void 0;
-            if (((_ref13 = data[xVar]) != null ? _ref13.ge : void 0) && ((_ref14 = data[xVar]) != null ? _ref14.le : void 0) && (data[xVar].le - data[xVar].ge) > poly["const"].epsilon) {
-              if ((_ref15 = (_base = spec.guides).x) == null) {
-                _base.x = {
+          for (_i = 0, _len = _ref11.length; _i < _len; _i++) {
+            layer = _ref11[_i];
+            xVar = xZoom ? (_ref12 = layer[aes.x]) != null ? _ref12["var"] : void 0 : void 0;
+            yVar = yZoom ? (_ref13 = layer[aes.y]) != null ? _ref13["var"] : void 0 : void 0;
+            if (((_ref14 = data[xVar]) != null ? _ref14.ge : void 0) && ((_ref15 = data[xVar]) != null ? _ref15.le : void 0) && (data[xVar].le - data[xVar].ge) > poly["const"].epsilon) {
+              if ((_ref16 = (_base = spec.guides)[_name = aes.x]) == null) {
+                _base[_name] = {
                   min: data[xVar].ge,
                   max: data[xVar].le
                 };
               }
-              spec.guides.x.min = data[xVar].ge;
-              spec.guides.x.max = data[xVar].le;
+              spec.guides[aes.x].min = data[xVar].ge;
+              spec.guides[aes.x].max = data[xVar].le;
             }
-            if (((_ref16 = data[yVar]) != null ? _ref16.ge : void 0) && ((_ref17 = data[yVar]) != null ? _ref17.le : void 0) && (data[yVar].le - data[yVar].ge) > poly["const"].epsilon) {
-              if ((_ref18 = (_base1 = spec.guides).y) == null) {
-                _base1.y = {
+            if (((_ref17 = data[yVar]) != null ? _ref17.ge : void 0) && ((_ref18 = data[yVar]) != null ? _ref18.le : void 0) && (data[yVar].le - data[yVar].ge) > poly["const"].epsilon) {
+              if ((_ref19 = (_base1 = spec.guides)[_name1 = aes.y]) == null) {
+                _base1[_name1] = {
                   min: data[yVar].ge,
                   max: data[yVar].le
                 };
               }
-              spec.guides.y.min = data[yVar].ge;
-              spec.guides.y.max = data[yVar].le;
+              spec.guides[aes.y].min = data[yVar].ge;
+              spec.guides[aes.y].max = data[yVar].le;
             }
             _results.push(graph.make(spec));
           }
@@ -9070,7 +9082,6 @@ The functions here makes it easier to create common types of interactions.
       this.paper = null;
       this.coord = null;
       this.facet = poly.facet.make();
-      this.initial_spec = _.clone(spec);
       this.dataSubscribed = [];
       this.make(spec);
       this.addHandler(poly.handler.tooltip());
@@ -9107,9 +9118,6 @@ The functions here makes it easier to create common types of interactions.
       var d, dataChange, datas, id, layerSpec, merge, _i, _len, _ref, _ref1,
         _this = this;
       this.callback = callback;
-      if (spec == null) {
-        spec = this.initial_spec;
-      }
       spec = poly.spec.toStrictMode(spec);
       poly.spec.check(spec);
       this.spec = spec;

@@ -21,7 +21,6 @@ class Graph
     @paper = null
     @coord = null
     @facet = poly.facet.make()
-    @initial_spec = _.clone spec
     @dataSubscribed = []
     @make spec
 
@@ -48,7 +47,6 @@ class Graph
   data processing is complete.
   ###
   make: (spec, @callback) ->
-    spec ?= @initial_spec
     spec = poly.spec.toStrictMode spec
     poly.spec.check spec
     @spec = spec

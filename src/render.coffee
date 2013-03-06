@@ -82,6 +82,7 @@ poly.render = (handleEvent, paper, scales, coord) -> (offset={}, clipping=false,
     pt.remove()
   animate: (pt, mark, evtData, tooltip) ->
     renderer[coord.type][mark.type].animate pt, scales, coord, offset, mark, mayflip
+    if clipping? then pt.attr('clip-rect', clipping)
     if evtData and _.keys(evtData).length > 0
       pt.data 'e', evtData
     if tooltip
