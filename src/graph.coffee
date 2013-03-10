@@ -85,7 +85,7 @@ class Graph
     3) Actually render the chart.
   ###
   merge: () =>
-    @layers = _.map @spec.layers, (layerSpec) => poly.layer.make(layerSpec, @spec.strict)
+    @layers = _.map @spec.layers, (layerSpec) => poly.layer.make(layerSpec, poly.spec.toStrictMode @spec)
     @facet.calculate(@processedData, @layers)
     @mergeDomains()
     @render()

@@ -6380,6 +6380,7 @@ Shared constants
 
 (function() {
   var Area, Bar, Box, Layer, Line, Path, Point, Spline, Step, Text, Tile, aesthetics, defaults, sf,
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -6405,9 +6406,10 @@ Shared constants
 
     Layer.prototype.defaults = defaults;
 
-    function Layer(spec) {
+    function Layer(spec, strictMode) {
       var aes, _i, _len;
       this.spec = spec;
+      this.strict = strictMode;
       this.mapping = {};
       this.consts = {};
       for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
@@ -6424,15 +6426,27 @@ Shared constants
     }
 
     Layer.prototype.calculate = function(statData, meta) {
-      var aes, key, _ref;
+      var aes, key, v, _i, _len, _ref, _ref1,
+        _this = this;
       this.statData = statData;
       this.meta = meta;
+      _ref = ['x', 'y'];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        aes = _ref[_i];
+        if ((this.strict.guides[aes] != null) && (this.strict.guides[aes].levels != null)) {
+          v = this.spec[aes]["var"];
+          this.statData = _.filter(this.statData, function(X) {
+            var _ref1;
+            return _ref1 = X[v], __indexOf.call(_this.strict.guides[aes].levels, _ref1) >= 0;
+          });
+        }
+      }
       this._calcGeoms();
       this.geoms = this._sample(this.geoms);
       meta = {};
-      _ref = this.mapping;
-      for (aes in _ref) {
-        key = _ref[aes];
+      _ref1 = this.mapping;
+      for (aes in _ref1) {
+        key = _ref1[aes];
         meta[aes] = this.meta[key];
       }
       return {
@@ -6825,7 +6839,9 @@ Shared constants
       if (this.mapping.x) {
         m = this.meta[this.mapping.x];
         if (m.type !== 'cat' && !m.binned) {
-          console.log("Bar chart x-values need to be binned. Use the bin() transform!");
+          if (m.type === 'num' && !(this.strict.guides.x.bw != null)) {
+            throw poly.error.type("Bar chart x-values need to be binned. Set binwidth or use the bin() transform!");
+          }
         }
       }
       this.position = (_ref = this.spec.position) != null ? _ref : 'stack';
@@ -7397,11 +7413,11 @@ Shared constants
     'step': Step
   };
 
-  poly.layer.make = function(layerSpec, strictmode) {
+  poly.layer.make = function(layerSpec, strictMode) {
     var type;
     type = layerSpec.type;
     if (type in poly.layer.classes) {
-      return new poly.layer.classes[type](layerSpec, strictmode);
+      return new poly.layer.classes[type](layerSpec, strictMode);
     }
     throw poly.error.defn("No such layer " + layerSpec.type + ".");
   };
@@ -8537,7 +8553,7 @@ The functions here makes it easier to create common types of interactions.
     var aes, initGuides, _ref, _ref1;
     if (zoomOptions == null) {
       zoomOptions = {
-        x: false,
+        x: true,
         y: true
       };
     }
@@ -8585,7 +8601,7 @@ The functions here makes it easier to create common types of interactions.
                 }
               }
               if (graph.axes.domains[v].type === 'cat') {
-                if (data[aesVar] !== []) {
+                if (data[aesVar]["in"].length !== 0) {
                   if ((_ref6 = guides[v]) == null) {
                     guides[v] = {
                       levels: null
@@ -9154,7 +9170,7 @@ The functions here makes it easier to create common types of interactions.
     Graph.prototype.merge = function() {
       var _this = this;
       this.layers = _.map(this.spec.layers, function(layerSpec) {
-        return poly.layer.make(layerSpec, _this.spec.strict);
+        return poly.layer.make(layerSpec, poly.spec.toStrictMode(_this.spec));
       });
       this.facet.calculate(this.processedData, this.layers);
       this.mergeDomains();

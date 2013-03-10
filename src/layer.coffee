@@ -39,8 +39,9 @@ Base class for all layers
 ###
 class Layer
   defaults: defaults
-  constructor: (spec) ->
+  constructor: (spec, strictMode) ->
     @spec = spec
+    @strict = strictMode
     @mapping = {}      # aesthetic mappings
     @consts = {}       # constants supplied by the spec
     for aes in aesthetics
@@ -48,6 +49,11 @@ class Layer
         if spec[aes].var then @mapping[aes] = spec[aes].var
         if spec[aes].const then @consts[aes] = spec[aes].const
   calculate: (@statData, @meta) ->
+    # Only keep the data that is necessary in the computation---for levels
+    for aes in ['x', 'y']
+      if @strict.guides[aes]? and @strict.guides[aes].levels?
+        v = @spec[aes].var
+        @statData = _.filter @statData, (X) => X[v] in @strict.guides[aes].levels
     @_calcGeoms()
     @geoms = @_sample @geoms
     meta = {}
@@ -70,7 +76,7 @@ class Layer
         else
           tooltip += "\n#{v}: #{poly.format.value item[v]}"
       tooltip
-  # helper to sample the number of geometrical points plotted, when encessary
+  # helper to sample the number of geometrical points plotted, when necessary
   _sample: (geoms) ->
     if @spec.sample is false
       geoms
@@ -210,9 +216,9 @@ class Bar extends Layer
     if @mapping.x
       m = @meta[@mapping.x]
       if m.type isnt 'cat' and not m.binned
-        #TODO: this need to be an error; however it doesn't take care of the
-        #case that the binwidth is specified in the guidespec
-        console.log "Bar chart x-values need to be binned. Use the bin() transform!"
+        # Check that the bw is set in guides. Hackish.
+        if m.type is 'num' and not @strict.guides.x.bw?
+          throw poly.error.type "Bar chart x-values need to be binned. Set binwidth or use the bin() transform!"
     @position = @spec.position ? 'stack'
     if @position is 'stack'
       @_calcGeomsStack()
@@ -499,8 +505,8 @@ poly.layer.classes = {
   'spline' : Spline
   'step' : Step
 }
-poly.layer.make = (layerSpec, strictmode) ->
+poly.layer.make = (layerSpec, strictMode) ->
   type = layerSpec.type
   if type of poly.layer.classes
-    return new poly.layer.classes[type](layerSpec, strictmode)
+    return new poly.layer.classes[type](layerSpec, strictMode)
   throw poly.error.defn "No such layer #{layerSpec.type}."

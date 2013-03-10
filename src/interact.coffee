@@ -134,7 +134,7 @@ poly.handler.zoom = (init_spec, zoomOptions = {x: true, y: true}) ->
                 guides[v] ?= {min: null, max: null}
                 [guides[v].min, guides[v].max] = [data[aesVar].ge, data[aesVar].le]
             if graph.axes.domains[v].type is 'cat'
-              if data[aesVar] isnt []
+              if data[aesVar].in.length isnt 0
                 guides[v] ?= {levels: null}
                 guides[v].levels = data[aesVar].in
           graph.make graph.spec
