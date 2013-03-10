@@ -2696,10 +2696,17 @@ Helper functions to legends & axes for generating ticks
 
 
   poly.tick.make = function(domain, guideSpec, type) {
-    var formatter, i, next, numticks, prev, step, t, tickfn, tickobjs, ticks, _i, _ref, _ref1, _ref2;
+    var formatter, i, next, numticks, prev, step, t, tickfn, tickobjs, ticks, _i, _ref, _ref1, _ref2,
+      _this = this;
     step = null;
     if (guideSpec.ticks != null) {
-      ticks = guideSpec.ticks;
+      if (type === 'num') {
+        ticks = _.filter(guideSpec.ticks, function(t) {
+          return t >= domain.min && t <= domain.max;
+        });
+      } else {
+        ticks = guideSpec.ticks;
+      }
     } else {
       numticks = (_ref = guideSpec.numticks) != null ? _ref : 5;
       _ref1 = tickValues[type](domain, numticks), ticks = _ref1.ticks, step = _ref1.step;
@@ -8585,7 +8592,7 @@ The functions here makes it easier to create common types of interactions.
             layer = _ref2[_j];
             for (_k = 0, _len2 = aes.length; _k < _len2; _k++) {
               v = aes[_k];
-              if (!zoomOptions[v]) {
+              if (!(zoomOptions[v] && (layer[v] != null))) {
                 continue;
               }
               aesVar = layer[v]["var"];

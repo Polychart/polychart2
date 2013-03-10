@@ -126,7 +126,7 @@ poly.handler.zoom = (init_spec, zoomOptions = {x: true, y: true}) ->
         data = obj.evtData
         guides = graph.spec.guides
         for layer in graph.spec.layers
-          for v in aes when zoomOptions[v]
+          for v in aes when (zoomOptions[v] and layer[v]?)
             aesVar = layer[v].var
             # Check what sort of domains
             if graph.axes.domains[v].type in ['num', 'date']

@@ -11,7 +11,11 @@ Produce an associate array of aesthetics to tick objects.
 poly.tick.make = (domain, guideSpec, type) ->
   step = null
   if guideSpec.ticks?
-    ticks = guideSpec.ticks # provided by spec
+    # Will the only custom tick type be num? Will there be problems for others?
+    if type is 'num'
+      ticks = _.filter guideSpec.ticks, (t) => (t >= domain.min and t <= domain.max) # provided by spec
+    else
+      ticks = guideSpec.ticks
   else
     numticks = guideSpec.numticks ? 5 # use default
     {ticks, step} = tickValues[type] domain, numticks
