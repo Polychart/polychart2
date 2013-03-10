@@ -4638,14 +4638,12 @@ attribute of that value.
         }
       };
       x = function(y1, y2) {
-        var i1, i2, tmp;
+        var i1, i2, _ref;
         if (y2 < y1) {
-          tmp = y2;
-          y2 = y1;
-          y1 = tmp;
+          _ref = [y2, y1], y1 = _ref[0], y2 = _ref[1];
         }
         i1 = Math.floor(y1 / step);
-        i2 = Math.ceil(y2 / step);
+        i2 = Math.floor(y2 / step);
         return {
           "in": _this.domain.levels.slice(i1, +i2 + 1 || 9e9)
         };
@@ -8535,87 +8533,69 @@ The functions here makes it easier to create common types of interactions.
   */
 
 
-  poly.handler.zoom = function(init_spec, xZoom, yZoom) {
-    var aes, xGuides, yGuides, zoomed, _ref, _ref1, _ref2, _ref3, _ref4;
-    if (xZoom == null) {
-      xZoom = true;
-    }
-    if (yZoom == null) {
-      yZoom = true;
+  poly.handler.zoom = function(init_spec, zoomOptions) {
+    var aes, initGuides, _ref, _ref1;
+    if (zoomOptions == null) {
+      zoomOptions = {
+        x: false,
+        y: true
+      };
     }
     if (!(init_spec != null)) {
       throw poly.error.input("Initial specification missing.");
     }
-    aes = ((_ref = init_spec.coord) != null ? _ref.flip : void 0) != null ? {
-      x: 'y',
-      y: 'x'
-    } : {
-      x: 'x',
-      y: 'y'
+    initGuides = {
+      x: _.clone((_ref = init_spec.guides) != null ? _ref.x : void 0),
+      y: _.clone((_ref1 = init_spec.guides) != null ? _ref1.y : void 0)
     };
-    xGuides = _.clone((_ref1 = (_ref2 = init_spec.guides) != null ? _ref2[aes.x] : void 0) != null ? _ref1 : void 0);
-    yGuides = _.clone((_ref3 = (_ref4 = init_spec.guides) != null ? _ref4[aes.y] : void 0) != null ? _ref3 : void 0);
-    zoomed = false;
+    aes = ['x', 'y'];
     return function(type, obj, event, graph) {
-      var data, layer, spec, xVar, yVar, _base, _base1, _i, _len, _name, _name1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref18, _ref19, _ref5, _ref6, _ref7, _ref8, _ref9, _results;
-      data = obj.evtData;
-      console.log(graph);
+      var aesVar, data, guides, layer, spec, v, _i, _j, _k, _len, _len1, _len2, _ref2, _ref3, _ref4, _ref5, _ref6, _results;
       if (graph.coord.type === 'cartesian') {
-        if (type === 'reset' && zoomed) {
+        if (type === 'reset') {
           spec = graph.spec;
-          zoomed = false;
-          if ((xGuides != null) && (((_ref5 = spec.guides) != null ? _ref5[aes.x] : void 0) != null)) {
-            spec.guides[aes.x] = _.clone(xGuides);
-          } else {
-            if (((_ref6 = spec.guides[aes.x]) != null ? _ref6.min : void 0) != null) {
-              delete spec.guides[aes.x].min;
-            }
-            if (((_ref7 = spec.guides[aes.x]) != null ? _ref7.max : void 0) != null) {
-              delete spec.guides[aes.x].max;
-            }
-          }
-          if ((yGuides != null) && (((_ref8 = spec.guides) != null ? _ref8[aes.y] : void 0) != null)) {
-            spec.guides[aes.y] = _.clone(yGuides);
-          } else {
-            if (((_ref9 = spec.guides[aes.y]) != null ? _ref9.min : void 0) != null) {
-              delete spec.guides[aes.y].min;
-            }
-            if (((_ref10 = spec.guides[aes.y]) != null ? _ref10.max : void 0) != null) {
-              delete spec.guides[aes.y].max;
-            }
+          for (_i = 0, _len = aes.length; _i < _len; _i++) {
+            v = aes[_i];
+            spec.guides[v] = _.clone(initGuides[v]);
           }
           graph.make(graph.spec);
         }
         if (type === 'select') {
-          spec = graph.spec;
-          zoomed = true;
-          _ref11 = spec.layers;
+          data = obj.evtData;
+          guides = graph.spec.guides;
+          _ref2 = graph.spec.layers;
           _results = [];
-          for (_i = 0, _len = _ref11.length; _i < _len; _i++) {
-            layer = _ref11[_i];
-            xVar = xZoom ? (_ref12 = layer[aes.x]) != null ? _ref12["var"] : void 0 : void 0;
-            yVar = yZoom ? (_ref13 = layer[aes.y]) != null ? _ref13["var"] : void 0 : void 0;
-            if (((_ref14 = data[xVar]) != null ? _ref14.ge : void 0) && ((_ref15 = data[xVar]) != null ? _ref15.le : void 0) && (data[xVar].le - data[xVar].ge) > poly["const"].epsilon) {
-              if ((_ref16 = (_base = spec.guides)[_name = aes.x]) == null) {
-                _base[_name] = {
-                  min: data[xVar].ge,
-                  max: data[xVar].le
-                };
+          for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+            layer = _ref2[_j];
+            for (_k = 0, _len2 = aes.length; _k < _len2; _k++) {
+              v = aes[_k];
+              if (!zoomOptions[v]) {
+                continue;
               }
-              spec.guides[aes.x].min = data[xVar].ge;
-              spec.guides[aes.x].max = data[xVar].le;
-            }
-            if (((_ref17 = data[yVar]) != null ? _ref17.ge : void 0) && ((_ref18 = data[yVar]) != null ? _ref18.le : void 0) && (data[yVar].le - data[yVar].ge) > poly["const"].epsilon) {
-              if ((_ref19 = (_base1 = spec.guides)[_name1 = aes.y]) == null) {
-                _base1[_name1] = {
-                  min: data[yVar].ge,
-                  max: data[yVar].le
-                };
+              aesVar = layer[v]["var"];
+              if ((_ref3 = graph.axes.domains[v].type) === 'num' || _ref3 === 'date') {
+                if (data[aesVar].le - data[aesVar].ge > poly["const"].epsilon) {
+                  if ((_ref4 = guides[v]) == null) {
+                    guides[v] = {
+                      min: null,
+                      max: null
+                    };
+                  }
+                  _ref5 = [data[aesVar].ge, data[aesVar].le], guides[v].min = _ref5[0], guides[v].max = _ref5[1];
+                }
               }
-              spec.guides[aes.y].min = data[yVar].ge;
-              spec.guides[aes.y].max = data[yVar].le;
+              if (graph.axes.domains[v].type === 'cat') {
+                if (data[aesVar] !== []) {
+                  if ((_ref6 = guides[v]) == null) {
+                    guides[v] = {
+                      levels: null
+                    };
+                  }
+                  guides[v].levels = data[aesVar]["in"];
+                }
+              }
             }
-            _results.push(graph.make(spec));
+            _results.push(graph.make(graph.spec));
           }
           return _results;
         }

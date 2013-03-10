@@ -186,9 +186,9 @@ class Linear extends PositionScale
       i = _.indexOf(@domain.levels, x)
       if i == -1 then null else @range.min + i*step
     x = (y1, y2) =>
-      if y2 < y1 then tmp=y2; y2=y1; y1=tmp
+      if y2 < y1 then [y1, y2] = [y2, y1]
       i1 = Math.floor(y1/step)
-      i2 = Math.ceil(y2/step)
+      i2 = Math.floor(y2/step)
       {in: @domain.levels[i1..i2]}
     @f = @_catWrapper step, y
     @finv = x

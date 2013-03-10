@@ -107,43 +107,34 @@ Zooming and Resetting. Whenever click and drag on range, set to that range.
   * Reset event, that is, restoring to previous values, when click blank spot
   * TODO: Add a friendly interface to restrict zooms
 ###
-poly.handler.zoom = (init_spec, xZoom = true, yZoom = true) ->
+poly.handler.zoom = (init_spec, zoomOptions = {x: true, y: true}) ->
   if not init_spec?
     throw poly.error.input "Initial specification missing."
-  aes = if init_spec.coord?.flip? then {x: 'y', y: 'x'} else {x: 'x', y: 'y'}
-  xGuides = _.clone init_spec.guides?[aes.x] ? undefined
-  yGuides = _.clone init_spec.guides?[aes.y] ? undefined
-  zoomed = false
+  # Keep a copy of initial guides for reset
+  initGuides =
+    x: _.clone init_spec.guides?.x
+    y: _.clone init_spec.guides?.y
+  aes = ['x', 'y']
   (type, obj, event, graph) ->
-    data = obj.evtData
-    console.log graph
+    # Zoom enabled only for Cartesian coordinates
     if graph.coord.type is 'cartesian'
-      if type is 'reset' and zoomed
+      if type is 'reset'
         spec = graph.spec
-        zoomed = false
-        if xGuides? and spec.guides?[aes.x]?
-          spec.guides[aes.x] = _.clone xGuides
-        else
-          if spec.guides[aes.x]?.min? then delete spec.guides[aes.x].min
-          if spec.guides[aes.x]?.max? then delete spec.guides[aes.x].max
-        if yGuides? and spec.guides?[aes.y]?
-          spec.guides[aes.y] = _.clone yGuides
-        else
-          if spec.guides[aes.y]?.min? then delete spec.guides[aes.y].min
-          if spec.guides[aes.y]?.max? then delete spec.guides[aes.y].max
+        (spec.guides[v] = _.clone initGuides[v]) for v in aes
         graph.make graph.spec
       if type is 'select'
-        spec = graph.spec
-        zoomed = true
-        for layer in spec.layers
-          xVar = if xZoom then layer[aes.x]?.var else undefined
-          yVar = if yZoom then layer[aes.y]?.var else undefined
-          if data[xVar]?.ge and data[xVar]?.le and (data[xVar].le - data[xVar].ge) > poly.const.epsilon
-            spec.guides[aes.x] ?= {min: data[xVar].ge, max: data[xVar].le}
-            spec.guides[aes.x].min = data[xVar].ge
-            spec.guides[aes.x].max = data[xVar].le
-          if data[yVar]?.ge and data[yVar]?.le and (data[yVar].le - data[yVar].ge) > poly.const.epsilon
-            spec.guides[aes.y] ?= {min: data[yVar].ge, max: data[yVar].le}
-            spec.guides[aes.y].min = data[yVar].ge
-            spec.guides[aes.y].max = data[yVar].le
-          graph.make spec
+        data = obj.evtData
+        guides = graph.spec.guides
+        for layer in graph.spec.layers
+          for v in aes when zoomOptions[v]
+            aesVar = layer[v].var
+            # Check what sort of domains
+            if graph.axes.domains[v].type in ['num', 'date']
+              if data[aesVar].le - data[aesVar].ge > poly.const.epsilon # Make sure there is difference
+                guides[v] ?= {min: null, max: null}
+                [guides[v].min, guides[v].max] = [data[aesVar].ge, data[aesVar].le]
+            if graph.axes.domains[v].type is 'cat'
+              if data[aesVar] isnt []
+                guides[v] ?= {levels: null}
+                guides[v].levels = data[aesVar].in
+          graph.make graph.spec
