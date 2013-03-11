@@ -6413,10 +6413,10 @@ Shared constants
 
     Layer.prototype.defaults = defaults;
 
-    function Layer(spec, strictMode) {
+    function Layer(spec, strictMode, guideSpec) {
       var aes, _i, _len;
       this.spec = spec;
-      this.strict = strictMode;
+      this.guideSpec = guideSpec;
       this.mapping = {};
       this.consts = {};
       for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
@@ -6433,27 +6433,15 @@ Shared constants
     }
 
     Layer.prototype.calculate = function(statData, meta) {
-      var aes, key, v, _i, _len, _ref, _ref1,
-        _this = this;
+      var aes, key, _ref;
       this.statData = statData;
       this.meta = meta;
-      _ref = ['x', 'y'];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        aes = _ref[_i];
-        if ((this.strict.guides[aes] != null) && (this.strict.guides[aes].levels != null)) {
-          v = this.spec[aes]["var"];
-          this.statData = _.filter(this.statData, function(X) {
-            var _ref1;
-            return _ref1 = X[v], __indexOf.call(_this.strict.guides[aes].levels, _ref1) >= 0;
-          });
-        }
-      }
       this._calcGeoms();
       this.geoms = this._sample(this.geoms);
       meta = {};
-      _ref1 = this.mapping;
-      for (aes in _ref1) {
-        key = _ref1[aes];
+      _ref = this.mapping;
+      for (aes in _ref) {
+        key = _ref[aes];
         meta[aes] = this.meta[key];
       }
       return {
@@ -6638,6 +6626,19 @@ Shared constants
       return _results;
     };
 
+    Layer.prototype._inLevels = function(item) {
+      var aes, _i, _len, _ref, _ref1;
+      _ref = ['x', 'y'];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        aes = _ref[_i];
+        if ((this.guideSpec[aes] != null) && (this.guideSpec[aes].levels != null)) {
+          return _ref1 = item[this.spec[aes]["var"]], __indexOf.call(this.guideSpec[aes].levels, _ref1) >= 0;
+        } else {
+          return true;
+        }
+      }
+    };
+
     return Layer;
 
   })();
@@ -6673,7 +6674,7 @@ Shared constants
               y: this._getValue(item, 'y'),
               color: this._getValue(item, 'color'),
               size: this._getValue(item, 'size'),
-              opacity: this._getValue(item, 'opacity')
+              opacity: this._inLevels(item) ? this._getValue(item, 'opacity') : 0
             }
           },
           evtData: evtData,
@@ -6846,7 +6847,7 @@ Shared constants
       if (this.mapping.x) {
         m = this.meta[this.mapping.x];
         if (m.type !== 'cat' && !m.binned) {
-          if (m.type === 'num' && !(this.strict.guides.x.bw != null)) {
+          if (m.type === 'num' && !(this.guideSpec.x.bw != null)) {
             throw poly.error.type("Bar chart x-values need to be binned. Set binwidth or use the bin() transform!");
           }
         }
@@ -6890,7 +6891,7 @@ Shared constants
               x: [lower, upper],
               y: [item.$lower, item.$upper],
               color: this._getValue(item, 'color'),
-              opacity: this._getValue(item, 'opacity')
+              opacity: this._inLevels(item) ? this._getValue(item, 'opacity') : 0
             }
           },
           evtData: evtData,
@@ -6926,7 +6927,7 @@ Shared constants
               x: [sf.lower(this._getValue(item, 'x')), sf.upper(this._getValue(item, 'x'))],
               y: [item.$lower, item.$upper],
               color: this._getValue(item, 'color'),
-              opacity: this._getValue(item, 'opacity')
+              opacity: this._inLevels(item) ? this._getValue(item, 'opacity') : 0
             }
           },
           evtData: evtData,
@@ -7163,7 +7164,7 @@ Shared constants
         y = this._getValue(item, 'y');
         color = this._getValue(item, 'color');
         size = this._getValue(item, 'size');
-        opacity = this._getValue(item, 'opacity');
+        opacity = this._inLevels(item) ? this._getValue(item, 'opacity') : 0;
         xl = sf.lower(x);
         xu = sf.upper(x);
         xm = sf.middle(x);
@@ -7420,11 +7421,11 @@ Shared constants
     'step': Step
   };
 
-  poly.layer.make = function(layerSpec, strictMode) {
+  poly.layer.make = function(layerSpec, strictMode, guideSpec) {
     var type;
     type = layerSpec.type;
     if (type in poly.layer.classes) {
-      return new poly.layer.classes[type](layerSpec, strictMode);
+      return new poly.layer.classes[type](layerSpec, strictMode, guideSpec);
     }
     throw poly.error.defn("No such layer " + layerSpec.type + ".");
   };
@@ -9177,7 +9178,7 @@ The functions here makes it easier to create common types of interactions.
     Graph.prototype.merge = function() {
       var _this = this;
       this.layers = _.map(this.spec.layers, function(layerSpec) {
-        return poly.layer.make(layerSpec, poly.spec.toStrictMode(_this.spec));
+        return poly.layer.make(layerSpec, _this.spec.strict, _this.spec.guides);
       });
       this.facet.calculate(this.processedData, this.layers);
       this.mergeDomains();

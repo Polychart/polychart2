@@ -39,9 +39,9 @@ Base class for all layers
 ###
 class Layer
   defaults: defaults
-  constructor: (spec, strictMode) ->
+  constructor: (spec, strictMode, guideSpec) ->
     @spec = spec
-    @strict = strictMode
+    @guideSpec = guideSpec
     @mapping = {}      # aesthetic mappings
     @consts = {}       # constants supplied by the spec
     for aes in aesthetics
@@ -50,10 +50,10 @@ class Layer
         if spec[aes].const then @consts[aes] = spec[aes].const
   calculate: (@statData, @meta) ->
     # Only keep the data that is necessary in the computation---for levels
-    for aes in ['x', 'y']
-      if @strict.guides[aes]? and @strict.guides[aes].levels?
-        v = @spec[aes].var
-        @statData = _.filter @statData, (X) => X[v] in @strict.guides[aes].levels
+    #for aes in ['x', 'y']
+      #if @guideSpec[aes]? and @guideSpec[aes].levels?
+        #v = @spec[aes].var
+        #@statData = _.filter @statData, (X) => X[v] in @guideSpec[aes].levels
     @_calcGeoms()
     @geoms = @_sample @geoms
     meta = {}
@@ -132,6 +132,12 @@ class Layer
       for item in datas
         item.$n = orderfn(item)
         item.$m = numgroup
+  _inLevels: (item) ->
+    for aes in ['x', 'y']
+      if @guideSpec[aes]? and @guideSpec[aes].levels?
+        return item[@spec[aes].var] in @guideSpec[aes].levels
+      else
+        return true
 
 class Point extends Layer
   _calcGeoms: () ->
@@ -149,7 +155,7 @@ class Point extends Layer
             y: @_getValue item, 'y'
             color: @_getValue item, 'color'
             size: @_getValue item, 'size'
-            opacity: @_getValue item, 'opacity'
+            opacity: if @_inLevels item then @_getValue item, 'opacity' else 0
         evtData: evtData
         tooltip: @_tooltip(item)
 
@@ -217,7 +223,7 @@ class Bar extends Layer
       m = @meta[@mapping.x]
       if m.type isnt 'cat' and not m.binned
         # Check that the bw is set in guides. Hackish.
-        if m.type is 'num' and not @strict.guides.x.bw?
+        if m.type is 'num' and not @guideSpec.x.bw?
           throw poly.error.type "Bar chart x-values need to be binned. Set binwidth or use the bin() transform!"
     @position = @spec.position ? 'stack'
     if @position is 'stack'
@@ -245,7 +251,7 @@ class Bar extends Layer
             x: [lower, upper]
             y: [item.$lower, item.$upper]
             color: @_getValue item, 'color'
-            opacity: @_getValue item, 'opacity'
+            opacity: if @_inLevels item then @_getValue item, 'opacity' else 0
         evtData: evtData
         tooltip: @_tooltip(item)
 
@@ -266,7 +272,7 @@ class Bar extends Layer
             x: [sf.lower(@_getValue(item, 'x')), sf.upper(@_getValue(item, 'x'))]
             y: [item.$lower, item.$upper]
             color: @_getValue item, 'color'
-            opacity: @_getValue item, 'opacity'
+            opacity: if @_inLevels item then @_getValue item, 'opacity' else 0
         evtData: evtData
         tooltip: @_tooltip(item)
 
@@ -363,7 +369,7 @@ class Box extends Layer
       y = @_getValue item, 'y'
       color = @_getValue item, 'color'
       size = @_getValue item, 'size'
-      opacity = @_getValue item, 'opacity'
+      opacity = if @_inLevels item then @_getValue item, 'opacity' else 0
       xl = sf.lower(x)
       xu = sf.upper(x)
       xm = sf.middle(x)
@@ -505,8 +511,8 @@ poly.layer.classes = {
   'spline' : Spline
   'step' : Step
 }
-poly.layer.make = (layerSpec, strictMode) ->
+poly.layer.make = (layerSpec, strictMode, guideSpec) ->
   type = layerSpec.type
   if type of poly.layer.classes
-    return new poly.layer.classes[type](layerSpec, strictMode)
+    return new poly.layer.classes[type](layerSpec, strictMode, guideSpec)
   throw poly.error.defn "No such layer #{layerSpec.type}."
