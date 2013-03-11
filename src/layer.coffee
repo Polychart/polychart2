@@ -49,11 +49,6 @@ class Layer
         if spec[aes].var then @mapping[aes] = spec[aes].var
         if spec[aes].const then @consts[aes] = spec[aes].const
   calculate: (@statData, @meta) ->
-    # Only keep the data that is necessary in the computation---for levels
-    #for aes in ['x', 'y']
-      #if @guideSpec[aes]? and @guideSpec[aes].levels?
-        #v = @spec[aes].var
-        #@statData = _.filter @statData, (X) => X[v] in @guideSpec[aes].levels
     @_calcGeoms()
     @geoms = @_sample @geoms
     meta = {}
@@ -132,6 +127,7 @@ class Layer
       for item in datas
         item.$n = orderfn(item)
         item.$m = numgroup
+  # Check that a certain item is in levels filter, if present
   _inLevels: (item) ->
     for aes in ['x', 'y']
       if @guideSpec[aes]? and @guideSpec[aes].levels?
