@@ -4639,7 +4639,7 @@ attribute of that value.
         var i;
         i = _.indexOf(_this.domain.levels, x);
         if (i === -1) {
-          return void 0;
+          return null;
         } else {
           return _this.range.min + i * step;
         }
