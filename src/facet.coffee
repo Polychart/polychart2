@@ -27,6 +27,8 @@ class Facet
     for aes, key of mapping
       if @spec.facet[aes]
         @specgroups[key] = @spec.facet[aes]
+    if @spec.facet.formatter
+      @formatter = @spec.facet.formatter
   calculate: (datas, layers) ->
     # facet indices & their values
     {@values, @indices} = @_makeIndices(datas, @specgroups)

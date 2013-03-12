@@ -4639,7 +4639,7 @@ attribute of that value.
         var i;
         i = _.indexOf(_this.domain.levels, x);
         if (i === -1) {
-          return null;
+          return void 0;
         } else {
           return _this.range.min + i * step;
         }
@@ -8651,22 +8651,21 @@ The functions here makes it easier to create common types of interactions.
     }
 
     Facet.prototype.make = function(spec) {
-      var aes, key, mapping, _ref, _results;
+      var aes, key, mapping, _ref;
       this.spec = spec;
       _ref = this._getMappings(this.spec.facet), this.type = _ref.type, mapping = _ref.mapping;
       this.mapping = mapping;
       this.groups = _.values(this.mapping);
       this.specgroups = {};
-      _results = [];
       for (aes in mapping) {
         key = mapping[aes];
         if (this.spec.facet[aes]) {
-          _results.push(this.specgroups[key] = this.spec.facet[aes]);
-        } else {
-          _results.push(void 0);
+          this.specgroups[key] = this.spec.facet[aes];
         }
       }
-      return _results;
+      if (this.spec.facet.formatter) {
+        return this.formatter = this.spec.facet.formatter;
+      }
     };
 
     Facet.prototype.calculate = function(datas, layers) {
