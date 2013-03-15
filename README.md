@@ -85,3 +85,4 @@ For non-commercial use, Polychart2.js is licensed under Creative Commons 3.0
 Attribution & Non-commercial ([Link](http://creativecommons.org/licenses/by-nc/3.0/)).
 
 Contact lisa@polychart.com for licensing inquiries & commercial usage.
+
