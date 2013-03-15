@@ -19,7 +19,7 @@ class Title extends poly.Guide
     @titletext = null
     @title = null
   make: (params) =>
-    {guideSpec, title, position} = params
+    {guideSpec, title, position, @size, @color} = params
     option = (item, def) => guideSpec[item] ? def
     @titletext = option('title', title)
     @position = option('position', position) ? @defaultPosition
@@ -53,7 +53,8 @@ class TitleH extends Title
     type: 'text'
     x : sf.identity x
     y : sf.identity y
-    color: sf.identity 'black'
+    color: sf.identity(@color ?'black')
+    size: sf.identity(@size ? 12)
     text: @titletext
     'text-anchor' : 'middle'
 
@@ -69,7 +70,8 @@ class TitleV extends Title
     type: 'text'
     x : sf.identity x
     y : sf.identity y
-    color: sf.identity 'black'
+    color: sf.identity(@color ?'black')
+    size: sf.identity(@size ? 12)
     text: @titletext
     'text-anchor' : 'middle'
     transform : 'r270'
@@ -81,7 +83,8 @@ class TitleMain extends Title
     type: 'text'
     x : sf.identity x
     y : sf.identity y
-    color: sf.identity 'black'
+    color: sf.identity(@color ?'black')
+    size: sf.identity(@size ? 12)
     text: @titletext
     'font-size' : '13px'
     'font-weight' : 'bold'
@@ -89,7 +92,7 @@ class TitleMain extends Title
 
 class TitleFacet extends Title
   make: (params) =>
-    {title} = params
+    {title, @size, @color} = params
     @titletext = title
   render: (renderer, dim, offset) => # note, this "offset" is a FACET offset!
     if @title?
@@ -100,7 +103,8 @@ class TitleFacet extends Title
     type: 'text'
     x : sf.identity offset.x + dim.eachWidth/2
     y : sf.identity offset.y - 7
-    color: sf.identity 'black'
+    color: sf.identity(@color ?'black')
+    size: sf.identity(@size ? 12)
     text: @titletext
     'text-anchor' : 'middle'
 

@@ -1,7 +1,8 @@
 poly.pane = {}
-poly.pane.make = (grp, name) -> new Pane grp, name
+poly.pane.make = (grp, title) -> new Pane grp, title
+
 class Pane extends poly.Renderable
-  constructor: (multiindex, @str) ->
+  constructor: (multiindex, @titleObj) ->
     @index = multiindex
     @layers = null
     @title = null
@@ -12,13 +13,12 @@ class Pane extends poly.Renderable
         @geoms[i] = new poly.Geometry()
 
     @metas = {}
-
     for layer, i in @layers
       {geoms, meta} = layer.calculate(data[i].statData, data[i].metaData)
       @geoms[i].set geoms
       @metas[i] = meta
     @title ?= @_makeTitle spec # title may have changed?!? (or not...)
-    @title.make title: @str
+    @title.make @titleObj
     @domains = @_makeDomains spec, @geoms, @metas
   _makeTitle: () -> poly.guide.title('facet')
   _makeDomains: (spec, geoms, metas) ->

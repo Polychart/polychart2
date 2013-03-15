@@ -4626,6 +4626,7 @@
         type: 'wrap',
         "var": 'gr',
         cols: 5,
+        size: 20,
         formatter: function(index) {
           return index.gr;
         }

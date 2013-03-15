@@ -19,6 +19,7 @@
       type: 'wrap'
       var: 'gr'
       cols: 5
+      size: 20
       formatter: (index) -> index.gr
     coord:
       type: 'polar'

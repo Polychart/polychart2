@@ -2965,7 +2965,7 @@ so simple, but not scalable.
     Title.prototype.make = function(params) {
       var guideSpec, option, position, title, _ref,
         _this = this;
-      guideSpec = params.guideSpec, title = params.title, position = params.position;
+      guideSpec = params.guideSpec, title = params.title, position = params.position, this.size = params.size, this.color = params.color;
       option = function(item, def) {
         var _ref;
         return (_ref = guideSpec[item]) != null ? _ref : def;
@@ -3021,14 +3021,15 @@ so simple, but not scalable.
     TitleH.prototype.defaultPosition = 'bottom';
 
     TitleH.prototype._makeTitle = function(dim, offset) {
-      var x, y, _ref, _ref1;
+      var x, y, _ref, _ref1, _ref2, _ref3;
       y = this.position === 'top' ? dim.paddingTop + dim.guideTop - ((_ref = offset.top) != null ? _ref : 0) - 2 : dim.height - dim.paddingBottom - dim.guideBottom + ((_ref1 = offset.bottom) != null ? _ref1 : 0);
       x = dim.paddingLeft + dim.guideLeft + (dim.width - dim.paddingLeft - dim.guideLeft - dim.paddingRight - dim.guideRight) / 2;
       return {
         type: 'text',
         x: sf.identity(x),
         y: sf.identity(y),
-        color: sf.identity('black'),
+        color: sf.identity((_ref2 = this.color) != null ? _ref2 : 'black'),
+        size: sf.identity((_ref3 = this.size) != null ? _ref3 : 12),
         text: this.titletext,
         'text-anchor': 'middle'
       };
@@ -3049,14 +3050,15 @@ so simple, but not scalable.
     TitleV.prototype.defaultPosition = 'left';
 
     TitleV.prototype._makeTitle = function(dim, offset) {
-      var x, y, _ref, _ref1;
+      var x, y, _ref, _ref1, _ref2, _ref3;
       x = this.position === 'left' ? dim.paddingLeft + dim.guideLeft - ((_ref = offset.left) != null ? _ref : 0) - 7 : dim.width - dim.paddingRight - dim.guideRight + ((_ref1 = offset.right) != null ? _ref1 : 0);
       y = dim.paddingTop + dim.guideTop + (dim.height - dim.paddingTop - dim.guideTop - dim.paddingBottom - dim.guideBottom) / 2;
       return {
         type: 'text',
         x: sf.identity(x),
         y: sf.identity(y),
-        color: sf.identity('black'),
+        color: sf.identity((_ref2 = this.color) != null ? _ref2 : 'black'),
+        size: sf.identity((_ref3 = this.size) != null ? _ref3 : 12),
         text: this.titletext,
         'text-anchor': 'middle',
         transform: 'r270'
@@ -3076,14 +3078,15 @@ so simple, but not scalable.
     }
 
     TitleMain.prototype._makeTitle = function(dim, offset) {
-      var x, y;
+      var x, y, _ref, _ref1;
       x = dim.width / 2;
       y = 20;
       return {
         type: 'text',
         x: sf.identity(x),
         y: sf.identity(y),
-        color: sf.identity('black'),
+        color: sf.identity((_ref = this.color) != null ? _ref : 'black'),
+        size: sf.identity((_ref1 = this.size) != null ? _ref1 : 12),
         text: this.titletext,
         'font-size': '13px',
         'font-weight': 'bold',
@@ -3108,7 +3111,7 @@ so simple, but not scalable.
 
     TitleFacet.prototype.make = function(params) {
       var title;
-      title = params.title;
+      title = params.title, this.size = params.size, this.color = params.color;
       return this.titletext = title;
     };
 
@@ -3121,11 +3124,13 @@ so simple, but not scalable.
     };
 
     TitleFacet.prototype._makeTitle = function(dim, offset) {
+      var _ref, _ref1;
       return {
         type: 'text',
         x: sf.identity(offset.x + dim.eachWidth / 2),
         y: sf.identity(offset.y - 7),
-        color: sf.identity('black'),
+        color: sf.identity((_ref = this.color) != null ? _ref : 'black'),
+        size: sf.identity((_ref1 = this.size) != null ? _ref1 : 12),
         text: this.titletext,
         'text-anchor': 'middle'
       };
@@ -7439,16 +7444,16 @@ Shared constants
 
   poly.pane = {};
 
-  poly.pane.make = function(grp, name) {
-    return new Pane(grp, name);
+  poly.pane.make = function(grp, title) {
+    return new Pane(grp, title);
   };
 
   Pane = (function(_super) {
 
     __extends(Pane, _super);
 
-    function Pane(multiindex, str) {
-      this.str = str;
+    function Pane(multiindex, titleObj) {
+      this.titleObj = titleObj;
       this.index = multiindex;
       this.layers = null;
       this.title = null;
@@ -7476,9 +7481,7 @@ Shared constants
       if ((_ref3 = this.title) == null) {
         this.title = this._makeTitle(spec);
       }
-      this.title.make({
-        title: this.str
-      });
+      this.title.make(this.titleObj);
       return this.domains = this._makeDomains(spec, this.geoms, this.metas);
     };
 
@@ -8664,7 +8667,15 @@ The functions here makes it easier to create common types of interactions.
         }
       }
       if (this.spec.facet.formatter) {
-        return this.formatter = this.spec.facet.formatter;
+        this.formatter = this.spec.facet.formatter;
+      }
+      this.style = {};
+      if (this.spec.facet.size) {
+        this.style.size = this.spec.facet.size;
+      }
+      console.log(this.style.size);
+      if (this.spec.facet.color) {
+        return this.style.color = this.spec.facet.color;
       }
     };
 
@@ -8701,7 +8712,9 @@ The functions here makes it easier to create common types of interactions.
       for (_j = 0, _len1 = added.length; _j < _len1; _j++) {
         key = added[_j];
         name = this.formatter ? this.formatter(this.indices[key]) : key;
-        this.panes[key] = poly.pane.make(this.indices[key], name);
+        this.panes[key] = poly.pane.make(this.indices[key], _.extend({
+          title: name
+        }, this.style));
       }
       _ref2 = this.indices;
       _results = [];

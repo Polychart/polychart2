@@ -29,6 +29,13 @@ class Facet
         @specgroups[key] = @spec.facet[aes]
     if @spec.facet.formatter
       @formatter = @spec.facet.formatter
+    # pre set font size & color
+    @style = {}
+    if @spec.facet.size
+      @style.size = @spec.facet.size
+    console.log @style.size
+    if @spec.facet.color
+      @style.color = @spec.facet.color
   calculate: (datas, layers) ->
     # facet indices & their values
     {@values, @indices} = @_makeIndices(datas, @specgroups)
@@ -58,7 +65,7 @@ class Facet
       delete @panes[key]
     for key in added
       name = if @formatter then @formatter(@indices[key]) else key
-      @panes[key] = poly.pane.make(@indices[key], name)
+      @panes[key] = poly.pane.make(@indices[key], _.extend({title:name}, @style))
     for key, multiindex of @indices
       @panes[key].make(@spec, @datas[key], layers)
   render: (renderer, dims, coord) ->
