@@ -17,7 +17,7 @@ formatNumber = (n) ->
   if !isFinite(n) then return n
   s = ""+n
   abs = Math.abs(n)
-  if (abs >= 1000)
+  if (abs >= 10000)
     v  = (""+abs).split(/\./)
     i  = v[0].length % 3 || 3
     v[0] = s.slice(0,i + (n < 0)) + v[0].slice(i).replace(/(\d{3})/g,',$1')
