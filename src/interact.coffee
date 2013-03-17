@@ -138,19 +138,3 @@ poly.handler.zoom = (init_spec, zoomOptions = {x: true, y: true}) ->
                 guides[v] ?= {levels: null}
                 guides[v].levels = data[aesVar].in
           graph.make graph.spec
-
-###
-Prototype exporting tool
-  * Shall try to export the current SVG render into various file formats
-  * Need to clean up SVG in some way or another.
-###
-poly.handler.exportTool = () ->
-  canv = document.getElementById('canv')
-  ctx = canv.getContext
-
-  (type, obj, event, graph) ->
-    if type is 'reset'
-      # Apparently some preprocessing for the SVG is necessary, though not sure where.
-      svg = graph.dom.innerHTML
-      canvg(canv, svg, {ignoreMouse: true, ignoreAnimation: true})
-      console.log canv.toDataURL()
