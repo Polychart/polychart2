@@ -933,11 +933,11 @@ Get the offset of the element
 
 
   poly.getXY = function(offset, e) {
-    var scrollX, scrollY, x, y, _ref, _ref1;
+    var scrollX, scrollY, x, y;
     x = e.clientX;
     y = e.clientY;
-    scrollY = (_ref = document.documentElement.scrollTop) != null ? _ref : document.body.scrollTop;
-    scrollX = (_ref1 = document.documentElement.scrollLeft) != null ? _ref1 : document.body.scrollLeft;
+    scrollY = (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop;
+    scrollX = (document.documentElement && document.documentElement.scrollLeft) || document.body.scrollLeft;
     return {
       x: x + scrollX - offset.left,
       y: y + scrollY - offset.top
@@ -2696,7 +2696,7 @@ Helper functions to legends & axes for generating ticks
 
 
   poly.tick.make = function(domain, guideSpec, type) {
-    var formatter, i, next, numticks, prev, step, t, tickfn, tickobjs, ticks, _i, _ref, _ref1, _ref2,
+    var formatter, i, next, numticks, prev, step, t, tickfn, tickobjs, ticks, tmpTick, _i, _ref, _ref1, _ref2,
       _this = this;
     step = null;
     if (guideSpec.ticks != null) {
@@ -2728,7 +2728,8 @@ Helper functions to legends & axes for generating ticks
         prev = i === 0 ? null : ticks[i - 1];
         next = i === ticks.length - 1 ? null : ticks[i + 1];
         t = ticks[i];
-        tickobjs[t] = tickfn(t, prev, next);
+        tmpTick = tickfn(t, prev, next);
+        tickobjs[tmpTick.value] = tmpTick;
       }
     }
     return tickobjs;
@@ -8626,6 +8627,30 @@ The functions here makes it easier to create common types of interactions.
           }
           return _results;
         }
+      }
+    };
+  };
+
+  /*
+  Prototype exporting tool
+    * Shall try to export the current SVG render into various file formats
+    * Need to clean up SVG in some way or another.
+  */
+
+
+  poly.handler.exportTool = function() {
+    var canv, ctx;
+    canv = document.getElementById('canv');
+    ctx = canv.getContext;
+    return function(type, obj, event, graph) {
+      var svg;
+      if (type === 'reset') {
+        svg = graph.dom.innerHTML;
+        canvg(canv, svg, {
+          ignoreMouse: true,
+          ignoreAnimation: true
+        });
+        return console.log(canv.toDataURL());
       }
     };
   };

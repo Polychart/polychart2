@@ -28,6 +28,8 @@ class Graph
     # Default handlers
     @addHandler poly.handler.tooltip()
     @addHandler poly.handler.zoom(spec)
+    #@addHandler poly.handler.exportTool()
+    #console.log @
 
   ###
   Remove all existing items on the graph, if necessary

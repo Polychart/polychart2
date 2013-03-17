@@ -22,7 +22,8 @@ Get the raphael (x,y) position of a mouse event
 poly.getXY = (offset, e) ->
   x = e.clientX
   y = e.clientY
-  scrollY = document.documentElement.scrollTop ? document.body.scrollTop
-  scrollX = document.documentElement.scrollLeft ? document.body.scrollLeft
+  # Support for different browser settings
+  scrollY = (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop
+  scrollX = (document.documentElement && document.documentElement.scrollLeft) || document.body.scrollLeft
   x: x + scrollX - offset.left
   y: y + scrollY - offset.top

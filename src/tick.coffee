@@ -34,7 +34,10 @@ poly.tick.make = (domain, guideSpec, type) ->
       prev = if i is 0 then null else ticks[i-1]
       next = if i is ticks.length-1 then null else ticks[i+1]
       t = ticks[i]
-      tickobjs[t] = tickfn t, prev, next
+      # Temp to force redraw when change format
+      # TODO: Find a way to only change the text when changing format
+      tmpTick = tickfn t, prev, next
+      tickobjs[tmpTick.value] = tmpTick
   tickobjs
 
 ###
