@@ -18,7 +18,6 @@ poly.paper = (dom, w, h, graph) ->
 Mouse Events
 ###
 poly.mouseEvents = (graph, bg) ->
-  offset = poly.offset(graph.dom)
   # Mouse selection drag rectangle
   handler = graph.handleEvent('select')
   rect = null
@@ -38,6 +37,7 @@ poly.mouseEvents = (graph, bg) ->
           height: Math.abs(start.y - end.y)
         rect = rect.attr attr
     else
+      offset = poly.offset graph.dom
       start = x: x - offset.left, y: y - offset.top
       startInfo = graph.facet.getFacetInfo graph.dims, start.x, start.y
       # Initalize drag rectangle if start within border

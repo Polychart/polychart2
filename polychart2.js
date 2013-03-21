@@ -7684,8 +7684,7 @@ Dimension object has the following elements (all numeric in pixels):
 
 
   poly.mouseEvents = function(graph, bg) {
-    var end, endInfo, handler, offset, onend, onmove, onstart, rect, start, startInfo;
-    offset = poly.offset(graph.dom);
+    var end, endInfo, handler, onend, onmove, onstart, rect, start, startInfo;
     handler = graph.handleEvent('select');
     rect = null;
     start = end = null;
@@ -7695,7 +7694,7 @@ Dimension object has the following elements (all numeric in pixels):
       return end = null;
     };
     onmove = function(dx, dy, x, y) {
-      var attr;
+      var attr, offset;
       if ((startInfo != null) && (start != null)) {
         end = {
           x: start.x + dx,
@@ -7712,6 +7711,7 @@ Dimension object has the following elements (all numeric in pixels):
           return rect = rect.attr(attr);
         }
       } else {
+        offset = poly.offset(graph.dom);
         start = {
           x: x - offset.left,
           y: y - offset.top
