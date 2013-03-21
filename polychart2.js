@@ -989,7 +989,7 @@ Get the offset of the element
     }
     s = "" + n;
     abs = Math.abs(n);
-    if (abs >= 1000) {
+    if (abs >= 10000) {
       v = ("" + abs).split(/\./);
       i = v[0].length % 3 || 3;
       v[0] = s.slice(0, i + (n < 0)) + v[0].slice(i).replace(/(\d{3})/g, ',$1');
@@ -8488,7 +8488,7 @@ The functions here makes it easier to create common types of interactions.
           tooltip.text.toFront();
           return obj.mousemove(update(tooltip));
         } else {
-          return obj.unmousemove(null);
+          return typeof obj.unmousemove === "function" ? obj.unmousemove(null) : void 0;
         }
       }
     };
@@ -8562,7 +8562,7 @@ The functions here makes it easier to create common types of interactions.
 
 
   poly.handler.zoom = function(init_spec, zoomOptions) {
-    var aes, initGuides, _ref, _ref1;
+    var aes, initGuides, initHandlers, _ref, _ref1, _wrapHandlers;
     if (zoomOptions == null) {
       zoomOptions = {
         x: true,
@@ -8576,16 +8576,38 @@ The functions here makes it easier to create common types of interactions.
       x: _.clone((_ref = init_spec.guides) != null ? _ref.x : void 0),
       y: _.clone((_ref1 = init_spec.guides) != null ? _ref1.y : void 0)
     };
+    initHandlers = void 0;
     aes = ['x', 'y'];
+    _wrapHandlers = function(h) {
+      return function(type, obj, event, graph) {
+        if (type === 'reset') {
+          if (_.isFunction(h)) {
+            return h('resetZoom', obj, event, graph);
+          } else {
+            return h.handle('resetZoom', obj, event, graph);
+          }
+        } else {
+          if (_.isFunction(h)) {
+            return h(type, obj, event, graph);
+          } else {
+            return h.handle(type, obj, event, graph);
+          }
+        }
+      };
+    };
     return function(type, obj, event, graph) {
       var aesVar, data, guides, layer, spec, v, _i, _j, _k, _len, _len1, _len2, _ref2, _ref3, _ref4, _ref5, _ref6, _results;
+      if (initHandlers == null) {
+        initHandlers = _.clone(graph.handlers);
+      }
       if (graph.coord.type === 'cartesian') {
-        if (type === 'reset') {
+        if (type === 'resetZoom') {
           spec = graph.spec;
           for (_i = 0, _len = aes.length; _i < _len; _i++) {
             v = aes[_i];
             spec.guides[v] = _.clone(initGuides[v]);
           }
+          graph.handlers = _.clone(initHandlers);
           graph.make(graph.spec);
         }
         if (type === 'select') {
@@ -8623,34 +8645,11 @@ The functions here makes it easier to create common types of interactions.
                 }
               }
             }
+            graph.handlers = _.map(graph.handlers, _wrapHandlers);
             _results.push(graph.make(graph.spec));
           }
           return _results;
         }
-      }
-    };
-  };
-
-  /*
-  Prototype exporting tool
-    * Shall try to export the current SVG render into various file formats
-    * Need to clean up SVG in some way or another.
-  */
-
-
-  poly.handler.exportTool = function() {
-    var canv, ctx;
-    canv = document.getElementById('canv');
-    ctx = canv.getContext;
-    return function(type, obj, event, graph) {
-      var svg;
-      if (type === 'reset') {
-        svg = graph.dom.innerHTML;
-        canvg(canv, svg, {
-          ignoreMouse: true,
-          ignoreAnimation: true
-        });
-        return console.log(canv.toDataURL());
       }
     };
   };
@@ -9160,9 +9159,13 @@ The functions here makes it easier to create common types of interactions.
       var d, dataChange, datas, id, layerSpec, merge, _i, _len, _ref, _ref1,
         _this = this;
       this.callback = callback;
-      spec = poly.spec.toStrictMode(spec);
-      poly.spec.check(spec);
-      this.spec = spec;
+      if (spec != null) {
+        spec = poly.spec.toStrictMode(spec);
+        poly.spec.check(spec);
+        this.spec = spec;
+      } else {
+        spec = this.spec;
+      }
       if (this.scaleSet) {
         this.maybeDispose(spec);
       }
@@ -9317,7 +9320,7 @@ The functions here makes it easier to create common types of interactions.
         }
         return _results;
       };
-      return _.throttle(handler, 1000);
+      return _.throttle(handler, 300);
     };
 
     Graph.prototype._makeScaleSet = function(spec, domains, facet) {

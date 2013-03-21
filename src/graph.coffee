@@ -28,8 +28,6 @@ class Graph
     # Default handlers
     @addHandler poly.handler.tooltip()
     @addHandler poly.handler.zoom(spec)
-    #@addHandler poly.handler.exportTool()
-    #console.log @
 
   ###
   Remove all existing items on the graph, if necessary
@@ -49,9 +47,11 @@ class Graph
   data processing is complete.
   ###
   make: (spec, @callback) ->
-    spec = poly.spec.toStrictMode spec
-    poly.spec.check spec
-    @spec = spec
+    if spec?
+      spec = poly.spec.toStrictMode spec
+      poly.spec.check spec
+      @spec = spec
+    else spec = @spec
     # check if we need to re-plot the graph from scratch
     if @scaleSet
       @maybeDispose(spec)
@@ -161,7 +161,7 @@ class Graph
           h(type, obj, event, graph)
         else
           h.handle(type, obj, event, graph)
-    _.throttle handler, 1000
+    _.throttle handler, 300
   _makeScaleSet: (spec, domains, facet) ->
     tmpRanges = @coord.ranges()
     poly.scaleset tmpRanges, @coord

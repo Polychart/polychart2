@@ -60,7 +60,7 @@ poly.handler.tooltip = () ->
         # TODO: Add handler to object so will monitor data changes
         obj.mousemove update(tooltip)
       else
-        obj.unmousemove null
+        obj.unmousemove? null
 ###
 Drilldown. Suitable for bar charts over categorical data, mostly.
 This function does not handle the following:
@@ -80,6 +80,8 @@ poly.handler.drilldown = (aes, levels, initial_filter = {}) ->
       spec = graph.spec
       filters.pop()
       newFilter = filters.unshift()
+      # Do we want to preserve the drilldown sequence?
+      #newFilter = filters[filters.length - 1]
       current--
       for layer in spec.layers
         layer.filter = newFilter
@@ -110,17 +112,25 @@ Zooming and Resetting. Whenever click and drag on range, set to that range.
 poly.handler.zoom = (init_spec, zoomOptions = {x: true, y: true}) ->
   if not init_spec?
     throw poly.error.input "Initial specification missing."
-  # Keep a copy of initial guides for reset
   initGuides =
     x: _.clone init_spec.guides?.x
     y: _.clone init_spec.guides?.y
+  initHandlers = undefined
   aes = ['x', 'y']
+  # Lambda wrap so that when zoomed, graph reset before other handlers
+  _wrapHandlers = (h) -> (type, obj, event, graph) ->
+    if type is 'reset'
+      if _.isFunction(h) then h('resetZoom', obj, event, graph) else h.handle('resetZoom', obj, event, graph)
+    else
+      if _.isFunction(h) then h(type, obj, event, graph) else h.handle(type, obj, event, graph)
   (type, obj, event, graph) ->
+    initHandlers ?= _.clone graph.handlers
     # Zoom enabled only for Cartesian coordinates
     if graph.coord.type is 'cartesian'
-      if type is 'reset'
+      if type is 'resetZoom'
         spec = graph.spec
         (spec.guides[v] = _.clone initGuides[v]) for v in aes
+        graph.handlers = _.clone initHandlers
         graph.make graph.spec
       if type is 'select'
         data = obj.evtData
@@ -128,13 +138,13 @@ poly.handler.zoom = (init_spec, zoomOptions = {x: true, y: true}) ->
         for layer in graph.spec.layers
           for v in aes when (zoomOptions[v] and layer[v]?)
             aesVar = layer[v].var
-            # Check what sort of domains
             if graph.axes.domains[v].type in ['num', 'date']
-              if data[aesVar].le - data[aesVar].ge > poly.const.epsilon # Make sure there is difference
+              if data[aesVar].le - data[aesVar].ge > poly.const.epsilon
                 guides[v] ?= {min: null, max: null}
                 [guides[v].min, guides[v].max] = [data[aesVar].ge, data[aesVar].le]
             if graph.axes.domains[v].type is 'cat'
               if data[aesVar].in.length isnt 0
                 guides[v] ?= {levels: null}
                 guides[v].levels = data[aesVar].in
+          graph.handlers = _.map(graph.handlers, _wrapHandlers)
           graph.make graph.spec
