@@ -8698,7 +8698,6 @@ The functions here makes it easier to create common types of interactions.
       if (this.spec.facet.size) {
         this.style.size = this.spec.facet.size;
       }
-      console.log(this.style.size);
       if (this.spec.facet.color) {
         return this.style.color = this.spec.facet.color;
       }
@@ -8959,7 +8958,7 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Facet.prototype._makeIndices = function(datas, groups) {
-      var aes, data, index, indexValues, indices, key, stringify, v, val, values, _i, _len;
+      var aes, data, index, indexValues, indices, key, meta, sortfn, stringify, v, val, values, _i, _len;
       values = {};
       for (aes in groups) {
         key = groups[aes];
@@ -8967,13 +8966,15 @@ The functions here makes it easier to create common types of interactions.
           values[key["var"]] = key.levels;
         } else {
           v = [];
+          sortfn = null;
           for (index in datas) {
             data = datas[index];
-            if (key["var"] in data.metaData) {
-              v = _.union(v, _.uniq(_.pluck(data.statData, key["var"])));
+            if (sortfn == null) {
+              sortfn = (meta = data.metaData[key["var"]]) ? poly.type.compare(meta.type) : poly.type.compare('num');
             }
+            v = _.uniq(_.union(v, _.pluck(data.statData, key["var"])));
           }
-          values[key["var"]] = v;
+          values[key["var"]] = v.sort(sortfn);
         }
       }
       indexValues = poly.cross(values);
@@ -9190,9 +9191,11 @@ The functions here makes it easier to create common types of interactions.
       this.dataprocess = {};
       this.processedData = {};
       return _.each(spec.layers, function(layerSpec, id) {
+        var groups;
         spec = _this.spec.layers[id];
-        _this.dataprocess[id] = new poly.DataProcess(spec, _this.facet.specgroups, spec.strict);
-        return _this.dataprocess[id].make(spec, _this.facet.specgroups, function(statData, metaData) {
+        groups = _.values(_this.facet.specgroups);
+        _this.dataprocess[id] = new poly.DataProcess(spec, groups, spec.strict);
+        return _this.dataprocess[id].make(spec, groups, function(statData, metaData) {
           _this.processedData[id] = {
             statData: statData,
             metaData: metaData

@@ -72,8 +72,9 @@ class Graph
     _.each spec.layers, (layerSpec, id) =>
       # using _ instead of a for loop to scope the id
       spec = @spec.layers[id] #repeated
-      @dataprocess[id] = new poly.DataProcess spec, @facet.specgroups, spec.strict
-      @dataprocess[id].make spec, @facet.specgroups, (statData, metaData) =>
+      groups = _.values @facet.specgroups
+      @dataprocess[id] = new poly.DataProcess spec, groups, spec.strict
+      @dataprocess[id].make spec, groups, (statData, metaData) =>
         @processedData[id] =
           statData: statData
           metaData: metaData

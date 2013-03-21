@@ -33,7 +33,6 @@ class Facet
     @style = {}
     if @spec.facet.size
       @style.size = @spec.facet.size
-    console.log @style.size
     if @spec.facet.color
       @style.color = @spec.facet.color
   calculate: (datas, layers) ->
@@ -183,10 +182,15 @@ class Facet
         values[key.var] = key.levels
       else
         v = []
+        sortfn = null
         for index, data of datas
-          if key.var of data.metaData
-            v = _.union v, _.uniq(_.pluck(data.statData, key.var))
-        values[key.var] = v # add sorting here
+          sortfn ?=
+            if meta = data.metaData[key.var]
+              poly.type.compare(meta.type)
+            else
+              poly.type.compare('num')
+          v = _.uniq _.union(v, _.pluck(data.statData, key.var))
+        values[key.var] = v.sort(sortfn)
     indexValues = poly.cross values
     # format
     indices = {}
