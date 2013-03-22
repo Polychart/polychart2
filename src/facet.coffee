@@ -184,13 +184,11 @@ class Facet
         v = []
         sortfn = null
         for index, data of datas
-          sortfn ?=
-            if meta = data.metaData[key.var]
+          if meta = data.metaData[key.var]
+            if meta and meta.type in ['num', 'date']
               poly.type.compare(meta.type)
-            else
-              poly.type.compare('num')
           v = _.uniq _.union(v, _.pluck(data.statData, key.var))
-        values[key.var] = v.sort(sortfn)
+        values[key.var] = if sortfn? then v.sort(sortfn) else v
     indexValues = poly.cross values
     # format
     indices = {}

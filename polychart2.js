@@ -8957,7 +8957,7 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Facet.prototype._makeIndices = function(datas, groups) {
-      var aes, data, index, indexValues, indices, key, meta, sortfn, stringify, v, val, values, _i, _len;
+      var aes, data, index, indexValues, indices, key, meta, sortfn, stringify, v, val, values, _i, _len, _ref;
       values = {};
       for (aes in groups) {
         key = groups[aes];
@@ -8968,12 +8968,14 @@ The functions here makes it easier to create common types of interactions.
           sortfn = null;
           for (index in datas) {
             data = datas[index];
-            if (sortfn == null) {
-              sortfn = (meta = data.metaData[key["var"]]) ? poly.type.compare(meta.type) : poly.type.compare('num');
+            if (meta = data.metaData[key["var"]]) {
+              if (meta && ((_ref = meta.type) === 'num' || _ref === 'date')) {
+                poly.type.compare(meta.type);
+              }
             }
             v = _.uniq(_.union(v, _.pluck(data.statData, key["var"])));
           }
-          values[key["var"]] = v.sort(sortfn);
+          values[key["var"]] = sortfn != null ? v.sort(sortfn) : v;
         }
       }
       indexValues = poly.cross(values);
