@@ -10,6 +10,9 @@ objects that can later be rendered using Geometry class.
 
 sf = poly.const.scaleFns
 
+axisColorMajor = '#666'
+axisColorMinor = '#EFEFEF'
+
 ###
 Renders and manages multiple axes, plot over multiple facets.
 ###
@@ -94,6 +97,10 @@ class Axes extends poly.GuideSet
 Abstract class for a single axis.
 ###
 class Axis extends poly.Guide
+  renderTickDefault : true
+  renderGridDefault : true
+  renderLabelDefault : true
+  renderLineDefault : true
   constructor: (params) ->
     {domain, type, guideSpec, key} = params
     # helper
@@ -103,10 +110,10 @@ class Axis extends poly.Guide
     if @position not in @validPositions
       throw poly.error.defn "X-axis position can't be #{@position}."
     @titletext = option('title', key)
-    @renderTick = option('renderTick', true)
-    @renderGrid = option('renderGrid', true)
-    @renderLabel = option('renderLabel', true)
-    @renderLine = option('renderLine', true)
+    @renderTick = option('renderTick', @renderTickDefault)
+    @renderGrid = option('renderGrid', @renderGridDefault)
+    @renderLabel = option('renderLabel', @renderLabelDefault)
+    @renderLine = option('renderLine', @renderLineDefault)
     # ticks
     @ticks = poly.tick.make domain, guideSpec, type
     @maxwidth = _.max _.map @ticks, (t) -> poly.strSize t.value
@@ -134,24 +141,23 @@ class Axis extends poly.Guide
   _makeTick : (obj) ->
     if !obj then throw poly.error.impl()
     obj.type = 'path'
-    obj.stroke = sf.identity 'black'
-    obj.color = sf.identity 'black'
+    obj.stroke = sf.identity axisColorMajor
+    obj.color = sf.identity axisColorMajor
     obj
   _makeLabel: (obj) ->
     if !obj then throw poly.error.impl()
     obj.type = 'text'
-    obj.stroke = sf.identity 'black'
-    obj.color = sf.identity 'black'
+    obj.stroke = sf.identity axisColorMajor
+    obj.color = sf.identity axisColorMajor
     obj
   _makeGrid: (obj) ->
     if !obj then throw poly.error.impl()
-    obj.stroke = '#CCC'
-    obj['stroke-dasharray'] = '- '
-    obj['stroke-dashoffset'] = 3
+    obj.stroke = axisColorMinor
     obj
 
 class XAxis extends Axis # assumes position = bottom
   type : 'x'
+  renderGridDefault: false
   defaultPosition : 'bottom'
   validPositions : ['top', 'bottom', 'none']
   _renderline : (axisDim) ->
@@ -164,7 +170,7 @@ class XAxis extends Axis # assumes position = bottom
     type: 'path'
     y: [y, y]
     x: [x1, x2]
-    stroke: sf.identity 'black'
+    stroke: sf.identity axisColorMajor
   _makeTick: (axisDim, tick) ->
     if @position is 'top'
       y1 = sf.identity(axisDim.top)
@@ -199,6 +205,8 @@ class XAxis extends Axis # assumes position = bottom
 
 class YAxis extends Axis # assumes position = left
   type : 'y'
+  renderLineDefault : false
+  renderTickDefault: false
   defaultPosition : 'left'
   validPositions : ['left', 'right', 'none']
   _renderline : (axisDim) ->
@@ -211,7 +219,7 @@ class YAxis extends Axis # assumes position = left
     type: 'path'
     x: [x, x]
     y: [y1, y2]
-    stroke: sf.identity 'black'
+    stroke: sf.identity axisColorMajor
   _makeTick: (axisDim, tick) ->
     if @position is 'left'
       x1 = sf.identity(axisDim.left)
@@ -255,7 +263,7 @@ class RAxis extends Axis # assumes position = left
     type: 'path'
     x: [x, x]
     y: [y1, y2]
-    stroke: sf.identity 'black'
+    stroke: sf.identity axisColorMajor
   _makeTick: (axisDim, tick) ->
     super
       x : [sf.identity(axisDim.left), sf.identity(axisDim.left-5)]
@@ -290,7 +298,7 @@ class TAxis extends Axis # assumes position = ... um, what is it supposed to be?
     y: sf.identity axisDim.centery
     size: sf.identity axisDim.radius
     color: sf.identity('none')
-    stroke: sf.identity('black')
+    stroke: sf.identity(axisColorMajor)
     'stroke-width': 1
   _makeTick: (axisDim, tick) ->
     super

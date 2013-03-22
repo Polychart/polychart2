@@ -3172,13 +3172,17 @@ objects that can later be rendered using Geometry class.
 
 
 (function() {
-  var Axes, Axis, RAxis, TAxis, XAxis, YAxis, sf, _ref,
+  var Axes, Axis, RAxis, TAxis, XAxis, YAxis, axisColorMajor, axisColorMinor, sf, _ref,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   sf = poly["const"].scaleFns;
+
+  axisColorMajor = '#666';
+
+  axisColorMinor = '#EFEFEF';
 
   /*
   Renders and manages multiple axes, plot over multiple facets.
@@ -3336,6 +3340,14 @@ objects that can later be rendered using Geometry class.
 
     __extends(Axis, _super);
 
+    Axis.prototype.renderTickDefault = true;
+
+    Axis.prototype.renderGridDefault = true;
+
+    Axis.prototype.renderLabelDefault = true;
+
+    Axis.prototype.renderLineDefault = true;
+
     function Axis(params) {
       this.calculate = __bind(this.calculate, this);
 
@@ -3351,10 +3363,10 @@ objects that can later be rendered using Geometry class.
         throw poly.error.defn("X-axis position can't be " + this.position + ".");
       }
       this.titletext = option('title', key);
-      this.renderTick = option('renderTick', true);
-      this.renderGrid = option('renderGrid', true);
-      this.renderLabel = option('renderLabel', true);
-      this.renderLine = option('renderLine', true);
+      this.renderTick = option('renderTick', this.renderTickDefault);
+      this.renderGrid = option('renderGrid', this.renderGridDefault);
+      this.renderLabel = option('renderLabel', this.renderLabelDefault);
+      this.renderLine = option('renderLine', this.renderLineDefault);
       this.ticks = poly.tick.make(domain, guideSpec, type);
       this.maxwidth = _.max(_.map(this.ticks, function(t) {
         return poly.strSize(t.value);
@@ -3407,8 +3419,8 @@ objects that can later be rendered using Geometry class.
         throw poly.error.impl();
       }
       obj.type = 'path';
-      obj.stroke = sf.identity('black');
-      obj.color = sf.identity('black');
+      obj.stroke = sf.identity(axisColorMajor);
+      obj.color = sf.identity(axisColorMajor);
       return obj;
     };
 
@@ -3417,8 +3429,8 @@ objects that can later be rendered using Geometry class.
         throw poly.error.impl();
       }
       obj.type = 'text';
-      obj.stroke = sf.identity('black');
-      obj.color = sf.identity('black');
+      obj.stroke = sf.identity(axisColorMajor);
+      obj.color = sf.identity(axisColorMajor);
       return obj;
     };
 
@@ -3426,9 +3438,7 @@ objects that can later be rendered using Geometry class.
       if (!obj) {
         throw poly.error.impl();
       }
-      obj.stroke = '#CCC';
-      obj['stroke-dasharray'] = '- ';
-      obj['stroke-dashoffset'] = 3;
+      obj.stroke = axisColorMinor;
       return obj;
     };
 
@@ -3445,6 +3455,8 @@ objects that can later be rendered using Geometry class.
     }
 
     XAxis.prototype.type = 'x';
+
+    XAxis.prototype.renderGridDefault = false;
 
     XAxis.prototype.defaultPosition = 'bottom';
 
@@ -3463,7 +3475,7 @@ objects that can later be rendered using Geometry class.
         type: 'path',
         y: [y, y],
         x: [x1, x2],
-        stroke: sf.identity('black')
+        stroke: sf.identity(axisColorMajor)
       };
     };
 
@@ -3531,6 +3543,10 @@ objects that can later be rendered using Geometry class.
 
     YAxis.prototype.type = 'y';
 
+    YAxis.prototype.renderLineDefault = false;
+
+    YAxis.prototype.renderTickDefault = false;
+
     YAxis.prototype.defaultPosition = 'left';
 
     YAxis.prototype.validPositions = ['left', 'right', 'none'];
@@ -3548,7 +3564,7 @@ objects that can later be rendered using Geometry class.
         type: 'path',
         x: [x, x],
         y: [y1, y2],
-        stroke: sf.identity('black')
+        stroke: sf.identity(axisColorMajor)
       };
     };
 
@@ -3629,7 +3645,7 @@ objects that can later be rendered using Geometry class.
         type: 'path',
         x: [x, x],
         y: [y1, y2],
-        stroke: sf.identity('black')
+        stroke: sf.identity(axisColorMajor)
       };
     };
 
@@ -3694,7 +3710,7 @@ objects that can later be rendered using Geometry class.
         y: sf.identity(axisDim.centery),
         size: sf.identity(axisDim.radius),
         color: sf.identity('none'),
-        stroke: sf.identity('black'),
+        stroke: sf.identity(axisColorMajor),
         'stroke-width': 1
       };
     };
