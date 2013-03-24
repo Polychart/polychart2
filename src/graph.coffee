@@ -27,7 +27,7 @@ class Graph
     # Post make work, things that do not have to be updated
     # Default handlers
     @addHandler poly.handler.tooltip()
-    @addHandler poly.handler.zoom(spec)
+    #@addHandler poly.handler.zoom(spec)
 
   ###
   Remove all existing items on the graph, if necessary

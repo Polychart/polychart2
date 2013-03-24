@@ -11,16 +11,17 @@ poly.paper = (dom, w, h, graph) ->
     opacity: 0    # for not showing background
     'stroke-width': 0
   bg.click graph.handleEvent('reset')
-  poly.mouseEvents(graph, bg)
+  poly.mouseEvents(graph, bg, showRect=false)
   paper
 
 ###
 Mouse Events
 ###
-poly.mouseEvents = (graph, bg) ->
+poly.mouseEvents = (graph, bg, showRect) ->
   # Mouse selection drag rectangle
   handler = graph.handleEvent('select')
-  rect = null
+  if showRect
+    rect = null
   start = end = null
   startInfo = endInfo = null
   onstart = () -> start = null; end = null
@@ -29,7 +30,7 @@ poly.mouseEvents = (graph, bg) ->
       end = x: start.x + dx, y: start.y + dy
       endInfo = graph.facet.getFacetInfo graph.dims, end.x, end.y
       # Update drag rect if within border
-      if rect? and endInfo? and endInfo.col is startInfo.col and endInfo.row is startInfo.row
+      if rect? and endInfo? and endInfo.col is startInfo.col and endInfo.row is startInfo.row and showRect
         attr =
           x: Math.min start.x, end.x
           y: Math.min start.y, end.y
@@ -41,12 +42,12 @@ poly.mouseEvents = (graph, bg) ->
       start = x: x - offset.left, y: y - offset.top
       startInfo = graph.facet.getFacetInfo graph.dims, start.x, start.y
       # Initalize drag rectangle if start within border
-      if startInfo?
+      if startInfo? and showRect
         rect = graph.paper.rect(start.x, start.y, 0, 0, 2)
         rect = rect.attr {fill: 'black', opacity: 0.2}
   onend = () -> if start? and end?
     # Clean up drag rectangle
-    if rect?
+    if rect? and showRect
       rect = rect.hide()
       rect.remove()
     handler start:start, end:end
