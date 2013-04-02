@@ -125,6 +125,9 @@ produces one atomic value for each group of data.
 statistics =
   sum : (spec) -> (values) -> _.reduce(_.without(values, undefined, null),
                                                  ((v, m) -> v + m), 0)
+  mean: (spec) -> (values) ->
+    values = _.without(values, undefined, null)
+    return _.reduce(values, ((v, m) -> v + m), 0) / values.length
   count : (spec) -> (values) -> _.without(values, undefined, null).length
   uniq : (spec) -> (values) -> (_.uniq(_.without(values, undefined, null))).length
   min: (spec) -> (values) -> _.min(values)

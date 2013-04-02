@@ -6139,6 +6139,14 @@ data processing to be done.
         }), 0);
       };
     },
+    mean: function(spec) {
+      return function(values) {
+        values = _.without(values, void 0, null);
+        return _.reduce(values, (function(v, m) {
+          return v + m;
+        }), 0) / values.length;
+      };
+    },
     count: function(spec) {
       return function(values) {
         return _.without(values, void 0, null).length;
