@@ -16,13 +16,14 @@ class DataProcess
 
   ## calculate things...
   make : (spec, grouping, callback) ->
-    dataSpec = poly.parser.layerToData spec, grouping
     wrappedCallback = @_wrap callback
     if @strictmode
       wrappedCallback @dataObj.json, {}
     if @dataObj.computeBackend
+      dataSpec = poly.parser.layerToData spec, grouping
       backendProcess(dataSpec, @dataObj, wrappedCallback)
     else
+      dataSpec = poly.parser.layerToData spec, grouping
       @dataObj.getData (data) ->
         frontendProcess(dataSpec, data, wrappedCallback)
 
@@ -129,7 +130,7 @@ statistics =
     values = _.without(values, undefined, null)
     return _.reduce(values, ((v, m) -> v + m), 0) / values.length
   count : (spec) -> (values) -> _.without(values, undefined, null).length
-  uniq : (spec) -> (values) -> (_.uniq(_.without(values, undefined, null))).length
+  unique : (spec) -> (values) -> (_.uniq(_.without(values, undefined, null))).length
   min: (spec) -> (values) -> _.min(values)
   max: (spec) -> (values) -> _.max(values)
   median: (spec) -> (values) -> poly.median(values)
