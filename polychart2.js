@@ -442,6 +442,7 @@ These are constants that are referred to throughout the coebase
     },
     stat: {
       'count': ['key'],
+      'unique': ['key'],
       'sum': ['key'],
       'mean': ['key'],
       'box': ['key'],
@@ -5934,14 +5935,15 @@ data processing to be done.
 
     DataProcess.prototype.make = function(spec, grouping, callback) {
       var dataSpec, wrappedCallback;
-      dataSpec = poly.parser.layerToData(spec, grouping);
       wrappedCallback = this._wrap(callback);
       if (this.strictmode) {
         wrappedCallback(this.dataObj.json, {});
       }
       if (this.dataObj.computeBackend) {
+        dataSpec = poly.parser.layerToData(spec, grouping);
         return backendProcess(dataSpec, this.dataObj, wrappedCallback);
       } else {
+        dataSpec = poly.parser.layerToData(spec, grouping);
         return this.dataObj.getData(function(data) {
           return frontendProcess(dataSpec, data, wrappedCallback);
         });
@@ -6152,7 +6154,7 @@ data processing to be done.
         return _.without(values, void 0, null).length;
       };
     },
-    uniq: function(spec) {
+    unique: function(spec) {
       return function(values) {
         return (_.uniq(_.without(values, void 0, null))).length;
       };
@@ -7687,7 +7689,7 @@ Dimension object has the following elements (all numeric in pixels):
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   poly.paper = function(dom, w, h, graph) {
-    var bg, paper;
+    var bg, paper, showRect;
     if (!(typeof Raphael !== "undefined" && Raphael !== null)) {
       throw poly.error.depn("The dependency Raphael is not included.");
     }
@@ -7698,7 +7700,7 @@ Dimension object has the following elements (all numeric in pixels):
       'stroke-width': 0
     });
     bg.click(graph.handleEvent('reset'));
-    poly.mouseEvents(graph, bg);
+    poly.mouseEvents(graph, bg, showRect = false);
     return paper;
   };
 
@@ -7707,10 +7709,12 @@ Dimension object has the following elements (all numeric in pixels):
   */
 
 
-  poly.mouseEvents = function(graph, bg) {
+  poly.mouseEvents = function(graph, bg, showRect) {
     var end, endInfo, handler, onend, onmove, onstart, rect, start, startInfo;
     handler = graph.handleEvent('select');
-    rect = null;
+    if (showRect) {
+      rect = null;
+    }
     start = end = null;
     startInfo = endInfo = null;
     onstart = function() {
@@ -7725,7 +7729,7 @@ Dimension object has the following elements (all numeric in pixels):
           y: start.y + dy
         };
         endInfo = graph.facet.getFacetInfo(graph.dims, end.x, end.y);
-        if ((rect != null) && (endInfo != null) && endInfo.col === startInfo.col && endInfo.row === startInfo.row) {
+        if ((rect != null) && (endInfo != null) && endInfo.col === startInfo.col && endInfo.row === startInfo.row && showRect) {
           attr = {
             x: Math.min(start.x, end.x),
             y: Math.min(start.y, end.y),
@@ -7741,7 +7745,7 @@ Dimension object has the following elements (all numeric in pixels):
           y: y - offset.top
         };
         startInfo = graph.facet.getFacetInfo(graph.dims, start.x, start.y);
-        if (startInfo != null) {
+        if ((startInfo != null) && showRect) {
           rect = graph.paper.rect(start.x, start.y, 0, 0, 2);
           return rect = rect.attr({
             fill: 'black',
@@ -7752,7 +7756,7 @@ Dimension object has the following elements (all numeric in pixels):
     };
     onend = function() {
       if ((start != null) && (end != null)) {
-        if (rect != null) {
+        if ((rect != null) && showRect) {
           rect = rect.hide();
           rect.remove();
         }
@@ -9152,7 +9156,6 @@ The functions here makes it easier to create common types of interactions.
       this.dataSubscribed = [];
       this.make(spec);
       this.addHandler(poly.handler.tooltip());
-      this.addHandler(poly.handler.zoom(spec));
     }
 
     /*
