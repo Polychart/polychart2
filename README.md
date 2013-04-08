@@ -48,9 +48,9 @@ events. See the documentations for more details.
 Downloads
 ---------
 
-* polychart2.js - The full version of Polychart2.js
-* polychart2.min.js - The minified version of Polychart2.js
-* polychart2.standalone.js - The minified version, including dependencies
+* [polychart2.js](https://raw.github.com/Polychart/polychart2/develop/polychart2.js) - The full version of Polychart2.js
+* [polychart2.min.js](https://raw.github.com/Polychart/polychart2/develop/polychart2.min.js) - The minified version of Polychart2.js
+* [polychart2.standalone.js](https://raw.github.com/Polychart/polychart2/develop/polychart2.standalone.js) - The minified version, including dependencies
 
 Dependencies
 ------------
@@ -84,5 +84,4 @@ License
 For non-commercial use, Polychart2.js is licensed under Creative Commons 3.0
 Attribution & Non-commercial ([Link](http://creativecommons.org/licenses/by-nc/3.0/)).
 
-Contact lisa@polychart.com for licensing inquiries & commercial usage.
-
+For commercial use, please see http://www.polychartjs.com/
