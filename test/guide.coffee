@@ -27,9 +27,9 @@ test "domain: strict mode num & cat", ->
 
   xticks = graph.scaleSet.axes.axes.x.ticks
   yticks = graph.scaleSet.axes.axes.y.ticks
-  deepEqual _.pluck(xticks, 'location'), [2, 3, 2.5, 3.5]
-  deepEqual _.pluck(yticks, 'location'), [1, 2, 3]
-  deepEqual _.pluck(yticks, 'value'), ['One', 'Five', 3]
+  deepEqual _.pluck(xticks, 'location'), [2, 2.5, 3, 3.5]
+  deepEqual _.pluck(yticks, 'location'), [3, 1, 2]
+  deepEqual _.pluck(yticks, 'value'), [3, 'One', 'Five']
 
 test "scale: x and v:", ->
   spec =

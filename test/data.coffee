@@ -173,28 +173,28 @@ test "statistics - count", ->
   trans = transformData data,
     stats:
       stats: [
-        key: 'y', stat: 'uniq', name: 'uniq(y)'
+        key: 'y', stat: 'unique', name: 'unique(y)'
       ],
       groups: ['x', 'z']
   deepEqual trans.data, [
-      {x: 'A', z:1, 'uniq(y)': 1}
-      {x: 'A', z:2, 'uniq(y)': 1}
-      {x: 'B', z:1, 'uniq(y)': 1}
-      {x: 'B', z:2, 'uniq(y)': 1}
+      {x: 'A', z:1, 'unique(y)': 1}
+      {x: 'A', z:2, 'unique(y)': 1}
+      {x: 'B', z:1, 'unique(y)': 1}
+      {x: 'B', z:2, 'unique(y)': 1}
     ]
 
   trans = transformData data,
     stats:
       stats: [
         {key: 'y', stat: 'count', name: 'count(y)'}
-        {key: 'y', stat: 'uniq', name: 'uniq(y)'}
+        {key: 'y', stat: 'unique', name: 'unique(y)'}
       ]
       groups: ['x', 'z']
   deepEqual trans.data, [
-      {x: 'A', z:1, 'count(y)':3, 'uniq(y)': 1}
-      {x: 'A', z:2, 'count(y)':3, 'uniq(y)': 1}
-      {x: 'B', z:1, 'count(y)':2, 'uniq(y)': 1}
-      {x: 'B', z:2, 'count(y)':2, 'uniq(y)': 1}
+      {x: 'A', z:1, 'count(y)':3, 'unique(y)': 1}
+      {x: 'A', z:2, 'count(y)':3, 'unique(y)': 1}
+      {x: 'B', z:1, 'count(y)':2, 'unique(y)': 1}
+      {x: 'B', z:2, 'count(y)':2, 'unique(y)': 1}
     ]
 
   data = polyjs.data data:[
