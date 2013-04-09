@@ -83,11 +83,11 @@ poly.render = (handleEvent, paper, scales, coord) -> (offset={}, clipping=false,
     # handlers
     if type is 'guide'
       pt.click handleEvent('guide-click')
-      poly.touchEvents handleEvent, pt
+      poly.touchEvents handleEvent, pt, true
     else
       pt.click handleEvent('click')
       pt.hover handleEvent('mover'), handleEvent('mout')
-      poly.touchEvents handleEvent, pt
+      poly.touchEvents handleEvent, pt, true
     pt
   remove: (pt) ->
     pt.remove()
