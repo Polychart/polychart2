@@ -906,6 +906,8 @@ Get the offset of the element
 
 
 (function() {
+  var touchInfo, _oldAlert,
+    _this = this;
 
   poly.offset = function(elem) {
     var box, doc, docElem, win;
@@ -934,9 +936,15 @@ Get the offset of the element
 
 
   poly.getXY = function(offset, e) {
-    var scrollX, scrollY, x, y;
-    x = e.clientX;
-    y = e.clientY;
+    var scrollX, scrollY, touch, x, y;
+    if (e.type.indexOf('mouse') !== -1) {
+      x = e.clientX;
+      y = e.clientY;
+    } else if (e.type.indexOf('touch') !== -1) {
+      touch = e.changedTouches[0];
+      x = touch.clientX;
+      y = touch.clientY;
+    }
     scrollY = (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop;
     scrollX = (document.documentElement && document.documentElement.scrollLeft) || document.body.scrollLeft;
     return {
@@ -966,6 +974,65 @@ Get the offset of the element
       }), delay);
     } else {
       return event.target.dispatchEvent(evt);
+    }
+  };
+
+  /*
+  Touch Event Handling
+  */
+
+
+  touchInfo = {
+    lastStart: 0,
+    lastTouch: 0,
+    lastEvent: null,
+    pressTimer: 0
+  };
+
+  _oldAlert = window.alert;
+
+  poly.touch = function(type, obj, event, graph) {
+    var elem, offset, touchPos;
+    obj.tooltip = obj.data('t');
+    obj.evtData = obj.data('e');
+    touchInfo.lastEvent = event;
+    event.preventDefault();
+    if (type === 'touchstart') {
+      touchInfo.lastStart = event.timeStamp;
+      poly.touchToMouse('mousedown', touchInfo);
+      touchInfo.pressTimer = window.setTimeout((function() {
+        return poly.touchToMouse('mouseover', touchInfo);
+      }), 800);
+      return window.alert = function() {
+        var args;
+        window.clearTimeout(touchInfo.pressTimer);
+        args = arguments;
+        return window.setTimeout((function() {
+          _oldAlert.apply(window, args);
+          return window.alert = _oldAlert;
+        }), 100);
+      };
+    } else if (type === 'touchmove') {
+      elem = graph.paper.getById(event.target.raphaelid);
+      offset = poly.offset(graph.dom);
+      touchPos = poly.getXY(offset, event);
+      if (event.timeStamp - touchInfo.lastStart > 600 && elem.isPointInside(touchPos.x, touchPos.y)) {
+        return poly.touchToMouse('mouseover', touchInfo);
+      } else {
+        window.clearTimeout(touchInfo.pressTimer);
+        return poly.touchToMouse('mouseout', touchInfo);
+      }
+    } else if (type === 'touchend') {
+      window.clearTimeout(touchInfo.pressTimer);
+      poly.touchToMouse('mouseup', touchInfo);
+      poly.touchToMouse('mouseout', touchInfo, 400);
+      if (event.timeStamp - touchInfo.lastStart < 800) {
+        return poly.touchToMouse('click', touchInfo);
+      }
+    } else if (type === 'touchcancel') {
+      window.clearTimeout(touchInfo.pressTimer);
+      poly.touchToMouse('mouseout', touchInfo);
+      return poly.touchToMouse('mouseup', touchInfo, 300);
     }
   };
 
