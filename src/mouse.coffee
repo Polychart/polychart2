@@ -27,3 +27,20 @@ poly.getXY = (offset, e) ->
   scrollX = (document.documentElement && document.documentElement.scrollLeft) || document.body.scrollLeft
   x: x + scrollX - offset.left
   y: y + scrollY - offset.top
+###
+Transforms a TouchEvent to MouseEvent
+###
+poly.touchToMouse = (type, touchInfo, delay=false) ->
+  event = touchInfo.lastEvent
+  first = (event.touches.length > 0 && event.touches[0]) || (event.changedTouches.length > 0 && event.changedTouches[0])
+  evt = document.createEvent 'MouseEvent'
+  evt.initMouseEvent(type, event.bubbles, event.cancelable, event.view, event.detail,
+                     first.screenX, first.screenY, first.clientX, first.clientY,
+                     event.ctrlKey, event.altKey, event.shiftKey, event.metaKey, 1, event.target)
+  if delay
+    window.clearTimeout touchInfo.pressTimer
+    touchInfo.pressTimer = window.setTimeout((() -> event.target.dispatchEvent evt), delay)
+  else
+    event.target.dispatchEvent evt
+
+

@@ -134,7 +134,9 @@ class Graph
     graph = @
     handler = (event) ->
       obj = @
-      if type == 'select'
+      if type in ['touchstart', 'touchmove', 'touchend', 'touchcancel']
+        poly.touch type, obj, event, graph
+      else if type == 'select'
         {start, end} = event
         f1 = graph.facet.getFacetInfo(graph.dims, start.x, start.y)
         if not f1 then return # Did not start in a facet
