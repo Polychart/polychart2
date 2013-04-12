@@ -81,7 +81,7 @@ test "extraction: stats", ->
   }
   parser = polyjs.debug.parser.layerToData layerparser
   deepEqual parser.filter, layerparser.filter
-  deepEqual parser.meta, {b: {sort:'a', asc:true}}
+  deepEqual parser.meta, {b: {sort:'a', asc:false}}
   deepEqual parser.select, ['a', 'b', 'sum(c)']
   deepEqual parser.stats.groups, ['a','b']
   deepEqual parser.stats.stats, [key:'c', name:'sum(c)', stat:'sum']
@@ -98,7 +98,7 @@ test "extraction: transforms", ->
   }
   parser = polyjs.debug.parser.layerToData layerparser
   deepEqual parser.filter, layerparser.filter
-  deepEqual parser.meta, {b: {sort:'a', asc:true}}
+  deepEqual parser.meta, {b: {sort:'a', asc:false}}
   deepEqual parser.select, ['lag(a,1)', 'b', 'sum(c)']
   deepEqual parser.stats.groups, ['lag(a,1)', 'b']
   deepEqual parser.stats.stats, [key:'c', name:'sum(c)', stat:'sum']
@@ -106,7 +106,7 @@ test "extraction: transforms", ->
 
   layerparser = {
     type: "point",
-    y: {var: "b", sort: "a", guide: "y2"},
+    y: {var: "b", sort: "a", guide: "y2", asc:true},
     x: {var: "bin(a, 1)"},
     color: {const: "blue"},
     opacity: {var: "sum(c)"},

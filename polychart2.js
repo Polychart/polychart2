@@ -463,7 +463,7 @@ These are constants that are referred to throughout the coebase
       sort: null,
       stat: null,
       limit: null,
-      asc: true
+      asc: false
     },
     scaleFns: {
       novalue: function() {
