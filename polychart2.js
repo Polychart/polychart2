@@ -1626,7 +1626,7 @@ See the spec definition for more information.
     if (defval == null) {
       defval = null;
     }
-    return (key in dict && dict[key]) || defval;
+    return (key in dict && (dict[key] != null)) || defval;
   };
 
   dictGets = function(dict, keyVals) {
