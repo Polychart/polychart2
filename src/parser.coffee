@@ -17,7 +17,7 @@ assocsToObj = (assocs) ->
   for [key, val] in assocs
     obj[key] = val
   obj
-dictGet = (dict, key, defval = null) -> (key of dict and dict[key]) or defval
+dictGet = (dict, key, defval = null) -> (key of dict and dict[key]?) or defval
 dictGets = (dict, keyVals) ->
   fin = {}
   for key, defval of keyVals
