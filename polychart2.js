@@ -6048,7 +6048,7 @@ of a dataset, or knows how to retrieve data from some source.
       var chr, url,
         _this = this;
 
-      if (this.raw != null) {
+      if ((this.raw != null) && (!this.computeBackend)) {
         return callback(this);
       }
       chr = _.indexOf(this.url, "?") === -1 ? '?' : '&';
