@@ -6819,7 +6819,7 @@ Shared constants
           for (_i = 0, _len = data.length; _i < _len; _i++) {
             item = data[_i];
             item.$lower = tmp;
-            tmp += yval(item);
+            tmp += parseFloat(yval(item));
             _results1.push(item.$upper = tmp);
           }
           return _results1;

@@ -103,7 +103,7 @@ class Layer
       yval = if @mapping.y? then ((item) => item[@mapping.y]) else (item) -> 0
       for item in data
         item.$lower = tmp
-        tmp += yval(item)
+        tmp += parseFloat(yval(item))
         item.$upper = tmp
   _dodge: (group) ->
     groupAes = _.without _.keys(@mapping), 'x', 'y', 'id'
