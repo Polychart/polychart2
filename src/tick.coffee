@@ -10,6 +10,7 @@ Produce an associate array of aesthetics to tick objects.
 ###
 poly.tick.make = (domain, guideSpec, type) ->
   step = null
+  formatter = null
   if guideSpec.ticks?
     # Will the only custom tick type be num? Will there be problems for others?
     if type is 'num'
@@ -38,7 +39,7 @@ poly.tick.make = (domain, guideSpec, type) ->
       # TODO: Find a way to only change the text when changing format
       tmpTick = tickfn t, prev, next
       tickobjs[tmpTick.value] = tmpTick
-  tickobjs
+  {ticks: tickobjs, ticksFormat: formatter}
 
 ###
 # CLASSES & HELPERS

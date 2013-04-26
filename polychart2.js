@@ -2847,6 +2847,7 @@ Helper functions to legends & axes for generating ticks
       _this = this;
 
     step = null;
+    formatter = null;
     if (guideSpec.ticks != null) {
       if (type === 'num') {
         ticks = _.filter(guideSpec.ticks, function(t) {
@@ -2881,7 +2882,10 @@ Helper functions to legends & axes for generating ticks
         tickobjs[tmpTick.value] = tmpTick;
       }
     }
-    return tickobjs;
+    return {
+      ticks: tickobjs,
+      ticksFormat: formatter
+    };
   };
 
   /*
@@ -3510,7 +3514,7 @@ objects that can later be rendered using Geometry class.
 
     function Axis(params) {
       this.calculate = __bind(this.calculate, this);
-      var domain, guideSpec, key, option, type, _ref,
+      var domain, guideSpec, key, option, type, _ref, _ref1,
         _this = this;
 
       domain = params.domain, type = params.type, guideSpec = params.guideSpec, key = params.key;
@@ -3528,7 +3532,7 @@ objects that can later be rendered using Geometry class.
       this.renderGrid = option('renderGrid', this.renderGridDefault);
       this.renderLabel = option('renderLabel', this.renderLabelDefault);
       this.renderLine = option('renderLine', this.renderLineDefault);
-      this.ticks = poly.tick.make(domain, guideSpec, type);
+      _ref1 = poly.tick.make(domain, guideSpec, type), this.ticks = _ref1.ticks, this.ticksFormat = _ref1.ticksFormat;
       this.maxwidth = _.max(_.map(this.ticks, function(t) {
         return poly.strSize(t.value);
       }));
@@ -6739,24 +6743,43 @@ Shared constants
     };
 
     Layer.prototype._tooltip = function(item) {
-      var tooltip, v, _i, _len, _ref;
+      var tooltip,
+        _this = this;
 
       tooltip = null;
       if (typeof this.spec.tooltip === 'function') {
-        return tooltip = this.spec.tooltip(item);
+        return tooltip = function(graph) {
+          return _this.spec.tooltip(item);
+        };
       } else if (this.spec.tooltip != null) {
-        return tooltip = this.spec.tooltip;
+        return tooltip = function(graph) {
+          return _this.spec.tooltip;
+        };
       } else {
-        _ref = _.uniq(_.values(this.mapping));
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          v = _ref[_i];
-          if (!tooltip) {
-            tooltip = "" + v + ": " + (poly.format.value(item[v]));
-          } else {
-            tooltip += "\n" + v + ": " + (poly.format.value(item[v]));
+        return tooltip = function(graph) {
+          var aes, formatter, key, seenKeys, text, _ref;
+
+          text = "";
+          seenKeys = [];
+          _ref = _this.mapping;
+          for (aes in _ref) {
+            key = _ref[aes];
+            if (seenKeys.indexOf(key) > -1) {
+              continue;
+            } else {
+              seenKeys.push(key);
+            }
+            if (graph.axes.axes[aes] != null) {
+              formatter = graph.axes.axes[aes].ticksFormat;
+            } else {
+              formatter = function(x) {
+                return x;
+              };
+            }
+            text += "\n" + key + ": " + (formatter(item[key]));
           }
-        }
-        return tooltip;
+          return text.substr(1);
+        };
       }
     };
 
@@ -8835,7 +8858,7 @@ The functions here makes it easier to create common types of interactions.
           mousePos = poly.getXY(offset, event);
           x1 = mousePos.x;
           y1 = mousePos.y;
-          tooltip.text = paper.text(x1, y1, obj.tooltip).attr({
+          tooltip.text = paper.text(x1, y1, obj.tooltip(graph)).attr({
             'text-anchor': 'middle',
             'fill': 'white'
           });
