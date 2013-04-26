@@ -217,12 +217,14 @@ class Area extends Scale
     sq = Math.sqrt
     ylin = poly.linear sq(@domain.min), min, sq(@domain.max), 10
     @f = @_identityWrapper (x) -> ylin sq(x)
+  _makeDate: () => @_makeNum()
 
 class Opacity extends Scale
   _makeNum: () => #range = [0, 1]
     min = if @domain.min == 0 then 0 else 0.1
     max = 1
     @f = @_identityWrapper poly.linear(@domain.min, min, @domain.max, max)
+  _makeDate: () => @_makeNum()
 
 class Palette extends Scale
   _makeCat: () => #TEMPORARY
@@ -248,6 +250,7 @@ class Gradient extends Scale
     b = poly.linear @domain.min, lower.b, @domain.max, upper.b
     @f =
       @_identityWrapper (value) => Raphael.rgb r(value), g(value), b(value)
+  _makeDate: () => @_makeNum()
 
 class Gradient2 extends Scale
   constructor: (params) ->
@@ -270,6 +273,7 @@ class Gradient2 extends Scale
         else
           Raphael.rgb r2(value), g2(value), b2(value)
   _makeCat: () =>
+  _makeDate: () => @_makeNum()
 
 class CustomScale extends Scale
   constructor: (params) -> {@function} = params

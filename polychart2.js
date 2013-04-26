@@ -4931,6 +4931,7 @@ attribute of that value.
     __extends(Area, _super);
 
     function Area() {
+      this._makeDate = __bind(this._makeDate, this);
       this._makeNum = __bind(this._makeNum, this);      _ref2 = Area.__super__.constructor.apply(this, arguments);
       return _ref2;
     }
@@ -4946,6 +4947,10 @@ attribute of that value.
       });
     };
 
+    Area.prototype._makeDate = function() {
+      return this._makeNum();
+    };
+
     return Area;
 
   })(Scale);
@@ -4954,6 +4959,7 @@ attribute of that value.
     __extends(Opacity, _super);
 
     function Opacity() {
+      this._makeDate = __bind(this._makeDate, this);
       this._makeNum = __bind(this._makeNum, this);      _ref3 = Opacity.__super__.constructor.apply(this, arguments);
       return _ref3;
     }
@@ -4964,6 +4970,10 @@ attribute of that value.
       min = this.domain.min === 0 ? 0 : 0.1;
       max = 1;
       return this.f = this._identityWrapper(poly.linear(this.domain.min, min, this.domain.max, max));
+    };
+
+    Opacity.prototype._makeDate = function() {
+      return this._makeNum();
     };
 
     return Opacity;
@@ -5009,6 +5019,7 @@ attribute of that value.
     __extends(Gradient, _super);
 
     function Gradient(params) {
+      this._makeDate = __bind(this._makeDate, this);
       this._makeNum = __bind(this._makeNum, this);      this.lower = params.lower, this.upper = params.upper;
     }
 
@@ -5026,6 +5037,10 @@ attribute of that value.
       });
     };
 
+    Gradient.prototype._makeDate = function() {
+      return this._makeNum();
+    };
+
     return Gradient;
 
   })(Scale);
@@ -5034,6 +5049,7 @@ attribute of that value.
     __extends(Gradient2, _super);
 
     function Gradient2(params) {
+      this._makeDate = __bind(this._makeDate, this);
       this._makeCat = __bind(this._makeCat, this);
       this._makeNum = __bind(this._makeNum, this);
       var _ref5;
@@ -5067,6 +5083,10 @@ attribute of that value.
     };
 
     Gradient2.prototype._makeCat = function() {};
+
+    Gradient2.prototype._makeDate = function() {
+      return this._makeNum();
+    };
 
     return Gradient2;
 
