@@ -2588,7 +2588,7 @@ Defines what coordinate system is used to plot the graph.
 
 
   makeDomainSet = function(geoms, metas, guideSpec, strictmode) {
-    var aes, bw, domain, fromspec, max, meta, min, values, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
+    var aes, bw, domain, fromspec, max, meta, min, values, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
 
     domain = {};
     for (aes in metas) {
@@ -2613,8 +2613,22 @@ Defines what coordinate system is used to plot the graph.
         switch (meta.type) {
           case 'num':
             bw = (_ref = fromspec('bw')) != null ? _ref : meta.bw;
-            min = (_ref1 = fromspec('min')) != null ? _ref1 : _.min(values);
-            max = (_ref2 = fromspec('max')) != null ? _ref2 : _.max(values) + (bw != null ? bw : 0);
+            if (values.length > 1) {
+              min = (_ref1 = fromspec('min')) != null ? _ref1 : _.min(values);
+              max = (_ref2 = fromspec('max')) != null ? _ref2 : _.max(values) + (bw != null ? bw : 0);
+            } else if (values.length === 1) {
+              debugger;
+              if (bw) {
+                min = (_ref3 = fromspec('min')) != null ? _ref3 : values[0];
+                max = (_ref4 = fromspec('max')) != null ? _ref4 : values[0] + bw;
+              } else {
+                min = (_ref5 = fromspec('min')) != null ? _ref5 : values[0] - 1;
+                max = (_ref6 = fromspec('max')) != null ? _ref6 : values[0] + 1;
+              }
+            } else {
+              min = (_ref7 = fromspec('min')) != null ? _ref7 : 0;
+              max = (_ref8 = (_ref9 = fromspec('max')) != null ? _ref9 : bw) != null ? _ref8 : 1;
+            }
             domain[aes] = makeDomain({
               type: 'num',
               min: min,
@@ -2623,8 +2637,8 @@ Defines what coordinate system is used to plot the graph.
             });
             break;
           case 'date':
-            bw = (_ref3 = fromspec('bw')) != null ? _ref3 : meta.bw;
-            min = (_ref4 = fromspec('min')) != null ? _ref4 : _.min(values);
+            bw = (_ref10 = fromspec('bw')) != null ? _ref10 : meta.bw;
+            min = (_ref11 = fromspec('min')) != null ? _ref11 : _.min(values);
             max = fromspec('max');
             if (max == null) {
               max = _.max(values);
@@ -2640,8 +2654,8 @@ Defines what coordinate system is used to plot the graph.
           case 'cat':
             domain[aes] = makeDomain({
               type: 'cat',
-              levels: (_ref5 = (_ref6 = fromspec('levels')) != null ? _ref6 : meta.levels) != null ? _ref5 : _.uniq(values),
-              sorted: (_ref7 = (_ref8 = fromspec('levels')) != null ? _ref8 : meta.sorted) != null ? _ref7 : false
+              levels: (_ref12 = (_ref13 = fromspec('levels')) != null ? _ref13 : meta.levels) != null ? _ref12 : _.uniq(values),
+              sorted: (_ref14 = (_ref15 = fromspec('levels')) != null ? _ref15 : meta.sorted) != null ? _ref14 : false
             });
         }
       }

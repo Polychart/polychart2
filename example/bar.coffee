@@ -281,3 +281,18 @@
     dom: dom
   }
   c = polyjs.chart spec
+
+@examples.bar_single_value = (dom) ->
+  data = polyjs.data
+    x: [0]
+    y: [1]
+  spec = {
+    layers: [
+      data: data
+      type: 'bar'
+      x: 'bin(x, 1)'
+      y: 'sum(y)'
+    ]
+    dom: dom
+  }
+  c = polyjs.chart spec
