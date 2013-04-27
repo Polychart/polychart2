@@ -10,7 +10,7 @@ poly.const =
   trans: {'bin': ['key', 'binwidth'], 'lag': ['key', 'lag']},
   stat: {'count': ['key'], 'unique': ['key'], 'sum': ['key'], 'mean': ['key'], 'box': ['key'], 'median': ['key']}
   timerange: ['second','minute','hour','day','week','month','2month','quarter','6month','year',  '2year', '5year', 'decade']
-  metas: {sort: null, stat: null, limit: null, asc: true},
+  metas: {sort: null, stat: null, limit: null, asc: false},
   scaleFns :
     novalue : () -> {v: null, f: 'novalue', t: 'scalefn'}
     max: (v) -> {v: v, f: 'max', t: 'scalefn'}

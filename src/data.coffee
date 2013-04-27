@@ -296,7 +296,7 @@ class BackendData extends AbstractData
   #   @callback - the callback function once data is retrieved
   #   @params - additional parameters to send to the backend
   getData: (callback, dataSpec) =>
-    if @raw? then return callback @
+    if @raw? and (not @computeBackend) then return callback @
     chr = if _.indexOf(@url, "?") is -1 then '?' else '&'
     url = @url
     if @limit

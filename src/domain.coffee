@@ -77,8 +77,20 @@ makeDomainSet = (geoms, metas, guideSpec, strictmode) ->
       switch meta.type
         when 'num'
           bw = fromspec('bw') ? meta.bw
-          min = fromspec('min') ? _.min(values)
-          max = fromspec('max') ?  (_.max(values) + (bw ? 0))
+          if values.length > 1
+            min = fromspec('min') ? _.min(values)
+            max = fromspec('max') ?  (_.max(values) + (bw ? 0))
+          else if values.length == 1
+            debugger
+            if bw
+              min = fromspec('min') ? values[0]
+              max = fromspec('max') ? values[0]+bw
+            else
+              min = fromspec('min') ? values[0]-1
+              max = fromspec('max') ? values[0]+1
+          else
+            min = fromspec('min') ? 0
+            max = fromspec('max') ? bw ? 1
           domain[aes] = makeDomain {
             type: 'num'
             min: min

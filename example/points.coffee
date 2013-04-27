@@ -466,3 +466,17 @@ one = () -> Math.random()*10
     render: false
     layer: {data:data2, type:'point', x:'a', y:'b'}
 
+@examples.point_single_value = (dom) ->
+  data = polyjs.data
+    x: [0]
+    y: [1]
+  spec = {
+    layers: [
+      data: data
+      type: 'point'
+      x: 'bin(x, 1)'
+      y: 'sum(y)'
+    ]
+    dom: dom
+  }
+  c = polyjs.chart spec
