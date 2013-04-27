@@ -115,7 +115,7 @@ class Axis extends poly.Guide
     @renderLabel = option('renderLabel', @renderLabelDefault)
     @renderLine = option('renderLine', @renderLineDefault)
     # ticks
-    {@ticks, @ticksFormat} = poly.tick.make domain, guideSpec, type
+    @ticks = poly.tick.make domain, guideSpec, type
     @maxwidth = _.max _.map @ticks, (t) -> poly.strSize t.value
     @maxwidth = Math.max @maxwidth, 0
   calculate: (axisDim, @coord, override) =>
