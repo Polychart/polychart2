@@ -61,21 +61,16 @@ class Layer
   _tooltip: (item) ->
     tooltip = null
     if typeof(@spec.tooltip) == 'function'
-      tooltip = (graph) => @spec.tooltip item
+      tooltip = @spec.tooltip item
     else if @spec.tooltip?
-      tooltip = (graph) => @spec.tooltip
+      tooltip = @spec.tooltip
     else
-      tooltip = (graph) =>
-        text = ""
-        seenKeys = []
-        for aes, key of @mapping
-          if seenKeys.indexOf(key) > -1 then continue else seenKeys.push(key)
-          if graph.axes.axes[aes]?
-            formatter = graph.axes.axes[aes].ticksFormat
-          else
-            formatter = (x) -> x
-          text += "\n#{key}: #{formatter item[key]}"
-        text.substr(1)
+      for v in _.uniq _.values @mapping
+        if not tooltip
+          tooltip = "#{v}: #{poly.format.value item[v]}"
+        else
+          tooltip += "\n#{v}: #{poly.format.value item[v]}"
+      tooltip
   # helper to sample the number of geometrical points plotted, when necessary
   _sample: (geoms) ->
     if @spec.sample is false

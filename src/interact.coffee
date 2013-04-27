@@ -41,7 +41,7 @@ poly.handler.tooltip = () ->
         mousePos = poly.getXY offset, event
         x1 = mousePos.x
         y1 = mousePos.y
-        tooltip.text = paper.text(x1, y1, obj.tooltip(graph)).attr
+        tooltip.text = paper.text(x1, y1, obj.tooltip).attr
           'text-anchor':'middle'
           'fill':'white'
         # now figure out where the tooltip text is and move it up enough to not
