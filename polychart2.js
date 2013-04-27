@@ -7175,7 +7175,7 @@ Shared constants
 
       if (this.mapping.x) {
         m = this.meta[this.mapping.x];
-        if (m.type !== 'cat' && !m.binned) {
+        if (m.type !== 'cat' && !m.bw && !m.binned) {
           if (m.type === 'num' && (this.guideSpec.x.bw == null)) {
             throw poly.error.type("Bar chart x-values need to be binned. Set binwidth or use the bin() transform!");
           }

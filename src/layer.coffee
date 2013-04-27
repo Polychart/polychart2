@@ -222,7 +222,7 @@ class Bar extends Layer
   _calcGeoms: () ->
     if @mapping.x
       m = @meta[@mapping.x]
-      if m.type isnt 'cat' and not m.binned
+      if m.type isnt 'cat' and not m.bw and not m.binned
         # Check that the bw is set in guides. Hackish.
         if m.type is 'num' and not @guideSpec.x.bw?
           throw poly.error.type "Bar chart x-values need to be binned. Set binwidth or use the bin() transform!"
