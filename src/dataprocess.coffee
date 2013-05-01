@@ -18,7 +18,9 @@ class DataProcess
   make : (spec, grouping, callback) ->
     wrappedCallback = @_wrap callback
     if @strictmode
-      wrappedCallback @dataObj.json, {}
+      wrappedCallback
+        data: @dataObj.raw
+        meta: @dataObj.meta
     if @dataObj.computeBackend
       dataSpec = poly.parser.layerToData spec, grouping
       backendProcess(dataSpec, @dataObj, wrappedCallback)

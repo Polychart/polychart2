@@ -6178,7 +6178,10 @@ data processing to be done.
 
       wrappedCallback = this._wrap(callback);
       if (this.strictmode) {
-        wrappedCallback(this.dataObj.json, {});
+        wrappedCallback({
+          data: this.dataObj.raw,
+          meta: this.dataObj.meta
+        });
       }
       if (this.dataObj.computeBackend) {
         dataSpec = poly.parser.layerToData(spec, grouping);
