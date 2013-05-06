@@ -114,16 +114,7 @@ class Axis extends poly.Guide
     @renderGrid = option('renderGrid', @renderGridDefault)
     @renderLabel = option('renderLabel', @renderLabelDefault)
     @renderLine = option('renderLine', @renderLineDefault)
-    @gridColor = if option('gridColor', @gridColor)
-      color = option('gridColor', @gridColor)
-      hexPattern = /\#?[A-Fa-f0-9]{6}\s*$/
-      rgbPattern = /rgb\((\s*[0-9]{1,3}\s*\,(?!\))){3,4}\)/
-      if typeof(color) is 'object' and color.const?
-        color.const
-      else if hexPattern.test(color) or rgbPatter.test(color)
-        color
-      else
-        throw poly.error.defn "Invalid color format #{color}"
+    @gridColor = option('gridColor', @gridColor)
     # ticks
     {@ticks, @ticksFormatter} = poly.tick.make domain, guideSpec, type
     @maxwidth = _.max _.map @ticks, (t) -> poly.strSize t.value
