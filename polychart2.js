@@ -3516,7 +3516,7 @@ objects that can later be rendered using Geometry class.
 
     function Axis(params) {
       this.calculate = __bind(this.calculate, this);
-      var domain, guideSpec, key, option, type, _ref, _ref1,
+      var color, domain, guideSpec, hexPattern, key, option, rgbPattern, type, _ref, _ref1,
         _this = this;
 
       domain = params.domain, type = params.type, guideSpec = params.guideSpec, key = params.key;
@@ -3534,6 +3534,20 @@ objects that can later be rendered using Geometry class.
       this.renderGrid = option('renderGrid', this.renderGridDefault);
       this.renderLabel = option('renderLabel', this.renderLabelDefault);
       this.renderLine = option('renderLine', this.renderLineDefault);
+      this.gridColor = (function() {
+        if (option('gridColor', this.gridColor)) {
+          color = option('gridColor', this.gridColor);
+          hexPattern = /\#?[A-Fa-f0-9]{6}\s*$/;
+          rgbPattern = /rgb\((\s*[0-9]{1,3}\s*\,(?!\))){3,4}\)/;
+          if (typeof color === 'object' && (color["const"] != null)) {
+            return color["const"];
+          } else if (hexPattern.test(color) || rgbPatter.test(color)) {
+            return color;
+          } else {
+            throw poly.error.defn("Invalid color format " + color);
+          }
+        }
+      }).call(this);
       _ref1 = poly.tick.make(domain, guideSpec, type), this.ticks = _ref1.ticks, this.ticksFormatter = _ref1.ticksFormatter;
       this.maxwidth = _.max(_.map(this.ticks, function(t) {
         return poly.strSize(t.value);
@@ -3606,7 +3620,7 @@ objects that can later be rendered using Geometry class.
       if (!obj) {
         throw poly.error.impl();
       }
-      obj.stroke = axisColorMinor;
+      obj.stroke = this.gridColor != null ? this.gridColor : axisColorMinor;
       return obj;
     };
 
