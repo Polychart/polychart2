@@ -5544,7 +5544,7 @@ of a dataset, or knows how to retrieve data from some source.
 
 
 (function() {
-  var AbstractData, BackendData, FrontendData, _getArray, _getArrayOfArrays, _getCSV, _getDataType, _getObject,
+  var AbstractData, ApiData, BackendData, FrontendData, _getArray, _getArrayOfArrays, _getCSV, _getDataType, _getObject,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
@@ -5601,6 +5601,18 @@ of a dataset, or knows how to retrieve data from some source.
   };
 
   /*
+  Data format which takes an API-facing function
+    
+  The function passed should be of type:
+    apiFun :: getParams -> callback -> polyjsData
+  */
+
+
+  poly.data.api = function(fun) {
+    return new ApiData(fun);
+  };
+
+  /*
   Helper functions
   */
 
@@ -5620,6 +5632,8 @@ of a dataset, or knows how to retrieve data from some source.
       } else {
         return 'csv';
       }
+    } else if (_.isFunction(data)) {
+      return 'api';
     } else {
       throw poly.error.data("Unknown data format.");
     }
@@ -6144,6 +6158,65 @@ of a dataset, or knows how to retrieve data from some source.
     };
 
     return BackendData;
+
+  })(AbstractData);
+
+  ApiData = (function(_super) {
+    __extends(ApiData, _super);
+
+    function ApiData(params) {
+      this.getData = __bind(this.getData, this);      ApiData.__super__.constructor.call(this);
+      this.apiFun = params.apiFun;
+      this.computeBackend = false;
+    }
+
+    ApiData.prototype.getData = function(callback, dataSpec) {
+      var _this = this;
+
+      return this.apiFun(dataSpec, function(blob) {
+        var data, e, meta, _ref, _ref1;
+
+        try {
+          blob = JSON.parse(blob);
+        } catch (_error) {
+          e = _error;
+        }
+        if (_.isObject(blob) && _.keys(blob).length < 4 && 'data' in blob) {
+          data = blob.data;
+          meta = (_ref = blob.meta) != null ? _ref : {};
+        } else {
+          data = blob;
+          meta = {};
+        }
+        _ref1 = (function() {
+          switch (_getDataType(data)) {
+            case 'json-object':
+              return _getObject(data, meta);
+            case 'json-grid':
+              return _getArrayofArrays(data, meta);
+            case 'json-array':
+              return _getArray(data, meta);
+            case 'csv':
+              return _getCSV(data, meta);
+            default:
+              throw poly.error.data("Unknown data format.");
+          }
+        })(), _this.key = _ref1.key, _this.raw = _ref1.raw, _this.meta = _ref1.meta;
+        _this.data = _this.raw;
+        return callback(_this);
+      });
+    };
+
+    ApiData.prototype.update = function(params) {
+      this.raw = null;
+      return ApiData.__super__.update.call(this);
+    };
+
+    ApiData.prototype.renameMany = function(obj) {
+      return _.keys(obj).length === 0;
+    };
+
+    return ApiData;
 
   })(AbstractData);
 

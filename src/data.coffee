@@ -35,6 +35,15 @@ poly.data.url = (url, computeBackend, limit) ->
   new BackendData {url, computeBackend, limit}
 
 ###
+Data format which takes an API-facing function
+  
+The function passed should be of type:
+  apiFun :: getParams -> callback -> polyjsData
+###
+poly.data.api = (fun) ->
+  new ApiData fun
+
+###
 Helper functions
 ###
 _getDataType = (data) ->
@@ -50,6 +59,8 @@ _getDataType = (data) ->
       'url'
     else
       'csv'
+  else if _.isFunction data
+    'api'
   else
     throw poly.error.data "Unknown data format."
 
@@ -331,3 +342,36 @@ class BackendData extends AbstractData
     super()
   renameMany: (obj) ->  _.keys(obj).length == 0
 
+# Too similar to Backend Data. Perhaps refactor with data mixins.
+class ApiData extends AbstractData
+  constructor: (params) ->
+    super()
+    {@apiFun} = params
+    @computeBackend = false
+
+  getData: (callback, dataSpec) =>
+    @apiFun dataSpec, (blob) =>
+      try
+        blob = JSON.parse(blob)
+      catch e
+        # Need to merge this with above code
+      if _.isObject(blob) and _.keys(blob).length < 4 and 'data' of blob
+        data = blob.data
+        meta = blob.meta ? {}
+      else
+        data = blob
+        meta = {}
+      {@key, @raw, @meta} =
+        switch _getDataType(data)
+          when 'json-object' then _getObject data, meta
+          when 'json-grid' then _getArrayofArrays data, meta
+          when 'json-array' then _getArray data, meta
+          when 'csv' then _getCSV data, meta
+          else
+            throw poly.error.data "Unknown data format."
+      @data = @raw
+      callback @
+  update: (params) ->
+    @raw = null
+    super()
+  renameMany: (obj) -> _.keys(obj).length == 0
