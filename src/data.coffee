@@ -22,6 +22,8 @@ poly.data = (blob) ->
       poly.data.url(data, meta, type)
     when 'csv'
       poly.data.csv(data, meta)
+    when 'api'
+      poly.data.api(data)
     else
       throw poly.error.data "Unknown data format."
 
@@ -347,21 +349,16 @@ class ApiData extends AbstractData
   constructor: (params) ->
     super()
     {@apiFun} = params
-    @computeBackend = false
+    @computeBackend = true
 
   getData: (callback, dataSpec) =>
     @apiFun dataSpec, (blob) =>
-      console.log blob
       try
         blob = JSON.parse(blob)
       catch e
-        # Need to merge this with above code
-      if _.isObject(blob) and _.keys(blob).length < 4 and 'data' of blob
-        data = blob.data
-        meta = blob.meta ? {}
-      else
-        data = blob
-        meta = {}
+      # Need to merge this with above code
+      data = blob.data
+      meta = blob.meta
       {@key, @raw, @meta} =
         switch _getDataType(data)
           when 'json-object' then _getObject data, meta
