@@ -5608,8 +5608,10 @@ of a dataset, or knows how to retrieve data from some source.
   */
 
 
-  poly.data.api = function(fun) {
-    return new ApiData(fun);
+  poly.data.api = function(apiFun) {
+    return new ApiData({
+      apiFun: apiFun
+    });
   };
 
   /*
@@ -6176,6 +6178,7 @@ of a dataset, or knows how to retrieve data from some source.
       return this.apiFun(dataSpec, function(blob) {
         var data, e, meta, _ref, _ref1;
 
+        console.log(blob);
         try {
           blob = JSON.parse(blob);
         } catch (_error) {
