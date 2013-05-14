@@ -5608,8 +5608,10 @@ of a dataset, or knows how to retrieve data from some source.
   */
 
 
-  poly.data.api = function(fun) {
-    return new ApiData(fun);
+  poly.data.api = function(apiFun) {
+    return new ApiData({
+      apiFun: apiFun
+    });
   };
 
   /*

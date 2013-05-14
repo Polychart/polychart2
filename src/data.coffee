@@ -40,8 +40,8 @@ Data format which takes an API-facing function
 The function passed should be of type:
   apiFun :: getParams -> callback -> polyjsData
 ###
-poly.data.api = (fun) ->
-  new ApiData fun
+poly.data.api = (apiFun) ->
+  new ApiData {apiFun}
 
 ###
 Helper functions
