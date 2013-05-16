@@ -10,7 +10,7 @@ class Graph
   The constructor does not do any real work. It just sets a bunch of variables
   to its default value and call @make(), which actually does the real work.
   ###
-  constructor: (spec) ->
+  constructor: (spec, callback, prepare) ->
     if not spec?
       throw poly.error.defn "No graph specification is passed in!"
     @handlers = []
@@ -22,6 +22,8 @@ class Graph
     @coord = null
     @facet = poly.facet.make()
     @dataSubscribed = []
+    @callback = callback
+    @prepare = prepare
     @make spec
 
     # Post make work, things that do not have to be updated
@@ -46,7 +48,7 @@ class Graph
   process may be asynchronous, we pass in @merge() as a callback for when
   data processing is complete.
   ###
-  make: (spec, @callback) ->
+  make: (spec) ->
     if spec?
       spec = poly.spec.toStrictMode spec
       poly.spec.check spec
@@ -115,15 +117,14 @@ class Graph
     @coord.setScales scales
     @scaleSet.coord = @coord
     {@axes, @titles, @legends} = @scaleSet.makeGuides(@spec, @dims)
-
+    if @prepare then @prepare @
     @dom = @spec.dom
     @paper ?= @_makePaper @dom, @dims.width, @dims.height, @
     renderer = poly.render @handleEvent, @paper, scales, @coord
 
     @facet.render(renderer, @dims, @coord)
     @scaleSet.renderGuides @dims, renderer, @facet
-    if @callback
-      @callback()
+    if @callback then @callback @
 
   addHandler : (h) -> if h not in @handlers then @handlers.push h
   removeHandler: (h) ->
@@ -173,4 +174,4 @@ class Graph
   _makePaper: (dom, width, height, handleEvent) ->
     paper = poly.paper dom, width, height, handleEvent
 
-poly.chart = (spec) -> new Graph(spec)
+poly.chart = (spec, callback, prepare) -> new Graph(spec, callback, prepare)

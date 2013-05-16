@@ -9584,7 +9584,7 @@ The functions here makes it easier to create common types of interactions.
     The constructor does not do any real work. It just sets a bunch of variables
     to its default value and call @make(), which actually does the real work.
     */
-    function Graph(spec) {
+    function Graph(spec, callback, prepare) {
       this.handleEvent = __bind(this.handleEvent, this);
       this.render = __bind(this.render, this);
       this.mergeDomains = __bind(this.mergeDomains, this);
@@ -9601,6 +9601,8 @@ The functions here makes it easier to create common types of interactions.
       this.coord = null;
       this.facet = poly.facet.make();
       this.dataSubscribed = [];
+      this.callback = callback;
+      this.prepare = prepare;
       this.make(spec);
       this.addHandler(poly.handler.tooltip());
     }
@@ -9632,11 +9634,10 @@ The functions here makes it easier to create common types of interactions.
     */
 
 
-    Graph.prototype.make = function(spec, callback) {
+    Graph.prototype.make = function(spec) {
       var d, dataChange, datas, id, layerSpec, merge, _i, _len, _ref, _ref1,
         _this = this;
 
-      this.callback = callback;
       if (spec != null) {
         spec = poly.spec.toStrictMode(spec);
         poly.spec.check(spec);
@@ -9739,6 +9740,9 @@ The functions here makes it easier to create common types of interactions.
       this.coord.setScales(scales);
       this.scaleSet.coord = this.coord;
       _ref = this.scaleSet.makeGuides(this.spec, this.dims), this.axes = _ref.axes, this.titles = _ref.titles, this.legends = _ref.legends;
+      if (this.prepare) {
+        this.prepare(this);
+      }
       this.dom = this.spec.dom;
       if ((_ref1 = this.paper) == null) {
         this.paper = this._makePaper(this.dom, this.dims.width, this.dims.height, this);
@@ -9747,7 +9751,7 @@ The functions here makes it easier to create common types of interactions.
       this.facet.render(renderer, this.dims, this.coord);
       this.scaleSet.renderGuides(this.dims, renderer, this.facet);
       if (this.callback) {
-        return this.callback();
+        return this.callback(this);
       }
     };
 
@@ -9832,8 +9836,8 @@ The functions here makes it easier to create common types of interactions.
 
   })();
 
-  poly.chart = function(spec) {
-    return new Graph(spec);
+  poly.chart = function(spec, callback, prepare) {
+    return new Graph(spec, callback, prepare);
   };
 
 }).call(this);
