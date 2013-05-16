@@ -104,12 +104,15 @@ makeDomainSet = (geoms, metas, guideSpec, strictmode) ->
           if not max?
             max = _.max(values)
             max =
-              if bw is 'week'
-                moment.unix(max).add('days',7).unix()
-              else if bw is 'decade'
-                moment.unix(max).add('years',10).unix()
-              else
-                moment.unix(max).add(bw+'s',1).unix()
+              switch bw
+                when 'week' then moment.unix(max).add('days',7).unix()
+                when 'twomonth' then moment.unix(max).add('months',2).unix()
+                when 'quarter' then moment.unix(max).add('months',4).unix()
+                when 'sixmonth' then moment.unix(max).add('months',6).unix()
+                when 'twoyear' then moment.unix(max).add('years',2).unix()
+                when 'fiveyear' then moment.unix(max).add('years',5).unix()
+                when 'decade' then moment.unix(max).add('years',10).unix()
+                else moment.unix(max).add(bw+'s',1).unix()
           domain[aes] = makeDomain {
             type: 'date'
             min: min

@@ -458,7 +458,7 @@ These are constants that are referred to throughout the coebase
       'box': ['key'],
       'median': ['key']
     },
-    timerange: ['second', 'minute', 'hour', 'day', 'week', 'month', '2month', 'quarter', '6month', 'year', '2year', '5year', 'decade'],
+    timerange: ['second', 'minute', 'hour', 'day', 'week', 'month', 'twomonth', 'quarter', 'sixmonth', 'year', 'twoyear', 'fiveyear', 'decade'],
     metas: {
       sort: null,
       stat: null,
@@ -1157,11 +1157,11 @@ Get the offset of the element
         return function(date) {
           return moment.unix(date).format('MMM D');
         };
-      } else if (level === 'month' || level === '2month' || level === 'quarter' || level === '6month') {
+      } else if (level === 'month' || level === 'twomonth' || level === 'quarter' || level === 'sixmonth') {
         return function(date) {
           return moment.unix(date).format('YYYY/MM');
         };
-      } else if (level === 'year' || level === '2year' || level === '5year' || level === 'decade') {
+      } else if (level === 'year' || level === 'twoyear' || level === 'fiveyear' || level === 'decade') {
         return function(date) {
           return moment.unix(date).format('YYYY');
         };
@@ -2642,7 +2642,26 @@ Defines what coordinate system is used to plot the graph.
             max = fromspec('max');
             if (max == null) {
               max = _.max(values);
-              max = bw === 'week' ? moment.unix(max).add('days', 7).unix() : bw === 'decade' ? moment.unix(max).add('years', 10).unix() : moment.unix(max).add(bw + 's', 1).unix();
+              max = (function() {
+                switch (bw) {
+                  case 'week':
+                    return moment.unix(max).add('days', 7).unix();
+                  case 'twomonth':
+                    return moment.unix(max).add('months', 2).unix();
+                  case 'quarter':
+                    return moment.unix(max).add('months', 4).unix();
+                  case 'sixmonth':
+                    return moment.unix(max).add('months', 6).unix();
+                  case 'twoyear':
+                    return moment.unix(max).add('years', 2).unix();
+                  case 'fiveyear':
+                    return moment.unix(max).add('years', 5).unix();
+                  case 'decade':
+                    return moment.unix(max).add('years', 10).unix();
+                  default:
+                    return moment.unix(max).add(bw + 's', 1).unix();
+                }
+              })();
             }
             domain[aes] = makeDomain({
               type: 'date',
@@ -3051,20 +3070,20 @@ Helper functions to legends & axes for generating ticks
 
       min = domain.min, max = domain.max;
       step = (max - min) / numticks;
-      step = step < 1.4 * 1 ? 'second' : step < 1.4 * 60 ? 'minute' : step < 1.4 * 60 * 60 ? 'hour' : step < 1.4 * 24 * 60 * 60 ? 'day' : step < 1.4 * 7 * 24 * 60 * 60 ? 'week' : step < 1.4 * 30 * 24 * 60 * 60 ? 'month' : step < 1.4 * 30 * 24 * 60 * 60 * 2 ? '2month' : step < 1.4 * 30 * 24 * 60 * 60 * 4 ? 'quarter' : step < 1.4 * 30 * 24 * 60 * 60 * 6 ? '6month' : step < 1.4 * 24 * 60 * 60 * 365 ? 'year' : step < 1.4 * 24 * 60 * 60 * 365 * 2 ? '2year' : step < 1.4 * 24 * 60 * 60 * 365 * 5 ? '5year' : 'decade';
+      step = step < 1.4 * 1 ? 'second' : step < 1.4 * 60 ? 'minute' : step < 1.4 * 60 * 60 ? 'hour' : step < 1.4 * 24 * 60 * 60 ? 'day' : step < 1.4 * 7 * 24 * 60 * 60 ? 'week' : step < 1.4 * 30 * 24 * 60 * 60 ? 'month' : step < 1.4 * 30 * 24 * 60 * 60 * 2 ? 'twomonth' : step < 1.4 * 30 * 24 * 60 * 60 * 4 ? 'quarter' : step < 1.4 * 30 * 24 * 60 * 60 * 6 ? 'sixmonth' : step < 1.4 * 24 * 60 * 60 * 365 ? 'year' : step < 1.4 * 24 * 60 * 60 * 365 * 2 ? 'twoyear' : step < 1.4 * 24 * 60 * 60 * 365 * 5 ? 'fiveyear' : 'decade';
       ticks = [];
       current = moment.unix(min).startOf(step);
       momentjsStep = (function() {
         switch (step) {
-          case '2month':
+          case 'twomonth':
             return ['months', 2];
           case 'quarter':
             return ['months', 4];
-          case '6month':
+          case 'sixmonth':
             return ['months', 6];
-          case '2year':
+          case 'twoyear':
             return ['years', 2];
-          case '5year':
+          case 'fiveyear':
             return ['years', 5];
           case 'decade':
             return ['years', 10];
@@ -4718,7 +4737,7 @@ attribute of that value.
       var _this = this;
 
       return this._NaNCheckWrap(function(value) {
-        var lower, m, space, upper, width, _ref;
+        var lower, space, upper, width, _ref, _timeConversion;
 
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
@@ -4732,9 +4751,57 @@ attribute of that value.
               return _this.range.min + value.v;
             }
             if ((_ref = value.f) === 'upper' || _ref === 'middle' || _ref === 'lower') {
-              upper = domain.bw === 'week' ? moment.unix(value.v).day(7).unix() : domain.bw === 'decade' ? (m = moment.unix(value.v).startOf('year'), m.year(10 * Math.floor(m.year() / 10)), m.unix()) : moment.unix(value.v).endOf(domain.bw).unix();
+              _timeConversion = function(n, timerange, lower) {
+                var m;
+
+                if (lower == null) {
+                  lower = 0;
+                }
+                m = moment.unix(value.v).startOf(timerange);
+                m[timerange](n * Math.floor(m[timerange]() / n) + n * lower);
+                return m.unix();
+              };
+              upper = (function() {
+                switch (domain.bw) {
+                  case 'week':
+                    return moment.unix(value.v).day(7).unix();
+                  case 'twomonth':
+                    return _timeConversion(2, 'month');
+                  case 'quarter':
+                    return _timeConversion(4, 'month');
+                  case 'sixmonth':
+                    return _timeConversion(6, 'month');
+                  case 'twoyear':
+                    return _timeConversion(2, 'year');
+                  case 'fiveyear':
+                    return _timeConversion(5, 'year');
+                  case 'decade':
+                    return _timeConversion(10, 'year');
+                  default:
+                    return moment.unix(value.v).endOf(domain.bw).unix();
+                }
+              })();
               upper = y(upper);
-              lower = domain.bw === 'week' ? moment.unix(value.v).day(0).unix() : domain.bw === 'decade' ? (m = moment.unix(value.v).startOf('year'), m.year(10 * Math.floor(m.year() / 10) + 10), m.unix()) : moment.unix(value.v).startOf(domain.bw).unix();
+              lower = (function() {
+                switch (domain.bw) {
+                  case 'week':
+                    return moment.unix(value.v).day(0).unix();
+                  case 'twomonth':
+                    return _timeConversion(2, 'month', 1);
+                  case 'quarter':
+                    return _timeConversion(4, 'month', 1);
+                  case 'sixmonth':
+                    return _timeConversion(6, 'month', 1);
+                  case 'twoyear':
+                    return _timeConversion(2, 'year', 1);
+                  case 'fiveyear':
+                    return _timeConversion(5, 'year', 1);
+                  case 'decade':
+                    return _timeConversion(10, 'year', 1);
+                  default:
+                    return moment.unix(value.v).startOf(domain.bw).unix();
+                }
+              })();
               lower = y(lower);
               space = (upper - lower) * _this.space;
               if (value.f === 'middle') {
@@ -6335,16 +6402,33 @@ data processing to be done.
           throw poly.error.defn("The binwidth " + binwidth + " is invalid for a datetime varliable");
         }
         binFn = function(item) {
-          var m;
+          var _timeBinning,
+            _this = this;
 
-          if (binwidth === 'week') {
-            return item[name] = moment.unix(item[key]).day(0).unix();
-          } else if (binwidth === 'decade') {
-            m = moment.unix(item[key]).startOf('year');
-            m.year(10 * Math.floor(m.year() / 10));
+          _timeBinning = function(n, timerange) {
+            var m;
+
+            m = moment.unix(item[key]).startOf(timerange);
+            m[timerange](n * Math.floor(m[timerange]() / n));
             return item[name] = m.unix();
-          } else {
-            return item[name] = moment.unix(item[key]).startOf(binwidth).unix();
+          };
+          switch (binwidth) {
+            case 'week':
+              return item[name] = moment.unix(item[key]).day(0).unix();
+            case 'twomonth':
+              return _timeBinning(2, 'month');
+            case 'quarter':
+              return _timeBinning(4, 'month');
+            case 'sixmonth':
+              return _timeBinning(6, 'month');
+            case 'twoyear':
+              return _timeBinning(2, 'year');
+            case 'fiveyear':
+              return _timeBinning(5, 'year');
+            case 'decade':
+              return _timeBinning(10, 'year');
+            default:
+              return item[name] = moment.unix(item[key]).startOf(binwidth).unix();
           }
         };
         return {
