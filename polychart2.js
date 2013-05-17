@@ -7345,8 +7345,8 @@ Shared constants
               throw poly.error.type("Bar chart x-values need to be binned. Set binwidth or use the bin() transform!");
             }
           }
-          this.position = (_ref4 = this.spec.position) != null ? _ref4 : 'stack';
         }
+        this.position = (_ref4 = this.spec.position) != null ? _ref4 : 'stack';
         if (this.position === 'stack') {
           return this._calcGeomsStack();
         } else if (this.position === 'dodge') {
@@ -8775,7 +8775,6 @@ Dimension object has the following elements (all numeric in pixels):
       this._checkPointUndefined(x[1], y[1], "Bar");
       _ref8 = this._applyOffset(x, y, offset), x = _ref8.x, y = _ref8.y;
       stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
-      console.log(x, y, mark);
       return this._shared(scales, mark, {
         x: _.min(x),
         y: _.min(y),
@@ -8806,6 +8805,7 @@ Dimension object has the following elements (all numeric in pixels):
     CircleRect.prototype.attr = function(scales, coord, offset, mark, mayflip) {
       var large, path, r, stroke, t, x, x0, x1, y, y0, y1, _ref10, _ref11, _ref8, _ref9;
 
+      console.log("What's going on D:");
       _ref8 = mark.x, x0 = _ref8[0], x1 = _ref8[1];
       _ref9 = mark.y, y0 = _ref9[0], y1 = _ref9[1];
       this._checkPointUndefined(x0, y0, "Bar");
@@ -8820,13 +8820,14 @@ Dimension object has the following elements (all numeric in pixels):
         r.push(r.splice(0, 1)[0]);
         t.push(t.splice(0, 1)[0]);
       }
-      if (Math.abs(t[1] - t[0]) - 2 * Math.PI < poly["const"].epsilon) {
-        path = "M " + x[0] + " " + y[0] + " v-" + r[2] + " a " + r[2] + " " + r[2] + " 0 1 0 0.01 0 z";
+      if (2 * Math.PI - Math.abs(t[1] - t[0]) < poly["const"].epsilon) {
+        path = "M " + x[0] + " " + y[0] + " A " + r[0] + " " + r[0] + " 0 1 1 " + x[0] + " " + (y[0] + 2 * r[0]) + " A " + r[1] + " " + r[1] + " 0 1 1 " + x[1] + " " + y[1];
+        path += "M " + x[2] + " " + y[2] + " A " + r[2] + " " + r[2] + " 0 1 0 " + x[2] + " " + (y[2] + 2 * r[2]) + " A " + r[3] + " " + r[3] + " 0 1 0 " + x[3] + " " + y[3] + " Z";
       } else {
         large = Math.abs(t[1] - t[0]) > Math.PI ? 1 : 0;
         path = "M " + x[0] + " " + y[0] + " A " + r[0] + " " + r[0] + " 0 " + large + " 1 " + x[1] + " " + y[1];
         large = Math.abs(t[3] - t[2]) > Math.PI ? 1 : 0;
-        path += "L " + x[2] + " " + y[2] + " A " + r[2] + " " + r[2] + " 0 " + large + " 0 " + x[3] + " " + y[3] + " z";
+        path += "L " + x[2] + " " + y[2] + " A " + r[2] + " " + r[2] + " 0 " + large + " 0 " + x[3] + " " + y[3] + " Z";
       }
       stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
       return this._shared(scales, mark, {

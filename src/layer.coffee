@@ -229,7 +229,7 @@ class Bar extends Layer
         if m.type isnt 'cat' and not m.bw and not m.binned # Check that the bw is set in guides. Hackish.  
           if m.type is 'num' and not @guideSpec.x.bw?
             throw poly.error.type "Bar chart x-values need to be binned. Set binwidth or use the bin() transform!"
-        @position = @spec.position ? 'stack'
+      @position = @spec.position ? 'stack'
       if @position is 'stack'
         @_calcGeomsStack()
       else if @position is 'dodge'
