@@ -291,7 +291,6 @@ class Rect extends Renderer # for CARTESIAN only
 class CircleRect extends Renderer # FOR POLAR ONLY
   _make: (paper) -> paper.path()
   attr: (scales, coord, offset, mark, mayflip) ->
-    console.log "What's going on D:"
     [x0, x1] = mark.x
     [y0, y1] = mark.y
     @_checkPointUndefined(x0, y0, "Bar")
