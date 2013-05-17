@@ -1,3 +1,4 @@
+#!/bin/sh
 # Polychart2.js
 rm -r compiled/src/
 coffee --compile --output compiled/src/ src/
@@ -44,4 +45,3 @@ coffee --compile --output compiled/test/ test/
 rm -r compiled/example/
 coffee --compile --output compiled/example/ example/
 cat compiled/example/* > examples.js
-

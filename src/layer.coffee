@@ -220,19 +220,22 @@ class Line extends Layer
 
 class Bar extends Layer
   _calcGeoms: () ->
-    if @mapping.x
-      m = @meta[@mapping.x]
-      if m.type isnt 'cat' and not m.bw and not m.binned
-        # Check that the bw is set in guides. Hackish.
-        if m.type is 'num' and not @guideSpec.x.bw?
-          throw poly.error.type "Bar chart x-values need to be binned. Set binwidth or use the bin() transform!"
-    @position = @spec.position ? 'stack'
-    if @position is 'stack'
-      @_calcGeomsStack()
-    else if @position is 'dodge'
-      @_calcGeomsDodge()
+    # When the y-axis is categorical, throw an error
+    if @mapping.y and @meta[@mapping.y] == 'cat'
+      throw poly.error.defn "The dependent variable of a bar chart cannot be categorical!"
     else
-      throw poly.error.defn "Bar chart position #{@position} is unknown."
+      if @mapping.x
+        m = @meta[@mapping.x]
+        if m.type isnt 'cat' and not m.bw and not m.binned # Check that the bw is set in guides. Hackish.  
+          if m.type is 'num' and not @guideSpec.x.bw?
+            throw poly.error.type "Bar chart x-values need to be binned. Set binwidth or use the bin() transform!"
+        @position = @spec.position ? 'stack'
+      if @position is 'stack'
+        @_calcGeomsStack()
+      else if @position is 'dodge'
+        @_calcGeomsDodge()
+      else
+        throw poly.error.defn "Bar chart position #{@position} is unknown."
   _calcGeomsDodge: () ->
     group = if @mapping.x? then [@mapping.x] else []
     @_dodge group

@@ -7335,21 +7335,25 @@ Shared constants
     Bar.prototype._calcGeoms = function() {
       var m, _ref4;
 
-      if (this.mapping.x) {
-        m = this.meta[this.mapping.x];
-        if (m.type !== 'cat' && !m.bw && !m.binned) {
-          if (m.type === 'num' && (this.guideSpec.x.bw == null)) {
-            throw poly.error.type("Bar chart x-values need to be binned. Set binwidth or use the bin() transform!");
-          }
-        }
-      }
-      this.position = (_ref4 = this.spec.position) != null ? _ref4 : 'stack';
-      if (this.position === 'stack') {
-        return this._calcGeomsStack();
-      } else if (this.position === 'dodge') {
-        return this._calcGeomsDodge();
+      if (this.mapping.y && this.meta[this.mapping.y] === 'cat') {
+        throw poly.error.defn("The dependent variable of a bar chart cannot be categorical!");
       } else {
-        throw poly.error.defn("Bar chart position " + this.position + " is unknown.");
+        if (this.mapping.x) {
+          m = this.meta[this.mapping.x];
+          if (m.type !== 'cat' && !m.bw && !m.binned) {
+            if (m.type === 'num' && (this.guideSpec.x.bw == null)) {
+              throw poly.error.type("Bar chart x-values need to be binned. Set binwidth or use the bin() transform!");
+            }
+          }
+          this.position = (_ref4 = this.spec.position) != null ? _ref4 : 'stack';
+        }
+        if (this.position === 'stack') {
+          return this._calcGeomsStack();
+        } else if (this.position === 'dodge') {
+          return this._calcGeomsDodge();
+        } else {
+          throw poly.error.defn("Bar chart position " + this.position + " is unknown.");
+        }
       }
     };
 
@@ -8771,6 +8775,7 @@ Dimension object has the following elements (all numeric in pixels):
       this._checkPointUndefined(x[1], y[1], "Bar");
       _ref8 = this._applyOffset(x, y, offset), x = _ref8.x, y = _ref8.y;
       stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
+      console.log(x, y, mark);
       return this._shared(scales, mark, {
         x: _.min(x),
         y: _.min(y),
@@ -8815,10 +8820,14 @@ Dimension object has the following elements (all numeric in pixels):
         r.push(r.splice(0, 1)[0]);
         t.push(t.splice(0, 1)[0]);
       }
-      large = Math.abs(t[1] - t[0]) > Math.PI ? 1 : 0;
-      path = "M " + x[0] + " " + y[0] + " A " + r[0] + " " + r[0] + " 0 " + large + " 1 " + x[1] + " " + y[1];
-      large = Math.abs(t[3] - t[2]) > Math.PI ? 1 : 0;
-      path += "L " + x[2] + " " + y[2] + " A " + r[2] + " " + r[2] + " 0 " + large + " 0 " + x[3] + " " + y[3] + " Z";
+      if (Math.abs(t[1] - t[0]) - 2 * Math.PI < poly["const"].epsilon) {
+        path = "M " + x[0] + " " + y[0] + " v-" + r[2] + " a " + r[2] + " " + r[2] + " 0 1 0 0.01 0 z";
+      } else {
+        large = Math.abs(t[1] - t[0]) > Math.PI ? 1 : 0;
+        path = "M " + x[0] + " " + y[0] + " A " + r[0] + " " + r[0] + " 0 " + large + " 1 " + x[1] + " " + y[1];
+        large = Math.abs(t[3] - t[2]) > Math.PI ? 1 : 0;
+        path += "L " + x[2] + " " + y[2] + " A " + r[2] + " " + r[2] + " 0 " + large + " 0 " + x[3] + " " + y[3] + " z";
+      }
       stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
       return this._shared(scales, mark, {
         path: path,
