@@ -8805,7 +8805,6 @@ Dimension object has the following elements (all numeric in pixels):
     CircleRect.prototype.attr = function(scales, coord, offset, mark, mayflip) {
       var large, path, r, stroke, t, x, x0, x1, y, y0, y1, _ref10, _ref11, _ref8, _ref9;
 
-      console.log("What's going on D:");
       _ref8 = mark.x, x0 = _ref8[0], x1 = _ref8[1];
       _ref9 = mark.y, y0 = _ref9[0], y1 = _ref9[1];
       this._checkPointUndefined(x0, y0, "Bar");
