@@ -59,6 +59,9 @@ makeDomain = (params) ->
     when 'date' then return new DateDomain(params)
     when 'cat' then return new CategoricalDomain(params)
 
+###
+Make a single domain out of some set of values
+###
 poly.domain.single = (values, meta, guide) ->
   if values.length is 0
     throw poly.error.input("Dataset is none?")
