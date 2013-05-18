@@ -24,9 +24,20 @@ class Pivot
     @make(spec)
 
   make: (spec, @callback) ->
-    spec = toStrictMode(spec)
-    ps = new poly.DataProcess(spec, [], spec.strict, poly.parser.pivotToData)
-    ps.make spec, [], (statData, metaData) =>
-      console.log(statData)
+    @spec = toStrictMode(spec)
+    ps = new poly.DataProcess(@spec, [], @spec.strict, poly.parser.pivotToData)
+    ps.make @spec, [], @render
+
+  render: (statData, metaData) =>
+    # create domains
+    domains = {}
+    for aes in ['rows', 'columns']
+      domains[aes] = []
+      for item in @spec[aes]
+        values = _.pluck(statData, item.var)
+        domains[aes].push(poly.domain.single(values, metaData[item.var], {}))
+    console.log domains
+
+
 
 poly.pivot = (spec) -> new Pivot(spec)
