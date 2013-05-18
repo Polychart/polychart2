@@ -2,11 +2,12 @@
 Wrapper around the data processing piece that keeps track of the kind of
 data processing to be done.
 ###
+
 class DataProcess
   ## save the specs
-  constructor: (layerSpec, grouping, strictmode) ->
+  constructor: (layerSpec, grouping, strictmode, @parseMethod=poly.parser.layerToData) ->
     @dataObj = layerSpec.data
-    @initialSpec = poly.parser.layerToData layerSpec, grouping
+    @initialSpec = @parseMethod layerSpec, grouping
     @prevSpec = null
     @strictmode = strictmode
     @statData = null
@@ -15,17 +16,17 @@ class DataProcess
   reset : (callback) -> @make @initialSpec, callback
 
   ## calculate things...
-  make : (spec, grouping, callback) ->
+  make : (spec, grouping, callback) =>
     wrappedCallback = @_wrap callback
     if @strictmode
       wrappedCallback
         data: @dataObj.raw
         meta: @dataObj.meta
     if @dataObj.computeBackend
-      dataSpec = poly.parser.layerToData spec, grouping
+      dataSpec = @parseMethod spec, grouping
       backendProcess(dataSpec, @dataObj, wrappedCallback)
     else
-      dataSpec = poly.parser.layerToData spec, grouping
+      dataSpec = @parseMethod spec, grouping
       @dataObj.getData (data) ->
         frontendProcess(dataSpec, data, wrappedCallback)
 

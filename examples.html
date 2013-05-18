@@ -101,14 +101,7 @@
       var selection, prev, next; 
       selection = location.search.substr(1);
       if (examples[selection] !== undefined) {
-        try {
-          examples[selection]('chart', 'chart2', 'chart3');
-        } catch(e) {
-          debugger;
-          $("#error").css("display", "block");
-          console.log(e);
-        }
-
+        examples[selection]('chart', 'chart2', 'chart3');
         var found = false;
         for (var elem in examples) {
           if (found) {
