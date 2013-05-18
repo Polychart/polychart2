@@ -2643,6 +2643,66 @@ Defines what coordinate system is used to plot the graph.
     }
   };
 
+  poly.domain.single = function(values, meta, guide) {
+    var bw, fromspec, max, min, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+
+    if (values.length === 0) {
+      throw poly.error.input("Dataset is none?");
+    }
+    fromspec = function(item) {
+      if (guide != null) {
+        return guide[item];
+      } else {
+        return null;
+      }
+    };
+    switch (meta.type) {
+      case 'num':
+        bw = (_ref = fromspec('bw')) != null ? _ref : meta.bw;
+        if (values.length > 1) {
+          min = (_ref1 = fromspec('min')) != null ? _ref1 : _.min(values);
+          max = (_ref2 = fromspec('max')) != null ? _ref2 : _.max(values) + (bw != null ? bw : 0);
+        } else if (values.length === 1) {
+          if (bw) {
+            min = (_ref3 = fromspec('min')) != null ? _ref3 : values[0];
+            max = (_ref4 = fromspec('max')) != null ? _ref4 : values[0] + bw;
+          } else {
+            min = (_ref5 = fromspec('min')) != null ? _ref5 : values[0] - 1;
+            max = (_ref6 = fromspec('max')) != null ? _ref6 : values[0] + 1;
+          }
+        } else {
+          min = (_ref7 = fromspec('min')) != null ? _ref7 : 0;
+          max = (_ref8 = (_ref9 = fromspec('max')) != null ? _ref9 : bw) != null ? _ref8 : 1;
+        }
+        return makeDomain({
+          type: 'num',
+          min: min,
+          max: max,
+          bw: bw
+        });
+      case 'date':
+        bw = (_ref10 = fromspec('bw')) != null ? _ref10 : meta.bw;
+        min = (_ref11 = fromspec('min')) != null ? _ref11 : _.min(values);
+        max = fromspec('max');
+        if (max == null) {
+          max = _.max(values);
+          max = bw === 'week' ? moment.unix(max).add('days', 7).unix() : bw === 'decade' ? moment.unix(max).add('years', 10).unix() : moment.unix(max).add(bw + 's', 1).unix();
+        }
+        return makeDomain({
+          type: 'date',
+          min: min,
+          max: max,
+          bw: bw
+        });
+      case 'cat':
+        return makeDomain({
+          type: 'cat',
+          levels: (_ref12 = (_ref13 = fromspec('levels')) != null ? _ref13 : meta.levels) != null ? _ref12 : _.uniq(values),
+          sorted: (_ref14 = (_ref15 = fromspec('levels')) != null ? _ref15 : meta.sorted) != null ? _ref14 : false
+        });
+    }
+  };
+
   /*
   Make a domain set. A domain set is an associate array of domains, with the
   keys being aesthetics
@@ -2650,11 +2710,12 @@ Defines what coordinate system is used to plot the graph.
 
 
   makeDomainSet = function(geoms, metas, guideSpec, strictmode) {
-    var aes, bw, domain, fromspec, max, meta, min, values, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+    var aes, domain, guide, meta, values;
 
     domain = {};
     for (aes in metas) {
       meta = metas[aes];
+      guide = guideSpec[aes];
       if (__indexOf.call(poly["const"].noDomain, aes) >= 0) {
         continue;
       }
@@ -2662,64 +2723,7 @@ Defines what coordinate system is used to plot the graph.
         domain[aes] = makeDomain(guideSpec[aes]);
       } else {
         values = flattenGeoms(geoms, aes);
-        if (values.length === 0) {
-          throw poly.error.input("Dataset is none?");
-        }
-        fromspec = function(item) {
-          if (guideSpec[aes] != null) {
-            return guideSpec[aes][item];
-          } else {
-            return null;
-          }
-        };
-        switch (meta.type) {
-          case 'num':
-            bw = (_ref = fromspec('bw')) != null ? _ref : meta.bw;
-            if (values.length > 1) {
-              min = (_ref1 = fromspec('min')) != null ? _ref1 : _.min(values);
-              max = (_ref2 = fromspec('max')) != null ? _ref2 : _.max(values) + (bw != null ? bw : 0);
-            } else if (values.length === 1) {
-              debugger;
-              if (bw) {
-                min = (_ref3 = fromspec('min')) != null ? _ref3 : values[0];
-                max = (_ref4 = fromspec('max')) != null ? _ref4 : values[0] + bw;
-              } else {
-                min = (_ref5 = fromspec('min')) != null ? _ref5 : values[0] - 1;
-                max = (_ref6 = fromspec('max')) != null ? _ref6 : values[0] + 1;
-              }
-            } else {
-              min = (_ref7 = fromspec('min')) != null ? _ref7 : 0;
-              max = (_ref8 = (_ref9 = fromspec('max')) != null ? _ref9 : bw) != null ? _ref8 : 1;
-            }
-            domain[aes] = makeDomain({
-              type: 'num',
-              min: min,
-              max: max,
-              bw: bw
-            });
-            break;
-          case 'date':
-            bw = (_ref10 = fromspec('bw')) != null ? _ref10 : meta.bw;
-            min = (_ref11 = fromspec('min')) != null ? _ref11 : _.min(values);
-            max = fromspec('max');
-            if (max == null) {
-              max = _.max(values);
-              max = bw === 'week' ? moment.unix(max).add('days', 7).unix() : bw === 'decade' ? moment.unix(max).add('years', 10).unix() : moment.unix(max).add(bw + 's', 1).unix();
-            }
-            domain[aes] = makeDomain({
-              type: 'date',
-              min: min,
-              max: max,
-              bw: bw
-            });
-            break;
-          case 'cat':
-            domain[aes] = makeDomain({
-              type: 'cat',
-              levels: (_ref12 = (_ref13 = fromspec('levels')) != null ? _ref13 : meta.levels) != null ? _ref12 : _.uniq(values),
-              sorted: (_ref14 = (_ref15 = fromspec('levels')) != null ? _ref15 : meta.sorted) != null ? _ref14 : false
-            });
-        }
+        domain[aes] = poly.domain.single(values, meta, guide);
       }
     }
     return domain;
