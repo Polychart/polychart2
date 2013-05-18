@@ -28,7 +28,7 @@ cat \
     compiled/src/render.js \
     compiled/src/interact.js \
     compiled/src/facet.js \
-    compiled/src/table.js \
+    compiled/src/pivot.js \
     compiled/src/graph.js > compiled/src/polychart2.bare.js
 cat make/header.js compiled/src/polychart2.bare.js make/footer.js > polychart2.js
 
