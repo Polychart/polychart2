@@ -6697,7 +6697,6 @@ data processing to be done.
       }
       return -1 * multiplier;
     };
-    data.sort(comparator);
     if (limit) {
       data = data.slice(0, +(limit - 1) + 1 || 9e9);
     }
@@ -7335,7 +7334,7 @@ Shared constants
     Bar.prototype._calcGeoms = function() {
       var m, _ref4;
 
-      if (this.mapping.y && this.meta[this.mapping.y] === 'cat') {
+      if (this.mapping.y && this.meta[this.mapping.y].type === 'cat') {
         throw poly.error.defn("The dependent variable of a bar chart cannot be categorical!");
       } else {
         if (this.mapping.x) {
@@ -8824,9 +8823,9 @@ Dimension object has the following elements (all numeric in pixels):
         path += "M " + x[2] + " " + y[2] + " A " + r[2] + " " + r[2] + " 0 1 0 " + x[2] + " " + (y[2] + 2 * r[2]) + " A " + r[3] + " " + r[3] + " 0 1 0 " + x[3] + " " + y[3] + " Z";
       } else {
         large = Math.abs(t[1] - t[0]) > Math.PI ? 1 : 0;
-        path = "M " + x[0] + " " + y[0] + " A " + r[0] + " " + r[0] + " 0 " + large + " 1 " + x[1] + " " + y[1];
+        path = "M " + x[0] + " " + y[0] + " A " + r[0] + " " + r[1] + " 0 " + large + " 1 " + x[1] + " " + y[1];
         large = Math.abs(t[3] - t[2]) > Math.PI ? 1 : 0;
-        path += "L " + x[2] + " " + y[2] + " A " + r[2] + " " + r[2] + " 0 " + large + " 0 " + x[3] + " " + y[3] + " Z";
+        path += "L " + x[2] + " " + y[2] + " A " + r[2] + " " + r[3] + " 0 " + large + " 0 " + x[3] + " " + y[3] + " Z";
       }
       stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
       return this._shared(scales, mark, {

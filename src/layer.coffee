@@ -221,7 +221,7 @@ class Line extends Layer
 class Bar extends Layer
   _calcGeoms: () ->
     # When the y-axis is categorical, throw an error
-    if @mapping.y and @meta[@mapping.y] == 'cat'
+    if @mapping.y and @meta[@mapping.y].type == 'cat'
       throw poly.error.defn "The dependent variable of a bar chart cannot be categorical!"
     else
       if @mapping.x

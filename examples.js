@@ -2976,8 +2976,74 @@
       ],
       dom: dom
     };
-    c = polyjs.chart(spec);
-    return console.log(c);
+    return c = polyjs.chart(spec);
+  };
+
+  /*
+  This is a rather interesting example. What do we really expect in this case?
+  */
+
+
+  this.examples.email_pie = function(dom) {
+    var c, data, spec;
+
+    data = polyjs.data({
+      data: emails,
+      meta: {
+        created: {
+          type: 'date'
+        },
+        success: {
+          type: 'cat'
+        }
+      }
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          y: 'created',
+          color: 'success'
+        }
+      ],
+      coord: {
+        type: 'polar'
+      },
+      dom: dom
+    };
+    return c = polyjs.chart(spec);
+  };
+
+  this.examples.email_polarbars = function(dom) {
+    var c, data, spec;
+
+    data = polyjs.data({
+      data: emails,
+      meta: {
+        id: {
+          type: 'num'
+        },
+        success: {
+          type: 'cat'
+        }
+      }
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: 'bin(id,100)',
+          y: 'success'
+        }
+      ],
+      coord: {
+        type: 'polar'
+      },
+      dom: dom
+    };
+    return c = polyjs.chart(spec);
   };
 
 }).call(this);

@@ -55,7 +55,7 @@ _getDataType = (data) ->
     else
       'json-array'
   else if _.isObject data
-    'json-object'
+      'json-object'
   else if _.isString data
     if poly.isURI data
       'url'

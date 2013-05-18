@@ -309,9 +309,9 @@ class CircleRect extends Renderer # FOR POLAR ONLY
       path += "M #{x[2]} #{y[2]} A #{r[2]} #{r[2]} 0 1 0 #{x[2]} #{y[2] + 2*r[2]} A #{r[3]} #{r[3]} 0 1 0 #{x[3]} #{y[3]} Z"
     else
       large = if Math.abs(t[1]-t[0]) > Math.PI then 1 else 0
-      path = "M #{x[0]} #{y[0]} A #{r[0]} #{r[0]} 0 #{large} 1 #{x[1]} #{y[1]}"
+      path = "M #{x[0]} #{y[0]} A #{r[0]} #{r[1]} 0 #{large} 1 #{x[1]} #{y[1]}"
       large = if Math.abs(t[3]-t[2]) > Math.PI then 1 else 0
-      path += "L #{x[2]} #{y[2]} A #{r[2]} #{r[2]} 0 #{large} 0 #{x[3]} #{y[3]} Z"
+      path += "L #{x[2]} #{y[2]} A #{r[2]} #{r[3]} 0 #{large} 0 #{x[3]} #{y[3]} Z"
     stroke = @_maybeApply scales, mark,
       if mark.stroke then 'stroke' else 'color'
     @_shared scales, mark,

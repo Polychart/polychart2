@@ -212,7 +212,7 @@ calculateMeta = (key, metaSpec, data) ->
     if a[sort] == b[sort] then return 0
     if a[sort] >= b[sort] then return 1 * multiplier
     return -1 * multiplier
-  data.sort comparator
+
   # limiting
   if limit
     data = data[0..limit-1]
