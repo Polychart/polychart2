@@ -6245,7 +6245,7 @@ of a dataset, or knows how to retrieve data from some source.
       var _this = this;
 
       return this.apiFun(dataSpec, function(blob) {
-        var data, e, meta, _ref;
+        var data, e, meta, _ref, _ref1;
 
         try {
           blob = JSON.parse(blob);
@@ -6253,8 +6253,8 @@ of a dataset, or knows how to retrieve data from some source.
           e = _error;
         }
         data = blob.data;
-        meta = blob.meta;
-        _ref = (function() {
+        meta = (_ref = blob.meta) != null ? _ref : {};
+        _ref1 = (function() {
           switch (_getDataType(data)) {
             case 'json-object':
               return _getObject(data, meta);
@@ -6267,7 +6267,7 @@ of a dataset, or knows how to retrieve data from some source.
             default:
               throw poly.error.data("Unknown data format.");
           }
-        })(), _this.key = _ref.key, _this.raw = _ref.raw, _this.meta = _ref.meta;
+        })(), _this.key = _ref1.key, _this.raw = _ref1.raw, _this.meta = _ref1.meta;
         _this.data = _this.raw;
         return callback(_this);
       });

@@ -358,7 +358,7 @@ class ApiData extends AbstractData
       catch e
       # Need to merge this with above code
       data = blob.data
-      meta = blob.meta
+      meta = blob.meta ? {}
       {@key, @raw, @meta} =
         switch _getDataType(data)
           when 'json-object' then _getObject data, meta
