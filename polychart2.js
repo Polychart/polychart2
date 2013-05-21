@@ -2571,6 +2571,15 @@ Defines what coordinate system is used to plot the graph.
 
 
   makeDomain = function(params) {
+    if (params.max === params.min) {
+      if (params.bw) {
+        params.max += params.bw;
+        params.min -= params.bw;
+      } else {
+        params.max *= 1.1;
+        params.min /= 1.1;
+      }
+    }
     switch (params.type) {
       case 'num':
         return new NumericDomain(params);
