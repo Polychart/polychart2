@@ -2571,7 +2571,7 @@ Defines what coordinate system is used to plot the graph.
 
 
   makeDomain = function(params) {
-    if (params.max === params.min) {
+    if (params.type !== 'cat' && params.max === params.min) {
       if (params.bw) {
         params.max += params.bw;
         params.min -= params.bw;

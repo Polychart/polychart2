@@ -54,7 +54,7 @@ class CategoricalDomain
 Public-ish interface for making different domain types
 ###
 makeDomain = (params) ->
-  if params.max == params.min
+  if params.type isnt 'cat' and params.max == params.min
     if params.bw then params.max += params.bw; params.min -= params.bw
     else params.max *= 1.1; params.min /= 1.1
   switch params.type
