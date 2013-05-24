@@ -6314,10 +6314,8 @@ data processing to be done.
 
   DataProcess = (function() {
     function DataProcess(layerSpec, grouping, strictmode) {
-      this._wrap = __bind(this._wrap, this);      console.log(layerSpec);
-      this.dataObj = layerSpec.data;
+      this._wrap = __bind(this._wrap, this);      this.dataObj = layerSpec.data;
       this.initialSpec = poly.parser.layerToData(layerSpec, grouping);
-      console.log(this.initialSpec);
       this.prevSpec = null;
       this.strictmode = strictmode;
       this.statData = null;
