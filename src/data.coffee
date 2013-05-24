@@ -193,7 +193,8 @@ class FrontendData extends AbstractData
   constructor: (params) ->
     super()
     @_setData params
-  getData: (callback) -> callback @
+  getData: (callback) ->
+    callback @
   update: (params) ->
     @_setData params
     super()

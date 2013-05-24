@@ -2120,23 +2120,27 @@ See the spec definition for more information.
     metas = {};
     for (key in aesthetics) {
       desc = aesthetics[key];
-      expr = parse(desc["var"]);
-      desc["var"] = expr.pretty();
-      ts = extractOps(expr);
-      transstat.push(ts);
-      select.push(desc["var"]);
-      if (ts.stat.length === 0) {
-        groups.push(desc["var"]);
-      }
-      if ('sort' in desc) {
-        sdesc = dictGets(desc, poly["const"].metas);
-        sexpr = parse(sdesc.sort);
-        sdesc.sort = sexpr.pretty();
-        result = extractOps(sexpr);
-        if (result.stat.length !== 0) {
-          sdesc.stat = result.stat[0];
+      if (desc["var"] === 'count(*)') {
+        select.push(desc["var"]);
+      } else {
+        expr = parse(desc["var"]);
+        desc["var"] = expr.pretty();
+        ts = extractOps(expr);
+        transstat.push(ts);
+        select.push(desc["var"]);
+        if (ts.stat.length === 0) {
+          groups.push(desc["var"]);
         }
-        metas[desc["var"]] = sdesc;
+        if ('sort' in desc) {
+          sdesc = dictGets(desc, poly["const"].metas);
+          sexpr = parse(sdesc.sort);
+          sdesc.sort = sexpr.pretty();
+          result = extractOps(sexpr);
+          if (result.stat.length !== 0) {
+            sdesc.stat = result.stat[0];
+          }
+          metas[desc["var"]] = sdesc;
+        }
       }
     }
     for (_i = 0, _len = grouping.length; _i < _len; _i++) {
@@ -6310,8 +6314,10 @@ data processing to be done.
 
   DataProcess = (function() {
     function DataProcess(layerSpec, grouping, strictmode) {
-      this._wrap = __bind(this._wrap, this);      this.dataObj = layerSpec.data;
+      this._wrap = __bind(this._wrap, this);      console.log(layerSpec);
+      this.dataObj = layerSpec.data;
       this.initialSpec = poly.parser.layerToData(layerSpec, grouping);
+      console.log(this.initialSpec);
       this.prevSpec = null;
       this.strictmode = strictmode;
       this.statData = null;
@@ -6338,6 +6344,22 @@ data processing to be done.
       } else {
         dataSpec = poly.parser.layerToData(spec, grouping);
         return this.dataObj.getData(function(data) {
+          var obj, _i, _len, _ref;
+
+          if (__indexOf.call(dataSpec.select, 'count(*)') >= 0) {
+            _ref = data.data;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              obj = _ref[_i];
+              obj['count(*)'] = 1;
+            }
+            data.meta['count(*)'] = {};
+            data.meta['count(*)']['type'] = 'num';
+            dataSpec.stats.stats.push({
+              key: 'count(*)',
+              name: 'count(*)',
+              stat: 'count'
+            });
+          }
           return frontendProcess(dataSpec, data, wrappedCallback);
         });
       }
@@ -6787,7 +6809,7 @@ data processing to be done.
     _ref6 = (_ref5 = dataSpec.select) != null ? _ref5 : [];
     for (_l = 0, _len3 = _ref6.length; _l < _len3; _l++) {
       key = _ref6[_l];
-      if (metaData[key] == null) {
+      if ((metaData[key] == null) && key !== 'count(*)') {
         throw poly.error.defn("You referenced a data column " + key + " that doesn't exist.");
       }
     }

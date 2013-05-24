@@ -5,8 +5,10 @@ data processing to be done.
 class DataProcess
   ## save the specs
   constructor: (layerSpec, grouping, strictmode) ->
+    console.log layerSpec
     @dataObj = layerSpec.data
     @initialSpec = poly.parser.layerToData layerSpec, grouping
+    console.log @initialSpec
     @prevSpec = null
     @strictmode = strictmode
     @statData = null
@@ -27,6 +29,13 @@ class DataProcess
     else
       dataSpec = poly.parser.layerToData spec, grouping
       @dataObj.getData (data) ->
+        # Hack to get 'count(*)' to behave properly
+        if 'count(*)' in dataSpec.select
+          for obj in data.data
+            obj['count(*)'] = 1
+          data.meta['count(*)'] = {}
+          data.meta['count(*)']['type'] = 'num'
+          dataSpec.stats.stats.push {key: 'count(*)', name: 'count(*)', stat: 'count'}
         frontendProcess(dataSpec, data, wrappedCallback)
 
   _wrap : (callback) => (params) =>
@@ -261,7 +270,7 @@ frontendProcess = (dataSpec, data, callback) ->
       addMeta name, {type: 'num'}
   # select: make sure everything selected is there
   for key in dataSpec.select ? []
-    if not metaData[key]?
+    if not metaData[key]? and key isnt 'count(*)'
       throw poly.error.defn ("You referenced a data column #{key} that doesn't exist.")
   # done
   callback(data:data, meta:metaData)
