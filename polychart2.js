@@ -5683,10 +5683,11 @@ of a dataset, or knows how to retrieve data from some source.
   };
 
   /*
-  Data format which takes an API-facing function
-    
-  The function passed should be of type:
-    apiFun :: getParams -> callback -> polyjsData
+  Data format which takes an API-facing function.
+  
+  Signature:
+  poly.data.api =
+   ((requestParams, (err, result) -> undefined) -> undefined) -> polyjsData
   */
 
 
@@ -5972,7 +5973,7 @@ of a dataset, or knows how to retrieve data from some source.
     }
 
     FrontendData.prototype.getData = function(callback) {
-      return callback(this);
+      return callback(null, this);
     };
 
     FrontendData.prototype.update = function(params) {
@@ -6188,7 +6189,8 @@ of a dataset, or knows how to retrieve data from some source.
         _this = this;
 
       if ((this.raw != null) && (!this.computeBackend)) {
-        return callback(this);
+        callback(null, this);
+        return;
       }
       chr = _.indexOf(this.url, "?") === -1 ? '?' : '&';
       url = this.url;
@@ -6228,7 +6230,7 @@ of a dataset, or knows how to retrieve data from some source.
           }
         })(), _this.key = _ref1.key, _this.raw = _ref1.raw, _this.meta = _ref1.meta;
         _this.data = _this.raw;
-        return callback(_this);
+        return callback(null, _this);
       });
     };
 
@@ -6257,9 +6259,13 @@ of a dataset, or knows how to retrieve data from some source.
     ApiData.prototype.getData = function(callback, dataSpec) {
       var _this = this;
 
-      return this.apiFun(dataSpec, function(blob) {
+      return this.apiFun(dataSpec, function(err, blob) {
         var data, e, meta, _ref, _ref1;
 
+        if (err) {
+          callback(err, null);
+          return;
+        }
         try {
           blob = JSON.parse(blob);
         } catch (_error) {
@@ -6282,7 +6288,7 @@ of a dataset, or knows how to retrieve data from some source.
           }
         })(), _this.key = _ref1.key, _this.raw = _ref1.raw, _this.meta = _ref1.meta;
         _this.data = _this.raw;
-        return callback(_this);
+        return callback(null, _this);
       });
     };
 
@@ -6341,9 +6347,13 @@ data processing to be done.
         return backendProcess(dataSpec, this.dataObj, wrappedCallback);
       } else {
         dataSpec = poly.parser.layerToData(spec, grouping);
-        return this.dataObj.getData(function(data) {
+        return this.dataObj.getData(function(err, data) {
           var obj, _i, _len, _ref;
 
+          if (err) {
+            wrappedCallback(err, null);
+            return;
+          }
           if (__indexOf.call(dataSpec.select, 'count(*)') >= 0) {
             _ref = data.data;
             for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -6366,13 +6376,17 @@ data processing to be done.
     DataProcess.prototype._wrap = function(callback) {
       var _this = this;
 
-      return function(params) {
+      return function(err, params) {
         var data, meta;
 
+        if (err) {
+          callback(err, null, null);
+          return;
+        }
         data = params.data, meta = params.meta;
         _this.statData = data;
         _this.metaData = meta;
-        return callback(_this.statData, _this.metaData);
+        return callback(null, _this.statData, _this.metaData);
       };
     };
 
@@ -6811,7 +6825,7 @@ data processing to be done.
         throw poly.error.defn("You referenced a data column " + key + " that doesn't exist.");
       }
     }
-    return callback({
+    return callback(null, {
       data: data,
       meta: metaData
     });
@@ -9800,7 +9814,12 @@ The functions here makes it easier to create common types of interactions.
         spec = _this.spec.layers[id];
         groups = _.values(_this.facet.specgroups);
         _this.dataprocess[id] = new poly.DataProcess(spec, groups, spec.strict);
-        return _this.dataprocess[id].make(spec, groups, function(statData, metaData) {
+        return _this.dataprocess[id].make(spec, groups, function(err, statData, metaData) {
+          if (err) {
+            console.error(err);
+            alert('Error processing chart data');
+            return;
+          }
           _this.processedData[id] = {
             statData: statData,
             metaData: metaData

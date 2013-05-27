@@ -26,7 +26,11 @@ class DataProcess
       backendProcess(dataSpec, @dataObj, wrappedCallback)
     else
       dataSpec = poly.parser.layerToData spec, grouping
-      @dataObj.getData (data) ->
+      @dataObj.getData (err, data) ->
+        if err
+          wrappedCallback err, null
+          return
+
         # Hack to get 'count(*)' to behave properly
         if 'count(*)' in dataSpec.select
           for obj in data.data
@@ -36,12 +40,16 @@ class DataProcess
           dataSpec.stats.stats.push {key: 'count(*)', name: 'count(*)', stat: 'count'}
         frontendProcess(dataSpec, data, wrappedCallback)
 
-  _wrap : (callback) => (params) =>
+  _wrap : (callback) => (err, params) =>
+    if err
+      callback err, null, null
+      return
+
     # save a copy of the data/meta before going to callback
     {data, meta} = params
     @statData = data
     @metaData = meta
-    callback @statData, @metaData
+    callback null, @statData, @metaData
 
 poly.DataProcess = DataProcess
 
@@ -271,7 +279,7 @@ frontendProcess = (dataSpec, data, callback) ->
     if not metaData[key]? and key isnt 'count(*)'
       throw poly.error.defn ("You referenced a data column #{key} that doesn't exist.")
   # done
-  callback(data:data, meta:metaData)
+  callback(null, data:data, meta:metaData)
 
 ###
 Perform the necessary computation in the backend

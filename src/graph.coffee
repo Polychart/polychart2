@@ -76,7 +76,13 @@ class Graph
       spec = @spec.layers[id] #repeated
       groups = _.values @facet.specgroups
       @dataprocess[id] = new poly.DataProcess spec, groups, spec.strict
-      @dataprocess[id].make spec, groups, (statData, metaData) =>
+      @dataprocess[id].make spec, groups, (err, statData, metaData) =>
+        if err
+          console.error err
+          alert 'Error processing chart data'
+          # Fravic error
+          return
+
         @processedData[id] =
           statData: statData
           metaData: metaData
