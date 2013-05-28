@@ -81,6 +81,7 @@ class Graph
           console.error err
           alert 'Error processing chart data'
           # Fravic error
+          callback err
           return
 
         @processedData[id] =

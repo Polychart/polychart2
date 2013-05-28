@@ -9643,6 +9643,7 @@ The functions here makes it easier to create common types of interactions.
           if (err) {
             console.error(err);
             alert('Error processing chart data');
+            callback(err);
             return;
           }
           _this.processedData[id] = {
