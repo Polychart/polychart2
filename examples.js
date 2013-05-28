@@ -2293,7 +2293,8 @@
           data: data,
           type: 'line',
           x: 'index',
-          y: 'value'
+          y: 'value',
+          'color': 'index'
         }, {
           data: data,
           type: 'point',

@@ -35,7 +35,7 @@ class ScaleSet
           switch a
             when 'x' then possibleScales = ['linear', 'log']
             when 'y' then possibleScales = ['linear', 'log']
-            when 'color' then possibleScales = ['palatte', 'gradient', 'gradient2']
+            when 'color' then possibleScales = ['palette', 'gradient', 'gradient2']
             when 'size' then possibleScales = ['linear', 'log']
             when 'opacity' then possibleScales = ['opacity']
             when 'shape' then possibleScales = ['linear', 'log', 'area']

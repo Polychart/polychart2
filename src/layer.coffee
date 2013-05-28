@@ -99,7 +99,7 @@ class Layer
     data_x = (@_getValue item, 'x' for item in data)
     missing = _.difference(all_x, data_x)
     x : data_x.concat missing
-    y : (@_getValue item, 'y' for item in data).concat (0 for x in missing)
+    y : (@_getValue item, 'y' for item in data).concat (undefined for x in missing)
   _stack: (group) ->
     # handle +/- separately?
     datas = poly.groupBy @statData , group
@@ -177,8 +177,8 @@ class Path extends Layer
         marks:
           0:
             type: 'path'
-            x: (@_getValue item, 'x' for item in data)
-            y: (@_getValue item, 'y' for item in data)
+            x: _.map data, (item) => @_getValue item, 'x'
+            y: _.map data, (item) => @_getValue item, 'y'
             color: @_getValue sample, 'color'
             opacity: @_getValue sample, 'opacity'
             size: @_getValue sample, 'size'
@@ -195,17 +195,18 @@ class Line extends Layer
   _calcGeoms: () ->
     all_x = _.uniq (@_getValue item, 'x' for item in @statData)
     group = (@mapping[k] for k in _.without(_.keys(@mapping), 'x', 'y'))
-    datas = poly.groupBy @statData, group
+    datas = _.pairs(poly.groupBy @statData, group)
     idfn = @_getIdFunc()
     @geoms = {}
-    for k, data of datas
-      # use the first data point as a sample
-      sample = data[0] # use this as a sample data
-      # create the eventData
+    # Check whether or not there is only one point per data point
+    segments = (_.max datas, (pair) -> pair[1].length)[1].length == 1
+    for pair, i in datas
+      [key, data] = pair
+      if segments and i + 1 < datas.length then data.push datas[i+1][1][0]
+      sample = data[0]
       evtData = {}
       for key in group
         evtData[key] = { in : [sample[key]] }
-      # fill zeros
       {x, y} = @_fillZeros(data, all_x)
       @geoms[idfn sample] =
         marks:
@@ -217,6 +218,13 @@ class Line extends Layer
             opacity: @_getValue sample, 'opacity'
             size: @_getValue sample, 'size'
         evtData: evtData
+
+class Spline extends Line
+  _calcGeoms: () ->
+    super()
+    for key, geom of @geoms
+      for key2, mark of geom.marks
+        mark.type = 'spline'
 
 class Bar extends Layer
   _calcGeoms: () ->
@@ -434,68 +442,6 @@ class Box extends Layer
           opacity: opacity
       @geoms[idfn item] = geom
 
-class Spline extends Layer
-  defaults:
-    'x': sf.novalue()
-    'y': sf.novalue()
-    'color': 'steelblue'
-    'size': 2
-    'opacity': 0.9
-    'shape': 1
-  _calcGeoms: () ->
-    all_x = _.uniq (@_getValue item, 'x' for item in @statData)
-    group = (@mapping[k] for k in _.without(_.keys(@mapping), 'x', 'y'))
-    datas = poly.groupBy @statData, group
-    idfn = @_getIdFunc()
-    @geoms = {}
-    for k, data of datas
-      sample = data[0]
-      evtData = {}
-      for key in group
-        evtData[key] = { in : [sample[key]] }
-      {x, y} = @_fillZeros(data, all_x)
-      @geoms[idfn sample] =
-        marks:
-          0:
-            type: 'spline'
-            x: x
-            y: y
-            color: @_getValue sample, 'color'
-            opacity: @_getValue sample, 'opacity'
-            size: @_getValue sample, 'size'
-        evtData: evtData
-
-class Step extends Layer
-  defaults:
-    'x': sf.novalue()
-    'y': sf.novalue()
-    'color': 'steelblue'
-    'size': 2
-    'opacity': 0.9
-    'shape': 1
-  _calcGeoms: () ->
-    all_x = _.uniq (@_getValue item, 'x' for item in @statData)
-    group = (@mapping[k] for k in _.without(_.keys(@mapping), 'x', 'y'))
-    datas = poly.groupBy @statData, group
-    idfn = @_getIdFunc()
-    @geoms = {}
-    for k, data of datas
-      sample = data[0]
-      evtData = {}
-      for key in group
-        evtData[key] = { in : [sample[key]] }
-      {x, y} = @_fillZeros(data, all_x)
-      @geoms[idfn sample] =
-        marks:
-          0:
-            type: 'step'
-            x: x
-            y: y
-            color: @_getValue sample, 'color'
-            opacity: @_getValue sample, 'opacity'
-            size: @_getValue sample, 'size'
-        evtData: evtData
-
 ###
 Public interface to making different layer types.
 TODO: this should be changed to make it easier to make other
@@ -513,7 +459,6 @@ poly.layer.classes = {
   'tile' : Tile
   'box' : Box
   'spline' : Spline
-  'step' : Step
 }
 poly.layer.make = (layerSpec, strictMode, guideSpec) ->
   type = layerSpec.type

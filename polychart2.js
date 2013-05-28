@@ -5327,7 +5327,7 @@ attribute of that value.
                 possibleScales = ['linear', 'log'];
                 break;
               case 'color':
-                possibleScales = ['palatte', 'gradient', 'gradient2'];
+                possibleScales = ['palette', 'gradient', 'gradient2'];
                 break;
               case 'size':
                 possibleScales = ['linear', 'log'];
@@ -6877,7 +6877,7 @@ Shared constants
 
 
 (function() {
-  var Area, Bar, Box, Layer, Line, Path, Point, Spline, Step, Text, Tile, aesthetics, defaults, sf, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9,
+  var Area, Bar, Box, Layer, Line, Path, Point, Spline, Text, Tile, aesthetics, defaults, sf, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -7052,7 +7052,7 @@ Shared constants
           _results = [];
           for (_i = 0, _len = missing.length; _i < _len; _i++) {
             x = missing[_i];
-            _results.push(0);
+            _results.push(void 0);
           }
           return _results;
         })())
@@ -7222,7 +7222,8 @@ Shared constants
     }
 
     Path.prototype._calcGeoms = function() {
-      var data, datas, evtData, group, idfn, item, k, key, sample, _i, _len, _results;
+      var data, datas, evtData, group, idfn, k, key, sample, _i, _len, _results,
+        _this = this;
 
       group = (function() {
         var _i, _len, _ref2, _results;
@@ -7253,26 +7254,12 @@ Shared constants
           marks: {
             0: {
               type: 'path',
-              x: (function() {
-                var _j, _len1, _results1;
-
-                _results1 = [];
-                for (_j = 0, _len1 = data.length; _j < _len1; _j++) {
-                  item = data[_j];
-                  _results1.push(this._getValue(item, 'x'));
-                }
-                return _results1;
-              }).call(this),
-              y: (function() {
-                var _j, _len1, _results1;
-
-                _results1 = [];
-                for (_j = 0, _len1 = data.length; _j < _len1; _j++) {
-                  item = data[_j];
-                  _results1.push(this._getValue(item, 'y'));
-                }
-                return _results1;
-              }).call(this),
+              x: _.map(data, function(item) {
+                return _this._getValue(item, 'x');
+              }),
+              y: _.map(data, function(item) {
+                return _this._getValue(item, 'y');
+              }),
               color: this._getValue(sample, 'color'),
               opacity: this._getValue(sample, 'opacity'),
               size: this._getValue(sample, 'size')
@@ -7306,7 +7293,7 @@ Shared constants
     };
 
     Line.prototype._calcGeoms = function() {
-      var all_x, data, datas, evtData, group, idfn, item, k, key, sample, x, y, _i, _len, _ref3, _results;
+      var all_x, data, datas, evtData, group, i, idfn, item, k, key, pair, sample, segments, x, y, _i, _j, _len, _len1, _ref3, _results;
 
       all_x = _.uniq((function() {
         var _i, _len, _ref3, _results;
@@ -7330,16 +7317,23 @@ Shared constants
         }
         return _results;
       }).call(this);
-      datas = poly.groupBy(this.statData, group);
+      datas = _.pairs(poly.groupBy(this.statData, group));
       idfn = this._getIdFunc();
       this.geoms = {};
+      segments = (_.max(datas, function(pair) {
+        return pair[1].length;
+      }))[1].length === 1;
       _results = [];
-      for (k in datas) {
-        data = datas[k];
+      for (i = _i = 0, _len = datas.length; _i < _len; i = ++_i) {
+        pair = datas[i];
+        key = pair[0], data = pair[1];
+        if (segments && i + 1 < datas.length) {
+          data.push(datas[i + 1][1][0]);
+        }
         sample = data[0];
         evtData = {};
-        for (_i = 0, _len = group.length; _i < _len; _i++) {
-          key = group[_i];
+        for (_j = 0, _len1 = group.length; _j < _len1; _j++) {
+          key = group[_j];
           evtData[key] = {
             "in": [sample[key]]
           };
@@ -7366,16 +7360,51 @@ Shared constants
 
   })(Layer);
 
+  Spline = (function(_super) {
+    __extends(Spline, _super);
+
+    function Spline() {
+      _ref3 = Spline.__super__.constructor.apply(this, arguments);
+      return _ref3;
+    }
+
+    Spline.prototype._calcGeoms = function() {
+      var geom, key, key2, mark, _ref4, _results;
+
+      Spline.__super__._calcGeoms.call(this);
+      _ref4 = this.geoms;
+      _results = [];
+      for (key in _ref4) {
+        geom = _ref4[key];
+        _results.push((function() {
+          var _ref5, _results1;
+
+          _ref5 = geom.marks;
+          _results1 = [];
+          for (key2 in _ref5) {
+            mark = _ref5[key2];
+            _results1.push(mark.type = 'spline');
+          }
+          return _results1;
+        })());
+      }
+      return _results;
+    };
+
+    return Spline;
+
+  })(Line);
+
   Bar = (function(_super) {
     __extends(Bar, _super);
 
     function Bar() {
-      _ref3 = Bar.__super__.constructor.apply(this, arguments);
-      return _ref3;
+      _ref4 = Bar.__super__.constructor.apply(this, arguments);
+      return _ref4;
     }
 
     Bar.prototype._calcGeoms = function() {
-      var m, _ref4;
+      var m, _ref5;
 
       if (this.mapping.y && this.meta[this.mapping.y].type === 'cat') {
         throw poly.error.defn("The dependent variable of a bar chart cannot be categorical!");
@@ -7388,7 +7417,7 @@ Shared constants
             }
           }
         }
-        this.position = (_ref4 = this.spec.position) != null ? _ref4 : 'stack';
+        this.position = (_ref5 = this.spec.position) != null ? _ref5 : 'stack';
         if (this.position === 'stack') {
           return this._calcGeomsStack();
         } else if (this.position === 'dodge') {
@@ -7400,17 +7429,17 @@ Shared constants
     };
 
     Bar.prototype._calcGeomsDodge = function() {
-      var evtData, group, idfn, item, k, lower, upper, v, _i, _len, _ref4, _results;
+      var evtData, group, idfn, item, k, lower, upper, v, _i, _len, _ref5, _results;
 
       group = this.mapping.x != null ? [this.mapping.x] : [];
       this._dodge(group);
       this._stack(group.concat("$n"));
       this.geoms = {};
       idfn = this._getIdFunc();
-      _ref4 = this.statData;
+      _ref5 = this.statData;
       _results = [];
-      for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
-        item = _ref4[_i];
+      for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
+        item = _ref5[_i];
         evtData = {};
         for (k in item) {
           v = item[k];
@@ -7440,16 +7469,16 @@ Shared constants
     };
 
     Bar.prototype._calcGeomsStack = function() {
-      var evtData, group, idfn, item, k, v, _i, _len, _ref4, _results;
+      var evtData, group, idfn, item, k, v, _i, _len, _ref5, _results;
 
       group = this.mapping.x != null ? [this.mapping.x] : [];
       this._stack(group);
       idfn = this._getIdFunc();
       this.geoms = {};
-      _ref4 = this.statData;
+      _ref5 = this.statData;
       _results = [];
-      for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
-        item = _ref4[_i];
+      for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
+        item = _ref5[_i];
         evtData = {};
         for (k in item) {
           v = item[k];
@@ -7484,20 +7513,20 @@ Shared constants
     __extends(Area, _super);
 
     function Area() {
-      _ref4 = Area.__super__.constructor.apply(this, arguments);
-      return _ref4;
+      _ref5 = Area.__super__.constructor.apply(this, arguments);
+      return _ref5;
     }
 
     Area.prototype._calcGeoms = function() {
       var all_x, counters, data, datas, evtData, group, idfn, item, k, key, sample, x, y, y_next, y_previous, _i, _j, _k, _len, _len1, _len2, _results;
 
       all_x = (function() {
-        var _i, _len, _ref5, _results;
+        var _i, _len, _ref6, _results;
 
-        _ref5 = this.statData;
+        _ref6 = this.statData;
         _results = [];
-        for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
-          item = _ref5[_i];
+        for (_i = 0, _len = _ref6.length; _i < _len; _i++) {
+          item = _ref6[_i];
           if (poly.isDefined(this._getValue(item, 'y')) && poly.isDefined(x = this._getValue(item, 'x'))) {
             _results.push(x);
           }
@@ -7511,12 +7540,12 @@ Shared constants
         counters[key] = 0;
       }
       group = (function() {
-        var _j, _len1, _ref5, _results;
+        var _j, _len1, _ref6, _results;
 
-        _ref5 = _.without(_.keys(this.mapping), 'x', 'y');
+        _ref6 = _.without(_.keys(this.mapping), 'x', 'y');
         _results = [];
-        for (_j = 0, _len1 = _ref5.length; _j < _len1; _j++) {
-          k = _ref5[_j];
+        for (_j = 0, _len1 = _ref6.length; _j < _len1; _j++) {
+          k = _ref6[_j];
           _results.push(this.mapping[k]);
         }
         return _results;
@@ -7588,19 +7617,19 @@ Shared constants
     __extends(Text, _super);
 
     function Text() {
-      _ref5 = Text.__super__.constructor.apply(this, arguments);
-      return _ref5;
+      _ref6 = Text.__super__.constructor.apply(this, arguments);
+      return _ref6;
     }
 
     Text.prototype._calcGeoms = function() {
-      var evtData, idfn, item, k, v, _i, _len, _ref6, _results;
+      var evtData, idfn, item, k, v, _i, _len, _ref7, _results;
 
       idfn = this._getIdFunc();
       this.geoms = {};
-      _ref6 = this.statData;
+      _ref7 = this.statData;
       _results = [];
-      for (_i = 0, _len = _ref6.length; _i < _len; _i++) {
-        item = _ref6[_i];
+      for (_i = 0, _len = _ref7.length; _i < _len; _i++) {
+        item = _ref7[_i];
         evtData = {};
         for (k in item) {
           v = item[k];
@@ -7635,19 +7664,19 @@ Shared constants
     __extends(Tile, _super);
 
     function Tile() {
-      _ref6 = Tile.__super__.constructor.apply(this, arguments);
-      return _ref6;
+      _ref7 = Tile.__super__.constructor.apply(this, arguments);
+      return _ref7;
     }
 
     Tile.prototype._calcGeoms = function() {
-      var evtData, idfn, item, k, v, x, y, _i, _len, _ref7, _results;
+      var evtData, idfn, item, k, v, x, y, _i, _len, _ref8, _results;
 
       idfn = this._getIdFunc();
       this.geoms = {};
-      _ref7 = this.statData;
+      _ref8 = this.statData;
       _results = [];
-      for (_i = 0, _len = _ref7.length; _i < _len; _i++) {
-        item = _ref7[_i];
+      for (_i = 0, _len = _ref8.length; _i < _len; _i++) {
+        item = _ref8[_i];
         evtData = {};
         x = this._getValue(item, 'x');
         y = this._getValue(item, 'y');
@@ -7685,19 +7714,19 @@ Shared constants
     __extends(Box, _super);
 
     function Box() {
-      _ref7 = Box.__super__.constructor.apply(this, arguments);
-      return _ref7;
+      _ref8 = Box.__super__.constructor.apply(this, arguments);
+      return _ref8;
     }
 
     Box.prototype._calcGeoms = function() {
-      var color, evtData, geom, idfn, index, item, k, opacity, point, size, v, x, xl, xm, xu, y, _i, _j, _len, _len1, _ref8, _ref9, _results;
+      var color, evtData, geom, idfn, index, item, k, opacity, point, size, v, x, xl, xm, xu, y, _i, _j, _len, _len1, _ref10, _ref9, _results;
 
       idfn = this._getIdFunc();
       this.geoms = {};
-      _ref8 = this.statData;
+      _ref9 = this.statData;
       _results = [];
-      for (_i = 0, _len = _ref8.length; _i < _len; _i++) {
-        item = _ref8[_i];
+      for (_i = 0, _len = _ref9.length; _i < _len; _i++) {
+        item = _ref9[_i];
         evtData = {};
         for (k in item) {
           v = item[k];
@@ -7773,9 +7802,9 @@ Shared constants
             }
           };
         }
-        _ref9 = y.outliers;
-        for (index = _j = 0, _len1 = _ref9.length; _j < _len1; index = ++_j) {
-          point = _ref9[index];
+        _ref10 = y.outliers;
+        for (index = _j = 0, _len1 = _ref10.length; _j < _len1; index = ++_j) {
+          point = _ref10[index];
           geom.marks[index] = {
             type: 'circle',
             x: xm,
@@ -7791,162 +7820,6 @@ Shared constants
     };
 
     return Box;
-
-  })(Layer);
-
-  Spline = (function(_super) {
-    __extends(Spline, _super);
-
-    function Spline() {
-      _ref8 = Spline.__super__.constructor.apply(this, arguments);
-      return _ref8;
-    }
-
-    Spline.prototype.defaults = {
-      'x': sf.novalue(),
-      'y': sf.novalue(),
-      'color': 'steelblue',
-      'size': 2,
-      'opacity': 0.9,
-      'shape': 1
-    };
-
-    Spline.prototype._calcGeoms = function() {
-      var all_x, data, datas, evtData, group, idfn, item, k, key, sample, x, y, _i, _len, _ref9, _results;
-
-      all_x = _.uniq((function() {
-        var _i, _len, _ref9, _results;
-
-        _ref9 = this.statData;
-        _results = [];
-        for (_i = 0, _len = _ref9.length; _i < _len; _i++) {
-          item = _ref9[_i];
-          _results.push(this._getValue(item, 'x'));
-        }
-        return _results;
-      }).call(this));
-      group = (function() {
-        var _i, _len, _ref9, _results;
-
-        _ref9 = _.without(_.keys(this.mapping), 'x', 'y');
-        _results = [];
-        for (_i = 0, _len = _ref9.length; _i < _len; _i++) {
-          k = _ref9[_i];
-          _results.push(this.mapping[k]);
-        }
-        return _results;
-      }).call(this);
-      datas = poly.groupBy(this.statData, group);
-      idfn = this._getIdFunc();
-      this.geoms = {};
-      _results = [];
-      for (k in datas) {
-        data = datas[k];
-        sample = data[0];
-        evtData = {};
-        for (_i = 0, _len = group.length; _i < _len; _i++) {
-          key = group[_i];
-          evtData[key] = {
-            "in": [sample[key]]
-          };
-        }
-        _ref9 = this._fillZeros(data, all_x), x = _ref9.x, y = _ref9.y;
-        _results.push(this.geoms[idfn(sample)] = {
-          marks: {
-            0: {
-              type: 'spline',
-              x: x,
-              y: y,
-              color: this._getValue(sample, 'color'),
-              opacity: this._getValue(sample, 'opacity'),
-              size: this._getValue(sample, 'size')
-            }
-          },
-          evtData: evtData
-        });
-      }
-      return _results;
-    };
-
-    return Spline;
-
-  })(Layer);
-
-  Step = (function(_super) {
-    __extends(Step, _super);
-
-    function Step() {
-      _ref9 = Step.__super__.constructor.apply(this, arguments);
-      return _ref9;
-    }
-
-    Step.prototype.defaults = {
-      'x': sf.novalue(),
-      'y': sf.novalue(),
-      'color': 'steelblue',
-      'size': 2,
-      'opacity': 0.9,
-      'shape': 1
-    };
-
-    Step.prototype._calcGeoms = function() {
-      var all_x, data, datas, evtData, group, idfn, item, k, key, sample, x, y, _i, _len, _ref10, _results;
-
-      all_x = _.uniq((function() {
-        var _i, _len, _ref10, _results;
-
-        _ref10 = this.statData;
-        _results = [];
-        for (_i = 0, _len = _ref10.length; _i < _len; _i++) {
-          item = _ref10[_i];
-          _results.push(this._getValue(item, 'x'));
-        }
-        return _results;
-      }).call(this));
-      group = (function() {
-        var _i, _len, _ref10, _results;
-
-        _ref10 = _.without(_.keys(this.mapping), 'x', 'y');
-        _results = [];
-        for (_i = 0, _len = _ref10.length; _i < _len; _i++) {
-          k = _ref10[_i];
-          _results.push(this.mapping[k]);
-        }
-        return _results;
-      }).call(this);
-      datas = poly.groupBy(this.statData, group);
-      idfn = this._getIdFunc();
-      this.geoms = {};
-      _results = [];
-      for (k in datas) {
-        data = datas[k];
-        sample = data[0];
-        evtData = {};
-        for (_i = 0, _len = group.length; _i < _len; _i++) {
-          key = group[_i];
-          evtData[key] = {
-            "in": [sample[key]]
-          };
-        }
-        _ref10 = this._fillZeros(data, all_x), x = _ref10.x, y = _ref10.y;
-        _results.push(this.geoms[idfn(sample)] = {
-          marks: {
-            0: {
-              type: 'step',
-              x: x,
-              y: y,
-              color: this._getValue(sample, 'color'),
-              opacity: this._getValue(sample, 'opacity'),
-              size: this._getValue(sample, 'size')
-            }
-          },
-          evtData: evtData
-        });
-      }
-      return _results;
-    };
-
-    return Step;
 
   })(Layer);
 
@@ -7970,8 +7843,7 @@ Shared constants
     'bar': Bar,
     'tile': Tile,
     'box': Box,
-    'spline': Spline,
-    'step': Step
+    'spline': Spline
   };
 
   poly.layer.make = function(layerSpec, strictMode, guideSpec) {
@@ -8207,7 +8079,7 @@ Dimension object has the following elements (all numeric in pixels):
 
 
 (function() {
-  var Area, Circle, CircleRect, Line, Path, PathRenderer, PolarLine, Rect, Renderer, Spline, Step, Text, renderer, _ref, _ref1, _ref10, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9,
+  var Area, Circle, CircleRect, Line, Path, PathRenderer, PolarLine, Rect, Renderer, Spline, Text, renderer, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -8420,15 +8292,6 @@ Dimension object has the following elements (all numeric in pixels):
         case 'spline':
           path = _.map(xs, function(x, i) {
             return (i === 0 ? "M " + x + " " + ys[i] + " R " : '') + ("" + x + " " + ys[i]);
-          });
-          break;
-        case 'step':
-          path = _.map(xs, function(x, i) {
-            if (i === 0) {
-              return "M " + x + " " + ys[i];
-            } else {
-              return "L " + x + " " + ys[i - 1] + " " + x + " " + ys[i];
-            }
           });
           break;
         default:
@@ -8713,27 +8576,60 @@ Dimension object has the following elements (all numeric in pixels):
 
   })(PathRenderer);
 
+  Spline = (function(_super) {
+    __extends(Spline, _super);
+
+    function Spline() {
+      _ref4 = Spline.__super__.constructor.apply(this, arguments);
+      return _ref4;
+    }
+
+    Spline.prototype.attr = function(scales, coord, offset, mark, mayflip) {
+      var i, size, stroke, x, xi, y, yi, _i, _len, _ref5, _ref6, _ref7, _ref8;
+
+      _ref5 = poly.sortArrays(scales.x.compare, [mark.x, mark.y]), mark.x = _ref5[0], mark.y = _ref5[1];
+      _ref6 = coord.getXY(mayflip, mark), x = _ref6.x, y = _ref6.y;
+      this._checkArrayUndefined(x, y, "Spline");
+      for (i = _i = 0, _len = x.length; _i < _len; i = ++_i) {
+        xi = x[i];
+        yi = y[i];
+      }
+      _ref7 = this._applyOffset(x, y, offset), x = _ref7.x, y = _ref7.y;
+      _ref8 = this._checkArrayNaN(x, y), x = _ref8.x, y = _ref8.y;
+      stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
+      size = this._maybeApply(scales, mark, mark.size ? 'size' : 'stroke-width');
+      return this._shared(scales, mark, {
+        path: this._makePath(x, y, 'spline'),
+        stroke: stroke,
+        'stroke-width': size
+      });
+    };
+
+    return Spline;
+
+  })(Line);
+
   PolarLine = (function(_super) {
     __extends(PolarLine, _super);
 
     function PolarLine() {
-      _ref4 = PolarLine.__super__.constructor.apply(this, arguments);
-      return _ref4;
+      _ref5 = PolarLine.__super__.constructor.apply(this, arguments);
+      return _ref5;
     }
 
     PolarLine.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var dir, i, large, path, r, stroke, t, x, y, _ref5, _ref6;
+      var dir, i, large, path, r, stroke, t, x, y, _ref6, _ref7;
 
-      _ref5 = coord.getXY(mayflip, mark), x = _ref5.x, y = _ref5.y, r = _ref5.r, t = _ref5.t;
+      _ref6 = coord.getXY(mayflip, mark), x = _ref6.x, y = _ref6.y, r = _ref6.r, t = _ref6.t;
       this._checkArrayUndefined(x, y, "Line");
-      _ref6 = this._applyOffset(x, y, offset), x = _ref6.x, y = _ref6.y;
+      _ref7 = this._applyOffset(x, y, offset), x = _ref7.x, y = _ref7.y;
       path = (function() {
-        var _i, _ref7;
+        var _i, _ref8;
 
         if (_.max(r) - _.min(r) < poly["const"].epsilon) {
           r = r[0];
           path = "M " + x[0] + " " + y[0];
-          for (i = _i = 1, _ref7 = x.length - 1; 1 <= _ref7 ? _i <= _ref7 : _i >= _ref7; i = 1 <= _ref7 ? ++_i : --_i) {
+          for (i = _i = 1, _ref8 = x.length - 1; 1 <= _ref8 ? _i <= _ref8 : _i >= _ref8; i = 1 <= _ref8 ? ++_i : --_i) {
             large = Math.abs(t[i] - t[i - 1]) > Math.PI ? 1 : 0;
             dir = t[i] - t[i - 1] > 0 ? 1 : 0;
             path += "A " + r + " " + r + " 0 " + large + " " + dir + " " + x[i] + " " + y[i];
@@ -8758,8 +8654,8 @@ Dimension object has the following elements (all numeric in pixels):
     __extends(Area, _super);
 
     function Area() {
-      _ref5 = Area.__super__.constructor.apply(this, arguments);
-      return _ref5;
+      _ref6 = Area.__super__.constructor.apply(this, arguments);
+      return _ref6;
     }
 
     Area.prototype._make = function(paper) {
@@ -8767,17 +8663,17 @@ Dimension object has the following elements (all numeric in pixels):
     };
 
     Area.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var bottom, top, x, y, _ref6, _ref7;
+      var bottom, top, x, y, _ref7, _ref8;
 
-      _ref6 = poly.sortArrays(scales.x.compare, [mark.x, mark.y.top]), x = _ref6[0], y = _ref6[1];
+      _ref7 = poly.sortArrays(scales.x.compare, [mark.x, mark.y.top]), x = _ref7[0], y = _ref7[1];
       top = coord.getXY(mayflip, {
         x: x,
         y: y
       });
       top = this._applyOffset(top.x, top.y, offset);
-      _ref7 = poly.sortArrays((function(a, b) {
+      _ref8 = poly.sortArrays((function(a, b) {
         return -scales.x.compare(a, b);
-      }), [mark.x, mark.y.bottom]), x = _ref7[0], y = _ref7[1];
+      }), [mark.x, mark.y.bottom]), x = _ref8[0], y = _ref8[1];
       bottom = coord.getXY(mayflip, {
         x: x,
         y: y
@@ -8801,8 +8697,8 @@ Dimension object has the following elements (all numeric in pixels):
     __extends(Rect, _super);
 
     function Rect() {
-      _ref6 = Rect.__super__.constructor.apply(this, arguments);
-      return _ref6;
+      _ref7 = Rect.__super__.constructor.apply(this, arguments);
+      return _ref7;
     }
 
     Rect.prototype._make = function(paper) {
@@ -8810,12 +8706,12 @@ Dimension object has the following elements (all numeric in pixels):
     };
 
     Rect.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var stroke, x, y, _ref7, _ref8;
+      var stroke, x, y, _ref8, _ref9;
 
-      _ref7 = coord.getXY(mayflip, mark), x = _ref7.x, y = _ref7.y;
+      _ref8 = coord.getXY(mayflip, mark), x = _ref8.x, y = _ref8.y;
       this._checkPointUndefined(x[0], y[0], "Bar");
       this._checkPointUndefined(x[1], y[1], "Bar");
-      _ref8 = this._applyOffset(x, y, offset), x = _ref8.x, y = _ref8.y;
+      _ref9 = this._applyOffset(x, y, offset), x = _ref9.x, y = _ref9.y;
       stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
       return this._shared(scales, mark, {
         x: _.min(x),
@@ -8836,8 +8732,8 @@ Dimension object has the following elements (all numeric in pixels):
     __extends(CircleRect, _super);
 
     function CircleRect() {
-      _ref7 = CircleRect.__super__.constructor.apply(this, arguments);
-      return _ref7;
+      _ref8 = CircleRect.__super__.constructor.apply(this, arguments);
+      return _ref8;
     }
 
     CircleRect.prototype._make = function(paper) {
@@ -8845,16 +8741,16 @@ Dimension object has the following elements (all numeric in pixels):
     };
 
     CircleRect.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var large, path, r, stroke, t, x, x0, x1, y, y0, y1, _ref10, _ref11, _ref8, _ref9;
+      var large, path, r, stroke, t, x, x0, x1, y, y0, y1, _ref10, _ref11, _ref12, _ref9;
 
-      _ref8 = mark.x, x0 = _ref8[0], x1 = _ref8[1];
-      _ref9 = mark.y, y0 = _ref9[0], y1 = _ref9[1];
+      _ref9 = mark.x, x0 = _ref9[0], x1 = _ref9[1];
+      _ref10 = mark.y, y0 = _ref10[0], y1 = _ref10[1];
       this._checkPointUndefined(x0, y0, "Bar");
       this._checkPointUndefined(x1, y1, "Bar");
       mark.x = [x0, x0, x1, x1];
       mark.y = [y0, y1, y1, y0];
-      _ref10 = coord.getXY(mayflip, mark), x = _ref10.x, y = _ref10.y, r = _ref10.r, t = _ref10.t;
-      _ref11 = this._applyOffset(x, y, offset), x = _ref11.x, y = _ref11.y;
+      _ref11 = coord.getXY(mayflip, mark), x = _ref11.x, y = _ref11.y, r = _ref11.r, t = _ref11.t;
+      _ref12 = this._applyOffset(x, y, offset), x = _ref12.x, y = _ref12.y;
       if (coord.flip) {
         x.push(x.splice(0, 1)[0]);
         y.push(y.splice(0, 1)[0]);
@@ -8887,8 +8783,8 @@ Dimension object has the following elements (all numeric in pixels):
     __extends(Text, _super);
 
     function Text() {
-      _ref8 = Text.__super__.constructor.apply(this, arguments);
-      return _ref8;
+      _ref9 = Text.__super__.constructor.apply(this, arguments);
+      return _ref9;
     }
 
     Text.prototype._make = function(paper) {
@@ -8896,18 +8792,18 @@ Dimension object has the following elements (all numeric in pixels):
     };
 
     Text.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var x, y, _ref10, _ref11, _ref9;
+      var x, y, _ref10, _ref11, _ref12;
 
-      _ref9 = coord.getXY(mayflip, mark), x = _ref9.x, y = _ref9.y;
+      _ref10 = coord.getXY(mayflip, mark), x = _ref10.x, y = _ref10.y;
       this._checkPointUndefined(x, y, "Text");
-      _ref10 = this._applyOffset(x, y, offset), x = _ref10.x, y = _ref10.y;
+      _ref11 = this._applyOffset(x, y, offset), x = _ref11.x, y = _ref11.y;
       return this._shared(scales, mark, {
         x: x,
         y: y,
         r: 10,
         text: this._maybeApply(scales, mark, 'text'),
         'font-size': this._maybeApply(scales, mark, 'size'),
-        'text-anchor': (_ref11 = mark['text-anchor']) != null ? _ref11 : 'left',
+        'text-anchor': (_ref12 = mark['text-anchor']) != null ? _ref12 : 'left',
         fill: this._maybeApply(scales, mark, 'color') || 'black'
       });
     };
@@ -8915,76 +8811,6 @@ Dimension object has the following elements (all numeric in pixels):
     return Text;
 
   })(Renderer);
-
-  Spline = (function(_super) {
-    __extends(Spline, _super);
-
-    function Spline() {
-      _ref9 = Spline.__super__.constructor.apply(this, arguments);
-      return _ref9;
-    }
-
-    Spline.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var i, size, stroke, x, xi, y, yi, _i, _len, _ref10, _ref11, _ref12, _ref13;
-
-      _ref10 = poly.sortArrays(scales.x.compare, [mark.x, mark.y]), mark.x = _ref10[0], mark.y = _ref10[1];
-      _ref11 = coord.getXY(mayflip, mark), x = _ref11.x, y = _ref11.y;
-      this._checkArrayUndefined(x, y, "Spline");
-      for (i = _i = 0, _len = x.length; _i < _len; i = ++_i) {
-        xi = x[i];
-        yi = y[i];
-      }
-      _ref12 = this._applyOffset(x, y, offset), x = _ref12.x, y = _ref12.y;
-      _ref13 = this._checkArrayNaN(x, y), x = _ref13.x, y = _ref13.y;
-      stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
-      size = this._maybeApply(scales, mark, mark.size ? 'size' : 'stroke-width');
-      return this._shared(scales, mark, {
-        path: this._makePath(x, y, 'spline'),
-        stroke: stroke,
-        'stroke-width': size
-      });
-    };
-
-    return Spline;
-
-  })(Line);
-
-  Step = (function(_super) {
-    __extends(Step, _super);
-
-    function Step() {
-      _ref10 = Step.__super__.constructor.apply(this, arguments);
-      return _ref10;
-    }
-
-    Step.prototype._make = function(paper) {
-      return paper.path();
-    };
-
-    Step.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var i, size, stroke, x, xi, y, yi, _i, _len, _ref11, _ref12, _ref13, _ref14;
-
-      _ref11 = poly.sortArrays(scales.x.compare, [mark.x, mark.y]), mark.x = _ref11[0], mark.y = _ref11[1];
-      _ref12 = coord.getXY(mayflip, mark), x = _ref12.x, y = _ref12.y;
-      this._checkArrayUndefined(x, y, "Spline");
-      for (i = _i = 0, _len = x.length; _i < _len; i = ++_i) {
-        xi = x[i];
-        yi = y[i];
-      }
-      _ref13 = this._applyOffset(x, y, offset), x = _ref13.x, y = _ref13.y;
-      _ref14 = this._checkArrayNaN(x, y), x = _ref14.x, y = _ref14.y;
-      stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
-      size = this._maybeApply(scales, mark, mark.size ? 'size' : 'stroke-width');
-      return this._shared(scales, mark, {
-        path: this._makePath(x, y, 'step'),
-        stroke: stroke,
-        'stroke-width': size
-      });
-    };
-
-    return Step;
-
-  })(Line);
 
   renderer = {
     cartesian: {
@@ -8995,8 +8821,7 @@ Dimension object has the following elements (all numeric in pixels):
       path: new Path(),
       text: new Text(),
       rect: new Rect(),
-      spline: new Spline(),
-      step: new Step()
+      spline: new Spline()
     },
     polar: {
       circle: new Circle(),

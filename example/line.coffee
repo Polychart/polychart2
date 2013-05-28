@@ -5,7 +5,7 @@
   data = polyjs.data data:jsondata
   spec = {
     layers: [
-      { data: data, type: 'line', x : 'index', y : 'value'}
+      { data: data, type: 'line', x : 'index', y : 'value', 'color': 'index'}
       { data: data, type: 'point', x : 'index', y : 'value', id: 'index'}
     ]
     guides:
