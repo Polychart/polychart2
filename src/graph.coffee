@@ -79,9 +79,8 @@ class Graph
       @dataprocess[id].make spec, groups, (err, statData, metaData) =>
         if err
           console.error err
-          alert 'Error processing chart data'
-          # Fravic error
-          callback err
+          if @callback
+            @callback err, null
           return
 
         @processedData[id] =
@@ -131,7 +130,7 @@ class Graph
 
     @facet.render(renderer, @dims, @coord)
     @scaleSet.renderGuides @dims, renderer, @facet
-    if @callback then @callback @
+    if @callback then @callback null, @
 
   addHandler : (h) -> if h not in @handlers then @handlers.push h
   removeHandler: (h) ->
@@ -181,4 +180,9 @@ class Graph
   _makePaper: (dom, width, height, handleEvent) ->
     paper = poly.paper dom, width, height, handleEvent
 
-poly.chart = (spec, callback, prepare) -> new Graph(spec, callback, prepare)
+poly.chart = (spec, callback, prepare) ->
+  try
+    new Graph(spec, callback, prepare)
+  catch err
+    callback err, null
+

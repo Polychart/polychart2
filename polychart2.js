@@ -6271,24 +6271,29 @@ of a dataset, or knows how to retrieve data from some source.
         } catch (_error) {
           e = _error;
         }
-        data = blob.data;
-        meta = (_ref = blob.meta) != null ? _ref : {};
-        _ref1 = (function() {
-          switch (_getDataType(data)) {
-            case 'json-object':
-              return _getObject(data, meta);
-            case 'json-grid':
-              return _getArrayofArrays(data, meta);
-            case 'json-array':
-              return _getArray(data, meta);
-            case 'csv':
-              return _getCSV(data, meta);
-            default:
-              throw poly.error.data("Unknown data format.");
-          }
-        })(), _this.key = _ref1.key, _this.raw = _ref1.raw, _this.meta = _ref1.meta;
-        _this.data = _this.raw;
-        return callback(null, _this);
+        try {
+          data = blob.data;
+          meta = (_ref = blob.meta) != null ? _ref : {};
+          _ref1 = (function() {
+            switch (_getDataType(data)) {
+              case 'json-object':
+                return _getObject(data, meta);
+              case 'json-grid':
+                return _getArrayofArrays(data, meta);
+              case 'json-array':
+                return _getArray(data, meta);
+              case 'csv':
+                return _getCSV(data, meta);
+              default:
+                throw poly.error.data("Unknown data format.");
+            }
+          })(), _this.key = _ref1.key, _this.raw = _ref1.raw, _this.meta = _ref1.meta;
+          _this.data = _this.raw;
+          return callback(null, _this);
+        } catch (_error) {
+          e = _error;
+          return callback(e);
+        }
       });
     };
 
@@ -9642,8 +9647,9 @@ The functions here makes it easier to create common types of interactions.
         return _this.dataprocess[id].make(spec, groups, function(err, statData, metaData) {
           if (err) {
             console.error(err);
-            alert('Error processing chart data');
-            callback(err);
+            if (_this.callback) {
+              _this.callback(err, null);
+            }
             return;
           }
           _this.processedData[id] = {
@@ -9717,7 +9723,7 @@ The functions here makes it easier to create common types of interactions.
       this.facet.render(renderer, this.dims, this.coord);
       this.scaleSet.renderGuides(this.dims, renderer, this.facet);
       if (this.callback) {
-        return this.callback(this);
+        return this.callback(null, this);
       }
     };
 
@@ -9803,7 +9809,14 @@ The functions here makes it easier to create common types of interactions.
   })();
 
   poly.chart = function(spec, callback, prepare) {
-    return new Graph(spec, callback, prepare);
+    var err;
+
+    try {
+      return new Graph(spec, callback, prepare);
+    } catch (_error) {
+      err = _error;
+      return callback(err, null);
+    }
   };
 
 }).call(this);

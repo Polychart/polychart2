@@ -365,19 +365,23 @@ class ApiData extends AbstractData
       try
         blob = JSON.parse(blob)
       catch e
-      # Need to merge this with above code
-      data = blob.data
-      meta = blob.meta ? {}
-      {@key, @raw, @meta} =
-        switch _getDataType(data)
-          when 'json-object' then _getObject data, meta
-          when 'json-grid' then _getArrayofArrays data, meta
-          when 'json-array' then _getArray data, meta
-          when 'csv' then _getCSV data, meta
-          else
-            throw poly.error.data "Unknown data format."
-      @data = @raw
-      callback null, @
+
+      try
+        # Need to merge this with above code
+        data = blob.data
+        meta = blob.meta ? {}
+        {@key, @raw, @meta} =
+          switch _getDataType(data)
+            when 'json-object' then _getObject data, meta
+            when 'json-grid' then _getArrayofArrays data, meta
+            when 'json-array' then _getArray data, meta
+            when 'csv' then _getCSV data, meta
+            else
+              throw poly.error.data "Unknown data format."
+        @data = @raw
+        callback null, @
+      catch e
+        callback e
   update: (params) ->
     @raw = null
     super()
