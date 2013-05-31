@@ -9626,21 +9626,107 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Pivot.prototype.render = function(statData, metaData) {
-      var aes, domains, item, values, _i, _j, _len, _len1, _ref, _ref1;
+      var COL_FILL, COL_TOFILL, NUMCOL, NUMROW, NUMVAL, ROW_FILL, ROW_VALUES, aes, cell, colTicks, domain, domains, i, index, item, k, key, m, n, row, rowTicks, size, space, table, tick, ticks, v, val, values, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _o, _p, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
 
       domains = {};
+      ticks = {};
       _ref = ['rows', 'columns'];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         aes = _ref[_i];
         domains[aes] = [];
+        ticks[aes] = [];
         _ref1 = this.spec[aes];
         for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
           item = _ref1[_j];
           values = _.pluck(statData, item["var"]);
-          domains[aes].push(poly.domain.single(values, metaData[item["var"]], {}));
+          domain = poly.domain.single(values, metaData[item["var"]], {});
+          tick = poly.tick.make(domain, {}, metaData[item["var"]].type);
+          domains[aes].push(domain);
+          ticks[aes].push(tick);
         }
       }
-      return console.log(domains);
+      NUMCOL = this.spec.columns.length;
+      NUMROW = this.spec.rows.length;
+      NUMVAL = this.spec.values.length;
+      COL_FILL = 1;
+      _ref2 = ticks.columns;
+      for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+        colTicks = _ref2[_k];
+        COL_FILL *= _.size(colTicks.ticks);
+      }
+      COL_FILL *= NUMVAL;
+      COL_TOFILL = 1;
+      ROW_FILL = 1;
+      ROW_VALUES = [];
+      _ref3 = ticks.rows;
+      for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
+        rowTicks = _ref3[_l];
+        ROW_FILL *= _.size(rowTicks.ticks);
+        ROW_VALUES.push(ROW_FILL);
+      }
+      if (!$) {
+        throw poly.error.depn("Pivot Tables require jQuery!");
+      }
+      table = $('<table></table>');
+      i = 0;
+      while (i < NUMCOL) {
+        row = $('<tr></tr>');
+        if (i === 0) {
+          space = $('<td></td>');
+          if (NUMVAL === 1) {
+            space.attr('rowspan', NUMCOL);
+          } else {
+            space.attr('rowspan', NUMCOL + 1);
+          }
+          space.attr('colspan', NUMROW);
+          row.append(space);
+        }
+        colTicks = ticks.columns[i];
+        size = _.size(colTicks.ticks);
+        COL_FILL /= size;
+        for (k = _m = 1; 1 <= COL_TOFILL ? _m <= COL_TOFILL : _m >= COL_TOFILL; k = 1 <= COL_TOFILL ? ++_m : --_m) {
+          _ref4 = colTicks.ticks;
+          for (key in _ref4) {
+            tick = _ref4[key];
+            cell = $("<td>" + tick.value + "</td>").attr('colspan', COL_FILL);
+            row.append(cell);
+          }
+        }
+        COL_TOFILL *= size;
+        table.append(row);
+        i++;
+      }
+      if (NUMVAL !== 1) {
+        row = $('<tr></tr>');
+        for (k = _n = 1; 1 <= COL_TOFILL ? _n <= COL_TOFILL : _n >= COL_TOFILL; k = 1 <= COL_TOFILL ? ++_n : --_n) {
+          _ref5 = this.spec.values;
+          for (_o = 0, _len4 = _ref5.length; _o < _len4; _o++) {
+            v = _ref5[_o];
+            cell = $("<td>" + v["var"] + "</td>");
+            row.append(cell);
+          }
+        }
+        table.append(row);
+      }
+      i = 0;
+      debugger;
+      while (i < ROW_FILL) {
+        row = $('<tr></tr>');
+        for (index = _p = 0, _len5 = ROW_VALUES.length; _p < _len5; index = ++_p) {
+          n = ROW_VALUES[index];
+          m = ROW_FILL / n;
+          if (i % m === 0) {
+            val = _.toArray(ticks.rows[index].ticks)[i / m];
+            cell = $("<td>" + val.value + "</td>").attr('colspan', m);
+            row.append(cell);
+          }
+        }
+        table.append(row);
+        i++;
+      }
+      this.dom = $('#' + this.spec.dom);
+      this.dom.empty();
+      return this.dom.append(table);
     };
 
     return Pivot;
