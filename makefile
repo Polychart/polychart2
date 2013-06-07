@@ -16,7 +16,34 @@ polychart2:
 	mkdir -p tmp
 	mkdir -p compiled
 	coffee --compile --output tmp/src/ src/
-	cat tmp/src/*.js > tmp/polychart2.bare.js
+	cat\
+		tmp/src/utils.js \
+    tmp/src/const.js \
+    tmp/src/error.js \
+    tmp/src/abstract.js\
+    tmp/src/mouse.js \
+    tmp/src/format.js \
+    tmp/src/type.js \
+    tmp/src/spec.js \
+    tmp/src/ajax.js \
+    tmp/src/parser.js \
+    tmp/src/coord.js \
+    tmp/src/domain.js \
+    tmp/src/tick.js \
+    tmp/src/title.js \
+    tmp/src/axis.js \
+    tmp/src/legend.js \
+    tmp/src/scale.js \
+    tmp/src/scaleset.js \
+    tmp/src/data.js \
+    tmp/src/dataprocess.js \
+    tmp/src/layer.js \
+    tmp/src/pane.js \
+    tmp/src/dim.js \
+    tmp/src/render.js \
+    tmp/src/interact.js \
+    tmp/src/facet.js \
+    tmp/src/graph.js > tmp/polychart2.bare.js
 	cat $(HEADER) tmp/polychart2.bare.js $(FOOTER) > polychart2.js
 
 polychart2.min: polychart2
