@@ -2133,9 +2133,18 @@ See the spec definition for more information.
         }
         if ('sort' in desc) {
           sdesc = dictGets(desc, poly["const"].metas);
-          sexpr = parse(sdesc.sort);
-          sdesc.sort = sexpr.pretty();
-          result = extractOps(sexpr);
+          if (sdesc.sort === 'count(*)') {
+            result = {
+              sort: 'count(*)',
+              asc: sdesc.asc,
+              stat: [],
+              trans: []
+            };
+          } else {
+            sexpr = parse(sdesc.sort);
+            sdesc.sort = sexpr.pretty();
+            result = extractOps(sexpr);
+          }
           if (result.stat.length !== 0) {
             sdesc.stat = result.stat[0];
           }
