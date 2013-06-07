@@ -1,4 +1,7 @@
 compiled/*
+tmp/*
 *.pyc
 *.swp
 *.swo
+*.swx
+
