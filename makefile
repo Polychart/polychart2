@@ -8,6 +8,8 @@ all: polychart2 polychart2.min polychart2.standalone examples tests clean-folder
 
 dev: polychart2 examples
 
+lib: polychart2 clean-folders
+
 production: polychart2.standalone
 
 polychart2:
