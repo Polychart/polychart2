@@ -2143,6 +2143,7 @@ data processing to be done.
         dataSpec = poly.parser.layerToData(spec, grouping);
         return backendProcess(dataSpec, this.dataObj, wrappedCallback);
       } else {
+        console.log(spec);
         dataSpec = poly.parser.layerToData(spec, grouping);
         return this.dataObj.getData(function(err, data) {
           var obj, _i, _len, _ref;
