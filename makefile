@@ -13,8 +13,8 @@ lib: polychart2 clean-folders
 production: polychart2.standalone
 
 polychart2:
-	mkdir tmp
-	mkdir compiled
+	mkdir tmp || echo "tmp/ already exists" && false
+	mkdir compiled || echo "compiled/ already exists" && false
 	coffee --compile --output tmp/src/ src/
 	cat tmp/src/*.js > tmp/polychart2.bare.js
 	cat $(HEADER) tmp/polychart2.bare.js $(FOOTER) > polychart2.js
