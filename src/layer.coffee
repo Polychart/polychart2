@@ -61,17 +61,17 @@ class Layer
   _tooltip: (item) ->
     tooltip = null
     if typeof(@spec.tooltip) == 'function'
-      tooltip = (axes) -> @spec.tooltip item
+      tooltip = (scales) -> @spec.tooltip item
     else if @spec.tooltip?
-      tooltip = (axes) -> @spec.tooltip
+      tooltip = (scales) -> @spec.tooltip
     else
-      tooltip = (axes) =>
+      tooltip = (scales) =>
         text = ""
         seenKeys = []
         for aes, key of @mapping
           if seenKeys.indexOf(key) != -1 then continue else seenKeys.push(key)
-          if axes? and axes[aes]?
-            formatter = axes[aes].ticksFormatter
+          if scales? and scales[aes]?
+            formatter = poly.format(scales[aes].domain.type, scales[aes].domain.bw)
           else
             formatter = (x) -> x
           text += "\n#{key}: #{formatter item[key]}"
