@@ -5,6 +5,7 @@ data processing to be done.
 class DataProcess
   ## save the specs
   constructor: (layerSpec, grouping, strictmode) ->
+    @layerMeta = layerSpec.meta
     @dataObj = layerSpec.data
     @initialSpec = poly.parser.layerToData layerSpec, grouping
     @prevSpec = null
@@ -23,6 +24,7 @@ class DataProcess
         meta: @dataObj.meta
     if @dataObj.computeBackend
       dataSpec = poly.parser.layerToData spec, grouping
+      if @layerMeta and _.size(dataSpec.meta) < 1 then dataSpec.meta = @layerMeta
       backendProcess(dataSpec, @dataObj, wrappedCallback)
     else
       dataSpec = poly.parser.layerToData spec, grouping

@@ -5702,8 +5702,9 @@ of a dataset, or knows how to retrieve data from some source.
   */
 
 
-  poly.data.api = function(apiFun) {
+  poly.data.api = function(_meta, apiFun) {
     return new ApiData({
+      _meta: _meta,
       apiFun: apiFun
     });
   };
@@ -6263,7 +6264,7 @@ of a dataset, or knows how to retrieve data from some source.
 
     function ApiData(params) {
       this.getData = __bind(this.getData, this);      ApiData.__super__.constructor.call(this);
-      this.apiFun = params.apiFun;
+      this._meta = params._meta, this.apiFun = params.apiFun;
       this.computeBackend = true;
     }
 
@@ -6300,6 +6301,9 @@ of a dataset, or knows how to retrieve data from some source.
             }
           })(), _this.key = _ref1.key, _this.raw = _ref1.raw, _this.meta = _ref1.meta;
           _this.data = _this.raw;
+          if (_this.meta === {}) {
+            _this.meta = _this._meta;
+          }
           return callback(null, _this);
         } catch (_error) {
           e = _error;
@@ -6336,7 +6340,8 @@ data processing to be done.
 
   DataProcess = (function() {
     function DataProcess(layerSpec, grouping, strictmode) {
-      this._wrap = __bind(this._wrap, this);      this.dataObj = layerSpec.data;
+      this._wrap = __bind(this._wrap, this);      this.layerMeta = layerSpec.meta;
+      this.dataObj = layerSpec.data;
       this.initialSpec = poly.parser.layerToData(layerSpec, grouping);
       this.prevSpec = null;
       this.strictmode = strictmode;
@@ -6360,6 +6365,9 @@ data processing to be done.
       }
       if (this.dataObj.computeBackend) {
         dataSpec = poly.parser.layerToData(spec, grouping);
+        if (this.layerMeta && _.size(dataSpec.meta) < 1) {
+          dataSpec.meta = this.layerMeta;
+        }
         return backendProcess(dataSpec, this.dataObj, wrappedCallback);
       } else {
         dataSpec = poly.parser.layerToData(spec, grouping);
