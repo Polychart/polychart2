@@ -43,6 +43,7 @@ polychart2:
     tmp/src/render.js \
     tmp/src/interact.js \
     tmp/src/facet.js \
+    tmp/src/pivot.js \
     tmp/src/graph.js > tmp/polychart2.bare.js
 	cat $(HEADER) tmp/polychart2.bare.js $(FOOTER) > polychart2.js
 
