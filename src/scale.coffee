@@ -109,25 +109,31 @@ class PositionScale extends Scale
         if value.f is 'min' then return @range.min + value.v
 
         if value.f in ['upper', 'middle', 'lower']
+          _timeConversion = (n, timerange, lower = 0) =>
+            m = moment.unix(value.v).startOf(timerange)
+            m[timerange](n * Math.floor(m[timerange]()/n) + n * lower)
+            m.unix()
           upper =
-            if domain.bw is 'week'
-              moment.unix(value.v).day(7).unix()
-            else if domain.bw is 'decade'
-              m = moment.unix(value.v).startOf('year')
-              m.year 10 * Math.floor(m.year()/10)
-              m.unix()
-            else
-              moment.unix(value.v).endOf(domain.bw).unix()
+            switch domain.bw
+              when 'week' then moment.unix(value.v).day(7).unix()
+              when 'twomonth' then _timeConversion 2, 'month'
+              when 'quarter' then _timeConversion 4, 'month'
+              when 'sixmonth' then _timeConversion 6, 'month'
+              when 'twoyear' then _timeConversion 2, 'year'
+              when 'fiveyear' then _timeConversion 5, 'year'
+              when 'decade' then _timeConversion 10, 'year'
+              else moment.unix(value.v).endOf(domain.bw).unix()
           upper = y(upper)
           lower =
-            if domain.bw is 'week'
-              moment.unix(value.v).day(0).unix()
-            else if domain.bw is 'decade'
-              m = moment.unix(value.v).startOf('year')
-              m.year 10 * Math.floor(m.year()/10) + 10
-              m.unix()
-            else
-              moment.unix(value.v).startOf(domain.bw).unix()
+            switch domain.bw
+              when 'week' then moment.unix(value.v).day(0).unix()
+              when 'twomonth' then _timeConversion 2, 'month', 1
+              when 'quarter' then _timeConversion 4, 'month', 1
+              when 'sixmonth' then _timeConversion 6, 'month', 1
+              when 'twoyear' then _timeConversion 2, 'year', 1
+              when 'fiveyear' then _timeConversion 5, 'year', 1
+              when 'decade' then _timeConversion 10, 'year', 1
+              else moment.unix(value.v).startOf(domain.bw).unix()
           lower = y(lower)
           space = (upper - lower) * @space # 5%. Sign matters!
           if value.f is 'middle' then return upper/2 + lower/2
@@ -300,7 +306,7 @@ poly.scale.classes = {
   linear : Linear
   log : Log
   area : Area
-  palette : Palette 
+  palette : Palette
   gradient : Gradient
   gradient2 : Gradient2
   identity: Identity

@@ -117,8 +117,6 @@ class Renderer
     switch type
       when 'spline'
         path = _.map xs, (x, i) -> (if i == 0 then "M #{x} #{ys[i]} R " else '') + "#{x} #{ys[i]}"
-      when 'step'
-        path = _.map xs, (x, i) -> (if i == 0 then "M #{x} #{ys[i]}" else "L #{x} #{ys[i-1]} #{x} #{ys[i]}")
       else
         path = _.map xs, (x, i) -> (if i == 0 then 'M' else type) + x+' '+ys[i]
     path.join(' ')
@@ -230,6 +228,24 @@ class Line extends PathRenderer
       stroke: stroke
       'stroke-width': size
 
+class Spline extends Line
+  attr: (scales, coord, offset, mark, mayflip) ->
+    [mark.x,mark.y] = poly.sortArrays scales.x.compare, [mark.x,mark.y]
+    {x, y} = coord.getXY mayflip, mark
+    @_checkArrayUndefined(x, y, "Spline")
+    for xi, i in x
+      yi = y[i]
+    {x, y} = @_applyOffset(x, y, offset)
+    {x, y} = @_checkArrayNaN x, y # Remove any non numeric values---needed for splines
+    stroke = @_maybeApply scales, mark,
+      if mark.stroke then 'stroke' else 'color'
+    size = @_maybeApply scales, mark,
+      if mark.size then 'size' else 'stroke-width'
+    @_shared scales, mark,
+      path: @_makePath x, y, 'spline'
+      stroke: stroke
+      'stroke-width': size
+
 # The difference between Line and PolarLine is that Polar Line MAY plot a circle
 class PolarLine extends Line
   attr: (scales, coord, offset, mark, mayflip) ->
@@ -304,11 +320,14 @@ class CircleRect extends Renderer # FOR POLAR ONLY
       y.push y.splice(0,1)[0]
       r.push r.splice(0,1)[0]
       t.push t.splice(0,1)[0]
-    large = if Math.abs(t[1]-t[0]) > Math.PI then 1 else 0
-    path = "M #{x[0]} #{y[0]} A #{r[0]} #{r[0]} 0 #{large} 1 #{x[1]} #{y[1]}"
-    large = if Math.abs(t[3]-t[2]) > Math.PI then 1 else 0
-    path += "L #{x[2]} #{y[2]} A #{r[2]} #{r[2]} 0 #{large} 0 #{x[3]} #{y[3]} Z"
-
+    if 2*Math.PI -  Math.abs(t[1]-t[0]) < poly.const.epsilon # Check for full pie
+      path = "M #{x[0]} #{y[0]} A #{r[0]} #{r[0]} 0 1 1 #{x[0]} #{y[0] + 2 * r[0]} A #{r[1]} #{r[1]} 0 1 1 #{x[1]} #{y[1]}"
+      path += "M #{x[2]} #{y[2]} A #{r[2]} #{r[2]} 0 1 0 #{x[2]} #{y[2] + 2*r[2]} A #{r[3]} #{r[3]} 0 1 0 #{x[3]} #{y[3]} Z"
+    else
+      large = if Math.abs(t[1]-t[0]) > Math.PI then 1 else 0
+      path = "M #{x[0]} #{y[0]} A #{r[0]} #{r[1]} 0 #{large} 1 #{x[1]} #{y[1]}"
+      large = if Math.abs(t[3]-t[2]) > Math.PI then 1 else 0
+      path += "L #{x[2]} #{y[2]} A #{r[2]} #{r[3]} 0 #{large} 0 #{x[3]} #{y[3]} Z"
     stroke = @_maybeApply scales, mark,
       if mark.stroke then 'stroke' else 'color'
     @_shared scales, mark,
@@ -333,43 +352,6 @@ class Text extends Renderer # for both cartesian & polar
       'text-anchor' : mark['text-anchor'] ? 'left'
       fill: @_maybeApply(scales, mark, 'color') or 'black'
 
-class Spline extends Line
-  attr: (scales, coord, offset, mark, mayflip) ->
-    [mark.x,mark.y] = poly.sortArrays scales.x.compare, [mark.x,mark.y]
-    {x, y} = coord.getXY mayflip, mark
-    @_checkArrayUndefined(x, y, "Spline")
-    for xi, i in x
-      yi = y[i]
-    {x, y} = @_applyOffset(x, y, offset)
-    {x, y} = @_checkArrayNaN x, y # Remove any non numeric values---needed for splines
-    stroke = @_maybeApply scales, mark,
-      if mark.stroke then 'stroke' else 'color'
-    size = @_maybeApply scales, mark,
-      if mark.size then 'size' else 'stroke-width'
-    @_shared scales, mark,
-      path: @_makePath x, y, 'spline'
-      stroke: stroke
-      'stroke-width': size
-
-class Step extends Line
-  _make: (paper) -> paper.path()
-  attr: (scales, coord, offset, mark, mayflip) ->
-    [mark.x,mark.y] = poly.sortArrays scales.x.compare, [mark.x,mark.y]
-    {x, y} = coord.getXY mayflip, mark
-    @_checkArrayUndefined(x, y, "Spline")
-    for xi, i in x
-      yi = y[i]
-    {x, y} = @_applyOffset(x, y, offset)
-    {x, y} = @_checkArrayNaN x, y # Remove any non numeric values---needed for splines
-    stroke = @_maybeApply scales, mark,
-      if mark.stroke then 'stroke' else 'color'
-    size = @_maybeApply scales, mark,
-      if mark.size then 'size' else 'stroke-width'
-    @_shared scales, mark,
-      path: @_makePath x, y, 'step'
-      stroke: stroke
-      'stroke-width': size
-
 renderer =
   cartesian:
     circle: new Circle()
@@ -380,7 +362,6 @@ renderer =
     text: new Text()
     rect: new Rect()
     spline: new Spline()
-    step: new Step()
   polar:
     circle: new Circle()
     path: new Path()

@@ -22,6 +22,8 @@ poly.data = (blob) ->
       poly.data.url(data, meta, type)
     when 'csv'
       poly.data.csv(data, meta)
+    when 'api'
+      poly.data.api(data)
     else
       throw poly.error.data "Unknown data format."
 
@@ -35,6 +37,16 @@ poly.data.url = (url, computeBackend, limit) ->
   new BackendData {url, computeBackend, limit}
 
 ###
+Data format which takes an API-facing function.
+
+Signature:
+poly.data.api =
+ ((requestParams, (err, result) -> undefined) -> undefined) -> polyjsData
+###
+poly.data.api = (apiFun) ->
+  new ApiData {apiFun}
+
+###
 Helper functions
 ###
 _getDataType = (data) ->
@@ -44,12 +56,14 @@ _getDataType = (data) ->
     else
       'json-array'
   else if _.isObject data
-    'json-object'
+      'json-object'
   else if _.isString data
     if poly.isURI data
       'url'
     else
       'csv'
+  else if _.isFunction data
+    'api'
   else
     throw poly.error.data "Unknown data format."
 
@@ -180,7 +194,8 @@ class FrontendData extends AbstractData
   constructor: (params) ->
     super()
     @_setData params
-  getData: (callback) -> callback @
+  getData: (callback) ->
+    callback null, @
   update: (params) ->
     @_setData params
     super()
@@ -296,7 +311,10 @@ class BackendData extends AbstractData
   #   @callback - the callback function once data is retrieved
   #   @params - additional parameters to send to the backend
   getData: (callback, dataSpec) =>
-    if @raw? and (not @computeBackend) then return callback @
+    if @raw? and (not @computeBackend)
+      callback null, @
+      return
+
     chr = if _.indexOf(@url, "?") is -1 then '?' else '&'
     url = @url
     if @limit
@@ -325,9 +343,46 @@ class BackendData extends AbstractData
           else
             throw poly.error.data "Unknown data format."
       @data = @raw # hack?
-      callback @
+      callback null, @
   update: (params) ->
     @raw = null
     super()
   renameMany: (obj) ->  _.keys(obj).length == 0
 
+# Too similar to Backend Data. Perhaps refactor with data mixins.
+class ApiData extends AbstractData
+  constructor: (params) ->
+    super()
+    {@apiFun} = params
+    @computeBackend = true
+
+  getData: (callback, dataSpec) =>
+    @apiFun dataSpec, (err, blob) =>
+      if err
+        callback err, null
+        return
+
+      try
+        blob = JSON.parse(blob)
+      catch e
+
+      try
+        # Need to merge this with above code
+        data = blob.data
+        meta = blob.meta ? {}
+        {@key, @raw, @meta} =
+          switch _getDataType(data)
+            when 'json-object' then _getObject data, meta
+            when 'json-grid' then _getArrayofArrays data, meta
+            when 'json-array' then _getArray data, meta
+            when 'csv' then _getCSV data, meta
+            else
+              throw poly.error.data "Unknown data format."
+        @data = @raw
+        callback null, @
+      catch e
+        callback e
+  update: (params) ->
+    @raw = null
+    super()
+  renameMany: (obj) -> _.keys(obj).length == 0

@@ -114,6 +114,7 @@ class Axis extends poly.Guide
     @renderGrid = option('renderGrid', @renderGridDefault)
     @renderLabel = option('renderLabel', @renderLabelDefault)
     @renderLine = option('renderLine', @renderLineDefault)
+    @gridColor = option('gridColor', @gridColor)
     # ticks
     {@ticks, @ticksFormatter} = poly.tick.make domain, guideSpec, type
     @maxwidth = _.max _.map @ticks, (t) -> poly.strSize t.value
@@ -152,7 +153,7 @@ class Axis extends poly.Guide
     obj
   _makeGrid: (obj) ->
     if !obj then throw poly.error.impl()
-    obj.stroke = axisColorMinor
+    obj.stroke = if @gridColor? then @gridColor else axisColorMinor
     obj
 
 class XAxis extends Axis # assumes position = bottom

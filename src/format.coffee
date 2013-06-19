@@ -67,9 +67,9 @@ poly.format.date = (format) ->
       (date) -> moment.unix(date).format('MMM D h a')
     else if level is 'day' or level is 'week'
       (date) -> moment.unix(date).format('MMM D')
-    else if level in ['month', '2month', 'quarter', '6month']
+    else if level in ['month', 'twomonth', 'quarter', 'sixmonth']
       (date) -> moment.unix(date).format('YYYY/MM')
-    else if level in ['year', '2year', '5year', 'decade']
+    else if level in ['year', 'twoyear', 'fiveyear', 'decade']
       (date) -> moment.unix(date).format('YYYY')
     else
       (date) -> moment.unix(date).format('YYYY')

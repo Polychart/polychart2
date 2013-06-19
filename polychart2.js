@@ -459,7 +459,7 @@ These are constants that are referred to throughout the coebase
       'box': ['key'],
       'median': ['key']
     },
-    timerange: ['second', 'minute', 'hour', 'day', 'week', 'month', '2month', 'quarter', '6month', 'year', '2year', '5year', 'decade'],
+    timerange: ['second', 'minute', 'hour', 'day', 'week', 'month', 'twomonth', 'quarter', 'sixmonth', 'year', 'twoyear', 'fiveyear', 'decade'],
     metas: {
       sort: null,
       stat: null,
@@ -1158,11 +1158,11 @@ Get the offset of the element
         return function(date) {
           return moment.unix(date).format('MMM D');
         };
-      } else if (level === 'month' || level === '2month' || level === 'quarter' || level === '6month') {
+      } else if (level === 'month' || level === 'twomonth' || level === 'quarter' || level === 'sixmonth') {
         return function(date) {
           return moment.unix(date).format('YYYY/MM');
         };
-      } else if (level === 'year' || level === '2year' || level === '5year' || level === 'decade') {
+      } else if (level === 'year' || level === 'twoyear' || level === 'fiveyear' || level === 'decade') {
         return function(date) {
           return moment.unix(date).format('YYYY');
         };
@@ -2121,23 +2121,36 @@ See the spec definition for more information.
     metas = {};
     for (key in aesthetics) {
       desc = aesthetics[key];
-      expr = parse(desc["var"]);
-      desc["var"] = expr.pretty();
-      ts = extractOps(expr);
-      transstat.push(ts);
-      select.push(desc["var"]);
-      if (ts.stat.length === 0) {
-        groups.push(desc["var"]);
-      }
-      if ('sort' in desc) {
-        sdesc = dictGets(desc, poly["const"].metas);
-        sexpr = parse(sdesc.sort);
-        sdesc.sort = sexpr.pretty();
-        result = extractOps(sexpr);
-        if (result.stat.length !== 0) {
-          sdesc.stat = result.stat[0];
+      if (desc["var"] === 'count(*)') {
+        select.push(desc["var"]);
+      } else {
+        expr = parse(desc["var"]);
+        desc["var"] = expr.pretty();
+        ts = extractOps(expr);
+        transstat.push(ts);
+        select.push(desc["var"]);
+        if (ts.stat.length === 0) {
+          groups.push(desc["var"]);
         }
-        metas[desc["var"]] = sdesc;
+        if ('sort' in desc) {
+          sdesc = dictGets(desc, poly["const"].metas);
+          if (sdesc.sort === 'count(*)') {
+            result = {
+              sort: 'count(*)',
+              asc: sdesc.asc,
+              stat: [],
+              trans: []
+            };
+          } else {
+            sexpr = parse(sdesc.sort);
+            sdesc.sort = sexpr.pretty();
+            result = extractOps(sexpr);
+          }
+          if (result.stat.length !== 0) {
+            sdesc.stat = result.stat[0];
+          }
+          metas[desc["var"]] = sdesc;
+        }
       }
     }
     for (_i = 0, _len = grouping.length; _i < _len; _i++) {
@@ -2633,6 +2646,17 @@ Defines what coordinate system is used to plot the graph.
 
 
   makeDomain = function(params) {
+    if (params.type !== 'cat' && params.max === params.min) {
+      if (params.bw) {
+        params.max += params.bw;
+        params.min -= params.bw;
+      } else if (params.max === 0) {
+        params.max += 1;
+      } else {
+        params.max *= 1.1;
+        params.min /= 1.1;
+      }
+    }
     switch (params.type) {
       case 'num':
         return new NumericDomain(params);
@@ -2691,7 +2715,26 @@ Defines what coordinate system is used to plot the graph.
         max = fromspec('max');
         if (max == null) {
           max = _.max(values);
-          max = bw === 'week' ? moment.unix(max).add('days', 7).unix() : bw === 'decade' ? moment.unix(max).add('years', 10).unix() : moment.unix(max).add(bw + 's', 1).unix();
+          max = (function() {
+            switch (bw) {
+              case 'week':
+                return moment.unix(max).add('days', 7).unix();
+              case 'twomonth':
+                return moment.unix(max).add('months', 2).unix();
+              case 'quarter':
+                return moment.unix(max).add('months', 4).unix();
+              case 'sixmonth':
+                return moment.unix(max).add('months', 6).unix();
+              case 'twoyear':
+                return moment.unix(max).add('years', 2).unix();
+              case 'fiveyear':
+                return moment.unix(max).add('years', 5).unix();
+              case 'decade':
+                return moment.unix(max).add('years', 10).unix();
+              default:
+                return moment.unix(max).add(bw + 's', 1).unix();
+            }
+          })();
         }
         return makeDomain({
           type: 'date',
@@ -3122,20 +3165,20 @@ Helper functions to legends & axes for generating ticks
 
       min = domain.min, max = domain.max;
       step = (max - min) / numticks;
-      step = step < 1.4 * 1 ? 'second' : step < 1.4 * 60 ? 'minute' : step < 1.4 * 60 * 60 ? 'hour' : step < 1.4 * 24 * 60 * 60 ? 'day' : step < 1.4 * 7 * 24 * 60 * 60 ? 'week' : step < 1.4 * 30 * 24 * 60 * 60 ? 'month' : step < 1.4 * 30 * 24 * 60 * 60 * 2 ? '2month' : step < 1.4 * 30 * 24 * 60 * 60 * 4 ? 'quarter' : step < 1.4 * 30 * 24 * 60 * 60 * 6 ? '6month' : step < 1.4 * 24 * 60 * 60 * 365 ? 'year' : step < 1.4 * 24 * 60 * 60 * 365 * 2 ? '2year' : step < 1.4 * 24 * 60 * 60 * 365 * 5 ? '5year' : 'decade';
+      step = step < 1.4 * 1 ? 'second' : step < 1.4 * 60 ? 'minute' : step < 1.4 * 60 * 60 ? 'hour' : step < 1.4 * 24 * 60 * 60 ? 'day' : step < 1.4 * 7 * 24 * 60 * 60 ? 'week' : step < 1.4 * 30 * 24 * 60 * 60 ? 'month' : step < 1.4 * 30 * 24 * 60 * 60 * 2 ? 'twomonth' : step < 1.4 * 30 * 24 * 60 * 60 * 4 ? 'quarter' : step < 1.4 * 30 * 24 * 60 * 60 * 6 ? 'sixmonth' : step < 1.4 * 24 * 60 * 60 * 365 ? 'year' : step < 1.4 * 24 * 60 * 60 * 365 * 2 ? 'twoyear' : step < 1.4 * 24 * 60 * 60 * 365 * 5 ? 'fiveyear' : 'decade';
       ticks = [];
       current = moment.unix(min).startOf(step);
       momentjsStep = (function() {
         switch (step) {
-          case '2month':
+          case 'twomonth':
             return ['months', 2];
           case 'quarter':
             return ['months', 4];
-          case '6month':
+          case 'sixmonth':
             return ['months', 6];
-          case '2year':
+          case 'twoyear':
             return ['years', 2];
-          case '5year':
+          case 'fiveyear':
             return ['years', 5];
           case 'decade':
             return ['years', 10];
@@ -3605,6 +3648,7 @@ objects that can later be rendered using Geometry class.
       this.renderGrid = option('renderGrid', this.renderGridDefault);
       this.renderLabel = option('renderLabel', this.renderLabelDefault);
       this.renderLine = option('renderLine', this.renderLineDefault);
+      this.gridColor = option('gridColor', this.gridColor);
       _ref1 = poly.tick.make(domain, guideSpec, type), this.ticks = _ref1.ticks, this.ticksFormatter = _ref1.ticksFormatter;
       this.maxwidth = _.max(_.map(this.ticks, function(t) {
         return poly.strSize(t.value);
@@ -3677,7 +3721,7 @@ objects that can later be rendered using Geometry class.
       if (!obj) {
         throw poly.error.impl();
       }
-      obj.stroke = axisColorMinor;
+      obj.stroke = this.gridColor != null ? this.gridColor : axisColorMinor;
       return obj;
     };
 
@@ -4788,7 +4832,7 @@ attribute of that value.
       var _this = this;
 
       return this._NaNCheckWrap(function(value) {
-        var lower, m, space, upper, width, _ref;
+        var lower, space, upper, width, _ref, _timeConversion;
 
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
@@ -4802,9 +4846,57 @@ attribute of that value.
               return _this.range.min + value.v;
             }
             if ((_ref = value.f) === 'upper' || _ref === 'middle' || _ref === 'lower') {
-              upper = domain.bw === 'week' ? moment.unix(value.v).day(7).unix() : domain.bw === 'decade' ? (m = moment.unix(value.v).startOf('year'), m.year(10 * Math.floor(m.year() / 10)), m.unix()) : moment.unix(value.v).endOf(domain.bw).unix();
+              _timeConversion = function(n, timerange, lower) {
+                var m;
+
+                if (lower == null) {
+                  lower = 0;
+                }
+                m = moment.unix(value.v).startOf(timerange);
+                m[timerange](n * Math.floor(m[timerange]() / n) + n * lower);
+                return m.unix();
+              };
+              upper = (function() {
+                switch (domain.bw) {
+                  case 'week':
+                    return moment.unix(value.v).day(7).unix();
+                  case 'twomonth':
+                    return _timeConversion(2, 'month');
+                  case 'quarter':
+                    return _timeConversion(4, 'month');
+                  case 'sixmonth':
+                    return _timeConversion(6, 'month');
+                  case 'twoyear':
+                    return _timeConversion(2, 'year');
+                  case 'fiveyear':
+                    return _timeConversion(5, 'year');
+                  case 'decade':
+                    return _timeConversion(10, 'year');
+                  default:
+                    return moment.unix(value.v).endOf(domain.bw).unix();
+                }
+              })();
               upper = y(upper);
-              lower = domain.bw === 'week' ? moment.unix(value.v).day(0).unix() : domain.bw === 'decade' ? (m = moment.unix(value.v).startOf('year'), m.year(10 * Math.floor(m.year() / 10) + 10), m.unix()) : moment.unix(value.v).startOf(domain.bw).unix();
+              lower = (function() {
+                switch (domain.bw) {
+                  case 'week':
+                    return moment.unix(value.v).day(0).unix();
+                  case 'twomonth':
+                    return _timeConversion(2, 'month', 1);
+                  case 'quarter':
+                    return _timeConversion(4, 'month', 1);
+                  case 'sixmonth':
+                    return _timeConversion(6, 'month', 1);
+                  case 'twoyear':
+                    return _timeConversion(2, 'year', 1);
+                  case 'fiveyear':
+                    return _timeConversion(5, 'year', 1);
+                  case 'decade':
+                    return _timeConversion(10, 'year', 1);
+                  default:
+                    return moment.unix(value.v).startOf(domain.bw).unix();
+                }
+              })();
               lower = y(lower);
               space = (upper - lower) * _this.space;
               if (value.f === 'middle') {
@@ -5317,7 +5409,7 @@ attribute of that value.
                 possibleScales = ['linear', 'log'];
                 break;
               case 'color':
-                possibleScales = ['palatte', 'gradient', 'gradient2'];
+                possibleScales = ['palette', 'gradient', 'gradient2'];
                 break;
               case 'size':
                 possibleScales = ['linear', 'log'];
@@ -5614,7 +5706,7 @@ of a dataset, or knows how to retrieve data from some source.
 
 
 (function() {
-  var AbstractData, BackendData, FrontendData, _getArray, _getArrayOfArrays, _getCSV, _getDataType, _getObject,
+  var AbstractData, ApiData, BackendData, FrontendData, _getArray, _getArrayOfArrays, _getCSV, _getDataType, _getObject,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
@@ -5641,6 +5733,8 @@ of a dataset, or knows how to retrieve data from some source.
         return poly.data.url(data, meta, type);
       case 'csv':
         return poly.data.csv(data, meta);
+      case 'api':
+        return poly.data.api(data);
       default:
         throw poly.error.data("Unknown data format.");
     }
@@ -5671,6 +5765,21 @@ of a dataset, or knows how to retrieve data from some source.
   };
 
   /*
+  Data format which takes an API-facing function.
+  
+  Signature:
+  poly.data.api =
+   ((requestParams, (err, result) -> undefined) -> undefined) -> polyjsData
+  */
+
+
+  poly.data.api = function(apiFun) {
+    return new ApiData({
+      apiFun: apiFun
+    });
+  };
+
+  /*
   Helper functions
   */
 
@@ -5690,6 +5799,8 @@ of a dataset, or knows how to retrieve data from some source.
       } else {
         return 'csv';
       }
+    } else if (_.isFunction(data)) {
+      return 'api';
     } else {
       throw poly.error.data("Unknown data format.");
     }
@@ -5944,7 +6055,7 @@ of a dataset, or knows how to retrieve data from some source.
     }
 
     FrontendData.prototype.getData = function(callback) {
-      return callback(this);
+      return callback(null, this);
     };
 
     FrontendData.prototype.update = function(params) {
@@ -6160,7 +6271,8 @@ of a dataset, or knows how to retrieve data from some source.
         _this = this;
 
       if ((this.raw != null) && (!this.computeBackend)) {
-        return callback(this);
+        callback(null, this);
+        return;
       }
       chr = _.indexOf(this.url, "?") === -1 ? '?' : '&';
       url = this.url;
@@ -6200,7 +6312,7 @@ of a dataset, or knows how to retrieve data from some source.
           }
         })(), _this.key = _ref1.key, _this.raw = _ref1.raw, _this.meta = _ref1.meta;
         _this.data = _this.raw;
-        return callback(_this);
+        return callback(null, _this);
       });
     };
 
@@ -6214,6 +6326,69 @@ of a dataset, or knows how to retrieve data from some source.
     };
 
     return BackendData;
+
+  })(AbstractData);
+
+  ApiData = (function(_super) {
+    __extends(ApiData, _super);
+
+    function ApiData(params) {
+      this.getData = __bind(this.getData, this);      ApiData.__super__.constructor.call(this);
+      this.apiFun = params.apiFun;
+      this.computeBackend = true;
+    }
+
+    ApiData.prototype.getData = function(callback, dataSpec) {
+      var _this = this;
+
+      return this.apiFun(dataSpec, function(err, blob) {
+        var data, e, meta, _ref, _ref1;
+
+        if (err) {
+          callback(err, null);
+          return;
+        }
+        try {
+          blob = JSON.parse(blob);
+        } catch (_error) {
+          e = _error;
+        }
+        try {
+          data = blob.data;
+          meta = (_ref = blob.meta) != null ? _ref : {};
+          _ref1 = (function() {
+            switch (_getDataType(data)) {
+              case 'json-object':
+                return _getObject(data, meta);
+              case 'json-grid':
+                return _getArrayofArrays(data, meta);
+              case 'json-array':
+                return _getArray(data, meta);
+              case 'csv':
+                return _getCSV(data, meta);
+              default:
+                throw poly.error.data("Unknown data format.");
+            }
+          })(), _this.key = _ref1.key, _this.raw = _ref1.raw, _this.meta = _ref1.meta;
+          _this.data = _this.raw;
+          return callback(null, _this);
+        } catch (_error) {
+          e = _error;
+          return callback(e);
+        }
+      });
+    };
+
+    ApiData.prototype.update = function(params) {
+      this.raw = null;
+      return ApiData.__super__.update.call(this);
+    };
+
+    ApiData.prototype.renameMany = function(obj) {
+      return _.keys(obj).length === 0;
+    };
+
+    return ApiData;
 
   })(AbstractData);
 
@@ -6235,6 +6410,7 @@ data processing to be done.
       this.parseMethod = parseMethod != null ? parseMethod : poly.parser.layerToData;
       this._wrap = __bind(this._wrap, this);
       this.make = __bind(this.make, this);
+      this.layerMeta = layerSpec.meta;
       this.dataObj = layerSpec.data;
       this.initialSpec = this.parseMethod(layerSpec, grouping);
       this.prevSpec = null;
@@ -6259,10 +6435,34 @@ data processing to be done.
       }
       if (this.dataObj.computeBackend) {
         dataSpec = this.parseMethod(spec, grouping);
+        backendProcess(dataSpec, this.dataObj, wrappedCallback);
+        if (this.layerMeta && _.size(dataSpec.meta) < 1) {
+          dataSpec.meta = this.layerMeta;
+        }
         return backendProcess(dataSpec, this.dataObj, wrappedCallback);
       } else {
         dataSpec = this.parseMethod(spec, grouping);
-        return this.dataObj.getData(function(data) {
+        return this.dataObj.getData(function(err, data) {
+          var obj, _i, _len, _ref;
+
+          if (err) {
+            wrappedCallback(err, null);
+            return;
+          }
+          if (__indexOf.call(dataSpec.select, 'count(*)') >= 0) {
+            _ref = data.data;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              obj = _ref[_i];
+              obj['count(*)'] = 1;
+            }
+            data.meta['count(*)'] = {};
+            data.meta['count(*)']['type'] = 'num';
+            dataSpec.stats.stats.push({
+              key: 'count(*)',
+              name: 'count(*)',
+              stat: 'count'
+            });
+          }
           return frontendProcess(dataSpec, data, wrappedCallback);
         });
       }
@@ -6271,13 +6471,17 @@ data processing to be done.
     DataProcess.prototype._wrap = function(callback) {
       var _this = this;
 
-      return function(params) {
+      return function(err, params) {
         var data, meta;
 
+        if (err) {
+          callback(err, null, null);
+          return;
+        }
         data = params.data, meta = params.meta;
         _this.statData = data;
         _this.metaData = meta;
-        return callback(_this.statData, _this.metaData);
+        return callback(null, _this.statData, _this.metaData);
       };
     };
 
@@ -6336,16 +6540,33 @@ data processing to be done.
           throw poly.error.defn("The binwidth " + binwidth + " is invalid for a datetime varliable");
         }
         binFn = function(item) {
-          var m;
+          var _timeBinning,
+            _this = this;
 
-          if (binwidth === 'week') {
-            return item[name] = moment.unix(item[key]).day(0).unix();
-          } else if (binwidth === 'decade') {
-            m = moment.unix(item[key]).startOf('year');
-            m.year(10 * Math.floor(m.year() / 10));
+          _timeBinning = function(n, timerange) {
+            var m;
+
+            m = moment.unix(item[key]).startOf(timerange);
+            m[timerange](n * Math.floor(m[timerange]() / n));
             return item[name] = m.unix();
-          } else {
-            return item[name] = moment.unix(item[key]).startOf(binwidth).unix();
+          };
+          switch (binwidth) {
+            case 'week':
+              return item[name] = moment.unix(item[key]).day(0).unix();
+            case 'twomonth':
+              return _timeBinning(2, 'month');
+            case 'quarter':
+              return _timeBinning(4, 'month');
+            case 'sixmonth':
+              return _timeBinning(6, 'month');
+            case 'twoyear':
+              return _timeBinning(2, 'year');
+            case 'fiveyear':
+              return _timeBinning(5, 'year');
+            case 'decade':
+              return _timeBinning(10, 'year');
+            default:
+              return item[name] = moment.unix(item[key]).startOf(binwidth).unix();
           }
         };
         return {
@@ -6614,7 +6835,6 @@ data processing to be done.
       }
       return -1 * multiplier;
     };
-    data.sort(comparator);
     if (limit) {
       data = data.slice(0, +(limit - 1) + 1 || 9e9);
     }
@@ -6696,11 +6916,11 @@ data processing to be done.
     _ref6 = (_ref5 = dataSpec.select) != null ? _ref5 : [];
     for (_l = 0, _len3 = _ref6.length; _l < _len3; _l++) {
       key = _ref6[_l];
-      if (metaData[key] == null) {
+      if ((metaData[key] == null) && key !== 'count(*)') {
         throw poly.error.defn("You referenced a data column " + key + " that doesn't exist.");
       }
     }
-    return callback({
+    return callback(null, {
       data: data,
       meta: metaData
     });
@@ -6752,7 +6972,7 @@ Shared constants
 
 
 (function() {
-  var Area, Bar, Box, Layer, Line, Path, Point, Spline, Step, Text, Tile, aesthetics, defaults, sf, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9,
+  var Area, Bar, Box, Layer, Line, Path, Point, Spline, Text, Tile, aesthetics, defaults, sf, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -6827,15 +7047,15 @@ Shared constants
 
       tooltip = null;
       if (typeof this.spec.tooltip === 'function') {
-        return tooltip = function(axes) {
+        return tooltip = function(scales) {
           return this.spec.tooltip(item);
         };
       } else if (this.spec.tooltip != null) {
-        return tooltip = function(axes) {
+        return tooltip = function(scales) {
           return this.spec.tooltip;
         };
       } else {
-        return tooltip = function(axes) {
+        return tooltip = function(scales) {
           var aes, formatter, key, seenKeys, text, _ref;
 
           text = "";
@@ -6848,8 +7068,8 @@ Shared constants
             } else {
               seenKeys.push(key);
             }
-            if ((axes != null) && (axes[aes] != null)) {
-              formatter = axes[aes].ticksFormatter;
+            if ((scales != null) && (scales[aes] != null)) {
+              formatter = poly.format(scales[aes].domain.type, scales[aes].domain.bw);
             } else {
               formatter = function(x) {
                 return x;
@@ -6927,7 +7147,7 @@ Shared constants
           _results = [];
           for (_i = 0, _len = missing.length; _i < _len; _i++) {
             x = missing[_i];
-            _results.push(0);
+            _results.push(void 0);
           }
           return _results;
         })())
@@ -7097,7 +7317,8 @@ Shared constants
     }
 
     Path.prototype._calcGeoms = function() {
-      var data, datas, evtData, group, idfn, item, k, key, sample, _i, _len, _results;
+      var data, datas, evtData, group, idfn, k, key, sample, _i, _len, _results,
+        _this = this;
 
       group = (function() {
         var _i, _len, _ref2, _results;
@@ -7128,26 +7349,12 @@ Shared constants
           marks: {
             0: {
               type: 'path',
-              x: (function() {
-                var _j, _len1, _results1;
-
-                _results1 = [];
-                for (_j = 0, _len1 = data.length; _j < _len1; _j++) {
-                  item = data[_j];
-                  _results1.push(this._getValue(item, 'x'));
-                }
-                return _results1;
-              }).call(this),
-              y: (function() {
-                var _j, _len1, _results1;
-
-                _results1 = [];
-                for (_j = 0, _len1 = data.length; _j < _len1; _j++) {
-                  item = data[_j];
-                  _results1.push(this._getValue(item, 'y'));
-                }
-                return _results1;
-              }).call(this),
+              x: _.map(data, function(item) {
+                return _this._getValue(item, 'x');
+              }),
+              y: _.map(data, function(item) {
+                return _this._getValue(item, 'y');
+              }),
               color: this._getValue(sample, 'color'),
               opacity: this._getValue(sample, 'opacity'),
               size: this._getValue(sample, 'size')
@@ -7181,7 +7388,7 @@ Shared constants
     };
 
     Line.prototype._calcGeoms = function() {
-      var all_x, data, datas, evtData, group, idfn, item, k, key, sample, x, y, _i, _len, _ref3, _results;
+      var all_x, data, datas, evtData, group, i, idfn, item, k, key, pair, sample, segments, x, y, _i, _j, _len, _len1, _ref3, _results;
 
       all_x = _.uniq((function() {
         var _i, _len, _ref3, _results;
@@ -7205,16 +7412,23 @@ Shared constants
         }
         return _results;
       }).call(this);
-      datas = poly.groupBy(this.statData, group);
+      datas = _.pairs(poly.groupBy(this.statData, group));
       idfn = this._getIdFunc();
       this.geoms = {};
+      segments = (_.max(datas, function(pair) {
+        return pair[1].length;
+      }))[1].length === 1;
       _results = [];
-      for (k in datas) {
-        data = datas[k];
+      for (i = _i = 0, _len = datas.length; _i < _len; i = ++_i) {
+        pair = datas[i];
+        key = pair[0], data = pair[1];
+        if (segments && i + 1 < datas.length) {
+          data.push(datas[i + 1][1][0]);
+        }
         sample = data[0];
         evtData = {};
-        for (_i = 0, _len = group.length; _i < _len; _i++) {
-          key = group[_i];
+        for (_j = 0, _len1 = group.length; _j < _len1; _j++) {
+          key = group[_j];
           evtData[key] = {
             "in": [sample[key]]
           };
@@ -7241,47 +7455,86 @@ Shared constants
 
   })(Layer);
 
+  Spline = (function(_super) {
+    __extends(Spline, _super);
+
+    function Spline() {
+      _ref3 = Spline.__super__.constructor.apply(this, arguments);
+      return _ref3;
+    }
+
+    Spline.prototype._calcGeoms = function() {
+      var geom, key, key2, mark, _ref4, _results;
+
+      Spline.__super__._calcGeoms.call(this);
+      _ref4 = this.geoms;
+      _results = [];
+      for (key in _ref4) {
+        geom = _ref4[key];
+        _results.push((function() {
+          var _ref5, _results1;
+
+          _ref5 = geom.marks;
+          _results1 = [];
+          for (key2 in _ref5) {
+            mark = _ref5[key2];
+            _results1.push(mark.type = 'spline');
+          }
+          return _results1;
+        })());
+      }
+      return _results;
+    };
+
+    return Spline;
+
+  })(Line);
+
   Bar = (function(_super) {
     __extends(Bar, _super);
 
     function Bar() {
-      _ref3 = Bar.__super__.constructor.apply(this, arguments);
-      return _ref3;
+      _ref4 = Bar.__super__.constructor.apply(this, arguments);
+      return _ref4;
     }
 
     Bar.prototype._calcGeoms = function() {
-      var m, _ref4;
+      var m, _ref5;
 
-      if (this.mapping.x) {
-        m = this.meta[this.mapping.x];
-        if (m.type !== 'cat' && !m.bw && !m.binned) {
-          if (m.type === 'num' && (this.guideSpec.x.bw == null)) {
-            throw poly.error.type("Bar chart x-values need to be binned. Set binwidth or use the bin() transform!");
+      if (this.mapping.y && this.meta[this.mapping.y].type === 'cat') {
+        throw poly.error.defn("The dependent variable of a bar chart cannot be categorical!");
+      } else {
+        if (this.mapping.x) {
+          m = this.meta[this.mapping.x];
+          if (m.type !== 'cat' && !m.bw && !m.binned) {
+            if (m.type === 'num' && (this.guideSpec.x.bw == null)) {
+              throw poly.error.type("Bar chart x-values need to be binned. Set binwidth or use the bin() transform!");
+            }
           }
         }
-      }
-      this.position = (_ref4 = this.spec.position) != null ? _ref4 : 'stack';
-      if (this.position === 'stack') {
-        return this._calcGeomsStack();
-      } else if (this.position === 'dodge') {
-        return this._calcGeomsDodge();
-      } else {
-        throw poly.error.defn("Bar chart position " + this.position + " is unknown.");
+        this.position = (_ref5 = this.spec.position) != null ? _ref5 : 'stack';
+        if (this.position === 'stack') {
+          return this._calcGeomsStack();
+        } else if (this.position === 'dodge') {
+          return this._calcGeomsDodge();
+        } else {
+          throw poly.error.defn("Bar chart position " + this.position + " is unknown.");
+        }
       }
     };
 
     Bar.prototype._calcGeomsDodge = function() {
-      var evtData, group, idfn, item, k, lower, upper, v, _i, _len, _ref4, _results;
+      var evtData, group, idfn, item, k, lower, upper, v, _i, _len, _ref5, _results;
 
       group = this.mapping.x != null ? [this.mapping.x] : [];
       this._dodge(group);
       this._stack(group.concat("$n"));
       this.geoms = {};
       idfn = this._getIdFunc();
-      _ref4 = this.statData;
+      _ref5 = this.statData;
       _results = [];
-      for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
-        item = _ref4[_i];
+      for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
+        item = _ref5[_i];
         evtData = {};
         for (k in item) {
           v = item[k];
@@ -7311,16 +7564,16 @@ Shared constants
     };
 
     Bar.prototype._calcGeomsStack = function() {
-      var evtData, group, idfn, item, k, v, _i, _len, _ref4, _results;
+      var evtData, group, idfn, item, k, v, _i, _len, _ref5, _results;
 
       group = this.mapping.x != null ? [this.mapping.x] : [];
       this._stack(group);
       idfn = this._getIdFunc();
       this.geoms = {};
-      _ref4 = this.statData;
+      _ref5 = this.statData;
       _results = [];
-      for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
-        item = _ref4[_i];
+      for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
+        item = _ref5[_i];
         evtData = {};
         for (k in item) {
           v = item[k];
@@ -7355,20 +7608,20 @@ Shared constants
     __extends(Area, _super);
 
     function Area() {
-      _ref4 = Area.__super__.constructor.apply(this, arguments);
-      return _ref4;
+      _ref5 = Area.__super__.constructor.apply(this, arguments);
+      return _ref5;
     }
 
     Area.prototype._calcGeoms = function() {
       var all_x, counters, data, datas, evtData, group, idfn, item, k, key, sample, x, y, y_next, y_previous, _i, _j, _k, _len, _len1, _len2, _results;
 
       all_x = (function() {
-        var _i, _len, _ref5, _results;
+        var _i, _len, _ref6, _results;
 
-        _ref5 = this.statData;
+        _ref6 = this.statData;
         _results = [];
-        for (_i = 0, _len = _ref5.length; _i < _len; _i++) {
-          item = _ref5[_i];
+        for (_i = 0, _len = _ref6.length; _i < _len; _i++) {
+          item = _ref6[_i];
           if (poly.isDefined(this._getValue(item, 'y')) && poly.isDefined(x = this._getValue(item, 'x'))) {
             _results.push(x);
           }
@@ -7382,12 +7635,12 @@ Shared constants
         counters[key] = 0;
       }
       group = (function() {
-        var _j, _len1, _ref5, _results;
+        var _j, _len1, _ref6, _results;
 
-        _ref5 = _.without(_.keys(this.mapping), 'x', 'y');
+        _ref6 = _.without(_.keys(this.mapping), 'x', 'y');
         _results = [];
-        for (_j = 0, _len1 = _ref5.length; _j < _len1; _j++) {
-          k = _ref5[_j];
+        for (_j = 0, _len1 = _ref6.length; _j < _len1; _j++) {
+          k = _ref6[_j];
           _results.push(this.mapping[k]);
         }
         return _results;
@@ -7459,19 +7712,19 @@ Shared constants
     __extends(Text, _super);
 
     function Text() {
-      _ref5 = Text.__super__.constructor.apply(this, arguments);
-      return _ref5;
+      _ref6 = Text.__super__.constructor.apply(this, arguments);
+      return _ref6;
     }
 
     Text.prototype._calcGeoms = function() {
-      var evtData, idfn, item, k, v, _i, _len, _ref6, _results;
+      var evtData, idfn, item, k, v, _i, _len, _ref7, _results;
 
       idfn = this._getIdFunc();
       this.geoms = {};
-      _ref6 = this.statData;
+      _ref7 = this.statData;
       _results = [];
-      for (_i = 0, _len = _ref6.length; _i < _len; _i++) {
-        item = _ref6[_i];
+      for (_i = 0, _len = _ref7.length; _i < _len; _i++) {
+        item = _ref7[_i];
         evtData = {};
         for (k in item) {
           v = item[k];
@@ -7506,19 +7759,19 @@ Shared constants
     __extends(Tile, _super);
 
     function Tile() {
-      _ref6 = Tile.__super__.constructor.apply(this, arguments);
-      return _ref6;
+      _ref7 = Tile.__super__.constructor.apply(this, arguments);
+      return _ref7;
     }
 
     Tile.prototype._calcGeoms = function() {
-      var evtData, idfn, item, k, v, x, y, _i, _len, _ref7, _results;
+      var evtData, idfn, item, k, v, x, y, _i, _len, _ref8, _results;
 
       idfn = this._getIdFunc();
       this.geoms = {};
-      _ref7 = this.statData;
+      _ref8 = this.statData;
       _results = [];
-      for (_i = 0, _len = _ref7.length; _i < _len; _i++) {
-        item = _ref7[_i];
+      for (_i = 0, _len = _ref8.length; _i < _len; _i++) {
+        item = _ref8[_i];
         evtData = {};
         x = this._getValue(item, 'x');
         y = this._getValue(item, 'y');
@@ -7556,19 +7809,19 @@ Shared constants
     __extends(Box, _super);
 
     function Box() {
-      _ref7 = Box.__super__.constructor.apply(this, arguments);
-      return _ref7;
+      _ref8 = Box.__super__.constructor.apply(this, arguments);
+      return _ref8;
     }
 
     Box.prototype._calcGeoms = function() {
-      var color, evtData, geom, idfn, index, item, k, opacity, point, size, v, x, xl, xm, xu, y, _i, _j, _len, _len1, _ref8, _ref9, _results;
+      var color, evtData, geom, idfn, index, item, k, opacity, point, size, v, x, xl, xm, xu, y, _i, _j, _len, _len1, _ref10, _ref9, _results;
 
       idfn = this._getIdFunc();
       this.geoms = {};
-      _ref8 = this.statData;
+      _ref9 = this.statData;
       _results = [];
-      for (_i = 0, _len = _ref8.length; _i < _len; _i++) {
-        item = _ref8[_i];
+      for (_i = 0, _len = _ref9.length; _i < _len; _i++) {
+        item = _ref9[_i];
         evtData = {};
         for (k in item) {
           v = item[k];
@@ -7644,9 +7897,9 @@ Shared constants
             }
           };
         }
-        _ref9 = y.outliers;
-        for (index = _j = 0, _len1 = _ref9.length; _j < _len1; index = ++_j) {
-          point = _ref9[index];
+        _ref10 = y.outliers;
+        for (index = _j = 0, _len1 = _ref10.length; _j < _len1; index = ++_j) {
+          point = _ref10[index];
           geom.marks[index] = {
             type: 'circle',
             x: xm,
@@ -7662,162 +7915,6 @@ Shared constants
     };
 
     return Box;
-
-  })(Layer);
-
-  Spline = (function(_super) {
-    __extends(Spline, _super);
-
-    function Spline() {
-      _ref8 = Spline.__super__.constructor.apply(this, arguments);
-      return _ref8;
-    }
-
-    Spline.prototype.defaults = {
-      'x': sf.novalue(),
-      'y': sf.novalue(),
-      'color': 'steelblue',
-      'size': 2,
-      'opacity': 0.9,
-      'shape': 1
-    };
-
-    Spline.prototype._calcGeoms = function() {
-      var all_x, data, datas, evtData, group, idfn, item, k, key, sample, x, y, _i, _len, _ref9, _results;
-
-      all_x = _.uniq((function() {
-        var _i, _len, _ref9, _results;
-
-        _ref9 = this.statData;
-        _results = [];
-        for (_i = 0, _len = _ref9.length; _i < _len; _i++) {
-          item = _ref9[_i];
-          _results.push(this._getValue(item, 'x'));
-        }
-        return _results;
-      }).call(this));
-      group = (function() {
-        var _i, _len, _ref9, _results;
-
-        _ref9 = _.without(_.keys(this.mapping), 'x', 'y');
-        _results = [];
-        for (_i = 0, _len = _ref9.length; _i < _len; _i++) {
-          k = _ref9[_i];
-          _results.push(this.mapping[k]);
-        }
-        return _results;
-      }).call(this);
-      datas = poly.groupBy(this.statData, group);
-      idfn = this._getIdFunc();
-      this.geoms = {};
-      _results = [];
-      for (k in datas) {
-        data = datas[k];
-        sample = data[0];
-        evtData = {};
-        for (_i = 0, _len = group.length; _i < _len; _i++) {
-          key = group[_i];
-          evtData[key] = {
-            "in": [sample[key]]
-          };
-        }
-        _ref9 = this._fillZeros(data, all_x), x = _ref9.x, y = _ref9.y;
-        _results.push(this.geoms[idfn(sample)] = {
-          marks: {
-            0: {
-              type: 'spline',
-              x: x,
-              y: y,
-              color: this._getValue(sample, 'color'),
-              opacity: this._getValue(sample, 'opacity'),
-              size: this._getValue(sample, 'size')
-            }
-          },
-          evtData: evtData
-        });
-      }
-      return _results;
-    };
-
-    return Spline;
-
-  })(Layer);
-
-  Step = (function(_super) {
-    __extends(Step, _super);
-
-    function Step() {
-      _ref9 = Step.__super__.constructor.apply(this, arguments);
-      return _ref9;
-    }
-
-    Step.prototype.defaults = {
-      'x': sf.novalue(),
-      'y': sf.novalue(),
-      'color': 'steelblue',
-      'size': 2,
-      'opacity': 0.9,
-      'shape': 1
-    };
-
-    Step.prototype._calcGeoms = function() {
-      var all_x, data, datas, evtData, group, idfn, item, k, key, sample, x, y, _i, _len, _ref10, _results;
-
-      all_x = _.uniq((function() {
-        var _i, _len, _ref10, _results;
-
-        _ref10 = this.statData;
-        _results = [];
-        for (_i = 0, _len = _ref10.length; _i < _len; _i++) {
-          item = _ref10[_i];
-          _results.push(this._getValue(item, 'x'));
-        }
-        return _results;
-      }).call(this));
-      group = (function() {
-        var _i, _len, _ref10, _results;
-
-        _ref10 = _.without(_.keys(this.mapping), 'x', 'y');
-        _results = [];
-        for (_i = 0, _len = _ref10.length; _i < _len; _i++) {
-          k = _ref10[_i];
-          _results.push(this.mapping[k]);
-        }
-        return _results;
-      }).call(this);
-      datas = poly.groupBy(this.statData, group);
-      idfn = this._getIdFunc();
-      this.geoms = {};
-      _results = [];
-      for (k in datas) {
-        data = datas[k];
-        sample = data[0];
-        evtData = {};
-        for (_i = 0, _len = group.length; _i < _len; _i++) {
-          key = group[_i];
-          evtData[key] = {
-            "in": [sample[key]]
-          };
-        }
-        _ref10 = this._fillZeros(data, all_x), x = _ref10.x, y = _ref10.y;
-        _results.push(this.geoms[idfn(sample)] = {
-          marks: {
-            0: {
-              type: 'step',
-              x: x,
-              y: y,
-              color: this._getValue(sample, 'color'),
-              opacity: this._getValue(sample, 'opacity'),
-              size: this._getValue(sample, 'size')
-            }
-          },
-          evtData: evtData
-        });
-      }
-      return _results;
-    };
-
-    return Step;
 
   })(Layer);
 
@@ -7841,8 +7938,7 @@ Shared constants
     'bar': Bar,
     'tile': Tile,
     'box': Box,
-    'spline': Spline,
-    'step': Step
+    'spline': Spline
   };
 
   poly.layer.make = function(layerSpec, strictMode, guideSpec) {
@@ -8078,7 +8174,7 @@ Dimension object has the following elements (all numeric in pixels):
 
 
 (function() {
-  var Area, Circle, CircleRect, Line, Path, PathRenderer, PolarLine, Rect, Renderer, Spline, Step, Text, renderer, _ref, _ref1, _ref10, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9,
+  var Area, Circle, CircleRect, Line, Path, PathRenderer, PolarLine, Rect, Renderer, Spline, Text, renderer, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -8291,15 +8387,6 @@ Dimension object has the following elements (all numeric in pixels):
         case 'spline':
           path = _.map(xs, function(x, i) {
             return (i === 0 ? "M " + x + " " + ys[i] + " R " : '') + ("" + x + " " + ys[i]);
-          });
-          break;
-        case 'step':
-          path = _.map(xs, function(x, i) {
-            if (i === 0) {
-              return "M " + x + " " + ys[i];
-            } else {
-              return "L " + x + " " + ys[i - 1] + " " + x + " " + ys[i];
-            }
           });
           break;
         default:
@@ -8584,27 +8671,60 @@ Dimension object has the following elements (all numeric in pixels):
 
   })(PathRenderer);
 
+  Spline = (function(_super) {
+    __extends(Spline, _super);
+
+    function Spline() {
+      _ref4 = Spline.__super__.constructor.apply(this, arguments);
+      return _ref4;
+    }
+
+    Spline.prototype.attr = function(scales, coord, offset, mark, mayflip) {
+      var i, size, stroke, x, xi, y, yi, _i, _len, _ref5, _ref6, _ref7, _ref8;
+
+      _ref5 = poly.sortArrays(scales.x.compare, [mark.x, mark.y]), mark.x = _ref5[0], mark.y = _ref5[1];
+      _ref6 = coord.getXY(mayflip, mark), x = _ref6.x, y = _ref6.y;
+      this._checkArrayUndefined(x, y, "Spline");
+      for (i = _i = 0, _len = x.length; _i < _len; i = ++_i) {
+        xi = x[i];
+        yi = y[i];
+      }
+      _ref7 = this._applyOffset(x, y, offset), x = _ref7.x, y = _ref7.y;
+      _ref8 = this._checkArrayNaN(x, y), x = _ref8.x, y = _ref8.y;
+      stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
+      size = this._maybeApply(scales, mark, mark.size ? 'size' : 'stroke-width');
+      return this._shared(scales, mark, {
+        path: this._makePath(x, y, 'spline'),
+        stroke: stroke,
+        'stroke-width': size
+      });
+    };
+
+    return Spline;
+
+  })(Line);
+
   PolarLine = (function(_super) {
     __extends(PolarLine, _super);
 
     function PolarLine() {
-      _ref4 = PolarLine.__super__.constructor.apply(this, arguments);
-      return _ref4;
+      _ref5 = PolarLine.__super__.constructor.apply(this, arguments);
+      return _ref5;
     }
 
     PolarLine.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var dir, i, large, path, r, stroke, t, x, y, _ref5, _ref6;
+      var dir, i, large, path, r, stroke, t, x, y, _ref6, _ref7;
 
-      _ref5 = coord.getXY(mayflip, mark), x = _ref5.x, y = _ref5.y, r = _ref5.r, t = _ref5.t;
+      _ref6 = coord.getXY(mayflip, mark), x = _ref6.x, y = _ref6.y, r = _ref6.r, t = _ref6.t;
       this._checkArrayUndefined(x, y, "Line");
-      _ref6 = this._applyOffset(x, y, offset), x = _ref6.x, y = _ref6.y;
+      _ref7 = this._applyOffset(x, y, offset), x = _ref7.x, y = _ref7.y;
       path = (function() {
-        var _i, _ref7;
+        var _i, _ref8;
 
         if (_.max(r) - _.min(r) < poly["const"].epsilon) {
           r = r[0];
           path = "M " + x[0] + " " + y[0];
-          for (i = _i = 1, _ref7 = x.length - 1; 1 <= _ref7 ? _i <= _ref7 : _i >= _ref7; i = 1 <= _ref7 ? ++_i : --_i) {
+          for (i = _i = 1, _ref8 = x.length - 1; 1 <= _ref8 ? _i <= _ref8 : _i >= _ref8; i = 1 <= _ref8 ? ++_i : --_i) {
             large = Math.abs(t[i] - t[i - 1]) > Math.PI ? 1 : 0;
             dir = t[i] - t[i - 1] > 0 ? 1 : 0;
             path += "A " + r + " " + r + " 0 " + large + " " + dir + " " + x[i] + " " + y[i];
@@ -8629,8 +8749,8 @@ Dimension object has the following elements (all numeric in pixels):
     __extends(Area, _super);
 
     function Area() {
-      _ref5 = Area.__super__.constructor.apply(this, arguments);
-      return _ref5;
+      _ref6 = Area.__super__.constructor.apply(this, arguments);
+      return _ref6;
     }
 
     Area.prototype._make = function(paper) {
@@ -8638,17 +8758,17 @@ Dimension object has the following elements (all numeric in pixels):
     };
 
     Area.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var bottom, top, x, y, _ref6, _ref7;
+      var bottom, top, x, y, _ref7, _ref8;
 
-      _ref6 = poly.sortArrays(scales.x.compare, [mark.x, mark.y.top]), x = _ref6[0], y = _ref6[1];
+      _ref7 = poly.sortArrays(scales.x.compare, [mark.x, mark.y.top]), x = _ref7[0], y = _ref7[1];
       top = coord.getXY(mayflip, {
         x: x,
         y: y
       });
       top = this._applyOffset(top.x, top.y, offset);
-      _ref7 = poly.sortArrays((function(a, b) {
+      _ref8 = poly.sortArrays((function(a, b) {
         return -scales.x.compare(a, b);
-      }), [mark.x, mark.y.bottom]), x = _ref7[0], y = _ref7[1];
+      }), [mark.x, mark.y.bottom]), x = _ref8[0], y = _ref8[1];
       bottom = coord.getXY(mayflip, {
         x: x,
         y: y
@@ -8672,8 +8792,8 @@ Dimension object has the following elements (all numeric in pixels):
     __extends(Rect, _super);
 
     function Rect() {
-      _ref6 = Rect.__super__.constructor.apply(this, arguments);
-      return _ref6;
+      _ref7 = Rect.__super__.constructor.apply(this, arguments);
+      return _ref7;
     }
 
     Rect.prototype._make = function(paper) {
@@ -8681,12 +8801,12 @@ Dimension object has the following elements (all numeric in pixels):
     };
 
     Rect.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var stroke, x, y, _ref7, _ref8;
+      var stroke, x, y, _ref8, _ref9;
 
-      _ref7 = coord.getXY(mayflip, mark), x = _ref7.x, y = _ref7.y;
+      _ref8 = coord.getXY(mayflip, mark), x = _ref8.x, y = _ref8.y;
       this._checkPointUndefined(x[0], y[0], "Bar");
       this._checkPointUndefined(x[1], y[1], "Bar");
-      _ref8 = this._applyOffset(x, y, offset), x = _ref8.x, y = _ref8.y;
+      _ref9 = this._applyOffset(x, y, offset), x = _ref9.x, y = _ref9.y;
       stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
       return this._shared(scales, mark, {
         x: _.min(x),
@@ -8707,8 +8827,8 @@ Dimension object has the following elements (all numeric in pixels):
     __extends(CircleRect, _super);
 
     function CircleRect() {
-      _ref7 = CircleRect.__super__.constructor.apply(this, arguments);
-      return _ref7;
+      _ref8 = CircleRect.__super__.constructor.apply(this, arguments);
+      return _ref8;
     }
 
     CircleRect.prototype._make = function(paper) {
@@ -8716,26 +8836,31 @@ Dimension object has the following elements (all numeric in pixels):
     };
 
     CircleRect.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var large, path, r, stroke, t, x, x0, x1, y, y0, y1, _ref10, _ref11, _ref8, _ref9;
+      var large, path, r, stroke, t, x, x0, x1, y, y0, y1, _ref10, _ref11, _ref12, _ref9;
 
-      _ref8 = mark.x, x0 = _ref8[0], x1 = _ref8[1];
-      _ref9 = mark.y, y0 = _ref9[0], y1 = _ref9[1];
+      _ref9 = mark.x, x0 = _ref9[0], x1 = _ref9[1];
+      _ref10 = mark.y, y0 = _ref10[0], y1 = _ref10[1];
       this._checkPointUndefined(x0, y0, "Bar");
       this._checkPointUndefined(x1, y1, "Bar");
       mark.x = [x0, x0, x1, x1];
       mark.y = [y0, y1, y1, y0];
-      _ref10 = coord.getXY(mayflip, mark), x = _ref10.x, y = _ref10.y, r = _ref10.r, t = _ref10.t;
-      _ref11 = this._applyOffset(x, y, offset), x = _ref11.x, y = _ref11.y;
+      _ref11 = coord.getXY(mayflip, mark), x = _ref11.x, y = _ref11.y, r = _ref11.r, t = _ref11.t;
+      _ref12 = this._applyOffset(x, y, offset), x = _ref12.x, y = _ref12.y;
       if (coord.flip) {
         x.push(x.splice(0, 1)[0]);
         y.push(y.splice(0, 1)[0]);
         r.push(r.splice(0, 1)[0]);
         t.push(t.splice(0, 1)[0]);
       }
-      large = Math.abs(t[1] - t[0]) > Math.PI ? 1 : 0;
-      path = "M " + x[0] + " " + y[0] + " A " + r[0] + " " + r[0] + " 0 " + large + " 1 " + x[1] + " " + y[1];
-      large = Math.abs(t[3] - t[2]) > Math.PI ? 1 : 0;
-      path += "L " + x[2] + " " + y[2] + " A " + r[2] + " " + r[2] + " 0 " + large + " 0 " + x[3] + " " + y[3] + " Z";
+      if (2 * Math.PI - Math.abs(t[1] - t[0]) < poly["const"].epsilon) {
+        path = "M " + x[0] + " " + y[0] + " A " + r[0] + " " + r[0] + " 0 1 1 " + x[0] + " " + (y[0] + 2 * r[0]) + " A " + r[1] + " " + r[1] + " 0 1 1 " + x[1] + " " + y[1];
+        path += "M " + x[2] + " " + y[2] + " A " + r[2] + " " + r[2] + " 0 1 0 " + x[2] + " " + (y[2] + 2 * r[2]) + " A " + r[3] + " " + r[3] + " 0 1 0 " + x[3] + " " + y[3] + " Z";
+      } else {
+        large = Math.abs(t[1] - t[0]) > Math.PI ? 1 : 0;
+        path = "M " + x[0] + " " + y[0] + " A " + r[0] + " " + r[1] + " 0 " + large + " 1 " + x[1] + " " + y[1];
+        large = Math.abs(t[3] - t[2]) > Math.PI ? 1 : 0;
+        path += "L " + x[2] + " " + y[2] + " A " + r[2] + " " + r[3] + " 0 " + large + " 0 " + x[3] + " " + y[3] + " Z";
+      }
       stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
       return this._shared(scales, mark, {
         path: path,
@@ -8753,8 +8878,8 @@ Dimension object has the following elements (all numeric in pixels):
     __extends(Text, _super);
 
     function Text() {
-      _ref8 = Text.__super__.constructor.apply(this, arguments);
-      return _ref8;
+      _ref9 = Text.__super__.constructor.apply(this, arguments);
+      return _ref9;
     }
 
     Text.prototype._make = function(paper) {
@@ -8762,18 +8887,18 @@ Dimension object has the following elements (all numeric in pixels):
     };
 
     Text.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var x, y, _ref10, _ref11, _ref9;
+      var x, y, _ref10, _ref11, _ref12;
 
-      _ref9 = coord.getXY(mayflip, mark), x = _ref9.x, y = _ref9.y;
+      _ref10 = coord.getXY(mayflip, mark), x = _ref10.x, y = _ref10.y;
       this._checkPointUndefined(x, y, "Text");
-      _ref10 = this._applyOffset(x, y, offset), x = _ref10.x, y = _ref10.y;
+      _ref11 = this._applyOffset(x, y, offset), x = _ref11.x, y = _ref11.y;
       return this._shared(scales, mark, {
         x: x,
         y: y,
         r: 10,
         text: this._maybeApply(scales, mark, 'text'),
         'font-size': this._maybeApply(scales, mark, 'size'),
-        'text-anchor': (_ref11 = mark['text-anchor']) != null ? _ref11 : 'left',
+        'text-anchor': (_ref12 = mark['text-anchor']) != null ? _ref12 : 'left',
         fill: this._maybeApply(scales, mark, 'color') || 'black'
       });
     };
@@ -8781,76 +8906,6 @@ Dimension object has the following elements (all numeric in pixels):
     return Text;
 
   })(Renderer);
-
-  Spline = (function(_super) {
-    __extends(Spline, _super);
-
-    function Spline() {
-      _ref9 = Spline.__super__.constructor.apply(this, arguments);
-      return _ref9;
-    }
-
-    Spline.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var i, size, stroke, x, xi, y, yi, _i, _len, _ref10, _ref11, _ref12, _ref13;
-
-      _ref10 = poly.sortArrays(scales.x.compare, [mark.x, mark.y]), mark.x = _ref10[0], mark.y = _ref10[1];
-      _ref11 = coord.getXY(mayflip, mark), x = _ref11.x, y = _ref11.y;
-      this._checkArrayUndefined(x, y, "Spline");
-      for (i = _i = 0, _len = x.length; _i < _len; i = ++_i) {
-        xi = x[i];
-        yi = y[i];
-      }
-      _ref12 = this._applyOffset(x, y, offset), x = _ref12.x, y = _ref12.y;
-      _ref13 = this._checkArrayNaN(x, y), x = _ref13.x, y = _ref13.y;
-      stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
-      size = this._maybeApply(scales, mark, mark.size ? 'size' : 'stroke-width');
-      return this._shared(scales, mark, {
-        path: this._makePath(x, y, 'spline'),
-        stroke: stroke,
-        'stroke-width': size
-      });
-    };
-
-    return Spline;
-
-  })(Line);
-
-  Step = (function(_super) {
-    __extends(Step, _super);
-
-    function Step() {
-      _ref10 = Step.__super__.constructor.apply(this, arguments);
-      return _ref10;
-    }
-
-    Step.prototype._make = function(paper) {
-      return paper.path();
-    };
-
-    Step.prototype.attr = function(scales, coord, offset, mark, mayflip) {
-      var i, size, stroke, x, xi, y, yi, _i, _len, _ref11, _ref12, _ref13, _ref14;
-
-      _ref11 = poly.sortArrays(scales.x.compare, [mark.x, mark.y]), mark.x = _ref11[0], mark.y = _ref11[1];
-      _ref12 = coord.getXY(mayflip, mark), x = _ref12.x, y = _ref12.y;
-      this._checkArrayUndefined(x, y, "Spline");
-      for (i = _i = 0, _len = x.length; _i < _len; i = ++_i) {
-        xi = x[i];
-        yi = y[i];
-      }
-      _ref13 = this._applyOffset(x, y, offset), x = _ref13.x, y = _ref13.y;
-      _ref14 = this._checkArrayNaN(x, y), x = _ref14.x, y = _ref14.y;
-      stroke = this._maybeApply(scales, mark, mark.stroke ? 'stroke' : 'color');
-      size = this._maybeApply(scales, mark, mark.size ? 'size' : 'stroke-width');
-      return this._shared(scales, mark, {
-        path: this._makePath(x, y, 'step'),
-        stroke: stroke,
-        'stroke-width': size
-      });
-    };
-
-    return Step;
-
-  })(Line);
 
   renderer = {
     cartesian: {
@@ -8861,8 +8916,7 @@ Dimension object has the following elements (all numeric in pixels):
       path: new Path(),
       text: new Text(),
       rect: new Rect(),
-      spline: new Spline(),
-      step: new Step()
+      spline: new Spline()
     },
     polar: {
       circle: new Circle(),
@@ -8937,7 +8991,7 @@ The functions here makes it easier to create common types of interactions.
           mousePos = poly.getXY(offset, event);
           x1 = mousePos.x;
           y1 = mousePos.y;
-          tooltip.text = paper.text(x1, y1, obj.tooltip(graph.axes.axes)).attr({
+          tooltip.text = paper.text(x1, y1, obj.tooltip(graph.scaleSet.scales)).attr({
             'text-anchor': 'middle',
             'fill': 'white'
           });
@@ -9626,7 +9680,7 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Pivot.prototype.render = function(statData, metaData) {
-      var COL_FILL, COL_TOFILL, NUMCOL, NUMROW, NUMVAL, ROW_FILL, ROW_VALUES, aes, cell, colTicks, domain, domains, i, index, item, k, key, m, n, row, rowTicks, size, space, table, tick, ticks, v, val, values, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _o, _p, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+      var COL_FILL, COL_TOFILL, COL_VALUES, NUMCOL, NUMROW, NUMVAL, ROW_FILL, ROW_VALUES, aes, cell, colTicks, domain, domains, i, index, item, j, k, key, m, n, row, rowTicks, size, space, table, tick, ticks, v, val, values, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _o, _p, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
 
       domains = {};
       ticks = {};
@@ -9649,10 +9703,12 @@ The functions here makes it easier to create common types of interactions.
       NUMROW = this.spec.rows.length;
       NUMVAL = this.spec.values.length;
       COL_FILL = 1;
+      COL_VALUES = [];
       _ref2 = ticks.columns;
       for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
         colTicks = _ref2[_k];
         COL_FILL *= _.size(colTicks.ticks);
+        COL_VALUES.push(COL_FILL);
       }
       COL_FILL *= NUMVAL;
       COL_TOFILL = 1;
@@ -9709,7 +9765,6 @@ The functions here makes it easier to create common types of interactions.
         table.append(row);
       }
       i = 0;
-      debugger;
       while (i < ROW_FILL) {
         row = $('<tr></tr>');
         for (index = _p = 0, _len5 = ROW_VALUES.length; _p < _len5; index = ++_p) {
@@ -9720,6 +9775,10 @@ The functions here makes it easier to create common types of interactions.
             cell = $("<td>" + val.value + "</td>").attr('colspan', m);
             row.append(cell);
           }
+        }
+        j = 0;
+        while (j < COL_FILL) {
+          j++;
         }
         table.append(row);
         i++;
@@ -9749,7 +9808,7 @@ The functions here makes it easier to create common types of interactions.
     The constructor does not do any real work. It just sets a bunch of variables
     to its default value and call @make(), which actually does the real work.
     */
-    function Graph(spec) {
+    function Graph(spec, callback, prepare) {
       this.handleEvent = __bind(this.handleEvent, this);
       this.render = __bind(this.render, this);
       this.mergeDomains = __bind(this.mergeDomains, this);
@@ -9766,6 +9825,8 @@ The functions here makes it easier to create common types of interactions.
       this.coord = null;
       this.facet = poly.facet.make();
       this.dataSubscribed = [];
+      this.callback = callback;
+      this.prepare = prepare;
       this.make(spec);
       this.addHandler(poly.handler.tooltip());
     }
@@ -9797,11 +9858,10 @@ The functions here makes it easier to create common types of interactions.
     */
 
 
-    Graph.prototype.make = function(spec, callback) {
+    Graph.prototype.make = function(spec) {
       var d, dataChange, datas, id, layerSpec, merge, _i, _len, _ref, _ref1,
         _this = this;
 
-      this.callback = callback;
       if (spec != null) {
         spec = poly.spec.toStrictMode(spec);
         poly.spec.check(spec);
@@ -9843,7 +9903,14 @@ The functions here makes it easier to create common types of interactions.
         spec = _this.spec.layers[id];
         groups = _.values(_this.facet.specgroups);
         _this.dataprocess[id] = new poly.DataProcess(spec, groups, spec.strict);
-        return _this.dataprocess[id].make(spec, groups, function(statData, metaData) {
+        return _this.dataprocess[id].make(spec, groups, function(err, statData, metaData) {
+          if (err) {
+            console.error(err);
+            if (_this.callback) {
+              _this.callback(err, null);
+            }
+            return;
+          }
           _this.processedData[id] = {
             statData: statData,
             metaData: metaData
@@ -9904,6 +9971,9 @@ The functions here makes it easier to create common types of interactions.
       this.coord.setScales(scales);
       this.scaleSet.coord = this.coord;
       _ref = this.scaleSet.makeGuides(this.spec, this.dims), this.axes = _ref.axes, this.titles = _ref.titles, this.legends = _ref.legends;
+      if (this.prepare) {
+        this.prepare(this);
+      }
       this.dom = this.spec.dom;
       if ((_ref1 = this.paper) == null) {
         this.paper = this._makePaper(this.dom, this.dims.width, this.dims.height, this);
@@ -9912,7 +9982,7 @@ The functions here makes it easier to create common types of interactions.
       this.facet.render(renderer, this.dims, this.coord);
       this.scaleSet.renderGuides(this.dims, renderer, this.facet);
       if (this.callback) {
-        return this.callback();
+        return this.callback(null, this);
       }
     };
 
@@ -9997,8 +10067,15 @@ The functions here makes it easier to create common types of interactions.
 
   })();
 
-  poly.chart = function(spec) {
-    return new Graph(spec);
+  poly.chart = function(spec, callback, prepare) {
+    var err;
+
+    try {
+      return new Graph(spec, callback, prepare);
+    } catch (_error) {
+      err = _error;
+      return callback(err, null);
+    }
   };
 
 }).call(this);

@@ -12,23 +12,35 @@ def uglify_js(source, dest):
   # we're using #2 right now.
 
   #source = open(path).read()
-
-  options = [ 
-    '-d', 'output_info=compiled_code',
-    '-d', 'output_info=warnings',
-    '-d', 'output_info=errors',
-    '-d', 'output_info=statistics',
-    '-d', 'output_format=json',
-    '-d', 'compilation_level=SIMPLE_OPTIMIZATIONS',
-  ]
-  cmd = ['curl'] + options + [ 
-    '--data-urlencode', ('js_code@%s' % source),
-    "http://closure-compiler.appspot.com/compile"
-  ]
-  result = check_output(*cmd)
-  obj = json.loads(result)
-  with open(dest, 'wb') as f:
-    f.write(obj['compiledCode'])
+  try:
+    print "Trying local closure compilation..."
+    compiler = os.path.join(os.getcwd(), 'make/compiler.jar')
+    cmd = [('java -jar %s' % compiler),
+        ('--js=%s' % source),
+        ('--js_output_file=%s' % dest)
+        ]
+    os.system(" ".join(cmd))
+    print "Local closure compilation successful!"
+  except Exception as e:
+    print "Unable to run local closure compiler."
+    print "Running online closure compilation."
+    options = [ 
+      '-d', 'output_info=compiled_code',
+      '-d', 'output_info=warnings',
+      '-d', 'output_info=errors',
+      '-d', 'output_info=statistics',
+      '-d', 'output_format=json',
+      '-d', 'compilation_level=SIMPLE_OPTIMIZATIONS',
+    ]
+    cmd = ['curl'] + options + [ 
+      '--data-urlencode', ('js_code@%s' % source),
+      "http://closure-compiler.appspot.com/compile"
+    ]
+    result = check_output(*cmd)
+    obj = json.loads(result)
+    with open(dest, 'wb') as f:
+      f.write(obj['compiledCode'])
+    print "Online closure compilation successful!"
 
 def check_output(*args):
   return subprocess.Popen(args, stdout=subprocess.PIPE).communicate()[0]

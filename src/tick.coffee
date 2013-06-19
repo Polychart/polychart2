@@ -141,22 +141,22 @@ tickValues =
       else if step < 1.4*24*60*60 then 'day'
       else if step < 1.4*7*24*60*60 then 'week'
       else if step < 1.4*30*24*60*60 then 'month'
-      else if step < 1.4*30*24*60*60*2 then '2month'
+      else if step < 1.4*30*24*60*60*2 then 'twomonth'
       else if step < 1.4*30*24*60*60*4 then 'quarter'
-      else if step < 1.4*30*24*60*60*6 then '6month'
+      else if step < 1.4*30*24*60*60*6 then 'sixmonth'
       else if step < 1.4*24*60*60*365 then 'year'
-      else if step < 1.4*24*60*60*365*2 then '2year'
-      else if step < 1.4*24*60*60*365*5 then '5year'
+      else if step < 1.4*24*60*60*365*2 then 'twoyear'
+      else if step < 1.4*24*60*60*365*5 then 'fiveyear'
       else 'decade'
     ticks = []
     current = moment.unix(min).startOf(step)
     momentjsStep =
       switch step
-        when '2month' then ['months', 2]
+        when 'twomonth' then ['months', 2]
         when 'quarter' then ['months', 4]
-        when '6month' then ['months', 6]
-        when '2year' then ['years', 2]
-        when '5year' then ['years', 5]
+        when 'sixmonth' then ['months', 6]
+        when 'twoyear' then ['years', 2]
+        when 'fiveyear' then ['years', 5]
         when 'decade' then ['years', 10]
         else [step+'s', 1]
     if current.unix() < min

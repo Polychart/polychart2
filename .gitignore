@@ -1,4 +1,8 @@
 compiled/*
+tmp/*
 *.pyc
 *.swp
 *.swo
+*.swx
+examples.js
+tests.js
