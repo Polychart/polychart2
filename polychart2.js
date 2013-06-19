@@ -9679,7 +9679,7 @@ The functions here makes it easier to create common types of interactions.
       return ps.make(this.spec, [], this.render);
     };
 
-    Pivot.prototype.render = function(statData, metaData) {
+    Pivot.prototype.render = function(err, statData, metaData) {
       var COL_FILL, COL_TOFILL, COL_VALUES, NUMCOL, NUMROW, NUMVAL, ROW_FILL, ROW_VALUES, aes, cell, colTicks, domain, domains, i, index, item, j, k, key, m, n, row, rowTicks, size, space, table, tick, ticks, v, val, values, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _o, _p, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
 
       domains = {};

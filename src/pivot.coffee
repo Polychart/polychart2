@@ -28,7 +28,7 @@ class Pivot
     ps = new poly.DataProcess(@spec, [], @spec.strict, poly.parser.pivotToData)
     ps.make @spec, [], @render
 
-  render: (statData, metaData) =>
+  render: (err, statData, metaData) =>
     # create domains & ticks
     domains = {}
     ticks = {}
