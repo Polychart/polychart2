@@ -9837,7 +9837,7 @@ The functions here makes it easier to create common types of interactions.
           m = ROW_FILL / n;
           if (i % m === 0) {
             val = _.toArray(ticks.rows[index].ticks)[i / m];
-            cell = $("<td>" + val.value + "</td>").attr('colspan', m);
+            cell = $("<td>" + val.value + "</td>").attr('rowspan', m);
             rows_mindex[index] = val.value;
             row.append(cell);
           }

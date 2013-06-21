@@ -140,7 +140,7 @@ class Pivot
         m = ROW_FILL / n
         if i % m is 0
           val = _.toArray(ticks.rows[index].ticks)[i / m]
-          cell = $("<td>#{val.value}</td>").attr('colspan', m)
+          cell = $("<td>#{val.value}</td>").attr('rowspan', m)
           rows_mindex[index] = val.value
           row.append(cell)
 
