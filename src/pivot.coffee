@@ -17,6 +17,32 @@ toStrictMode = (spec) ->
         spec[aes][i] = { var: mappedTo }
   spec
 
+class PivotProcessedData
+  constructor: (@statData, @spec) ->
+    @processedData = {}
+    tmp_parent = null
+    tmp_item = null
+    for row in @statData
+      tmp_parent = @processedData
+      tmp = @processedData
+      for aes in ['rows', 'columns']
+        for item in @spec[aes]
+          item = item.var
+          tmp[row[item]] ?= {}
+          tmp_parent = tmp
+          tmp = tmp_parent[row[item]]
+      tmp_parent[row[item]] = row
+  get: (rows, columns, val) =>
+    retvalue = @processedData
+    for i in rows
+      if retvalue? and retvalue[i]?
+        retvalue = retvalue[i]
+    for i in columns
+      if retvalue? and retvalue[i]?
+        retvalue = retvalue[i]
+    if retvalue? and retvalue[val]?
+      retvalue[val]
+
 class Pivot
   constructor: (spec) ->
     if not spec?
@@ -42,6 +68,8 @@ class Pivot
         domains[aes].push(domain)
         ticks[aes].push(tick)
 
+    pivotData = new PivotProcessedData(statData, @spec)
+
     # figure out dimensions of the table
     NUMCOL = @spec.columns.length
     NUMROW = @spec.rows.length
@@ -49,9 +77,13 @@ class Pivot
 
     COL_FILL = 1
     COL_VALUES = []
+    COL_TICKS = []
     for colTicks in ticks.columns
-      COL_FILL *= _.size(colTicks.ticks)
+      t = _.size(colTicks.ticks)
+      COL_TICKS.push(t)
+      COL_FILL *= t
       COL_VALUES.push(COL_FILL)
+    COL_TOTAL = COL_FILL
     COL_FILL *= NUMVAL
     COL_TOFILL = 1
 
@@ -98,18 +130,34 @@ class Pivot
       table.append(row)
     # REST OF TABLE
     i = 0
+    rows_mindex = []
+    cols_mindex = []
     while i < ROW_FILL # total rows
       row = $('<tr></tr>')
       # ROW HEADERS
       for n, index in ROW_VALUES
+
         m = ROW_FILL / n
         if i % m is 0
           val = _.toArray(ticks.rows[index].ticks)[i / m]
           cell = $("<td>#{val.value}</td>").attr('colspan', m)
+          rows_mindex[index] = val.value
           row.append(cell)
+
       # ROW VALUES
       j = 0
-      while j < COL_FILL
+      while j < COL_TOTAL
+        for n2, index2 in COL_VALUES
+          len = COL_TICKS[index2]
+          m2 = COL_TOTAL / n2
+
+          if j % m2 is 0
+            val = _.toArray(ticks.columns[index2].ticks)[(j/m2) % len]
+            cols_mindex[index2] = val.value
+
+        for val in @spec.values
+          v = pivotData.get(rows_mindex, cols_mindex, val.var)
+          row.append $("<td>#{v ? '-'}</td>")
         j++
 
       table.append(row)
