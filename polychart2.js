@@ -9722,7 +9722,9 @@ The functions here makes it easier to create common types of interactions.
 
   Pivot = (function() {
     function Pivot(spec) {
-      this.render = __bind(this.render, this);      if (spec == null) {
+      this.render = __bind(this.render, this);
+      this.generateTicks = __bind(this.generateTicks, this);
+      this.calculateMeta = __bind(this.calculateMeta, this);      if (spec == null) {
         throw poly.error.defn("No pivot table specification is passed in!");
       }
       this.make(spec);
@@ -9737,8 +9739,114 @@ The functions here makes it easier to create common types of interactions.
       return ps.make(this.spec, [], this.render);
     };
 
-    Pivot.prototype.render = function(err, statData, metaData) {
-      var COL_FILL, COL_TICKS, COL_TOFILL, COL_TOTAL, COL_VALUES, NUMCOL, NUMROW, NUMVAL, ROW_FILL, ROW_VALUES, aes, cell, colTicks, cols_mindex, domain, domains, i, index, index2, item, j, k, key, len, m, m2, n, n2, pivotData, row, rowTicks, rows_mindex, size, space, t, table, tick, ticks, v, val, values, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
+    Pivot.prototype.calculateMeta = function(spec, ticks) {
+      var colTicks, i, meta, rowTicks, tmp, v, _i, _j, _len, _len1, _ref, _ref1;
+
+      colTicks = (function() {
+        var _i, _len, _ref, _results;
+
+        _ref = ticks.columns;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          v = _ref[_i];
+          _results.push(_.toArray(v.ticks));
+        }
+        return _results;
+      })();
+      rowTicks = (function() {
+        var _i, _len, _ref, _results;
+
+        _ref = ticks.rows;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          v = _ref[_i];
+          _results.push(_.toArray(v.ticks));
+        }
+        return _results;
+      })();
+      meta = {
+        ncol: spec.columns.length,
+        nrow: spec.rows.length,
+        nval: spec.values.length,
+        rows: (function() {
+          var _i, _len, _ref, _results;
+
+          _ref = spec.rows;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            v = _ref[_i];
+            _results.push(v["var"]);
+          }
+          return _results;
+        })(),
+        cols: (function() {
+          var _i, _len, _ref, _results;
+
+          _ref = spec.columns;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            v = _ref[_i];
+            _results.push(v["var"]);
+          }
+          return _results;
+        })(),
+        vals: (function() {
+          var _i, _len, _ref, _results;
+
+          _ref = spec.values;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            v = _ref[_i];
+            _results.push(v["var"]);
+          }
+          return _results;
+        })(),
+        colTicks: colTicks,
+        colTickLen: (function() {
+          var _i, _len, _results;
+
+          _results = [];
+          for (_i = 0, _len = colTicks.length; _i < _len; _i++) {
+            v = colTicks[_i];
+            _results.push(v.length);
+          }
+          return _results;
+        })(),
+        rowTicks: rowTicks,
+        rowTickLen: (function() {
+          var _i, _len, _results;
+
+          _results = [];
+          for (_i = 0, _len = rowTicks.length; _i < _len; _i++) {
+            v = rowTicks[_i];
+            _results.push(v.length);
+          }
+          return _results;
+        })()
+      };
+      tmp = 1;
+      meta.colFill = [];
+      _ref = meta.colTickLen;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        i = _ref[_i];
+        tmp *= i;
+        meta.colFill.push(tmp);
+      }
+      meta.colTotal = tmp;
+      tmp = 1;
+      meta.rowFill = [];
+      _ref1 = meta.rowTickLen;
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        i = _ref1[_j];
+        tmp *= i;
+        meta.rowFill.push(tmp);
+      }
+      meta.rowTotal = tmp;
+      return meta;
+    };
+
+    Pivot.prototype.generateTicks = function(spec, statData, metaData) {
+      var aes, domain, domains, item, tick, ticks, values, _i, _j, _len, _len1, _ref, _ref1;
 
       domains = {};
       ticks = {};
@@ -9747,7 +9855,7 @@ The functions here makes it easier to create common types of interactions.
         aes = _ref[_i];
         domains[aes] = [];
         ticks[aes] = [];
-        _ref1 = this.spec[aes];
+        _ref1 = spec[aes];
         for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
           item = _ref1[_j];
           values = _.pluck(statData, item["var"]);
@@ -9757,70 +9865,53 @@ The functions here makes it easier to create common types of interactions.
           ticks[aes].push(tick);
         }
       }
+      return ticks;
+    };
+
+    Pivot.prototype.render = function(err, statData, metaData) {
+      var cell, cols_mindex, filled, i, index, index2, j, k, len, m, m2, n, n2, pivotData, pivotMeta, row, rows_mindex, space, table, tick, ticks, tofill, v, val, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _n, _o, _ref, _ref1, _ref2, _ref3, _ref4;
+
+      ticks = this.generateTicks(this.spec, statData, metaData);
       pivotData = new PivotProcessedData(statData, this.spec);
-      NUMCOL = this.spec.columns.length;
-      NUMROW = this.spec.rows.length;
-      NUMVAL = this.spec.values.length;
-      COL_FILL = 1;
-      COL_VALUES = [];
-      COL_TICKS = [];
-      _ref2 = ticks.columns;
-      for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
-        colTicks = _ref2[_k];
-        t = _.size(colTicks.ticks);
-        COL_TICKS.push(t);
-        COL_FILL *= t;
-        COL_VALUES.push(COL_FILL);
-      }
-      COL_TOTAL = COL_FILL;
-      COL_FILL *= NUMVAL;
-      COL_TOFILL = 1;
-      ROW_FILL = 1;
-      ROW_VALUES = [];
-      _ref3 = ticks.rows;
-      for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
-        rowTicks = _ref3[_l];
-        ROW_FILL *= _.size(rowTicks.ticks);
-        ROW_VALUES.push(ROW_FILL);
-      }
+      pivotMeta = this.calculateMeta(this.spec, ticks);
       if (!$) {
         throw poly.error.depn("Pivot Tables require jQuery!");
       }
       table = $('<table></table>');
       i = 0;
-      while (i < NUMCOL) {
+      filled = 1;
+      tofill = pivotMeta.colTotal * pivotMeta.nval;
+      while (i < pivotMeta.ncol) {
         row = $('<tr></tr>');
         if (i === 0) {
           space = $('<td></td>');
-          if (NUMVAL === 1) {
-            space.attr('rowspan', NUMCOL);
+          if (pivotMeta.nval === 1) {
+            space.attr('rowspan', pivotMeta.ncol);
           } else {
-            space.attr('rowspan', NUMCOL + 1);
+            space.attr('rowspan', pivotMeta.ncol + 1);
           }
-          space.attr('colspan', NUMROW);
+          space.attr('colspan', pivotMeta.nrow);
           row.append(space);
         }
-        colTicks = ticks.columns[i];
-        size = _.size(colTicks.ticks);
-        COL_FILL /= size;
-        for (k = _m = 1; 1 <= COL_TOFILL ? _m <= COL_TOFILL : _m >= COL_TOFILL; k = 1 <= COL_TOFILL ? ++_m : --_m) {
-          _ref4 = colTicks.ticks;
-          for (key in _ref4) {
-            tick = _ref4[key];
-            cell = $("<td>" + tick.value + "</td>").attr('colspan', COL_FILL);
+        tofill /= pivotMeta.colTickLen[i];
+        for (k = _i = 1; 1 <= filled ? _i <= filled : _i >= filled; k = 1 <= filled ? ++_i : --_i) {
+          _ref = pivotMeta.colTicks[i];
+          for (_j = 0, _len = _ref.length; _j < _len; _j++) {
+            tick = _ref[_j];
+            cell = $("<td>" + tick.value + "</td>").attr('colspan', tofill);
             row.append(cell);
           }
         }
-        COL_TOFILL *= size;
+        filled *= pivotMeta.colTickLen[i];
         table.append(row);
         i++;
       }
-      if (NUMVAL !== 1) {
+      if (pivotMeta.nval !== 1) {
         row = $('<tr></tr>');
-        for (k = _n = 1; 1 <= COL_TOFILL ? _n <= COL_TOFILL : _n >= COL_TOFILL; k = 1 <= COL_TOFILL ? ++_n : --_n) {
-          _ref5 = this.spec.values;
-          for (_o = 0, _len4 = _ref5.length; _o < _len4; _o++) {
-            v = _ref5[_o];
+        for (k = _k = 1; 1 <= filled ? _k <= filled : _k >= filled; k = 1 <= filled ? ++_k : --_k) {
+          _ref1 = this.spec.values;
+          for (_l = 0, _len1 = _ref1.length; _l < _len1; _l++) {
+            v = _ref1[_l];
             cell = $("<td>" + v["var"] + "</td>");
             row.append(cell);
           }
@@ -9830,11 +9921,12 @@ The functions here makes it easier to create common types of interactions.
       i = 0;
       rows_mindex = [];
       cols_mindex = [];
-      while (i < ROW_FILL) {
+      while (i < pivotMeta.rowTotal) {
         row = $('<tr></tr>');
-        for (index = _p = 0, _len5 = ROW_VALUES.length; _p < _len5; index = ++_p) {
-          n = ROW_VALUES[index];
-          m = ROW_FILL / n;
+        _ref2 = pivotMeta.rowFill;
+        for (index = _m = 0, _len2 = _ref2.length; _m < _len2; index = ++_m) {
+          n = _ref2[index];
+          m = pivotMeta.rowTotal / n;
           if (i % m === 0) {
             val = _.toArray(ticks.rows[index].ticks)[i / m];
             cell = $("<td>" + val.value + "</td>").attr('rowspan', m);
@@ -9843,19 +9935,21 @@ The functions here makes it easier to create common types of interactions.
           }
         }
         j = 0;
-        while (j < COL_TOTAL) {
-          for (index2 = _q = 0, _len6 = COL_VALUES.length; _q < _len6; index2 = ++_q) {
-            n2 = COL_VALUES[index2];
-            len = COL_TICKS[index2];
-            m2 = COL_TOTAL / n2;
+        debugger;
+        while (j < pivotMeta.colTotal) {
+          _ref3 = pivotMeta.colFill;
+          for (index2 = _n = 0, _len3 = _ref3.length; _n < _len3; index2 = ++_n) {
+            n2 = _ref3[index2];
+            len = pivotMeta.colTickLen[index2];
+            m2 = pivotMeta.colTotal / n2;
             if (j % m2 === 0) {
               val = _.toArray(ticks.columns[index2].ticks)[(j / m2) % len];
               cols_mindex[index2] = val.value;
             }
           }
-          _ref6 = this.spec.values;
-          for (_r = 0, _len7 = _ref6.length; _r < _len7; _r++) {
-            val = _ref6[_r];
+          _ref4 = this.spec.values;
+          for (_o = 0, _len4 = _ref4.length; _o < _len4; _o++) {
+            val = _ref4[_o];
             v = pivotData.get(rows_mindex, cols_mindex, val["var"]);
             row.append($("<td>" + (v != null ? v : '-') + "</td>"));
           }
