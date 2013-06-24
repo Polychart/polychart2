@@ -8929,6 +8929,10 @@ The functions here makes it easier to create common types of interactions.
             box.x -= delta / 2;
             text.x -= delta / 2;
           }
+          if (box.x < 0) {
+            box.x -= box.x / 2;
+            text.x -= box.x / 2;
+          }
           tooltip.box.attr(box);
           return tooltip.text.attr(text);
         }
