@@ -10043,18 +10043,19 @@ The functions here makes it easier to create common types of interactions.
   };
 
   Metric = (function() {
-    function Metric(spec) {
+    function Metric(spec, callback, prepare) {
       this.render = __bind(this.render, this);
       this.handleEvent = __bind(this.handleEvent, this);      if (spec == null) {
         throw poly.error.defn("No metric specification is passed in!");
       }
+      this.callback = callback;
+      this.prepare = prepare;
       this.make(spec);
     }
 
-    Metric.prototype.make = function(spec, callback) {
+    Metric.prototype.make = function(spec) {
       var ps;
 
-      this.callback = callback;
       if (!spec.value) {
         throw poly.error.defn("No value defined in metric.");
       }
@@ -10070,6 +10071,9 @@ The functions here makes it easier to create common types of interactions.
 
       this.value = statData[0][this.spec.value["var"]];
       this.value = (0 < (_ref = this.value) && _ref < 1) ? poly.format.number(false)(this.value) : this.value % 1 === 0 ? poly.format.number(0)(this.value) : poly.format.number(-1)(this.value);
+      if (this.prepare) {
+        this.prepare(this);
+      }
       this.dom = this.spec.dom;
       this.width = (_ref1 = this.spec.width) != null ? _ref1 : 200;
       this.height = (_ref2 = this.spec.height) != null ? _ref2 : 100;
@@ -10086,7 +10090,10 @@ The functions here makes it easier to create common types of interactions.
       });
       _ref5 = this.textObj.getBBox(), width = _ref5.width, height = _ref5.height;
       scale = Math.min(this.width * 0.8 / width, this.height * 0.8 / height);
-      return this.textObj.transform("s" + scale);
+      this.textObj.transform("s" + scale);
+      if (this.callback) {
+        return this.callback(null, this);
+      }
     };
 
     Metric.prototype._makePaper = function(dom, width, height, handleEvent) {
@@ -10099,8 +10106,8 @@ The functions here makes it easier to create common types of interactions.
 
   })();
 
-  poly.metric = function(spec) {
-    return new Metric(spec);
+  poly.metric = function(spec, callback, prepare) {
+    return new Metric(spec, callback, prepare);
   };
 
 }).call(this);

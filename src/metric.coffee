@@ -10,12 +10,14 @@ toStrictMode = (spec) ->
   spec
 
 class Metric
-  constructor: (spec) ->
+  constructor: (spec, callback, prepare) ->
     if not spec?
       throw poly.error.defn "No metric specification is passed in!"
+    @callback = callback
+    @prepare = prepare
     @make(spec)
 
-  make: (spec, @callback) ->
+  make: (spec) ->
     # checking
     if not spec.value
       throw poly.error.defn "No value defined in metric."
@@ -38,6 +40,8 @@ class Metric
       else
         poly.format.number(-1)(@value)
 
+    if @prepare then @prepare @
+
     @dom = @spec.dom
     @width = @spec.width ? 200
     @height = @spec.height ? 100
@@ -55,8 +59,10 @@ class Metric
     scale = Math.min(@width*0.8/width, @height*0.8/height)
     @textObj.transform "s#{scale}"
 
+    if @callback then @callback null, @
+
   _makePaper: (dom, width, height, handleEvent) ->
     paper = poly.paper dom, width, height, handleEvent
 
 
-poly.metric = (spec) -> new Metric(spec)
+poly.metric = (spec, callback, prepare) -> new Metric(spec, callback, prepare)
