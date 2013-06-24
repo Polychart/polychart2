@@ -6,3 +6,4 @@ tmp/*
 *.swx
 examples.js
 tests.js
+bugs/

@@ -61,9 +61,9 @@ class Layer
   _tooltip: (item) ->
     tooltip = null
     if typeof(@spec.tooltip) == 'function'
-      tooltip = (scales) -> @spec.tooltip item
+      tooltip = (scales) => @spec.tooltip item
     else if @spec.tooltip?
-      tooltip = (scales) -> @spec.tooltip
+      tooltip = (scales) => @spec.tooltip
     else
       tooltip = (scales) =>
         text = ""
