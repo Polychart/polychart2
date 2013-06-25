@@ -10,7 +10,7 @@ class Graph
   The constructor does not do any real work. It just sets a bunch of variables
   to its default value and call @make(), which actually does the real work.
   ###
-  constructor: (spec, callback, prepare) ->
+  constructor: (spec, callback=null, prepare=null) ->
     if not spec?
       throw poly.error.defn "No graph specification is passed in!"
     @handlers = []
@@ -77,11 +77,10 @@ class Graph
       groups = _.values @facet.specgroups
       @dataprocess[id] = new poly.DataProcess spec, groups, spec.strict
       @dataprocess[id].make spec, groups, (err, statData, metaData) =>
-        if err
+        if err?
           console.error err
-          if @callback
-            @callback err, null
-          return
+          if @callback? then @callback err, null
+          else throw poly.error.defn "Error processing data!"
 
         @processedData[id] =
           statData: statData
@@ -123,14 +122,14 @@ class Graph
     @coord.setScales scales
     @scaleSet.coord = @coord
     {@axes, @titles, @legends} = @scaleSet.makeGuides(@spec, @dims)
-    if @prepare then @prepare @
+    if @prepare? then @prepare @
     @dom = @spec.dom
     @paper ?= @_makePaper @dom, @dims.width, @dims.height, @
     renderer = poly.render @handleEvent, @paper, scales, @coord
 
     @facet.render(renderer, @dims, @coord)
     @scaleSet.renderGuides @dims, renderer, @facet
-    if @callback then @callback null, @
+    if @callback? then @callback null, @
 
   addHandler : (h) -> if h not in @handlers then @handlers.push h
   removeHandler: (h) ->
@@ -184,5 +183,5 @@ poly.chart = (spec, callback, prepare) ->
   try
     new Graph(spec, callback, prepare)
   catch err
-    callback err, null
-
+    if callback? then callback err, null
+    else throw poly.error.defn "Bad specification."

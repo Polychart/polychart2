@@ -6206,8 +6206,7 @@ of a dataset, or knows how to retrieve data from some source.
         _this = this;
 
       if ((this.raw != null) && (!this.computeBackend)) {
-        callback(null, this);
-        return;
+        return callback(null, this);
       }
       chr = _.indexOf(this.url, "?") === -1 ? '?' : '&';
       url = this.url;
@@ -6279,9 +6278,8 @@ of a dataset, or knows how to retrieve data from some source.
       return this.apiFun(dataSpec, function(err, blob) {
         var data, e, meta, _ref, _ref1;
 
-        if (err) {
-          callback(err, null);
-          return;
+        if (err != null) {
+          return callback(err, null);
         }
         try {
           blob = JSON.parse(blob);
@@ -6376,9 +6374,8 @@ data processing to be done.
         return this.dataObj.getData(function(err, data) {
           var obj, _i, _len, _ref;
 
-          if (err) {
-            wrappedCallback(err, null);
-            return;
+          if (err != null) {
+            return wrappedCallback(err, null);
           }
           if (__indexOf.call(dataSpec.select, 'count(*)') >= 0) {
             _ref = data.data;
@@ -6405,9 +6402,8 @@ data processing to be done.
       return function(err, params) {
         var data, meta;
 
-        if (err) {
-          callback(err, null, null);
-          return;
+        if (err != null) {
+          return callback(err, null, null);
         }
         data = params.data, meta = params.meta;
         _this.statData = data;
@@ -6766,6 +6762,7 @@ data processing to be done.
       }
       return -1 * multiplier;
     };
+    data.sort.comparator;
     if (limit) {
       data = data.slice(0, +(limit - 1) + 1 || 9e9);
     }
@@ -8930,8 +8927,8 @@ The functions here makes it easier to create common types of interactions.
             text.x -= delta / 2;
           }
           if (box.x < 0) {
-            box.x -= box.x / 2;
-            text.x -= box.x / 2;
+            box.x += box.x / 2;
+            text.x += box.x / 2;
           }
           tooltip.box.attr(box);
           return tooltip.text.attr(text);
@@ -9661,11 +9658,18 @@ The functions here makes it easier to create common types of interactions.
     to its default value and call @make(), which actually does the real work.
     */
     function Graph(spec, callback, prepare) {
+      if (callback == null) {
+        callback = null;
+      }
+      if (prepare == null) {
+        prepare = null;
+      }
       this.handleEvent = __bind(this.handleEvent, this);
       this.render = __bind(this.render, this);
       this.mergeDomains = __bind(this.mergeDomains, this);
       this.merge = __bind(this.merge, this);
-      this.maybeDispose = __bind(this.maybeDispose, this);      if (spec == null) {
+      this.maybeDispose = __bind(this.maybeDispose, this);
+      if (spec == null) {
         throw poly.error.defn("No graph specification is passed in!");
       }
       this.handlers = [];
@@ -9756,12 +9760,13 @@ The functions here makes it easier to create common types of interactions.
         groups = _.values(_this.facet.specgroups);
         _this.dataprocess[id] = new poly.DataProcess(spec, groups, spec.strict);
         return _this.dataprocess[id].make(spec, groups, function(err, statData, metaData) {
-          if (err) {
+          if (err != null) {
             console.error(err);
-            if (_this.callback) {
+            if (_this.callback != null) {
               _this.callback(err, null);
+            } else {
+              throw poly.error.defn("Error processing data!");
             }
-            return;
           }
           _this.processedData[id] = {
             statData: statData,
@@ -9823,7 +9828,7 @@ The functions here makes it easier to create common types of interactions.
       this.coord.setScales(scales);
       this.scaleSet.coord = this.coord;
       _ref = this.scaleSet.makeGuides(this.spec, this.dims), this.axes = _ref.axes, this.titles = _ref.titles, this.legends = _ref.legends;
-      if (this.prepare) {
+      if (this.prepare != null) {
         this.prepare(this);
       }
       this.dom = this.spec.dom;
@@ -9833,7 +9838,7 @@ The functions here makes it easier to create common types of interactions.
       renderer = poly.render(this.handleEvent, this.paper, scales, this.coord);
       this.facet.render(renderer, this.dims, this.coord);
       this.scaleSet.renderGuides(this.dims, renderer, this.facet);
-      if (this.callback) {
+      if (this.callback != null) {
         return this.callback(null, this);
       }
     };
@@ -9931,7 +9936,11 @@ The functions here makes it easier to create common types of interactions.
       return new Graph(spec, callback, prepare);
     } catch (_error) {
       err = _error;
-      return callback(err, null);
+      if (callback != null) {
+        return callback(err, null);
+      } else {
+        throw poly.error.defn("Bad specification.");
+      }
     }
   };
 
