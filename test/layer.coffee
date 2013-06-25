@@ -66,11 +66,11 @@ test "lines", ->
 
   equal layer.geoms[0].marks[0].type, 'line'
   deepEqual layer.geoms[0].marks[0].x, [2, 3, 1, 5]
-  deepEqual layer.geoms[0].marks[0].y, [4, 3, 0, 0]
+  deepEqual layer.geoms[0].marks[0].y, [4, 3, undefined, undefined]
   deepEqual layer.geoms[0].marks[0].color, 'A'
   deepEqual layer.geoms[0].evtData.z.in, ['A']
   deepEqual layer.geoms[1].marks[0].x, [1, 5, 2, 3]
-  deepEqual layer.geoms[1].marks[0].y, [4, 3, 0, 0]
+  deepEqual layer.geoms[1].marks[0].y, [4, 3, undefined, undefined]
   deepEqual layer.geoms[1].marks[0].color, 2
   deepEqual layer.geoms[1].evtData.z.in, [2]
 

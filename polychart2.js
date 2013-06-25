@@ -3312,7 +3312,7 @@ so simple, but not scalable.
         if (this.title != null) {
           renderer.remove(this.title);
         }
-        return this.title = renderer.add(this._makeTitle(dim, offset), null, null, 'guide');
+        return this.title = renderer.add(this._makeTitle(dim, offset), null, null, 'guide-' + this.titleType);
       } else if (this.title != null) {
         return renderer.remove(this.title);
       }
@@ -3351,6 +3351,8 @@ so simple, but not scalable.
 
     TitleH.prototype.defaultPosition = 'bottom';
 
+    TitleH.prototype.titleType = 'titleH';
+
     TitleH.prototype._makeTitle = function(dim, offset) {
       var x, y, _ref1, _ref2, _ref3, _ref4;
 
@@ -3381,6 +3383,8 @@ so simple, but not scalable.
 
     TitleV.prototype.defaultPosition = 'left';
 
+    TitleV.prototype.titleType = 'titleV';
+
     TitleV.prototype._makeTitle = function(dim, offset) {
       var x, y, _ref2, _ref3, _ref4, _ref5;
 
@@ -3409,6 +3413,8 @@ so simple, but not scalable.
       _ref2 = TitleMain.__super__.constructor.apply(this, arguments);
       return _ref2;
     }
+
+    TitleMain.prototype.titleType = 'title';
 
     TitleMain.prototype._makeTitle = function(dim, offset) {
       var x, y, _ref3, _ref4;
@@ -3452,7 +3458,7 @@ so simple, but not scalable.
       if (this.title != null) {
         return this.title = renderer.animate(this.title, this._makeTitle(dim, offset));
       } else {
-        return this.title = renderer.add(this._makeTitle(dim, offset), null, null, 'guide');
+        return this.title = renderer.add(this._makeTitle(dim, offset), null, null, 'guide-facet-title');
       }
     };
 
@@ -6327,8 +6333,7 @@ of a dataset, or knows how to retrieve data from some source.
         _this = this;
 
       if ((this.raw != null) && (!this.computeBackend)) {
-        callback(null, this);
-        return;
+        return callback(null, this);
       }
       chr = _.indexOf(this.url, "?") === -1 ? '?' : '&';
       url = this.url;
@@ -6400,9 +6405,8 @@ of a dataset, or knows how to retrieve data from some source.
       return this.apiFun(dataSpec, function(err, blob) {
         var data, e, meta, _ref, _ref1;
 
-        if (err) {
-          callback(err, null);
-          return;
+        if (err != null) {
+          return callback(err, null);
         }
         try {
           blob = JSON.parse(blob);
@@ -6501,9 +6505,8 @@ data processing to be done.
         return this.dataObj.getData(function(err, data) {
           var obj, _i, _len, _ref;
 
-          if (err) {
-            wrappedCallback(err, null);
-            return;
+          if (err != null) {
+            return wrappedCallback(err, null);
           }
           if (__indexOf.call(dataSpec.select, 'count(*)') >= 0) {
             _ref = data.data;
@@ -6530,9 +6533,8 @@ data processing to be done.
       return function(err, params) {
         var data, meta;
 
-        if (err) {
-          callback(err, null, null);
-          return;
+        if (err != null) {
+          return callback(err, null, null);
         }
         data = params.data, meta = params.meta;
         _this.statData = data;
@@ -6891,6 +6893,7 @@ data processing to be done.
       }
       return -1 * multiplier;
     };
+    data.sort(comparator);
     if (limit) {
       data = data.slice(0, +(limit - 1) + 1 || 9e9);
     }
@@ -7104,11 +7107,11 @@ Shared constants
       tooltip = null;
       if (typeof this.spec.tooltip === 'function') {
         return tooltip = function(scales) {
-          return this.spec.tooltip(item);
+          return _this.spec.tooltip(item);
         };
       } else if (this.spec.tooltip != null) {
         return tooltip = function(scales) {
-          return this.spec.tooltip;
+          return _this.spec.tooltip;
         };
       } else {
         return tooltip = function(scales) {
@@ -8374,6 +8377,9 @@ Dimension object has the following elements (all numeric in pixels):
           if (type === 'guide') {
             pt.click(handleEvent('guide-click'));
             poly.touchEvents(handleEvent, pt, true);
+          } else if (type === 'guide-title' || type === 'guide-titleH' || type === 'guide-titleV') {
+            pt.click(handleEvent(type));
+            poly.touchEvents(handleEvent, pt, true);
           } else {
             pt.click(handleEvent('click'));
             pt.hover(handleEvent('mover'), handleEvent('mout'));
@@ -9006,36 +9012,67 @@ The functions here makes it easier to create common types of interactions.
 
 
   poly.handler.tooltip = function() {
-    var offset, tooltip, update;
+    var offset, positioner, tooltip, _boxMargin, _boxPadding, _boxRadius, _positionTooltip, _update;
 
     tooltip = {};
     offset = null;
-    update = function(tooltip) {
+    positioner = null;
+    _boxPadding = 10;
+    _boxMargin = 20;
+    _boxRadius = 10;
+    _update = function(tooltip) {
       return function(e) {
-        var height, mousePos, width, x, y, _ref, _ref1;
+        var m;
 
-        mousePos = poly.getXY(offset, e);
-        if (tooltip.text.getBBox()) {
-          _ref = tooltip.text.getBBox(), x = _ref.x, y = _ref.y, width = _ref.width, height = _ref.height;
-          tooltip.text.attr({
-            x: mousePos.x,
-            y: Math.max(0, mousePos.y - 5 - height)
-          });
+        m = poly.getXY(offset, e);
+        if (tooltip.text != null) {
+          return _positionTooltip(tooltip, m);
+        }
+      };
+    };
+    _positionTooltip = function(maxHeight, maxWidth) {
+      return function(tooltip, mousePos) {
+        var box, delta, height, mx, my, text, width, x, y, _ref, _ref1;
+
+        _ref = [mousePos.x, mousePos.y], mx = _ref[0], my = _ref[1];
+        if (tooltip.text != null) {
+          height = tooltip.text.getBBox().height;
+          text = {
+            x: mx,
+            y: my - height / 2 - _boxMargin
+          };
+          tooltip.text.attr(text);
           _ref1 = tooltip.text.getBBox(), x = _ref1.x, y = _ref1.y, width = _ref1.width, height = _ref1.height;
-          return tooltip.box.attr({
-            x: Math.max(0, x - 5),
-            y: Math.max(0, y - 5),
-            width: width + 10,
-            height: height + 10
-          });
+          box = {
+            x: x - _boxPadding / 2,
+            y: y - _boxPadding / 2,
+            width: width + _boxPadding,
+            height: height + _boxPadding
+          };
+          if (box.y < 0) {
+            box.y = y + 3 * _boxPadding + height;
+            text.y = my + height / 2 + 3 * _boxMargin / 4;
+          }
+          if (box.x + box.width > maxWidth) {
+            delta = box.x + box.width - maxWidth;
+            box.x -= delta / 2;
+            text.x -= delta / 2;
+          }
+          if (box.x < 0) {
+            text.x -= box.x;
+            box.x = 0;
+          }
+          tooltip.box.attr(box);
+          return tooltip.text.attr(text);
         }
       };
     };
     return function(type, obj, event, graph) {
-      var height, mousePos, paper, width, x, x1, x2, y, y1, y2, _ref, _ref1, _ref2;
+      var height, mousePos, paper, width, x, x1, x2, y, y1, y2, _ref, _ref1, _ref2, _ref3;
 
       offset = poly.offset(graph.dom);
       paper = obj.paper;
+      positioner = _positionTooltip(graph.dims.chartHeight, graph.dims.chartWidth);
       if (type === 'mover' || type === 'mout') {
         if (tooltip.text != null) {
           tooltip.text.remove();
@@ -9043,26 +9080,25 @@ The functions here makes it easier to create common types of interactions.
         }
         tooltip = {};
         if (type === 'mover' && obj.tooltip) {
-          _ref = obj.getBBox(), x = _ref.x, y = _ref.y, x2 = _ref.x2, y2 = _ref.y2;
           mousePos = poly.getXY(offset, event);
-          x1 = mousePos.x;
-          y1 = mousePos.y;
+          _ref = obj.getBBox(), x = _ref.x, y = _ref.y, x2 = _ref.x2, y2 = _ref.y2;
+          _ref1 = [mousePos.x, mousePos.y], x1 = _ref1[0], y1 = _ref1[1];
           tooltip.text = paper.text(x1, y1, obj.tooltip(graph.scaleSet.scales)).attr({
             'text-anchor': 'middle',
-            'fill': 'white'
-          });
-          _ref1 = tooltip.text.getBBox(), x = _ref1.x, y = _ref1.y, width = _ref1.width, height = _ref1.height;
-          y = y1 - height - 10;
-          tooltip.text.attr({
-            'y': y
+            fill: 'white'
           });
           _ref2 = tooltip.text.getBBox(), x = _ref2.x, y = _ref2.y, width = _ref2.width, height = _ref2.height;
-          tooltip.box = paper.rect(x - 5, y - 5, width + 10, height + 10, 5);
+          tooltip.text.attr({
+            y: y1 - height / 2 - _boxMargin
+          });
+          _ref3 = tooltip.text.getBBox(), x = _ref3.x, y = _ref3.y, width = _ref3.width, height = _ref3.height;
+          tooltip.box = paper.rect(x - _boxPadding / 2, y - _boxPadding / 2, width + _boxPadding, height + _boxPadding, _boxRadius);
           tooltip.box.attr({
             fill: '#213'
           });
           tooltip.text.toFront();
-          return obj.mousemove(update(tooltip));
+          positioner(tooltip, mousePos);
+          return obj.mousemove(_update(tooltip));
         } else {
           return typeof obj.unmousemove === "function" ? obj.unmousemove(null) : void 0;
         }
@@ -10122,6 +10158,64 @@ The functions here makes it easier to create common types of interactions.
 }).call(this);
 // Generated by CoffeeScript 1.6.2
 (function() {
+  var PolyEvent, TitleClickEvent,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  PolyEvent = (function() {
+    function PolyEvent() {
+      this.eventName = 'polyjsEvent';
+      this.bubbles = true;
+      this.cancelable = true;
+      this.detail = {
+        type: null,
+        data: null
+      };
+    }
+
+    PolyEvent.prototype.dispatch = function(dom) {
+      var evt;
+
+      evt = new CustomEvent(this.eventName, {
+        detail: this.detail
+      });
+      if (dom != null) {
+        return dom.dispatchEvent(evt);
+      }
+    };
+
+    return PolyEvent;
+
+  })();
+
+  TitleClickEvent = (function(_super) {
+    __extends(TitleClickEvent, _super);
+
+    function TitleClickEvent(obj, type) {
+      TitleClickEvent.__super__.constructor.call(this);
+      this.eventName = 'title-click';
+      this.detail = {
+        type: type,
+        data: obj
+      };
+    }
+
+    return TitleClickEvent;
+
+  })(PolyEvent);
+
+  poly.event = {};
+
+  poly.event.make = function(type, obj) {
+    if (type === 'guide-title' || type === 'guide-titleH' || type === 'guide-titleV') {
+      return new TitleClickEvent(obj, type);
+    }
+    throw poly.error.defn("No such event " + type + ".");
+  };
+
+}).call(this);
+// Generated by CoffeeScript 1.6.2
+(function() {
   var Graph,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -10132,11 +10226,18 @@ The functions here makes it easier to create common types of interactions.
     to its default value and call @make(), which actually does the real work.
     */
     function Graph(spec, callback, prepare) {
+      if (callback == null) {
+        callback = null;
+      }
+      if (prepare == null) {
+        prepare = null;
+      }
       this.handleEvent = __bind(this.handleEvent, this);
       this.render = __bind(this.render, this);
       this.mergeDomains = __bind(this.mergeDomains, this);
       this.merge = __bind(this.merge, this);
-      this.maybeDispose = __bind(this.maybeDispose, this);      if (spec == null) {
+      this.maybeDispose = __bind(this.maybeDispose, this);
+      if (spec == null) {
         throw poly.error.defn("No graph specification is passed in!");
       }
       this.handlers = [];
@@ -10227,12 +10328,13 @@ The functions here makes it easier to create common types of interactions.
         groups = _.values(_this.facet.specgroups);
         _this.dataprocess[id] = new poly.DataProcess(spec, groups, spec.strict);
         return _this.dataprocess[id].make(spec, groups, function(err, statData, metaData) {
-          if (err) {
+          if (err != null) {
             console.error(err);
-            if (_this.callback) {
+            if (_this.callback != null) {
               _this.callback(err, null);
+            } else {
+              throw poly.error.defn("Error processing data!");
             }
-            return;
           }
           _this.processedData[id] = {
             statData: statData,
@@ -10294,7 +10396,7 @@ The functions here makes it easier to create common types of interactions.
       this.coord.setScales(scales);
       this.scaleSet.coord = this.coord;
       _ref = this.scaleSet.makeGuides(this.spec, this.dims), this.axes = _ref.axes, this.titles = _ref.titles, this.legends = _ref.legends;
-      if (this.prepare) {
+      if (this.prepare != null) {
         this.prepare(this);
       }
       this.dom = this.spec.dom;
@@ -10304,7 +10406,7 @@ The functions here makes it easier to create common types of interactions.
       renderer = poly.render(this.handleEvent, this.paper, scales, this.coord);
       this.facet.render(renderer, this.dims, this.coord);
       this.scaleSet.renderGuides(this.dims, renderer, this.facet);
-      if (this.callback) {
+      if (this.callback != null) {
         return this.callback(null, this);
       }
     };
@@ -10352,6 +10454,11 @@ The functions here makes it easier to create common types of interactions.
         } else if (type === 'reset' || type === 'click' || type === 'mover' || type === 'mout' || type === 'guide-click') {
           obj.tooltip = obj.data('t');
           obj.evtData = obj.data('e');
+        } else if (type === 'guide-title' || type === 'guide-titleH' || type === 'guide-titleV') {
+          obj.tooltip = obj.data('t');
+          obj.evtData = obj.data('e');
+          event = poly.event.make(type, obj);
+          event.dispatch(graph.dom);
         }
         _ref = graph.handlers;
         _results = [];
@@ -10397,7 +10504,11 @@ The functions here makes it easier to create common types of interactions.
       return new Graph(spec, callback, prepare);
     } catch (_error) {
       err = _error;
-      return callback(err, null);
+      if (callback != null) {
+        return callback(err, null);
+      } else {
+        throw poly.error.defn("Bad specification.");
+      }
     }
   };
 

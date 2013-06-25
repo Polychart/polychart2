@@ -31,9 +31,7 @@ class DataProcess
     else
       dataSpec = @parseMethod spec, grouping
       @dataObj.getData (err, data) ->
-        if err
-          wrappedCallback err, null
-          return
+        if err? then return wrappedCallback err, null
 
         # Hack to get 'count(*)' to behave properly
         if 'count(*)' in dataSpec.select
@@ -45,9 +43,7 @@ class DataProcess
         frontendProcess(dataSpec, data, wrappedCallback)
 
   _wrap : (callback) => (err, params) =>
-    if err
-      callback err, null, null
-      return
+    if err? then return callback err, null, null
 
     # save a copy of the data/meta before going to callback
     {data, meta} = params
@@ -231,7 +227,7 @@ calculateMeta = (key, metaSpec, data) ->
     if a[sort] == b[sort] then return 0
     if a[sort] >= b[sort] then return 1 * multiplier
     return -1 * multiplier
-
+  data.sort comparator
   # limiting
   if limit
     data = data[0..limit-1]

@@ -2,8 +2,8 @@ module "Data"
 
 ## HELPER FUNCTIONS
 transformData = (data, spec) ->
-  data.getData (x)->(x)
-  polyjs.data.frontendProcess spec, data, (x) -> x
+  data.getData (err, x)-> if err? then console.err err else x
+  polyjs.data.frontendProcess spec, data, (err, x) -> if err? then console.err err else x
 
 test "smoke test", ->
   jsondata= [

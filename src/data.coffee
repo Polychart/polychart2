@@ -194,8 +194,7 @@ class FrontendData extends AbstractData
   constructor: (params) ->
     super()
     @_setData params
-  getData: (callback) ->
-    callback null, @
+  getData: (callback) -> callback null, @
   update: (params) ->
     @_setData params
     super()
@@ -311,10 +310,7 @@ class BackendData extends AbstractData
   #   @callback - the callback function once data is retrieved
   #   @params - additional parameters to send to the backend
   getData: (callback, dataSpec) =>
-    if @raw? and (not @computeBackend)
-      callback null, @
-      return
-
+    if @raw? and (not @computeBackend) then return callback null, @
     chr = if _.indexOf(@url, "?") is -1 then '?' else '&'
     url = @url
     if @limit
@@ -358,10 +354,7 @@ class ApiData extends AbstractData
 
   getData: (callback, dataSpec) =>
     @apiFun dataSpec, (err, blob) =>
-      if err
-        callback err, null
-        return
-
+      if err? then return callback err, null
       try
         blob = JSON.parse(blob)
       catch e
