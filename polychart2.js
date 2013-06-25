@@ -10067,30 +10067,38 @@ The functions here makes it easier to create common types of interactions.
     Metric.prototype.handleEvent = function(type) {};
 
     Metric.prototype.render = function(err, statData, metaData) {
-      var degree, height, scale, width, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+      var degree, height, scale, width, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
 
       this.value = statData[0][this.spec.value["var"]];
-      degree = (0 < (_ref = this.value) && _ref < 1) ? void 0 : this.value % 1 === 0 ? 0 : -1;
+      this.title = (_ref = this.spec.title) != null ? _ref : this.spec.value["var"];
+      degree = (0 < (_ref1 = this.value) && _ref1 < 1) ? void 0 : this.value % 1 === 0 ? 0 : -1;
       this.value = poly.format.number(degree)(this.value);
       if (this.prepare) {
         this.prepare(this);
       }
       this.dom = this.spec.dom;
-      this.width = (_ref1 = this.spec.width) != null ? _ref1 : 200;
-      this.height = (_ref2 = this.spec.height) != null ? _ref2 : 100;
-      if ((_ref3 = this.paper) == null) {
+      this.width = (_ref2 = this.spec.width) != null ? _ref2 : 200;
+      this.height = (_ref3 = this.spec.height) != null ? _ref3 : 100;
+      if ((_ref4 = this.paper) == null) {
         this.paper = this._makePaper(this.dom, this.width, this.height, this);
       }
-      if ((_ref4 = this.textObj) == null) {
+      if ((_ref5 = this.titleObj) == null) {
+        this.titleObj = this.paper.text(this.width / 2, 10, '');
+      }
+      this.titleObj.attr({
+        text: this.title,
+        'font-size': '12px'
+      });
+      if ((_ref6 = this.textObj) == null) {
         this.textObj = this.paper.text(this.width / 2, this.height / 2, '');
       }
       this.textObj.attr({
         x: this.width / 2,
-        y: this.height / 2,
+        y: 7 + this.height / 2,
         text: this.value
       });
-      _ref5 = this.textObj.getBBox(), width = _ref5.width, height = _ref5.height;
-      scale = Math.min(this.width * 0.8 / width, this.height * 0.8 / height);
+      _ref7 = this.textObj.getBBox(), width = _ref7.width, height = _ref7.height;
+      scale = Math.min(this.width * 0.9 / width, (this.height - 14) * 0.9 / height);
       this.textObj.transform("s" + scale);
       if (this.callback) {
         return this.callback(null, this);

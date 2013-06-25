@@ -30,31 +30,34 @@ class Metric
 
   render: (err, statData, metaData) =>
     @value = statData[0][@spec.value.var]
-
+    @title = @spec.title ? @spec.value.var
     # formatting the value (temporary)
     degree =
       if 0 < @value < 1      then undefined
       else if @value % 1 == 0 then 0
       else                        -1
     @value = poly.format.number(degree)(@value)
-
+    # pre-preparation process
     if @prepare then @prepare @
-
+    # prepare the dom
     @dom = @spec.dom
     @width = @spec.width ? 200
     @height = @spec.height ? 100
     @paper ?= @_makePaper @dom, @width, @height, @
-
-    # make a filler object; this makes rendering & re-rendering consistent
+    # rendering the title
+    @titleObj ?= @paper.text(@width/2, 10,  '')
+    @titleObj.attr text: @title, 'font-size':'12px'
+    # actually render the text --
+    # first make a filler object; this makes rendering & re-rendering consistent
     @textObj ?= @paper.text(@width/2, @height/2,  '')
     # update the object to the correct value & position
     @textObj.attr
       x: @width/2
-      y: @height/2
+      y: 7+@height/2 # =(@height-20)/2 + 14  # -- i.e. push down by 20px
       text: @value
     # now resize the object to take up 80% of the space
     {width, height} = @textObj.getBBox()
-    scale = Math.min(@width*0.8/width, @height*0.8/height)
+    scale = Math.min(@width*0.9/width, (@height-14)*0.9/height)
     @textObj.transform "s#{scale}"
 
     if @callback then @callback null, @
