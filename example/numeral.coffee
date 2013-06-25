@@ -5,8 +5,8 @@ data = polyjs.data data:{
   val: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12.12413252523523]
 }
 
-@examples.metric = (dom) ->
-  polyjs.metric
+@examples.numeral = (dom) ->
+  polyjs.numeral
     data: data
     value: 'sum(val)'
     filter: cat: in: ['b']

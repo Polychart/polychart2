@@ -265,7 +265,7 @@ pivotToDataSpec = (lspec) ->
     select: (dedup select), filter: filters
   }
 
-metricToDataSpec = (lspec) ->
+numeralToDataSpec = (lspec) ->
   filters = {}
   for key, val of lspec.filter ? {}
     filters[(parse key).pretty()] = val # normalize name
@@ -304,4 +304,4 @@ poly.parser =
   parse: parse
   layerToData: layerToDataSpec
   pivotToData: pivotToDataSpec
-  metricToData: metricToDataSpec
+  numeralToData: numeralToDataSpec

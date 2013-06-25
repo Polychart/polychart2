@@ -1,5 +1,5 @@
 ##
-# "Meric" Object And Entry Point: poly.metric()
+# "Meric" Object And Entry Point: poly.numeral()
 # ------------------------------------------
 # This produces a single value
 ##
@@ -9,10 +9,10 @@ toStrictMode = (spec) ->
     spec.value = {var: spec.value}
   spec
 
-class Metric
+class Numeral
   constructor: (spec, callback, prepare) ->
     if not spec?
-      throw poly.error.defn "No metric specification is passed in!"
+      throw poly.error.defn "No numeral specification is passed in!"
     @callback = callback
     @prepare = prepare
     @make(spec)
@@ -20,10 +20,10 @@ class Metric
   make: (spec) ->
     # checking
     if not spec.value
-      throw poly.error.defn "No value defined in metric."
+      throw poly.error.defn "No value defined in numeral."
 
     @spec = toStrictMode(spec)
-    ps = new poly.DataProcess(@spec, [], @spec.strict, poly.parser.metricToData)
+    ps = new poly.DataProcess(@spec, [], @spec.strict, poly.parser.numeralToData)
     ps.make @spec, [], @render
 
   handleEvent : (type) =>
@@ -66,4 +66,4 @@ class Metric
     paper = poly.paper dom, width, height, handleEvent
 
 
-poly.metric = (spec, callback, prepare) -> new Metric(spec, callback, prepare)
+poly.numeral = (spec, callback, prepare) -> new Numeral(spec, callback, prepare)
