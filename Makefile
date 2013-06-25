@@ -21,6 +21,7 @@ polychart2:
     tmp/src/const.js \
     tmp/src/error.js \
     tmp/src/abstract.js\
+		tmp/src/canvas.js \
     tmp/src/mouse.js \
     tmp/src/format.js \
     tmp/src/type.js \

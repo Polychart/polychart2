@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Polychart Examples</title>
+    <script>
+      // for testing IE, remove array.indexOf
+      // delete Array.prototype.indexOf;
+    </script>
+    <script type="text/javascript" src="/lib/jquery-1.7.1.js"></script>
+    <script type="text/javascript" src="/lib/underscore.js"></script>
+    <script type="text/javascript" src="/lib/moment.js"></script>
+    <script type="text/javascript" src="/polychart2.js"></script>
+
+    <style type="text/css">
+      h1 {
+        font-size: 1.8em;
+        font-weight: 100;
+        font-family: "adelle", "serif";
+      }
+      div#wrapper {
+        display: inline-block;
+        width: 900px;
+      }
+      div#header {
+        display: block;
+        margin-left: 20px;
+      }
+      div {
+        display:inline-block;
+      }
+      div#nav {
+        float:right; 
+        display:inline-block;
+        height: 700px;
+        width: 150px;
+        overflow: auto;
+      }
+      div#nav table {
+        border:1px solid #e2e2e6; 
+        padding-left:5px;
+      }
+      div#error {
+        color: red;
+        font-size: 30px;
+        font-weight: 200;
+        padding-top: 300px;
+        display: none;
+      }
+      div#header {
+        display: block;
+        width: 900px;
+      }
+      a {
+        text-decoration: none;
+      }
+      div#header a {
+        color:green;
+      }
+      div#header #curr {
+        padding-left: 250px;
+        color: black;
+      }
+      div#header a:visited {
+        color: green;
+        float: left;
+      }
+      div#header a:last-child {
+        margin-left: 20px;
+        float: right;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="nav">
+      <table>
+        <thead>
+          <tr>
+            <th align="left">Navigation</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div id="wrapper">
+      <div id="header">
+        <a id="prev">PREV</a>
+        <a id="curr"></a>
+        <a id="next">NEXT</a>
+      </div>
+      <canvas id="c">
+      </canvas>
+      <div id="error">
+        <p>YOU HAVE FAILED ME, YOUNG PADAWAN!</p>
+      </div>
+    </div>
+    <script type="text/javascript">
+      var canv = document.getElementById('c'),
+          spec, jsondata, data, c;
+
+      jsondata = [];
+      for(var i = 0; i < 10; i++) {
+        var res = { index: i, value: Math.random() * 10 };
+        jsondata.push(res);
+      }
+
+      data = polyjs.data({ data: jsondata });
+
+      spec = {
+        layers: [
+          { data: data, type: 'bar', x: 'index', y: 'value', id: 'index', opacity: 'value' }
+        ],
+        guides: {
+          x: {
+            type: 'num',
+            bw: 1
+          },
+          y: {
+            type: 'num',
+            min: 0,
+            max: 10,
+            ticks: [2, 4, 6, 8],
+            labels: { 2: 'Two', 4: 'Four', 6: 'Six', 8: 'Eight' }
+          }
+        },
+        dom: canv
+      };
+
+      c = polyjs.chart(spec, (function(err){ console.error(err); }));
+    </script>
+  </body>
+</html>
+

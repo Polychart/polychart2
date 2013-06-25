@@ -2,9 +2,8 @@
 # GLOBALS
 ###
 poly.paper = (dom, w, h, graph) ->
-  if not Raphael?
-    throw poly.error.depn "The dependency Raphael is not included."
-  paper = Raphael(dom, w, h)
+  if Raphael? then paper = Raphael(dom, w, h)
+  else paper = poly.canvas dom, w, h
   # Handlers and events for clicking outside of graph geometry
   bg = paper.rect(0,0,w,h).attr
     fill: 'white' # for FireFox
@@ -116,12 +115,11 @@ class Renderer
     pt.animate @attr(scales, coord, offset, mark, mayflip), 300
   attr: (scales, coord, offset, mark, mayflip) -> throw poly.error.impl()
   _cantRender: (aes) -> throw poly.error.missingdata()
-  _makePath : (xs, ys, type='L') ->
-    switch type
-      when 'spline'
-        path = _.map xs, (x, i) -> (if i == 0 then "M #{x} #{ys[i]} R " else '') + "#{x} #{ys[i]}"
-      else
-        path = _.map xs, (x, i) -> (if i == 0 then 'M' else type) + x+' '+ys[i]
+  _makePath : (xs, ys, type='L ') ->
+    if type is 'spline'
+      path = _.map xs, (x, i) -> (if i == 0 then "M #{x} #{ys[i]} R " else '') + "#{x} #{ys[i]}"
+    else
+      path = _.map xs, (x, i) -> (if i == 0 then 'M ' else type) + x+' '+ys[i]
     path.join(' ')
   _maybeApply : (scales, mark, key) ->
     val = mark[key]
