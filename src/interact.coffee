@@ -30,6 +30,7 @@ poly.handler.tooltip = () ->
       text =
         x: mx
         y: my - height/2 - _boxMargin
+      tooltip.text.attr text
       {x, y, width, height} = tooltip.text.getBBox()
       box =
         x: x - _boxPadding/2
@@ -44,8 +45,8 @@ poly.handler.tooltip = () ->
         box.x -= delta/2
         text.x -= delta/2
       if box.x < 0
-        box.x += box.x/2
-        text.x += box.x/2
+        text.x -= box.x
+        box.x = 0
       tooltip.box.attr box
       tooltip.text.attr text
 

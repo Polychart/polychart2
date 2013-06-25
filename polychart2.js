@@ -8910,6 +8910,7 @@ The functions here makes it easier to create common types of interactions.
             x: mx,
             y: my - height / 2 - _boxMargin
           };
+          tooltip.text.attr(text);
           _ref1 = tooltip.text.getBBox(), x = _ref1.x, y = _ref1.y, width = _ref1.width, height = _ref1.height;
           box = {
             x: x - _boxPadding / 2,
@@ -8927,8 +8928,8 @@ The functions here makes it easier to create common types of interactions.
             text.x -= delta / 2;
           }
           if (box.x < 0) {
-            box.x += box.x / 2;
-            text.x += box.x / 2;
+            text.x -= box.x;
+            box.x = 0;
           }
           tooltip.box.attr(box);
           return tooltip.text.attr(text);
