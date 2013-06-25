@@ -2242,7 +2242,7 @@ See the spec definition for more information.
   };
 
   numeralToDataSpec = function(lspec) {
-    var aesthetics, dedupByName, desc, expr, filters, groups, key, metas, result, sdesc, select, sexpr, stats, transstat, transstats, ts, val, _ref1, _ref2;
+    var aesthetics, dedupByName, desc, expr, filters, groups, key, metas, result, sdesc, select, sexpr, stats, transstat, transstats, ts, val, _ref1, _ref2, _ref3, _ref4;
 
     filters = {};
     _ref2 = (_ref1 = lspec.filter) != null ? _ref1 : {};
@@ -2262,33 +2262,37 @@ See the spec definition for more information.
     metas = {};
     for (key in aesthetics) {
       desc = aesthetics[key];
-      expr = parse(desc["var"]);
-      desc["var"] = expr.pretty();
-      ts = extractOps(expr);
-      transstat.push(ts);
-      select.push(desc["var"]);
-      if (ts.stat.length === 0) {
-        groups.push(desc["var"]);
-      }
-      if ('sort' in desc) {
-        sdesc = dictGets(desc, poly["const"].metas);
-        sexpr = parse(sdesc.sort);
-        sdesc.sort = sexpr.pretty();
-        result = extractOps(sexpr);
-        if (result.stat.length !== 0) {
-          sdesc.stat = result.stat[0];
+      if (desc["var"] === 'count(*)') {
+        select.push(desc["var"]);
+      } else {
+        expr = parse(desc["var"]);
+        desc["var"] = expr.pretty();
+        ts = extractOps(expr);
+        transstat.push(ts);
+        select.push(desc["var"]);
+        if (ts.stat.length === 0) {
+          groups.push(desc["var"]);
         }
-        metas[desc["var"]] = sdesc;
+        if ('sort' in desc) {
+          sdesc = dictGets(desc, poly["const"].metas);
+          sexpr = parse(sdesc.sort);
+          sdesc.sort = sexpr.pretty();
+          result = extractOps(sexpr);
+          if (result.stat.length !== 0) {
+            sdesc.stat = result.stat[0];
+          }
+          metas[desc["var"]] = sdesc;
+        }
       }
     }
     transstats = mergeObjLists(transstat);
     dedupByName = dedupOnKey('name');
     stats = {
-      stats: dedupByName(transstats.stat),
+      stats: dedupByName((_ref3 = transstats.stat) != null ? _ref3 : []),
       groups: dedup(groups)
     };
     return {
-      trans: dedupByName(transstats.trans),
+      trans: dedupByName((_ref4 = transstats.trans) != null ? _ref4 : []),
       stats: stats,
       meta: metas,
       select: dedup(select),

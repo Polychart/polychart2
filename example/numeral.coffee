@@ -11,3 +11,10 @@ data = polyjs.data data:{
     value: 'sum(val)'
     filter: cat: in: ['b']
     dom: dom
+
+@examples.numeral2 = (dom) ->
+  polyjs.numeral
+    data: data
+    value: 'count(*)'
+    filter: cat: in: ['b']
+    dom: dom
