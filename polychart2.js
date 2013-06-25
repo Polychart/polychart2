@@ -6762,7 +6762,7 @@ data processing to be done.
       }
       return -1 * multiplier;
     };
-    data.sort.comparator;
+    data.sort(comparator);
     if (limit) {
       data = data.slice(0, +(limit - 1) + 1 || 9e9);
     }
