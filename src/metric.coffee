@@ -31,14 +31,12 @@ class Metric
   render: (err, statData, metaData) =>
     @value = statData[0][@spec.value.var]
 
-    # formatting (temporary)
-    @value =
-      if 0 < @value < 1
-        poly.format.number(false)(@value)
-      else if @value % 1 == 0
-        poly.format.number(0)(@value)
-      else
-        poly.format.number(-1)(@value)
+    # formatting the value (temporary)
+    degree =
+      if 0 < @value < 1      then undefined
+      else if @value % 1 == 0 then 0
+      else                        -1
+    @value = poly.format.number(degree)(@value)
 
     if @prepare then @prepare @
 

@@ -10067,10 +10067,11 @@ The functions here makes it easier to create common types of interactions.
     Metric.prototype.handleEvent = function(type) {};
 
     Metric.prototype.render = function(err, statData, metaData) {
-      var height, scale, width, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+      var degree, height, scale, width, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
 
       this.value = statData[0][this.spec.value["var"]];
-      this.value = (0 < (_ref = this.value) && _ref < 1) ? poly.format.number(false)(this.value) : this.value % 1 === 0 ? poly.format.number(0)(this.value) : poly.format.number(-1)(this.value);
+      degree = (0 < (_ref = this.value) && _ref < 1) ? void 0 : this.value % 1 === 0 ? 0 : -1;
+      this.value = poly.format.number(degree)(this.value);
       if (this.prepare) {
         this.prepare(this);
       }
