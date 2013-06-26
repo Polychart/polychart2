@@ -2,7 +2,7 @@ class PolyCanvas
   # Simulates paper element of Raphael
   constructor: (dom, w, h) ->
     if dom.getContext then @context = dom.getContext '2d'
-    else throw poly.error.depn "Neither Raphael nor Canvas is available."
+    else dom.polyGeom = @
 
     dom.width = w
     dom.height = h
@@ -10,14 +10,9 @@ class PolyCanvas
     @items = []
     @_counter = 0
 
-  _makeItem: (type, params) ->
-    id = @_newId()
-    switch type
-      when 'rect' then item = new PolyRect id, @, params
-      when 'circle' then item = new PolyCirc id, @, params
-      when 'path' then item = new PolyPath id, @, params
-      when 'text' then item = new PolyText id, @, params
-    @items[id] = item
+  _makeItem: (type, args) ->
+    item = new PolyCanvasItem type, @_newId(), @, args
+    @items.unshift item
     item
 
   _newId: () -> @_counter += 1
@@ -27,53 +22,23 @@ class PolyCanvas
   path: (args...) -> @_makeItem 'path', args
   text: (args...) -> @_makeItem 'text', args
 
-  # TODO: Erase item
   remove: (id) ->
-    item = @items[id]
+    for item, i in @items
+      if item.id is id
+        return @items.splice i, 1
 
-
-class PolyCanvasItem
-  constructor: (@id, @canvas, params) ->
-    @context = @canvas.context
-    @_resetContext()
-    @attr params
-
-  _setFont: (fontSize, fontFamily) ->
-    if fontFamily?
-      @context.font = "#{fontSize}px #{fontFamily}"
-    else
-      @context.font = "#{fontSize}px sans-serif"
+  toBack: (id) ->
+    [item] = @remove id
+    @items.push item
+  toFront: (id) ->
+    [item] = @remove id
+    @items.unshift item
 
   _resetContext: () ->
     @context.fillStyle = '#000000'
     @context.strokeStyle = '#000000'
     @context.globalAlpha = 1
     @context.lineWidth = 0.5
-
-  # Sets the attr of some drawn thing
-  attr: (args) ->
-    if args.len == 1
-      params = args[0]
-      if params['stroke-width']? then @context.lineWidth = params['stroke-width']
-      if params.stroke? then @context.strokeStyle = params.stroke
-      if params.fill? then @context.fillStyle = params.fill
-      if params.opacity? then @context.globalAlpha = params.opacity
-
-      if params['font-size']? then @_setFont params['font-size'], params['font-family']
-      if params['text-anchor']?
-        anchor = params['text-anchor']
-        switch anchor
-          when 'left' then @context.textAlign = 'start'
-          when 'middle' then @context.textAlign = 'center'
-          when 'right' then @context.textAlign = 'right'
-    else
-      [key, val] = [args[0], args[1]]
-      if val?
-        switch key
-          when 'fill' then @context.fillStyle = @_stringToHex val
-          when 'opacity' then @context.globalAlpha = val
-          when 'stroke' then @context.strokeStyle = @_stringToHex val
-          when 'stoke-width' then @context.lineWidth = val
 
   _stringToHex: (colour) ->
     switch colour
@@ -82,100 +47,48 @@ class PolyCanvasItem
       when 'steelblue' then '#4692B4'
       else colour
 
-  _setProps: (args, props) ->
-    if args.length == 1
-      params = args[0]
-      _.each props, (prop) =>
-        if params[prop]? then @[prop] = params[prop]
-    else
-      [key, val] = [args[0], args[1]]
-      _.each props, (prop) =>
-        if key == prop and val? then @[prop] = val
+class PolyCanvasItem
+  constructor: (@type, @id, @canvas, args) ->
+    @_attr = {}
+    @_interact = {}
+    @attr args
 
-  # TODO: Implement a scene tree type object
+  # Sets the attr of some drawn thing
+  attr: (args...) ->
+    if args.length == 1 and _.isObject args[0]
+      for key, val of args[0]
+        @_attr[key] = val
+    else if args.length == 2 and args[0]? and args[1]?
+      @_attr[args[0]] = args[1]
+    else if args.length > 2
+      switch @type
+        when 'rect'
+          @_attr = _.extend @_attr, {x: args[0], y: args[1], width: args[2], height: args[3]}
+        when 'circle'
+          @_attr = _.extend @_attr, {x: args[0], y: args[1], r: args[2]}
+        when 'path'
+          @_attr = _.extend @_attr, {path: args[0]}
+        when 'text'
+          @_attr = _.extend @_attr, {x: args[0], y: args[1], text: args[2]}
+        else throw poly.error.defn "Unknown geometry type!"
+    @
+
   remove: () -> @canvas.remove @id
-  toBack: () -> undefined
-  toFront: () -> undefined
+  toBack: () -> @canvas.toBack(@id)
+  toFront: () -> @canvas.toFront(@id)
 
-  animate: () -> undefined
+  animate: (args...) -> @_attr.animate = args; @
 
-  click: (handler) -> undefined
-  drag: (onmove, onstart, onend) -> undefined
-  data: (type, handler) -> undefined
-  hover: (handler) -> undefined
+  click: (handler) -> @_interact.click = handler
+  drag: (onmove, onstart, onend) -> @_interact.drag = {onmove, onstart, onend}
+  hover: (handler) -> @_interact.hover = handler
+  data: (type, handler) ->
+    @_interact.data ?= {}
+    @_interact.data[type] = handler
 
-  touchstart: (handler) -> undefined
-  touchend: (handler) -> undefined
-  touchmove: (handler) -> undefined
-  touchcancel: (handler) -> undefined
-
-# Simulates paper.rect(x, y, w, h)
-class PolyRect extends PolyCanvasItem
-  attr: (args...) ->
-    super(args)
-    @_setProps args, ['x', 'y', 'width', 'height']
-    @_draw()
-
-  _draw: () ->
-    @context.fillRect @x, @y, @width, @height
-    @
-
-# Simulates paper.circle(x, y, r)
-class PolyCirc extends PolyCanvasItem
-  attr: (args...) ->
-    super(args)
-    @_setProps args, ['x', 'y', 'r']
-    @_draw()
-
-  _draw: () ->
-    @context.arc @cx, @cy, @r, 0, 2 * Math.PI, false
-    @context.fill()
-    @context.stroke()
-    @
-
-# Simulates paper.path([pathString])
-class PolyPath extends PolyCanvasItem
-  attr: (args...) ->
-    super(args)
-    @_setProps args, ['path']
-    console.log args
-    @_draw()
-
-  _draw: () ->
-    if @path?
-      path = @path.split(' ')
-      console.log path
-      @context.beginPath()
-      while path.length > 0
-        chr = path.shift()
-        switch chr
-          when 'M'
-            x = path.shift()
-            y = path.shift()
-            @context.moveTo x, y
-          when 'L'
-            x = path.shift()
-            y = path.shift()
-            @context.lineTo x, y
-          when 'R'
-            undefined
-          when 'A'
-            undefined
-          when 'Z'
-            @context.closePath()
-          else throw poly.error.defn "Unknown line type!"
-      @context.stroke()
-    @
-
-# Simulates paper.text(x, y, text)
-class PolyText extends PolyCanvasItem
-  attr: (args...) ->
-    super(args)
-    @_setProps args, ['x', 'y', 'text']
-    @_draw()
-
-  _draw: () ->
-    if @text? then @context.fillText @text, @x, @y
-    @
+  touchstart: (handler) -> @_interact.touchstart = handler
+  touchend: (handler) -> @_interact.touchend = handler
+  touchmove: (handler) -> @_interact.touchmove = handler
+  touchcancel: (handler) -> @_interact.touchcancel = handler
 
 poly.canvas = (dom, w, h) -> new PolyCanvas dom, w, h

@@ -122,10 +122,10 @@
             labels: { 2: 'Two', 4: 'Four', 6: 'Six', 8: 'Eight' }
           }
         },
-        dom: canv
+        dom: {}
       };
 
-      c = polyjs.chart(spec, (function(err){ console.error(err); }));
+      c = polyjs.chart(spec, (function(err, graph){ console.error(err); console.log(graph); }));
     </script>
   </body>
 </html>
