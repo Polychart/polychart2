@@ -177,7 +177,7 @@ class Legend extends poly.Guide
   make: (params) ->
     {domain, type, guideSpec, @mapping, @position, keys} = params
     @titletext = guideSpec.title ? keys
-    @ticks = poly.tick.make domain, guideSpec, type
+    {@ticks, _} = poly.tick.make domain, guideSpec, type
   calculate: () ->
     geoms = {}
     geoms['title'] = marks: 0: @_makeTitle(@titletext)

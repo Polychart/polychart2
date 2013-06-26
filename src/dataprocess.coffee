@@ -5,6 +5,7 @@ data processing to be done.
 class DataProcess
   ## save the specs
   constructor: (layerSpec, grouping, strictmode) ->
+    @layerMeta = layerSpec.meta
     @dataObj = layerSpec.data
     @initialSpec = poly.parser.layerToData layerSpec, grouping
     @prevSpec = null
@@ -18,21 +19,35 @@ class DataProcess
   make : (spec, grouping, callback) ->
     wrappedCallback = @_wrap callback
     if @strictmode
-      wrappedCallback @dataObj.json, {}
+      wrappedCallback
+        data: @dataObj.raw
+        meta: @dataObj.meta
     if @dataObj.computeBackend
       dataSpec = poly.parser.layerToData spec, grouping
+      if @layerMeta and _.size(dataSpec.meta) < 1 then dataSpec.meta = @layerMeta
       backendProcess(dataSpec, @dataObj, wrappedCallback)
     else
       dataSpec = poly.parser.layerToData spec, grouping
-      @dataObj.getData (data) ->
+      @dataObj.getData (err, data) ->
+        if err? then return wrappedCallback err, null
+
+        # Hack to get 'count(*)' to behave properly
+        if 'count(*)' in dataSpec.select
+          for obj in data.data
+            obj['count(*)'] = 1
+          data.meta['count(*)'] = {}
+          data.meta['count(*)']['type'] = 'num'
+          dataSpec.stats.stats.push {key: 'count(*)', name: 'count(*)', stat: 'count'}
         frontendProcess(dataSpec, data, wrappedCallback)
 
-  _wrap : (callback) => (params) =>
+  _wrap : (callback) => (err, params) =>
+    if err? then return callback err, null, null
+
     # save a copy of the data/meta before going to callback
     {data, meta} = params
     @statData = data
     @metaData = meta
-    callback @statData, @metaData
+    callback null, @statData, @metaData
 
 poly.DataProcess = DataProcess
 
@@ -65,14 +80,19 @@ transforms =
       if not (binwidth in poly.const.timerange)
         throw poly.error.defn "The binwidth #{binwidth} is invalid for a datetime varliable"
       binFn = (item) ->
-        if binwidth is 'week'
-          item[name] = moment.unix(item[key]).day(0).unix()
-        else if binwidth is 'decade'
-          m = moment.unix(item[key]).startOf('year')
-          m.year 10 * Math.floor(m.year()/10)
+        _timeBinning = (n, timerange) =>
+          m = moment.unix(item[key]).startOf(timerange)
+          m[timerange] n * Math.floor(m[timerange]()/n)
           item[name] = m.unix()
-        else
-          item[name] = moment.unix(item[key]).startOf(binwidth).unix()
+        switch binwidth
+          when 'week' then item[name] = moment.unix(item[key]).day(0).unix()
+          when 'twomonth' then _timeBinning 2, 'month'
+          when 'quarter' then _timeBinning 4, 'month'
+          when 'sixmonth' then _timeBinning 6, 'month'
+          when 'twoyear' then _timeBinning 2, 'year'
+          when 'fiveyear' then _timeBinning 5, 'year'
+          when 'decade' then _timeBinning 10, 'year'
+          else item[name] = moment.unix(item[key]).startOf(binwidth).unix()
       return trans: binFn, meta: {bw: binwidth, binned: true, type:'date'}
   'lag' : (key, transSpec, meta) ->
     {name, lag} = transSpec
@@ -254,10 +274,10 @@ frontendProcess = (dataSpec, data, callback) ->
       addMeta name, {type: 'num'}
   # select: make sure everything selected is there
   for key in dataSpec.select ? []
-    if not metaData[key]?
+    if not metaData[key]? and key isnt 'count(*)'
       throw poly.error.defn ("You referenced a data column #{key} that doesn't exist.")
   # done
-  callback(data:data, meta:metaData)
+  callback(null, data:data, meta:metaData)
 
 ###
 Perform the necessary computation in the backend

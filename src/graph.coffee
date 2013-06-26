@@ -10,7 +10,7 @@ class Graph
   The constructor does not do any real work. It just sets a bunch of variables
   to its default value and call @make(), which actually does the real work.
   ###
-  constructor: (spec) ->
+  constructor: (spec, callback=null, prepare=null) ->
     if not spec?
       throw poly.error.defn "No graph specification is passed in!"
     @handlers = []
@@ -22,6 +22,8 @@ class Graph
     @coord = null
     @facet = poly.facet.make()
     @dataSubscribed = []
+    @callback = callback
+    @prepare = prepare
     @make spec
 
     # Post make work, things that do not have to be updated
@@ -46,7 +48,7 @@ class Graph
   process may be asynchronous, we pass in @merge() as a callback for when
   data processing is complete.
   ###
-  make: (spec, @callback) ->
+  make: (spec) ->
     if spec?
       spec = poly.spec.toStrictMode spec
       poly.spec.check spec
@@ -74,7 +76,12 @@ class Graph
       spec = @spec.layers[id] #repeated
       groups = _.values @facet.specgroups
       @dataprocess[id] = new poly.DataProcess spec, groups, spec.strict
-      @dataprocess[id].make spec, groups, (statData, metaData) =>
+      @dataprocess[id].make spec, groups, (err, statData, metaData) =>
+        if err?
+          console.error err
+          if @callback? then @callback err, null
+          else throw poly.error.defn "Error processing data!"
+
         @processedData[id] =
           statData: statData
           metaData: metaData
@@ -115,15 +122,14 @@ class Graph
     @coord.setScales scales
     @scaleSet.coord = @coord
     {@axes, @titles, @legends} = @scaleSet.makeGuides(@spec, @dims)
-
+    if @prepare? then @prepare @
     @dom = @spec.dom
     @paper ?= @_makePaper @dom, @dims.width, @dims.height, @
     renderer = poly.render @handleEvent, @paper, scales, @coord
 
     @facet.render(renderer, @dims, @coord)
     @scaleSet.renderGuides @dims, renderer, @facet
-    if @callback
-      @callback()
+    if @callback? then @callback null, @
 
   addHandler : (h) -> if h not in @handlers then @handlers.push h
   removeHandler: (h) ->
@@ -153,11 +159,11 @@ class Graph
       else if type in ['reset', 'click', 'mover', 'mout', 'guide-click']
         obj.tooltip = obj.data('t')
         obj.evtData = obj.data('e')
-        # if type is 'reset'
-        #   {x, y} = poly.getXY(poly.offset(graph.dom), event)
-        #   f = graph.facet.getFacetInfo(graph.dims, x, y)
-        #   if not f then return
-
+      else if type in ['guide-title', 'guide-titleH', 'guide-titleV']
+        obj.tooltip = obj.data('t')
+        obj.evtData = obj.data('e')
+        event = poly.event.make type, obj
+        event.dispatch graph.dom
       for h in graph.handlers
         if _.isFunction(h)
           h(type, obj, event, graph)
@@ -173,4 +179,9 @@ class Graph
   _makePaper: (dom, width, height, handleEvent) ->
     paper = poly.paper dom, width, height, handleEvent
 
-poly.chart = (spec) -> new Graph(spec)
+poly.chart = (spec, callback, prepare) ->
+  try
+    new Graph(spec, callback, prepare)
+  catch err
+    if callback? then callback err, null
+    else throw poly.error.defn "Bad specification."

@@ -28,7 +28,7 @@ class Title extends poly.Guide
     if @position isnt 'none'
       if @title?
         renderer.remove @title
-      @title = renderer.add @_makeTitle(dim, offset), null, null, 'guide'
+      @title = renderer.add @_makeTitle(dim, offset), null, null, 'guide-' + @titleType
     else if @title?
       renderer.remove @title
   dispose: (renderer) ->
@@ -43,6 +43,7 @@ class Title extends poly.Guide
 
 class TitleH extends Title
   defaultPosition: 'bottom'
+  titleType: 'titleH'
   _makeTitle: (dim, offset) ->
     y =
       if @position is 'top'
@@ -60,6 +61,7 @@ class TitleH extends Title
 
 class TitleV extends Title
   defaultPosition: 'left'
+  titleType: 'titleV'
   _makeTitle: (dim, offset) ->
     x =
       if @position is 'left'
@@ -77,6 +79,7 @@ class TitleV extends Title
     transform : 'r270'
 
 class TitleMain extends Title
+  titleType: 'title'
   _makeTitle: (dim, offset) ->
     x = dim.width / 2
     y = 20
@@ -98,7 +101,8 @@ class TitleFacet extends Title
     if @title?
       @title = renderer.animate @title, @_makeTitle(dim, offset)
     else
-      @title = renderer.add @_makeTitle(dim, offset), null, null, 'guide'
+      # TODO: Ensure that editing titles will be fine
+      @title = renderer.add @_makeTitle(dim, offset), null, null, 'guide-facet-title'
   _makeTitle: (dim, offset) ->
     type: 'text'
     x : sf.identity offset.x + dim.eachWidth/2

@@ -12,53 +12,80 @@ Render a tooltip. This is actually included automatically for every graph.
 poly.handler.tooltip = () ->
   tooltip = {}
   offset = null
-  # Local handler function to update on mousemove
-  update = (tooltip) -> (e) ->
-    mousePos = poly.getXY offset, e
-    if tooltip.text.getBBox()
+  positioner = null
+
+  _boxPadding = 10
+  _boxMargin = 20
+  _boxRadius = 10
+
+  _update = (tooltip) -> (e) ->
+    m = poly.getXY offset, e
+    if tooltip.text?
+      _positionTooltip tooltip, m
+
+  _positionTooltip = (maxHeight, maxWidth) -> (tooltip, mousePos) ->
+    [mx, my] = [mousePos.x, mousePos.y]
+    if tooltip.text?
+      {height} = tooltip.text.getBBox()
+      text =
+        x: mx
+        y: my - height/2 - _boxMargin
+      tooltip.text.attr text
       {x, y, width, height} = tooltip.text.getBBox()
-      tooltip.text.attr
-        x: mousePos.x
-        y: Math.max(0, mousePos.y - 5 - height)
-      {x, y, width, height} = tooltip.text.getBBox()
-      tooltip.box.attr
-        x: Math.max(0, x - 5)
-        y: Math.max(0, y - 5)
-        width: width + 10
-        height: height + 10
-  # Main handler for tooltip
+      box =
+        x: x - _boxPadding/2
+        y: y - _boxPadding/2
+        width: width + _boxPadding
+        height: height + _boxPadding
+      if box.y < 0
+        box.y = y + 3*_boxPadding + height
+        text.y = my + height/2 + 3*_boxMargin/4
+      if box.x + box.width > maxWidth
+        delta = box.x + box.width - maxWidth
+        box.x -= delta/2
+        text.x -= delta/2
+      if box.x < 0
+        text.x -= box.x
+        box.x = 0
+      tooltip.box.attr box
+      tooltip.text.attr text
+
+  # Handler for tooltips
   (type, obj, event, graph) ->
     offset = poly.offset graph.dom
     paper = obj.paper
-    if type is 'mover' or type is 'mout'
+    positioner = _positionTooltip graph.dims.chartHeight, graph.dims.chartWidth
+    if type in ['mover', 'mout']
       if tooltip.text?
         tooltip.text.remove()
         tooltip.box.remove()
       tooltip = {}
       if type is 'mover' and obj.tooltip
+        mousePos = poly.getXY offset, event
         # Get the bounding box of the object and mouse position
         {x, y, x2, y2} = obj.getBBox()
-        mousePos = poly.getXY offset, event
-        x1 = mousePos.x
-        y1 = mousePos.y
-        tooltip.text = paper.text(x1, y1, obj.tooltip).attr
+        [x1, y1] = [mousePos.x, mousePos.y]
+        tooltip.text = paper.text(x1, y1, obj.tooltip(graph.scaleSet.scales)).attr
           'text-anchor':'middle'
-          'fill':'white'
+          fill:'white'
         # now figure out where the tooltip text is and move it up enough to not
         # obstruct the object
         {x, y, width, height} = tooltip.text.getBBox()
-        y = y1-height - 10
-        tooltip.text.attr 'y': y
+        tooltip.text.attr { y: y1 - height/2 - _boxMargin }
         # bound the text with a rounded rectangle background
         {x, y, width, height} = tooltip.text.getBBox()
-        tooltip.box = paper.rect(x-5, y-5, width+10, height+10, 5)
-        tooltip.box.attr fill: '#213'
-        # move the text to the front of the rectangle
+        tooltip.box = paper.rect x - _boxPadding/2,
+                                 y - _boxPadding/2,
+                                 width + _boxPadding,
+                                 height + _boxPadding,
+                                 _boxRadius
+        tooltip.box.attr { fill: '#213' }
         tooltip.text.toFront()
         
+        positioner tooltip, mousePos
         # Add handler on to the object to move box/text on mousemove
         # TODO: Add handler to object so will monitor data changes
-        obj.mousemove update(tooltip)
+        obj.mousemove _update(tooltip)
       else
         obj.unmousemove? null
 ###
