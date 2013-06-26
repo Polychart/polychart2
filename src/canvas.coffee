@@ -55,22 +55,23 @@ class PolyCanvasItem
 
   # Sets the attr of some drawn thing
   attr: (args...) ->
-    if args.length == 1 and _.isObject args[0]
+    if args.length > 0 and _.isArray args[0]
+      params = args[0]
+      switch @type
+        when 'rect'
+          @_attr = _.extend @_attr, {x: params[0], y: params[1], width: params[2], height: params[3]}
+        when 'circle'
+          @_attr = _.extend @_attr, {x: params[0], y: params[1], r: params[2]}
+        when 'path'
+          @_attr = _.extend @_attr, {path: params[0]}
+        when 'text'
+          @_attr = _.extend @_attr, {x: params[0], y: params[1], text: params[2]}
+        else throw poly.error.defn "Unknown geometry type!"
+    else if args.length == 1 and _.isObject args[0]
       for key, val of args[0]
         @_attr[key] = val
     else if args.length == 2 and args[0]? and args[1]?
       @_attr[args[0]] = args[1]
-    else if args.length > 2
-      switch @type
-        when 'rect'
-          @_attr = _.extend @_attr, {x: args[0], y: args[1], width: args[2], height: args[3]}
-        when 'circle'
-          @_attr = _.extend @_attr, {x: args[0], y: args[1], r: args[2]}
-        when 'path'
-          @_attr = _.extend @_attr, {path: args[0]}
-        when 'text'
-          @_attr = _.extend @_attr, {x: args[0], y: args[1], text: args[2]}
-        else throw poly.error.defn "Unknown geometry type!"
     @
 
   remove: () -> @canvas.remove @id

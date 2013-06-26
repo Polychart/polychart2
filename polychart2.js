@@ -1021,50 +1021,50 @@ Abstract classes, almost used like interfaces throughout the codebase
     }
 
     PolyCanvasItem.prototype.attr = function() {
-      var args, key, val, _ref;
+      var args, key, params, val, _ref;
 
       args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      if (args.length === 1 && _.isObject(args[0])) {
+      if (args.length > 0 && _.isArray(args[0])) {
+        params = args[0];
+        switch (this.type) {
+          case 'rect':
+            this._attr = _.extend(this._attr, {
+              x: params[0],
+              y: params[1],
+              width: params[2],
+              height: params[3]
+            });
+            break;
+          case 'circle':
+            this._attr = _.extend(this._attr, {
+              x: params[0],
+              y: params[1],
+              r: params[2]
+            });
+            break;
+          case 'path':
+            this._attr = _.extend(this._attr, {
+              path: params[0]
+            });
+            break;
+          case 'text':
+            this._attr = _.extend(this._attr, {
+              x: params[0],
+              y: params[1],
+              text: params[2]
+            });
+            break;
+          default:
+            throw poly.error.defn("Unknown geometry type!");
+        }
+      } else if (args.length === 1 && _.isObject(args[0])) {
         _ref = args[0];
         for (key in _ref) {
           val = _ref[key];
           this._attr[key] = val;
         }
       } else if (args.length === 2 && (args[0] != null) && (args[1] != null)) {
-        console.log(args[0], args[1]);
         this._attr[args[0]] = args[1];
-      } else if (args.length > 2) {
-        switch (this.type) {
-          case 'rect':
-            this._attr = _.extend(this._attr, {
-              x: args[0],
-              y: args[1],
-              width: args[2],
-              height: args[3]
-            });
-            break;
-          case 'circle':
-            this._attr = _.extend(this._attr, {
-              x: args[0],
-              y: args[1],
-              r: args[2]
-            });
-            break;
-          case 'path':
-            this._attr = _.extend(this._attr, {
-              path: args[0]
-            });
-            break;
-          case 'text':
-            this._attr = _.extend(this._attr, {
-              x: args[0],
-              y: args[1],
-              text: args[2]
-            });
-            break;
-          default:
-            throw poly.error.defn("Unknown geometry type!");
-        }
       }
       return this;
     };
