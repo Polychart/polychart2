@@ -6499,7 +6499,6 @@ data processing to be done.
       }
       if (this.dataObj.computeBackend) {
         dataSpec = this.parseMethod(spec, grouping);
-        backendProcess(dataSpec, this.dataObj, wrappedCallback);
         if (this.layerMeta && _.size(dataSpec.meta) < 1) {
           dataSpec.meta = this.layerMeta;
         }

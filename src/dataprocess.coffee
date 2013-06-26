@@ -25,7 +25,6 @@ class DataProcess
         meta: @dataObj.meta
     if @dataObj.computeBackend
       dataSpec = @parseMethod spec, grouping
-      backendProcess(dataSpec, @dataObj, wrappedCallback)
       if @layerMeta and _.size(dataSpec.meta) < 1 then dataSpec.meta = @layerMeta
       backendProcess(dataSpec, @dataObj, wrappedCallback)
     else
