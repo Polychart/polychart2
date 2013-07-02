@@ -9015,67 +9015,70 @@ The functions here makes it easier to create common types of interactions.
 
 
   poly.handler.tooltip = function() {
-    var offset, positioner, tooltip, _boxMargin, _boxPadding, _boxRadius, _positionTooltip, _update;
+    var maxHeight, maxWidth, minWidth, offset, paper, tooltip, _boxMargin, _boxPadding, _boxRadius, _positionTooltip, _update;
 
     tooltip = {};
     offset = null;
-    positioner = null;
+    paper = null;
     _boxPadding = 10;
     _boxMargin = 20;
     _boxRadius = 10;
-    _update = function(tooltip) {
-      return function(e) {
-        var m;
+    maxHeight = null;
+    maxWidth = null;
+    minWidth = null;
+    _update = function(e) {
+      var mousePos;
 
-        m = poly.getXY(offset, e);
-        if (tooltip.text != null) {
-          return _positionTooltip(tooltip, m);
-        }
-      };
+      mousePos = poly.getXY(offset, e);
+      if (tooltip.text != null) {
+        return _positionTooltip(tooltip, mousePos);
+      }
     };
-    _positionTooltip = function(maxHeight, maxWidth) {
-      return function(tooltip, mousePos) {
-        var box, delta, height, mx, my, text, width, x, y, _ref, _ref1;
+    _positionTooltip = function(tooltip, mousePos) {
+      var box, delta, height, mx, my, text, width, x, y, _ref, _ref1;
 
-        _ref = [mousePos.x, mousePos.y], mx = _ref[0], my = _ref[1];
-        if (tooltip.text != null) {
-          height = tooltip.text.getBBox().height;
-          text = {
-            x: mx,
-            y: my - height / 2 - _boxMargin
-          };
-          tooltip.text.attr(text);
-          _ref1 = tooltip.text.getBBox(), x = _ref1.x, y = _ref1.y, width = _ref1.width, height = _ref1.height;
-          box = {
-            x: x - _boxPadding / 2,
-            y: y - _boxPadding / 2,
-            width: width + _boxPadding,
-            height: height + _boxPadding
-          };
-          if (box.y < 0) {
-            box.y = y + 3 * _boxPadding + height;
-            text.y = my + height / 2 + 3 * _boxMargin / 4;
-          }
-          if (box.x + box.width > maxWidth) {
-            delta = box.x + box.width - maxWidth;
-            box.x -= delta / 2;
-            text.x -= delta / 2;
-          }
-          if (box.x < 0) {
-            text.x -= box.x;
-            box.x = 0;
-          }
-          tooltip.box.attr(box);
-          return tooltip.text.attr(text);
+      _ref = [mousePos.x, mousePos.y], mx = _ref[0], my = _ref[1];
+      if (tooltip.text != null) {
+        height = tooltip.text.getBBox().height;
+        text = {
+          x: mx,
+          y: my - height / 2 - _boxMargin
+        };
+        tooltip.text.attr(text);
+        _ref1 = tooltip.text.getBBox(), x = _ref1.x, y = _ref1.y, width = _ref1.width, height = _ref1.height;
+        box = {
+          x: x - _boxPadding / 2,
+          y: y - _boxPadding / 2,
+          width: width + _boxPadding,
+          height: height + _boxPadding
+        };
+        if (box.y < 0) {
+          box.y = y + 3 * _boxPadding + height;
+          text.y = my + height / 2 + 3 * _boxMargin / 4;
         }
-      };
+        if (box.x + box.width > maxWidth) {
+          delta = box.x + box.width - maxWidth;
+          box.x -= delta / 2;
+          text.x -= delta / 2;
+        }
+        if (box.x < minWidth) {
+          text.x += minWidth - box.x;
+          box.x = minWidth;
+        }
+        tooltip.text.attr(text);
+        tooltip.box.attr(box);
+        return tooltip;
+      }
     };
     return function(type, obj, event, graph) {
-      var height, mousePos, paper, width, x, x1, x2, y, y1, y2, _ref, _ref1, _ref2, _ref3;
+      var height, mousePos, width, x, x1, x2, y, y1, y2, _ref, _ref1, _ref2, _ref3;
 
       offset = poly.offset(graph.dom);
       paper = obj.paper;
-      positioner = _positionTooltip(graph.dims.chartHeight, graph.dims.chartWidth);
+      maxHeight = graph.dims.chartHeight;
+      maxWidth = graph.dims.chartWidth + graph.dims.guideLeft + graph.dims.paddingLeft;
+      minWidth = graph.dims.guideLeft + graph.dims.paddingLeft;
+      console.log(graph.dims);
       if (type === 'mover' || type === 'mout') {
         if (tooltip.text != null) {
           tooltip.text.remove();
@@ -9100,10 +9103,8 @@ The functions here makes it easier to create common types of interactions.
             fill: '#213'
           });
           tooltip.text.toFront();
-          positioner(tooltip, mousePos);
-          return obj.mousemove(_update(tooltip));
-        } else {
-          return typeof obj.unmousemove === "function" ? obj.unmousemove(null) : void 0;
+          tooltip = _positionTooltip(tooltip, mousePos);
+          return obj.mousemove(_update);
         }
       }
     };
