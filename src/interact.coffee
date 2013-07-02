@@ -12,18 +12,22 @@ Render a tooltip. This is actually included automatically for every graph.
 poly.handler.tooltip = () ->
   tooltip = {}
   offset = null
-  positioner = null
+  paper = null
 
   _boxPadding = 10
   _boxMargin = 20
   _boxRadius = 10
+  
+  maxHeight = null
+  maxWidth = null
+  minWidth = null
 
-  _update = (tooltip) -> (e) ->
-    m = poly.getXY offset, e
+  _update = (e) ->
+    mousePos = poly.getXY offset, e
     if tooltip.text?
-      _positionTooltip tooltip, m
+      _positionTooltip tooltip, mousePos
 
-  _positionTooltip = (maxHeight, maxWidth) -> (tooltip, mousePos) ->
+  _positionTooltip = (tooltip, mousePos) ->
     [mx, my] = [mousePos.x, mousePos.y]
     if tooltip.text?
       {height} = tooltip.text.getBBox()
@@ -44,17 +48,20 @@ poly.handler.tooltip = () ->
         delta = box.x + box.width - maxWidth
         box.x -= delta/2
         text.x -= delta/2
-      if box.x < 0
-        text.x -= box.x
-        box.x = 0
-      tooltip.box.attr box
+      if box.x < minWidth
+        text.x += minWidth - box.x
+        box.x = minWidth
       tooltip.text.attr text
+      tooltip.box.attr box
+      tooltip
 
   # Handler for tooltips
   (type, obj, event, graph) ->
     offset = poly.offset graph.dom
     paper = obj.paper
-    positioner = _positionTooltip graph.dims.chartHeight, graph.dims.chartWidth
+    maxHeight = graph.dims.chartHeight
+    maxWidth = graph.dims.chartWidth + graph.dims.guideLeft + graph.dims.paddingLeft
+    minWidth = graph.dims.guideLeft + graph.dims.paddingLeft
     if type in ['mover', 'mout']
       if tooltip.text?
         tooltip.text.remove()
@@ -82,12 +89,11 @@ poly.handler.tooltip = () ->
         tooltip.box.attr { fill: '#213' }
         tooltip.text.toFront()
         
-        positioner tooltip, mousePos
+        tooltip = _positionTooltip tooltip, mousePos
         # Add handler on to the object to move box/text on mousemove
         # TODO: Add handler to object so will monitor data changes
-        obj.mousemove _update(tooltip)
-      else
-        obj.unmousemove? null
+        obj.mousemove _update
+
 ###
 Drilldown. Suitable for bar charts over categorical data, mostly.
 This function does not handle the following:
