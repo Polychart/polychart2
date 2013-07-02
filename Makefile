@@ -68,4 +68,4 @@ clean-folders:
 	-rm -r tmp || echo "Done removing tmp/" && false
 
 clean: clean-folders
-	rm $(OBJS)
+	-rm $(OBJS)
