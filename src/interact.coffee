@@ -62,7 +62,6 @@ poly.handler.tooltip = () ->
     maxHeight = graph.dims.chartHeight
     maxWidth = graph.dims.chartWidth + graph.dims.guideLeft + graph.dims.paddingLeft
     minWidth = graph.dims.guideLeft + graph.dims.paddingLeft
-    console.log graph.dims
     if type in ['mover', 'mout']
       if tooltip.text?
         tooltip.text.remove()

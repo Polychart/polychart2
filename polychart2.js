@@ -9078,7 +9078,6 @@ The functions here makes it easier to create common types of interactions.
       maxHeight = graph.dims.chartHeight;
       maxWidth = graph.dims.chartWidth + graph.dims.guideLeft + graph.dims.paddingLeft;
       minWidth = graph.dims.guideLeft + graph.dims.paddingLeft;
-      console.log(graph.dims);
       if (type === 'mover' || type === 'mout') {
         if (tooltip.text != null) {
           tooltip.text.remove();
