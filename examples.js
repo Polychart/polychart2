@@ -446,6 +446,16 @@
         return alert("You clicked on index: " + data.index["in"][0]);
       }
     });
+    c.addHandler(function(type, obj, evt, graph) {
+      if (type === 'tover') {
+        obj.shadow = obj.clone().attr({
+          color: 'purple'
+        }).insertBefore(obj);
+        return obj.shadow.blur(1);
+      } else if (type === 'tout') {
+        return obj.shadow.remove();
+      }
+    });
     return window.c = c;
   };
 

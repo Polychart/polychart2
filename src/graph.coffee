@@ -156,7 +156,7 @@ class Graph
           obj.evtData = null
       else if type == 'data'
         obj.evtData = {}
-      else if type in ['reset', 'click', 'mover', 'mout', 'guide-click']
+      else if type in ['reset', 'click', 'mover', 'mout', 'tover', 'tout', 'guide-click']
         obj.tooltip = obj.data('t')
         obj.evtData = obj.data('e')
       else if type in ['guide-title', 'guide-titleH', 'guide-titleV']

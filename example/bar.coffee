@@ -27,6 +27,12 @@
       debugger
       alert("You clicked on index: " + data.index.in[0])
     #if type == 'select' then console.log data
+  c.addHandler (type, obj, evt, graph) ->
+    if type is 'tover'
+      obj.shadow = obj.clone().attr({color: 'purple'}).insertBefore(obj)
+      obj.shadow.blur(1)
+    else if type is 'tout'
+      obj.shadow.remove()
   window.c = c
  
 @examples.bar_missing = (dom) ->

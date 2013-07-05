@@ -86,6 +86,7 @@ poly.render = (handleEvent, paper, scales, coord) -> (offset={}, clipping=false,
       poly.touchEvents handleEvent, pt, true
     else if type in ['guide-title', 'guide-titleH', 'guide-titleV']
       pt.click handleEvent(type)
+      pt.hover handleEvent('tover'), handleEvent('tout')
       poly.touchEvents handleEvent, pt, true
     else
       pt.click handleEvent('click')

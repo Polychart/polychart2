@@ -8382,6 +8382,7 @@ Dimension object has the following elements (all numeric in pixels):
             poly.touchEvents(handleEvent, pt, true);
           } else if (type === 'guide-title' || type === 'guide-titleH' || type === 'guide-titleV') {
             pt.click(handleEvent(type));
+            pt.hover(handleEvent('tover'), handleEvent('tout'));
             poly.touchEvents(handleEvent, pt, true);
           } else {
             pt.click(handleEvent('click'));
@@ -10454,7 +10455,7 @@ The functions here makes it easier to create common types of interactions.
           }
         } else if (type === 'data') {
           obj.evtData = {};
-        } else if (type === 'reset' || type === 'click' || type === 'mover' || type === 'mout' || type === 'guide-click') {
+        } else if (type === 'reset' || type === 'click' || type === 'mover' || type === 'mout' || type === 'tover' || type === 'tout' || type === 'guide-click') {
           obj.tooltip = obj.data('t');
           obj.evtData = obj.data('e');
         } else if (type === 'guide-title' || type === 'guide-titleH' || type === 'guide-titleV') {
