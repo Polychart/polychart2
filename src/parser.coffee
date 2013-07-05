@@ -223,7 +223,7 @@ layerToDataSpec = (lspec, grouping=[]) ->
   dedupByName = dedupOnKey 'name'
   stats = {stats: dedupByName(transstats.stat), groups: (dedup groups)}
   {
-    trans: dedupByName(transstats.trans), stats: stats, meta: metas,
+    trans: dedupByName(transstats.trans), stats: stats, sort: metas,
     select: (dedup select), filter: filters
   }
 
@@ -261,7 +261,7 @@ pivotToDataSpec = (lspec) ->
   dedupByName = dedupOnKey 'name'
   stats = {stats: dedupByName(transstats.stat), groups: (dedup groups)}
   {
-    trans: dedupByName(transstats.trans), stats: stats, meta: metas,
+    trans: dedupByName(transstats.trans), stats: stats, sort: metas,
     select: (dedup select), filter: filters
   }
 
@@ -297,7 +297,7 @@ numeralToDataSpec = (lspec) ->
   dedupByName = dedupOnKey 'name'
   stats = {stats: dedupByName(transstats.stat ? []), groups: (dedup groups)}
   {
-    trans: dedupByName(transstats.trans ? []), stats: stats, meta: metas,
+    trans: dedupByName(transstats.trans ? []), stats: stats, sort: metas,
     select: (dedup select), filter: filters
   }
 

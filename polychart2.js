@@ -2175,7 +2175,7 @@ See the spec definition for more information.
     return {
       trans: dedupByName(transstats.trans),
       stats: stats,
-      meta: metas,
+      sort: metas,
       select: dedup(select),
       filter: filters
     };
@@ -2235,7 +2235,7 @@ See the spec definition for more information.
     return {
       trans: dedupByName(transstats.trans),
       stats: stats,
-      meta: metas,
+      sort: metas,
       select: dedup(select),
       filter: filters
     };
@@ -2294,7 +2294,7 @@ See the spec definition for more information.
     return {
       trans: dedupByName((_ref4 = transstats.trans) != null ? _ref4 : []),
       stats: stats,
-      meta: metas,
+      sort: metas,
       select: dedup(select),
       filter: filters
     };
@@ -6499,7 +6499,7 @@ data processing to be done.
       }
       if (this.dataObj.computeBackend) {
         dataSpec = this.parseMethod(spec, grouping);
-        if (this.layerMeta && _.size(dataSpec.meta) < 1) {
+        if (this.layerMeta) {
           dataSpec.meta = this.layerMeta;
         }
         return backendProcess(dataSpec, this.dataObj, wrappedCallback);
@@ -6953,9 +6953,9 @@ data processing to be done.
     if (dataSpec.filter) {
       data = _.filter(data, filterFactory(dataSpec.filter));
     }
-    if (dataSpec.meta) {
+    if (dataSpec.sort) {
       additionalFilter = {};
-      _ref2 = dataSpec.meta;
+      _ref2 = dataSpec.sort;
       for (key in _ref2) {
         metaSpec = _ref2[key];
         _ref3 = calculateMeta(key, metaSpec, data), meta = _ref3.meta, filter = _ref3.filter;

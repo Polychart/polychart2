@@ -25,7 +25,7 @@ class DataProcess
         meta: @dataObj.meta
     if @dataObj.computeBackend
       dataSpec = @parseMethod spec, grouping
-      if @layerMeta and _.size(dataSpec.meta) < 1 then dataSpec.meta = @layerMeta
+      if @layerMeta then dataSpec.meta = @layerMeta
       backendProcess(dataSpec, @dataObj, wrappedCallback)
     else
       dataSpec = @parseMethod spec, grouping
@@ -260,9 +260,9 @@ frontendProcess = (dataSpec, data, callback) ->
   if dataSpec.filter
     data = _.filter data, filterFactory(dataSpec.filter)
   # meta + more filtering
-  if dataSpec.meta
+  if dataSpec.sort
     additionalFilter = {}
-    for key, metaSpec of dataSpec.meta
+    for key, metaSpec of dataSpec.sort
       {meta, filter} = calculateMeta(key, metaSpec, data)
       additionalFilter[key] = filter
       addMeta key, meta
