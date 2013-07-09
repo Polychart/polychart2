@@ -10,7 +10,7 @@ poly.data = (blob) ->
   type = undefined
   data = undefined
   meta = undefined
-  if _.isObject(blob) and _.keys(blob).length < 4 and 'data' of blob
+  if _.isObject(blob) and 'data' of blob and 'meta' of blob and _.keys(blob).length < 7
     data = blob.data
     meta = blob.meta
   else
