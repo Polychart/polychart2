@@ -5784,7 +5784,7 @@ of a dataset, or knows how to retrieve data from some source.
     type = void 0;
     data = void 0;
     meta = void 0;
-    if (_.isObject(blob) && _.keys(blob).length < 4 && 'data' in blob) {
+    if (_.isObject(blob) && 'data' in blob && 'meta' in blob && _.keys(blob).length < 7) {
       data = blob.data;
       meta = blob.meta;
     } else {
