@@ -5779,12 +5779,12 @@ of a dataset, or knows how to retrieve data from some source.
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   poly.data = function(blob) {
-    var data, meta, type;
+    var data, len, meta, type;
 
     type = void 0;
     data = void 0;
     meta = void 0;
-    if (_.isObject(blob) && 'data' in blob && 'meta' in blob && _.keys(blob).length < 7) {
+    if (_.isObject(blob) && 'data' in blob && (((len = _.keys(blob).length) < 7 && 'meta' in blob) || len < 5)) {
       data = blob.data;
       meta = blob.meta;
     } else {
