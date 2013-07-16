@@ -105,29 +105,32 @@ class Pivot
     if not $
       throw poly.error.depn "Pivot Tables require jQuery!"
 
-    table = $('<table></table>')
-    # counters
+    table = $('<table></table>').attr('border', '1px solid black')
+    table.attr('cellspacing', 0)
+    table.attr('cellpadding', 0)
     i = 0
     #  COLUMN headers
     while i < pivotMeta.ncol
       row = $('<tr></tr>')
-      if i is 0 # first row
-        space = $('<td></td>')
-        if pivotMeta.nval is 1
-          space.attr('rowspan', pivotMeta.ncol)
-        else
-          space.attr('rowspan', pivotMeta.ncol+1)
-        space.attr('colspan', pivotMeta.nrow)
-        row.append(space)
-
-      j = 0
       key = @spec.columns[i].var
+      ## SPACE in the FIRST ROW
+      if i is 0
+        if pivotMeta.nrow > 1
+          space = $('<td></td>')
+          space.attr('rowspan', pivotMeta.ncol)
+          space.attr('colspan', pivotMeta.nrow-1)
+          row.append(space)
+      ## COLUMN header names
+      row.append $("<th>#{key}:</th>").attr('align', 'right')
+      ## COLUMN header values
+      j = 0
       while j < colHeaders.length
         value = colHeaders[j][key]
         colspan = 1
         while ((j+colspan) < colHeaders.length) and (value is colHeaders[j+colspan][key])
           colspan++
         cell = $("<td>#{value}</td>").attr('colspan', colspan*pivotMeta.nval)
+        cell.attr('align', 'center')
         row.append(cell)
         j += colspan
 
@@ -135,15 +138,27 @@ class Pivot
       i++
 
     # VALUE headers
-    if pivotMeta.nval isnt 1
-      row = $('<tr></tr>')
-      k = 0
-      while k < colHeaders.length
-        for v in @spec.values
-          cell = $("<td>#{v.var}</td>")
-          row.append(cell)
-        k++
-      table.append(row)
+    row = $('<tr></tr>')
+    if pivotMeta.nrow is 0
+      ## SPACE
+      space = $("<td></td>")
+      space.attr('rowspan', rowHeaders.length+1)
+      row.append(space)
+
+    ## ROW header names
+    i = 0
+    while i < pivotMeta.nrow
+      key = @spec.rows[i].var
+      row.append $("<th>#{key}</th>").attr('align', 'center')
+      i++
+    k = 0
+    while k < colHeaders.length
+      for v in @spec.values
+        cell = $("<td>#{v.var}</td>")
+        cell.attr('align', 'center')
+        row.append(cell)
+      k++
+    table.append(row)
 
     # REST OF TABLE
     i = 0
@@ -161,6 +176,8 @@ class Pivot
             rowspan++
           # add a cell!!
           cell = $("<td>#{value}</td>").attr('rowspan', rowspan)
+          cell.attr('align', 'center')
+          cell.attr('valign', 'middle')
           row.append(cell)
 
       # ROW VALUES

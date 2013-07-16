@@ -22,3 +22,29 @@ data = polyjs.data data:{
     rows: ['cat3', 'cat2']
     values: ['sum(val1)', 'mean(val1)']
     dom: dom
+
+@examples.pivot3 = (dom) ->
+  polyjs.pivot
+    data: data
+    columns: []
+    rows: ['cat3', 'cat2','cat1']
+    values: ['sum(val1)', 'mean(val1)']
+    dom: dom
+
+@examples.pivot4 = (dom) ->
+  polyjs.pivot
+    data: data
+    columns: ['cat2', 'cat1','cat3']
+    rows: []
+    values: ['sum(val1)', 'mean(val1)']
+    dom: dom
+
+@examples.pivot5 = (dom) ->
+  polyjs.pivot
+    data: data
+    columns: []
+    rows: ['cat1', 'cat2','cat3']
+    values: ['sum(val1)', 'mean(val1)']
+    dom: dom
+
+

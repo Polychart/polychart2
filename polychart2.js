@@ -9932,22 +9932,23 @@ The functions here makes it easier to create common types of interactions.
       if (!$) {
         throw poly.error.depn("Pivot Tables require jQuery!");
       }
-      table = $('<table></table>');
+      table = $('<table></table>').attr('border', '1px solid black');
+      table.attr('cellspacing', 0);
+      table.attr('cellpadding', 0);
       i = 0;
       while (i < pivotMeta.ncol) {
         row = $('<tr></tr>');
-        if (i === 0) {
-          space = $('<td></td>');
-          if (pivotMeta.nval === 1) {
-            space.attr('rowspan', pivotMeta.ncol);
-          } else {
-            space.attr('rowspan', pivotMeta.ncol + 1);
-          }
-          space.attr('colspan', pivotMeta.nrow);
-          row.append(space);
-        }
-        j = 0;
         key = this.spec.columns[i]["var"];
+        if (i === 0) {
+          if (pivotMeta.nrow > 1) {
+            space = $('<td></td>');
+            space.attr('rowspan', pivotMeta.ncol);
+            space.attr('colspan', pivotMeta.nrow - 1);
+            row.append(space);
+          }
+        }
+        row.append($("<th>" + key + ":</th>").attr('align', 'right'));
+        j = 0;
         while (j < colHeaders.length) {
           value = colHeaders[j][key];
           colspan = 1;
@@ -9955,26 +9956,37 @@ The functions here makes it easier to create common types of interactions.
             colspan++;
           }
           cell = $("<td>" + value + "</td>").attr('colspan', colspan * pivotMeta.nval);
+          cell.attr('align', 'center');
           row.append(cell);
           j += colspan;
         }
         table.append(row);
         i++;
       }
-      if (pivotMeta.nval !== 1) {
-        row = $('<tr></tr>');
-        k = 0;
-        while (k < colHeaders.length) {
-          _ref1 = this.spec.values;
-          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-            v = _ref1[_i];
-            cell = $("<td>" + v["var"] + "</td>");
-            row.append(cell);
-          }
-          k++;
-        }
-        table.append(row);
+      row = $('<tr></tr>');
+      if (pivotMeta.nrow === 0) {
+        space = $("<td></td>");
+        space.attr('rowspan', rowHeaders.length + 1);
+        row.append(space);
       }
+      i = 0;
+      while (i < pivotMeta.nrow) {
+        key = this.spec.rows[i]["var"];
+        row.append($("<th>" + key + "</th>").attr('align', 'center'));
+        i++;
+      }
+      k = 0;
+      while (k < colHeaders.length) {
+        _ref1 = this.spec.values;
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          v = _ref1[_i];
+          cell = $("<td>" + v["var"] + "</td>");
+          cell.attr('align', 'center');
+          row.append(cell);
+        }
+        k++;
+      }
+      table.append(row);
       i = 0;
       rows_mindex = [];
       cols_mindex = [];
@@ -9991,6 +10003,8 @@ The functions here makes it easier to create common types of interactions.
               rowspan++;
             }
             cell = $("<td>" + value + "</td>").attr('rowspan', rowspan);
+            cell.attr('align', 'center');
+            cell.attr('valign', 'middle');
             row.append(cell);
           }
         }
