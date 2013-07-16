@@ -3337,7 +3337,7 @@
     }
   });
 
-  this.examples.pivot = function(dom) {
+  this.examples.pivot_both = function(dom) {
     return polyjs.pivot({
       data: data,
       columns: ['cat1', 'cat2'],
@@ -3347,17 +3347,33 @@
     });
   };
 
-  this.examples.pivot2 = function(dom) {
+  this.examples.pivot_both_smallnum = function(dom) {
+    data.derive((function(x) {
+      return x.val1 / 100000;
+    }), 'val2');
     return polyjs.pivot({
       data: data,
       columns: ['cat1'],
       rows: ['cat3', 'cat2'],
-      values: ['sum(val1)', 'mean(val1)'],
+      values: ['sum(val2)'],
       dom: dom
     });
   };
 
-  this.examples.pivot3 = function(dom) {
+  this.examples.pivot_both_largenum = function(dom) {
+    data.derive((function(x) {
+      return x.val1 * 100000;
+    }), 'val3');
+    return polyjs.pivot({
+      data: data,
+      columns: ['cat1'],
+      rows: ['cat3', 'cat2'],
+      values: ['sum(val3)'],
+      dom: dom
+    });
+  };
+
+  this.examples.pivot_rows_only = function(dom) {
     return polyjs.pivot({
       data: data,
       columns: [],
@@ -3367,7 +3383,7 @@
     });
   };
 
-  this.examples.pivot4 = function(dom) {
+  this.examples.pivot_cols_only = function(dom) {
     return polyjs.pivot({
       data: data,
       columns: ['cat2', 'cat1', 'cat3'],
@@ -3377,12 +3393,12 @@
     });
   };
 
-  this.examples.pivot5 = function(dom) {
+  this.examples.pivot_one_val = function(dom) {
     return polyjs.pivot({
       data: data,
       columns: [],
       rows: ['cat1', 'cat2', 'cat3'],
-      values: ['sum(val1)', 'mean(val1)'],
+      values: ['sum(val1)'],
       dom: dom
     });
   };

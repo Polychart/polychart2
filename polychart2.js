@@ -1100,13 +1100,17 @@ Get the offset of the element
     return s;
   };
 
+  poly.format.getExp = function(num) {
+    return Math.floor(Math.log(Math.abs(num === 0 ? 1 : num)) / Math.LN10);
+  };
+
   poly.format.number = function(exp_original) {
     return function(num) {
       var exp, exp_fixed, exp_precision, rounded;
 
       exp_fixed = 0;
       exp_precision = 0;
-      exp = exp_original != null ? exp_original : Math.floor(Math.log(Math.abs(num === 0 ? 1 : num)) / Math.LN10);
+      exp = exp_original != null ? exp_original : poly.format.getExp(num);
       if ((exp_original != null) && (exp === 2 || exp === 5 || exp === 8 || exp === 11)) {
         exp_fixed = exp + 1;
         exp_precision = 1;
@@ -9767,6 +9771,7 @@ The functions here makes it easier to create common types of interactions.
       this.ticks = ticks;
       this.spec = spec;
       this.get = __bind(this.get, this);
+      this.makeFormatters = __bind(this.makeFormatters, this);
       this.makeHeaders = __bind(this.makeHeaders, this);
       this.rows = (function() {
         var _i, _len, _ref, _results;
@@ -9853,6 +9858,30 @@ The functions here makes it easier to create common types of interactions.
       };
     };
 
+    PivotProcessedData.prototype.makeFormatters = function() {
+      var degree, exp, formatters, item, v, values, _i, _len;
+
+      values = (function() {
+        var _i, _len, _ref, _results;
+
+        _ref = this.spec.values;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          item = _ref[_i];
+          _results.push(item["var"]);
+        }
+        return _results;
+      }).call(this);
+      formatters = {};
+      for (_i = 0, _len = values.length; _i < _len; _i++) {
+        v = values[_i];
+        exp = poly.format.getExp(_.min(_.pluck(this.statData, v)));
+        degree = exp;
+        formatters[v] = poly.format.number(degree);
+      }
+      return formatters;
+    };
+
     PivotProcessedData.prototype.get = function(rowMindex, colMindex, val) {
       var key, retvalue, _i, _j, _len, _len1, _ref, _ref1;
 
@@ -9919,11 +9948,12 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Pivot.prototype.render = function(err, statData, metaData) {
-      var cell, colHeaders, cols, cols_mindex, colspan, i, j, k, key, pivotData, pivotMeta, row, rowHeaders, rows, rows_mindex, rowspan, space, table, ticks, v, val, value, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
+      var cell, colHeaders, cols, cols_mindex, colspan, formatters, i, j, k, key, pivotData, pivotMeta, row, rowHeaders, rows, rows_mindex, rowspan, space, table, ticks, v, val, value, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
 
       ticks = this.generateTicks(this.spec, statData, metaData);
       pivotData = new PivotProcessedData(statData, ticks, this.spec);
       _ref = pivotData.makeHeaders(), rowHeaders = _ref.rowHeaders, colHeaders = _ref.colHeaders;
+      formatters = pivotData.makeFormatters();
       pivotMeta = {
         ncol: this.spec.columns.length,
         nrow: this.spec.rows.length,
@@ -10016,7 +10046,8 @@ The functions here makes it easier to create common types of interactions.
           for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
             val = _ref3[_k];
             v = pivotData.get(rows, cols, val["var"]);
-            row.append($("<td>" + (v != null ? v : '-') + "</td>"));
+            v = v ? formatters[val["var"]](v) : '-';
+            row.append($("<td>" + v + "</td>").attr('align', 'right'));
           }
           j++;
         }

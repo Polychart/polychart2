@@ -7,7 +7,7 @@ data = polyjs.data data:{
   val1: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 }
 
-@examples.pivot = (dom) ->
+@examples.pivot_both = (dom) ->
   polyjs.pivot
     data: data
     columns: ['cat1', 'cat2']
@@ -15,15 +15,25 @@ data = polyjs.data data:{
     values: ['sum(val1)', 'mean(val1)']
     dom: dom
 
-@examples.pivot2 = (dom) ->
+@examples.pivot_both_smallnum = (dom) ->
+  data.derive ((x) -> x.val1/100000), 'val2'
   polyjs.pivot
     data: data
     columns: ['cat1']
     rows: ['cat3', 'cat2']
-    values: ['sum(val1)', 'mean(val1)']
+    values: ['sum(val2)']
     dom: dom
 
-@examples.pivot3 = (dom) ->
+@examples.pivot_both_largenum = (dom) ->
+  data.derive ((x) -> x.val1*100000), 'val3'
+  polyjs.pivot
+    data: data
+    columns: ['cat1']
+    rows: ['cat3', 'cat2']
+    values: ['sum(val3)']
+    dom: dom
+
+@examples.pivot_rows_only = (dom) ->
   polyjs.pivot
     data: data
     columns: []
@@ -31,7 +41,7 @@ data = polyjs.data data:{
     values: ['sum(val1)', 'mean(val1)']
     dom: dom
 
-@examples.pivot4 = (dom) ->
+@examples.pivot_cols_only = (dom) ->
   polyjs.pivot
     data: data
     columns: ['cat2', 'cat1','cat3']
@@ -39,12 +49,12 @@ data = polyjs.data data:{
     values: ['sum(val1)', 'mean(val1)']
     dom: dom
 
-@examples.pivot5 = (dom) ->
+@examples.pivot_one_val = (dom) ->
   polyjs.pivot
     data: data
     columns: []
     rows: ['cat1', 'cat2','cat3']
-    values: ['sum(val1)', 'mean(val1)']
+    values: ['sum(val1)']
     dom: dom
 
 

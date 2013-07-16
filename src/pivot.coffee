@@ -58,6 +58,16 @@ class PivotProcessedData
     _recurse(@colHeaders, {}, @columns, @dataIndexByCols)
     {@rowHeaders, @colHeaders}
 
+  makeFormatters: () =>
+    values = (item.var for item in @spec.values)
+    formatters = {}
+    for v in values
+      exp = poly.format.getExp(_.min(_.pluck(@statData, v)))
+      degree = exp
+      formatters[v] = poly.format.number(degree)
+
+    formatters
+
   get: (rowMindex, colMindex, val) =>
     retvalue = @dataIndexByRows
     for key in @rows
@@ -96,6 +106,7 @@ class Pivot
     ticks = @generateTicks(@spec, statData, metaData)
     pivotData = new PivotProcessedData(statData, ticks, @spec)
     {rowHeaders, colHeaders} = pivotData.makeHeaders()
+    formatters  = pivotData.makeFormatters()
     pivotMeta =
       ncol: @spec.columns.length
       nrow: @spec.rows.length
@@ -188,7 +199,8 @@ class Pivot
 
         for val in @spec.values
           v = pivotData.get(rows, cols, val.var)
-          row.append $("<td>#{v ? '-'}</td>")
+          v = if v then formatters[val.var](v) else '-'
+          row.append $("<td>#{v}</td>").attr('align', 'right')
         j++
 
       table.append(row)
