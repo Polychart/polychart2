@@ -18,28 +18,54 @@ toStrictMode = (spec) ->
   spec
 
 class PivotProcessedData
-  constructor: (@statData, @spec) ->
-    @processedData = {}
-    tmp_parent = null
-    tmp_item = null
+  constructor: (@statData, @ticks, @spec) ->
+    # Construct the data
+    # put data in a structure such that a data point can be fetched by
+    # identifying the ROWS then COLS, and also COLS then ROWS
+    @rows = (item.var for item in @spec.rows)
+    @columns = (item.var for item in @spec.columns)
+    indexRows = @rows.concat(@columns) # actually used
+    indexCols = @columns              # only for header calculation
+    @dataIndexByRows = {}
+    @dataIndexByCols = {}
+    _insertInto = (structure, keys, row) ->
+      tmp = tmp_parent = structure
+      for key in keys
+        tmp[row[key]] ?= {}
+        tmp_parent = tmp
+        tmp = tmp_parent[row[key]]
+      tmp_parent[row[key]] = row
     for row in @statData
-      tmp_parent = @processedData
-      tmp = @processedData
-      for aes in ['rows', 'columns']
-        for item in @spec[aes]
-          item = item.var
-          tmp[row[item]] ?= {}
-          tmp_parent = tmp
-          tmp = tmp_parent[row[item]]
-      tmp_parent[row[item]] = row
-  get: (rows, columns, val) =>
-    retvalue = @processedData
-    for i in rows
-      if retvalue? and retvalue[i]?
-        retvalue = retvalue[i]
-    for i in columns
-      if retvalue? and retvalue[i]?
-        retvalue = retvalue[i]
+      _insertInto(@dataIndexByRows, indexRows, row)
+      _insertInto(@dataIndexByCols, indexCols, row)
+
+  makeHeaders: (full=false) =>
+    _recurse = (accumulator, indexValues, keys, item) =>
+      if keys.length is 0
+        accumulator.push(indexValues)
+      else
+        key = keys[0]
+        restOfKeys = keys[1..]
+        values = _.keys(item) # all possible values (or column headers)
+        _.each @ticks[key].ticks, (ignore, v) =>
+          if full or (v in values)
+            indexV = _.clone(indexValues)
+            indexV[key] = v
+            _recurse(accumulator, indexV, restOfKeys, item[v])
+    @rowHeaders=[]
+    @colHeaders=[]
+    _recurse(@rowHeaders, {}, @rows, @dataIndexByRows)
+    _recurse(@colHeaders, {}, @columns, @dataIndexByCols)
+    {@rowHeaders, @colHeaders}
+
+  get: (rowMindex, colMindex, val) =>
+    retvalue = @dataIndexByRows
+    for key in @rows
+      if retvalue? and retvalue[rowMindex[key]]?
+        retvalue = retvalue[rowMindex[key]]
+    for key in @columns
+      if retvalue? and retvalue[colMindex[key]]?
+        retvalue = retvalue[colMindex[key]]
     if retvalue? and retvalue[val]?
       retvalue[val]
 
@@ -54,58 +80,26 @@ class Pivot
     ps = new poly.DataProcess(@spec, [], @spec.strict, poly.parser.pivotToData)
     ps.make @spec, [], @render
 
-  calculateMeta: (spec, ticks) =>
-    # calculate some dimensions & other information regarding the pivot table
-    colTicks = (_.toArray(v.ticks) for v in ticks.columns)
-    rowTicks = (_.toArray(v.ticks) for v in ticks.rows)
-    meta =
-      ncol: spec.columns.length
-      nrow: spec.rows.length
-      nval: spec.values.length
-      rows: (v.var for v in spec.rows)
-      cols: (v.var for v in spec.columns)
-      vals: (v.var for v in spec.values)
-      colTicks: colTicks
-      colTickLen: (v.length for v in colTicks)
-      rowTicks: rowTicks
-      rowTickLen: (v.length for v in rowTicks)
-
-    tmp = 1
-    meta.colFill = []
-    for i in meta.colTickLen
-      tmp *= i
-      meta.colFill.push(tmp)
-    meta.colTotal = tmp
-
-    tmp = 1
-    meta.rowFill = []
-    for i in meta.rowTickLen
-      tmp *= i
-      meta.rowFill.push(tmp)
-    meta.rowTotal = tmp
-
-    meta
-
-
   generateTicks: (spec, statData, metaData) =>
-    domains = {}
     ticks = {}
     for aes in ['rows', 'columns']
-      domains[aes] = []
-      ticks[aes] = []
       for item in spec[aes]
-        values = _.pluck(statData, item.var)
-        domain = poly.domain.single(values, metaData[item.var], {})
-        tick = poly.tick.make(domain, {}, metaData[item.var].type)
-        domains[aes].push(domain)
-        ticks[aes].push(tick)
+        key = item.var
+        values = _.pluck(statData, key)
+        domain = poly.domain.single(values, metaData[key], {})
+        tick = poly.tick.make(domain, {}, metaData[key].type)
+        ticks[key] = tick
     ticks
 
   render: (err, statData, metaData) =>
-    # create domains & ticks
+    # create  ticks
     ticks = @generateTicks(@spec, statData, metaData)
-    pivotData = new PivotProcessedData(statData, @spec)
-    pivotMeta = @calculateMeta(@spec, ticks)
+    pivotData = new PivotProcessedData(statData, ticks, @spec)
+    {rowHeaders, colHeaders} = pivotData.makeHeaders()
+    pivotMeta =
+      ncol: @spec.columns.length
+      nrow: @spec.rows.length
+      nval: @spec.values.length
 
     # render a table...
     if not $
@@ -114,8 +108,6 @@ class Pivot
     table = $('<table></table>')
     # counters
     i = 0
-    filled = 1
-    tofill = pivotMeta.colTotal * pivotMeta.nval
     #  COLUMN headers
     while i < pivotMeta.ncol
       row = $('<tr></tr>')
@@ -127,52 +119,58 @@ class Pivot
           space.attr('rowspan', pivotMeta.ncol+1)
         space.attr('colspan', pivotMeta.nrow)
         row.append(space)
-      tofill /= pivotMeta.colTickLen[i]
-      for k in [1..filled]
-        for tick in pivotMeta.colTicks[i]
-          cell = $("<td>#{tick.value}</td>").attr('colspan', tofill)
-          row.append(cell)
-      filled*= pivotMeta.colTickLen[i]
+
+      j = 0
+      key = @spec.columns[i].var
+      while j < colHeaders.length
+        value = colHeaders[j][key]
+        colspan = 1
+        while ((j+colspan) < colHeaders.length) and (value is colHeaders[j+colspan][key])
+          colspan++
+        cell = $("<td>#{value}</td>").attr('colspan', colspan*pivotMeta.nval)
+        row.append(cell)
+        j += colspan
+
       table.append(row)
       i++
 
     # VALUE headers
     if pivotMeta.nval isnt 1
       row = $('<tr></tr>')
-      for k in [1..filled]
+      k = 0
+      while k < colHeaders.length
         for v in @spec.values
           cell = $("<td>#{v.var}</td>")
           row.append(cell)
+        k++
       table.append(row)
+
     # REST OF TABLE
     i = 0
     rows_mindex = []
     cols_mindex = []
-    while i < pivotMeta.rowTotal # total rows
+    while i < rowHeaders.length # total rows
       row = $('<tr></tr>')
       # ROW HEADERS
-      for n, index in pivotMeta.rowFill
-        m = pivotMeta.rowTotal / n
-        if i % m is 0
-          val = _.toArray(ticks.rows[index].ticks)[i / m]
-          cell = $("<td>#{val.value}</td>").attr('rowspan', m)
-          rows_mindex[index] = val.value
+      for key in @spec.rows
+        key = key.var
+        value = rowHeaders[i][key]
+        if (i is 0) or value != rowHeaders[i-1][key]
+          rowspan = 1
+          while (i+rowspan < rowHeaders.length) and value == rowHeaders[i+rowspan][key]
+            rowspan++
+          # add a cell!!
+          cell = $("<td>#{value}</td>").attr('rowspan', rowspan)
           row.append(cell)
 
       # ROW VALUES
       j = 0
-      debugger
-      while j < pivotMeta.colTotal
-        for n2, index2 in pivotMeta.colFill
-          len = pivotMeta.colTickLen[index2]
-          m2 = pivotMeta.colTotal / n2
-
-          if j % m2 is 0
-            val = _.toArray(ticks.columns[index2].ticks)[(j/m2) % len]
-            cols_mindex[index2] = val.value
+      while j < colHeaders.length
+        cols = colHeaders[j]
+        rows = rowHeaders[i]
 
         for val in @spec.values
-          v = pivotData.get(rows_mindex, cols_mindex, val.var)
+          v = pivotData.get(rows, cols, val.var)
           row.append $("<td>#{v ? '-'}</td>")
         j++
 
