@@ -9735,7 +9735,7 @@ The functions here makes it easier to create common types of interactions.
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   toStrictMode = function(spec) {
-    var aes, i, mappedTo, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
+    var aes, i, mappedTo, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
 
     _ref = ['row', 'column', 'value'];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -9759,6 +9759,9 @@ The functions here makes it easier to create common types of interactions.
           };
         }
       }
+    }
+    if ((_ref3 = spec.full) == null) {
+      spec.full = false;
     }
     return spec;
   };
@@ -9821,13 +9824,11 @@ The functions here makes it easier to create common types of interactions.
       }
     }
 
-    PivotProcessedData.prototype.makeHeaders = function(full) {
-      var _recurse,
+    PivotProcessedData.prototype.makeHeaders = function() {
+      var full, _recurse,
         _this = this;
 
-      if (full == null) {
-        full = false;
-      }
+      full = this.spec.full;
       _recurse = function(accumulator, indexValues, keys, item) {
         var key, restOfKeys, values;
 

@@ -3397,9 +3397,20 @@
     return polyjs.pivot({
       data: data,
       columns: [],
-      rows: ['cat1', 'cat2', 'cat3'],
+      rows: ['cat3', 'cat1', 'cat2'],
       values: ['sum(val1)'],
       dom: dom
+    });
+  };
+
+  this.examples.pivot_full = function(dom) {
+    return polyjs.pivot({
+      data: data,
+      columns: [],
+      rows: ['cat3', 'cat1', 'cat2'],
+      values: ['sum(val1)'],
+      dom: dom,
+      full: true
     });
   };
 

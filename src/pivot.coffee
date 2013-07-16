@@ -10,11 +10,11 @@ toStrictMode = (spec) ->
       spec[aes+'s'] = []
       if spec[aes]?
         spec[aes+'s'].push(spec[aes])
-
   for aes in ['rows', 'columns', 'values']
     for mappedTo, i in spec[aes]
       if _.isString mappedTo
         spec[aes][i] = { var: mappedTo }
+  spec.full ?= false
   spec
 
 class PivotProcessedData
@@ -39,7 +39,8 @@ class PivotProcessedData
       _insertInto(@dataIndexByRows, indexRows, row)
       _insertInto(@dataIndexByCols, indexCols, row)
 
-  makeHeaders: (full=false) =>
+  makeHeaders: () =>
+    full = @spec.full
     _recurse = (accumulator, indexValues, keys, item) =>
       if keys.length is 0
         accumulator.push(indexValues)
