@@ -48,11 +48,11 @@ class PivotProcessedData
         key = keys[0]
         restOfKeys = keys[1..]
         values = _.keys(item) # all possible values (or column headers)
-        _.each @ticks[key].ticks, (ignore, v) =>
-          if full or (v in values)
+        _.each @ticks[key].ticks, (tickValue, v) =>
+          if full or (tickValue.location in values)
             indexV = _.clone(indexValues)
-            indexV[key] = v
-            _recurse(accumulator, indexV, restOfKeys, item[v])
+            indexV[key] = tickValue.value
+            _recurse(accumulator, indexV, restOfKeys, item[tickValue.location])
     @rowHeaders=[]
     @colHeaders=[]
     _recurse(@rowHeaders, {}, @rows, @dataIndexByRows)
@@ -72,11 +72,13 @@ class PivotProcessedData
   get: (rowMindex, colMindex, val) =>
     retvalue = @dataIndexByRows
     for key in @rows
-      if retvalue? and retvalue[rowMindex[key]]?
-        retvalue = retvalue[rowMindex[key]]
+      index = @ticks[key].ticks[rowMindex[key]].location
+      if retvalue? and retvalue[index]?
+        retvalue = retvalue[index]
     for key in @columns
-      if retvalue? and retvalue[colMindex[key]]?
-        retvalue = retvalue[colMindex[key]]
+      index = @ticks[key].ticks[colMindex[key]].location
+      if retvalue? and retvalue[index]?
+        retvalue = retvalue[index]
     if retvalue? and retvalue[val]?
       retvalue[val]
 
@@ -98,7 +100,8 @@ class Pivot
         key = item.var
         values = _.pluck(statData, key)
         domain = poly.domain.single(values, metaData[key], {})
-        tick = poly.tick.make(domain, {}, metaData[key].type)
+        fakeGuideSpec = numtick: _.uniq(values) # NOTE: THIS IS WRONG!!
+        tick = poly.tick.make(domain, fakeGuideSpec, metaData[key].type)
         ticks[key] = tick
     ticks
 

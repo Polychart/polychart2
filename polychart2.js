@@ -9838,13 +9838,13 @@ The functions here makes it easier to create common types of interactions.
           key = keys[0];
           restOfKeys = keys.slice(1);
           values = _.keys(item);
-          return _.each(_this.ticks[key].ticks, function(ignore, v) {
-            var indexV;
+          return _.each(_this.ticks[key].ticks, function(tickValue, v) {
+            var indexV, _ref;
 
-            if (full || (__indexOf.call(values, v) >= 0)) {
+            if (full || (_ref = tickValue.location, __indexOf.call(values, _ref) >= 0)) {
               indexV = _.clone(indexValues);
-              indexV[key] = v;
-              return _recurse(accumulator, indexV, restOfKeys, item[v]);
+              indexV[key] = tickValue.value;
+              return _recurse(accumulator, indexV, restOfKeys, item[tickValue.location]);
             }
           });
         }
@@ -9884,21 +9884,24 @@ The functions here makes it easier to create common types of interactions.
     };
 
     PivotProcessedData.prototype.get = function(rowMindex, colMindex, val) {
-      var key, retvalue, _i, _j, _len, _len1, _ref, _ref1;
+      debugger;
+      var index, key, retvalue, _i, _j, _len, _len1, _ref, _ref1;
 
       retvalue = this.dataIndexByRows;
       _ref = this.rows;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         key = _ref[_i];
-        if ((retvalue != null) && (retvalue[rowMindex[key]] != null)) {
-          retvalue = retvalue[rowMindex[key]];
+        index = this.ticks[key].ticks[rowMindex[key]].location;
+        if ((retvalue != null) && (retvalue[index] != null)) {
+          retvalue = retvalue[index];
         }
       }
       _ref1 = this.columns;
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         key = _ref1[_j];
-        if ((retvalue != null) && (retvalue[colMindex[key]] != null)) {
-          retvalue = retvalue[colMindex[key]];
+        index = this.ticks[key].ticks[colMindex[key]].location;
+        if ((retvalue != null) && (retvalue[index] != null)) {
+          retvalue = retvalue[index];
         }
       }
       if ((retvalue != null) && (retvalue[val] != null)) {
@@ -9929,7 +9932,7 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Pivot.prototype.generateTicks = function(spec, statData, metaData) {
-      var aes, domain, item, key, tick, ticks, values, _i, _j, _len, _len1, _ref, _ref1;
+      var aes, domain, fakeGuideSpec, item, key, tick, ticks, values, _i, _j, _len, _len1, _ref, _ref1;
 
       ticks = {};
       _ref = ['rows', 'columns'];
@@ -9941,7 +9944,10 @@ The functions here makes it easier to create common types of interactions.
           key = item["var"];
           values = _.pluck(statData, key);
           domain = poly.domain.single(values, metaData[key], {});
-          tick = poly.tick.make(domain, {}, metaData[key].type);
+          fakeGuideSpec = {
+            numtick: _.uniq(values)
+          };
+          tick = poly.tick.make(domain, fakeGuideSpec, metaData[key].type);
           ticks[key] = tick;
         }
       }
