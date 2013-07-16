@@ -9884,7 +9884,6 @@ The functions here makes it easier to create common types of interactions.
     };
 
     PivotProcessedData.prototype.get = function(rowMindex, colMindex, val) {
-      debugger;
       var index, key, retvalue, _i, _j, _len, _len1, _ref, _ref1;
 
       retvalue = this.dataIndexByRows;
