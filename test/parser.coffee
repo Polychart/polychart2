@@ -50,7 +50,7 @@ test "extraction: nothing (smoke test)", ->
   }
   parser = polyjs.debug.parser.layerToData layerparser
   deepEqual parser.filter, {}
-  deepEqual parser.meta, {}
+  deepEqual parser.sort, {}
   deepEqual parser.select, ['a', 'b', 'c']
   deepEqual parser.stats.stats, []
   deepEqual parser.trans, []
@@ -64,7 +64,7 @@ test "extraction: simple, one stat (smoke test)", ->
   }
   parser = polyjs.debug.parser.layerToData layerparser
   deepEqual parser.filter, {}
-  deepEqual parser.meta, {}
+  deepEqual parser.sort, {}
   deepEqual parser.select, ['a', 'sum(b)']
   deepEqual parser.stats.stats, [key:'b', stat:'sum',name:'sum(b)']
   deepEqual parser.stats.groups, ['a']
@@ -81,7 +81,7 @@ test "extraction: stats", ->
   }
   parser = polyjs.debug.parser.layerToData layerparser
   deepEqual parser.filter, layerparser.filter
-  deepEqual parser.meta, {b: {sort:'a', asc:false}}
+  deepEqual parser.sort, {b: {sort:'a', asc:false}}
   deepEqual parser.select, ['a', 'b', 'sum(c)']
   deepEqual parser.stats.groups, ['a','b']
   deepEqual parser.stats.stats, [key:'c', name:'sum(c)', stat:'sum']
@@ -98,7 +98,7 @@ test "extraction: transforms", ->
   }
   parser = polyjs.debug.parser.layerToData layerparser
   deepEqual parser.filter, layerparser.filter
-  deepEqual parser.meta, {b: {sort:'a', asc:false}}
+  deepEqual parser.sort, {b: {sort:'a', asc:false}}
   deepEqual parser.select, ['lag(a,1)', 'b', 'sum(c)']
   deepEqual parser.stats.groups, ['lag(a,1)', 'b']
   deepEqual parser.stats.stats, [key:'c', name:'sum(c)', stat:'sum']
@@ -114,7 +114,7 @@ test "extraction: transforms", ->
   }
   parser = polyjs.debug.parser.layerToData layerparser
   deepEqual parser.filter, layerparser.filter
-  deepEqual parser.meta, {b: {sort:'a', asc:true}}
+  deepEqual parser.sort, {b: {sort:'a', asc:true}}
   deepEqual parser.select, ['bin(a,1)', 'b', 'sum(c)']
   deepEqual parser.stats.groups, ['bin(a,1)', 'b']
   deepEqual parser.stats.stats, [key:'c', name:'sum(c)', stat:'sum']
