@@ -242,21 +242,24 @@ pivotToDataSpec = (lspec) ->
 
   transstat = []; select = []; groups = []; metas = {}
   for desc in aesthetics_list
-    expr = parse desc.var
-    desc.var = expr.pretty() # normalize name
-    ts = extractOps expr
-    transstat.push ts
-    select.push desc.var
-    if ts.stat.length is 0
-      groups.push desc.var
-    if 'sort' of desc
-      sdesc = dictGets(desc, poly.const.metas)
-      sexpr = parse sdesc.sort
-      sdesc.sort = sexpr.pretty() # normalize name
-      result = extractOps sexpr
-      if result.stat.length isnt 0
-        sdesc.stat = result.stat[0]
-      metas[desc.var] = sdesc
+    if desc.var is 'count(*)'
+      select.push desc.var
+    else
+      expr = parse desc.var
+      desc.var = expr.pretty() # normalize name
+      ts = extractOps expr
+      transstat.push ts
+      select.push desc.var
+      if ts.stat.length is 0
+        groups.push desc.var
+      if 'sort' of desc
+        sdesc = dictGets(desc, poly.const.metas)
+        sexpr = parse sdesc.sort
+        sdesc.sort = sexpr.pretty() # normalize name
+        result = extractOps sexpr
+        if result.stat.length isnt 0
+          sdesc.stat = result.stat[0]
+        metas[desc.var] = sdesc
   transstats = mergeObjLists transstat
   dedupByName = dedupOnKey 'name'
   stats = {stats: dedupByName(transstats.stat), groups: (dedup groups)}

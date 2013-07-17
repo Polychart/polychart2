@@ -2225,23 +2225,27 @@ See the spec definition for more information.
     metas = {};
     for (_j = 0, _len1 = aesthetics_list.length; _j < _len1; _j++) {
       desc = aesthetics_list[_j];
-      expr = parse(desc["var"]);
-      desc["var"] = expr.pretty();
-      ts = extractOps(expr);
-      transstat.push(ts);
-      select.push(desc["var"]);
-      if (ts.stat.length === 0) {
-        groups.push(desc["var"]);
-      }
-      if ('sort' in desc) {
-        sdesc = dictGets(desc, poly["const"].metas);
-        sexpr = parse(sdesc.sort);
-        sdesc.sort = sexpr.pretty();
-        result = extractOps(sexpr);
-        if (result.stat.length !== 0) {
-          sdesc.stat = result.stat[0];
+      if (desc["var"] === 'count(*)') {
+        select.push(desc["var"]);
+      } else {
+        expr = parse(desc["var"]);
+        desc["var"] = expr.pretty();
+        ts = extractOps(expr);
+        transstat.push(ts);
+        select.push(desc["var"]);
+        if (ts.stat.length === 0) {
+          groups.push(desc["var"]);
         }
-        metas[desc["var"]] = sdesc;
+        if ('sort' in desc) {
+          sdesc = dictGets(desc, poly["const"].metas);
+          sexpr = parse(sdesc.sort);
+          sdesc.sort = sexpr.pretty();
+          result = extractOps(sexpr);
+          if (result.stat.length !== 0) {
+            sdesc.stat = result.stat[0];
+          }
+          metas[desc["var"]] = sdesc;
+        }
       }
     }
     transstats = mergeObjLists(transstat);
