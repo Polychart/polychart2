@@ -87,3 +87,13 @@ data = polyjs.data data:{
     dom: dom
     full: true
 
+@examples.pivot_filtered = (dom) ->
+  polyjs.pivot
+    data: data
+    columns: []
+    rows: ['bin(val1, 5)']
+    values: ['sum(val1)']
+    dom: dom
+    full: true
+    filter: val1: ge: 10
+
