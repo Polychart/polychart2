@@ -88,7 +88,7 @@ class Pivot
       throw poly.error.defn "No pivot table specification is passed in!"
     @make(spec)
 
-  make: (spec, @callback) ->
+  make: (spec) ->
     @spec = toStrictMode(spec)
     ps = new poly.DataProcess(@spec, [], @spec.strict, poly.parser.pivotToData)
     ps.make @spec, [], @render
@@ -219,9 +219,12 @@ class Pivot
       i++
 
     if @prepare then @prepare @
+
+    if @spec.width then table.attr('width', @spec.width)
+    if @spec.height then table.attr('height', @spec.height)
     @dom = if _.isString(@spec.dom) then $('#'+@spec.dom) else $(@spec.dom)
     @dom.empty()
     @dom.append(table)
     if @callback then @callback null, @
 
-poly.pivot = (spec) -> new Pivot(spec)
+poly.pivot = (spec, callback, prepare) -> new Pivot(spec, callback, prepare)

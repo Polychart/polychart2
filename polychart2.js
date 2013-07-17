@@ -9946,10 +9946,9 @@ The functions here makes it easier to create common types of interactions.
       this.make(spec);
     }
 
-    Pivot.prototype.make = function(spec, callback) {
+    Pivot.prototype.make = function(spec) {
       var ps;
 
-      this.callback = callback;
       this.spec = toStrictMode(spec);
       ps = new poly.DataProcess(this.spec, [], this.spec.strict, poly.parser.pivotToData);
       return ps.make(this.spec, [], this.render);
@@ -10093,6 +10092,12 @@ The functions here makes it easier to create common types of interactions.
       if (this.prepare) {
         this.prepare(this);
       }
+      if (this.spec.width) {
+        table.attr('width', this.spec.width);
+      }
+      if (this.spec.height) {
+        table.attr('height', this.spec.height);
+      }
       this.dom = _.isString(this.spec.dom) ? $('#' + this.spec.dom) : $(this.spec.dom);
       this.dom.empty();
       this.dom.append(table);
@@ -10105,8 +10110,8 @@ The functions here makes it easier to create common types of interactions.
 
   })();
 
-  poly.pivot = function(spec) {
-    return new Pivot(spec);
+  poly.pivot = function(spec, callback, prepare) {
+    return new Pivot(spec, callback, prepare);
   };
 
 }).call(this);
