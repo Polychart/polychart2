@@ -55,6 +55,7 @@ class Numeral
       else if @value % 1 == 0 then 0
       else                        -1
     @value = poly.format.number(degree)(@value)
+    if _.isNaN(@value) or @value is 'NaN' then @value = "Not a Number"
 
     if @prepare? then @prepare @
     @dom = @spec.dom

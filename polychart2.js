@@ -10171,6 +10171,9 @@ The functions here makes it easier to create common types of interactions.
       this.title = (_ref = this.spec.title) != null ? _ref : this.spec.value["var"];
       degree = (0 < (_ref1 = this.value) && _ref1 < 1) ? void 0 : this.value % 1 === 0 ? 0 : -1;
       this.value = poly.format.number(degree)(this.value);
+      if (_.isNaN(this.value) || this.value === 'NaN') {
+        this.value = "Not a Number";
+      }
       if (this.prepare != null) {
         this.prepare(this);
       }
