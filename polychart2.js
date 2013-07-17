@@ -9953,7 +9953,7 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Pivot.prototype.generateTicks = function(spec, statData, metaData) {
-      var aes, domain, guideSpec, item, key, meta, tick, ticks, values, _i, _j, _len, _len1, _ref, _ref1;
+      var aes, bw, domain, guideSpec, item, key, meta, tick, ticks, values, _i, _j, _len, _len1, _ref, _ref1;
 
       ticks = {};
       _ref = ['rows', 'columns'];
@@ -9970,7 +9970,9 @@ The functions here makes it easier to create common types of interactions.
             ticks: domain.levels
           } : meta.type === 'num' ? {
             numticks: (domain.max - domain.min) / meta.bw
-          } : {};
+          } : (bw = poly["const"].approxTimeInSeconds[meta.bw], {
+            numticks: (domain.max - domain.min) / bw
+          });
           tick = poly.tick.make(domain, guideSpec, metaData[key].type);
           ticks[key] = tick;
         }
