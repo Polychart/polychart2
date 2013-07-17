@@ -85,8 +85,8 @@ class Numeral
     if @callback then @callback null, @
     return
 
-  _makePaper: (dom, width, height, handleEvent) ->
-    paper = poly.paper dom, width, height, handleEvent
+  _makePaper: (dom, width, height, numeral) ->
+    paper = poly.paper dom, width, height, {numeral}
 
 
 poly.numeral = (spec, callback, prepare) -> new Numeral(spec, callback, prepare)

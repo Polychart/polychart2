@@ -1,7 +1,8 @@
 ###
 # GLOBALS
 ###
-poly.paper = (dom, w, h, graph) ->
+poly.paper = (dom, w, h, obj) ->
+  {graph, numeral} = obj
   if not Raphael?
     throw poly.error.depn "The dependency Raphael is not included."
   paper = Raphael(dom, w, h)
@@ -10,9 +11,12 @@ poly.paper = (dom, w, h, graph) ->
     fill: 'white' # for FireFox
     opacity: 0    # for not showing background
     'stroke-width': 0
-  bg.click graph.handleEvent('reset')
-  poly.mouseEvents graph, bg, false
-  poly.touchEvents graph.handleEvent, bg, true
+  if graph?
+    bg.click graph.handleEvent('reset')
+    poly.mouseEvents graph, bg, false
+    poly.touchEvents graph.handleEvent, bg, true
+  else if numeral?
+    bg.click numeral.handleEvent('reset')
   paper
 
 ###

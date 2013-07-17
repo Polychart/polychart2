@@ -8262,9 +8262,10 @@ Dimension object has the following elements (all numeric in pixels):
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  poly.paper = function(dom, w, h, graph) {
-    var bg, paper;
+  poly.paper = function(dom, w, h, obj) {
+    var bg, graph, numeral, paper;
 
+    graph = obj.graph, numeral = obj.numeral;
     if (typeof Raphael === "undefined" || Raphael === null) {
       throw poly.error.depn("The dependency Raphael is not included.");
     }
@@ -8274,9 +8275,13 @@ Dimension object has the following elements (all numeric in pixels):
       opacity: 0,
       'stroke-width': 0
     });
-    bg.click(graph.handleEvent('reset'));
-    poly.mouseEvents(graph, bg, false);
-    poly.touchEvents(graph.handleEvent, bg, true);
+    if (graph != null) {
+      bg.click(graph.handleEvent('reset'));
+      poly.mouseEvents(graph, bg, false);
+      poly.touchEvents(graph.handleEvent, bg, true);
+    } else if (numeral != null) {
+      bg.click(numeral.handleEvent('reset'));
+    }
     return paper;
   };
 
@@ -10208,10 +10213,12 @@ The functions here makes it easier to create common types of interactions.
       }
     };
 
-    Numeral.prototype._makePaper = function(dom, width, height, handleEvent) {
+    Numeral.prototype._makePaper = function(dom, width, height, numeral) {
       var paper;
 
-      return paper = poly.paper(dom, width, height, handleEvent);
+      return paper = poly.paper(dom, width, height, {
+        numeral: numeral
+      });
     };
 
     return Numeral;
@@ -10554,10 +10561,12 @@ The functions here makes it easier to create common types of interactions.
       return poly.dim.make(spec, scaleSet, facet.getGrid());
     };
 
-    Graph.prototype._makePaper = function(dom, width, height, handleEvent) {
+    Graph.prototype._makePaper = function(dom, width, height, graph) {
       var paper;
 
-      return paper = poly.paper(dom, width, height, handleEvent);
+      return paper = poly.paper(dom, width, height, {
+        graph: graph
+      });
     };
 
     return Graph;

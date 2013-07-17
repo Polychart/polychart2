@@ -176,8 +176,8 @@ class Graph
   _makeDimensions: (spec, scaleSet, facet, tmpDims) ->
     scaleSet.makeGuides(spec, tmpDims)
     poly.dim.make spec, scaleSet, facet.getGrid()
-  _makePaper: (dom, width, height, handleEvent) ->
-    paper = poly.paper dom, width, height, handleEvent
+  _makePaper: (dom, width, height, graph) ->
+    paper = poly.paper dom, width, height, {graph}
 
 poly.chart = (spec, callback, prepare) ->
   try
