@@ -9931,7 +9931,7 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Pivot.prototype.generateTicks = function(spec, statData, metaData) {
-      var aes, domain, fakeGuideSpec, item, key, tick, ticks, values, _i, _j, _len, _len1, _ref, _ref1;
+      var aes, domain, guideSpec, item, key, meta, tick, ticks, values, _i, _j, _len, _len1, _ref, _ref1;
 
       ticks = {};
       _ref = ['rows', 'columns'];
@@ -9941,12 +9941,15 @@ The functions here makes it easier to create common types of interactions.
         for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
           item = _ref1[_j];
           key = item["var"];
+          meta = metaData[key];
           values = _.pluck(statData, key);
           domain = poly.domain.single(values, metaData[key], {});
-          fakeGuideSpec = {
-            numtick: _.uniq(values)
-          };
-          tick = poly.tick.make(domain, fakeGuideSpec, metaData[key].type);
+          guideSpec = meta.type === 'cat' ? {
+            ticks: domain.levels
+          } : meta.type === 'num' ? {
+            numticks: (domain.max - domain.min) / meta.bw
+          } : {};
+          tick = poly.tick.make(domain, guideSpec, metaData[key].type);
           ticks[key] = tick;
         }
       }

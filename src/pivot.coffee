@@ -98,10 +98,19 @@ class Pivot
     for aes in ['rows', 'columns']
       for item in spec[aes]
         key = item.var
+        meta = metaData[key]
         values = _.pluck(statData, key)
         domain = poly.domain.single(values, metaData[key], {})
-        fakeGuideSpec = numtick: _.uniq(values) # NOTE: THIS IS WRONG!!
-        tick = poly.tick.make(domain, fakeGuideSpec, metaData[key].type)
+        guideSpec =
+          if meta.type is 'cat'
+            ticks: domain.levels
+          else if meta.type is 'num'
+            numticks: (domain.max - domain.min) / meta.bw
+          else # meta.type is 'date'
+            # TODO: going to make a push on develop first
+            # numticks: (domain.max - domain.min) / meta.bw
+            {}
+        tick = poly.tick.make(domain, guideSpec, metaData[key].type)
         ticks[key] = tick
     ticks
 
