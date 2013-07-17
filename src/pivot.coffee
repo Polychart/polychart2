@@ -83,7 +83,7 @@ class PivotProcessedData
       retvalue[val]
 
 class Pivot
-  constructor: (spec) ->
+  constructor: (spec, @callback, @prepare) ->
     if not spec?
       throw poly.error.defn "No pivot table specification is passed in!"
     @make(spec)
@@ -218,8 +218,10 @@ class Pivot
       table.append(row)
       i++
 
+    if @prepare then @prepare @
     @dom = if _.isString(@spec.dom) then $('#'+@spec.dom) else $(@spec.dom)
     @dom.empty()
     @dom.append(table)
+    if @callback then @callback null, @
 
 poly.pivot = (spec) -> new Pivot(spec)

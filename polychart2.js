@@ -9935,9 +9935,12 @@ The functions here makes it easier to create common types of interactions.
   })();
 
   Pivot = (function() {
-    function Pivot(spec) {
+    function Pivot(spec, callback, prepare) {
+      this.callback = callback;
+      this.prepare = prepare;
       this.render = __bind(this.render, this);
-      this.generateTicks = __bind(this.generateTicks, this);      if (spec == null) {
+      this.generateTicks = __bind(this.generateTicks, this);
+      if (spec == null) {
         throw poly.error.defn("No pivot table specification is passed in!");
       }
       this.make(spec);
@@ -10087,9 +10090,15 @@ The functions here makes it easier to create common types of interactions.
         table.append(row);
         i++;
       }
+      if (this.prepare) {
+        this.prepare(this);
+      }
       this.dom = _.isString(this.spec.dom) ? $('#' + this.spec.dom) : $(this.spec.dom);
       this.dom.empty();
-      return this.dom.append(table);
+      this.dom.append(table);
+      if (this.callback) {
+        return this.callback(null, this);
+      }
     };
 
     return Pivot;
