@@ -11,6 +11,19 @@ poly.const =
   trans: {'bin': ['key', 'binwidth'], 'lag': ['key', 'lag']},
   stat: {'count': ['key'], 'unique': ['key'], 'sum': ['key'], 'mean': ['key'], 'box': ['key'], 'median': ['key']}
   timerange: ['second','minute','hour','day','week','month','twomonth','quarter','sixmonth','year',  'twoyear', 'fiveyear', 'decade']
+  approxTimeInSeconds: # approximate!
+    second: 1
+    minute: 60
+    hour: 60*60
+    day: 24*60*60
+    week: 7*24*60*60
+    month: 30*24*60*60
+    twomonth: 30*24*60*60*2
+    quarter: 30*24*60*60*4
+    sixmonth: 30*24*60*60*6
+    year: 24*60*60*365
+    twoyear: 24*60*60*365*2
+    fiveyear: 24*60*60*365*5
   metas: {sort: null, stat: null, limit: null, asc: false},
   scaleFns :
     novalue : () -> {v: null, f: 'novalue', t: 'scalefn'}
