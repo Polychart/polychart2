@@ -10087,7 +10087,7 @@ The functions here makes it easier to create common types of interactions.
         table.append(row);
         i++;
       }
-      this.dom = $('#' + this.spec.dom);
+      this.dom = _.isString(this.spec.dom) ? $('#' + this.spec.dom) : $(this.spec.dom);
       this.dom.empty();
       return this.dom.append(table);
     };

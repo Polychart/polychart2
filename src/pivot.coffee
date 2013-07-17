@@ -218,7 +218,7 @@ class Pivot
       table.append(row)
       i++
 
-    @dom = $('#'+@spec.dom)
+    @dom = if _.isString(@spec.dom) then $('#'+@spec.dom) else $(@spec.dom)
     @dom.empty()
     @dom.append(table)
 
