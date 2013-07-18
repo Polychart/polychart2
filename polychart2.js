@@ -1269,7 +1269,11 @@ Impute types from values
           return moment(value, meta.format).unix();
         }
       } else {
-        return moment(value).unix();
+        if (isFinite(value) && value >= Math.pow(10, 9)) {
+          return moment.unix(value).unix();
+        } else {
+          return moment(value).unix();
+        }
       }
     } else {
       return void 0;
