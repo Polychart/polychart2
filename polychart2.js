@@ -464,15 +464,15 @@ These are constants that are referred to throughout the coebase
       second: 1,
       minute: 60,
       hour: 60 * 60,
-      day: 24 * 60 * 60,
-      week: 7 * 24 * 60 * 60,
-      month: 30 * 24 * 60 * 60,
-      twomonth: 30 * 24 * 60 * 60 * 2,
-      quarter: 30 * 24 * 60 * 60 * 4,
-      sixmonth: 30 * 24 * 60 * 60 * 6,
-      year: 24 * 60 * 60 * 365,
-      twoyear: 24 * 60 * 60 * 365 * 2,
-      fiveyear: 24 * 60 * 60 * 365 * 5
+      day: 60 * 60 * 24,
+      week: 60 * 60 * 24 * 7,
+      month: 60 * 60 * 24 * 30,
+      twomonth: 60 * 60 * 24 * 30 * 2,
+      quarter: 60 * 60 * 24 * 30 * 4,
+      sixmonth: 60 * 60 * 24 * 30 * 6,
+      year: 60 * 60 * 24 * 365,
+      twoyear: 60 * 60 * 24 * 365 * 2,
+      fiveyear: 60 * 60 * 24 * 365 * 5 + 60 * 60 * 24
     },
     metas: {
       sort: null,
@@ -4826,33 +4826,35 @@ attribute of that value.
         var width;
 
         if (_.isObject(value)) {
-          if (value.f === 'identity') {
-            return value.v;
+          width = function(m) {
+            return (this.range.max - this.range.min - 2 * space) / m;
+          };
+          switch (value.f) {
+            case 'identity':
+              return value.v;
+            case 'middle':
+              return _this.range.max / 2 + _this.range.min / 2;
+            case 'max':
+              return _this.range.max;
+            case 'min':
+              return _this.range.min;
+            case 'upper':
+              if (!value.m) {
+                return _this.range.max - space;
+              } else {
+                return (_this.range.min + space) + (value.n + 1) * width(value.m);
+              }
+              break;
+            case 'lower':
+              if (!value.m) {
+                return _this.range.min + space;
+              } else {
+                return (_this.range.min + space) + value.n * width(value.m);
+              }
           }
-          if (value.f === 'middle') {
-            return _this.range.max / 2 + _this.range.min / 2;
-          }
-          if (value.f === 'max') {
-            return _this.range.max;
-          }
-          if (value.f === 'min') {
-            return _this.range.min;
-          }
-          if (value.f === 'upper' && !value.m) {
-            return _this.range.max - space;
-          }
-          if (value.f === 'lower' && !value.m) {
-            return _this.range.min + space;
-          }
-          width = (_this.range.max - _this.range.min - 2 * space) / value.m;
-          if (value.f === 'upper') {
-            return (_this.range.min + space) + (value.n + 1) * width;
-          }
-          if (value.f === 'lower') {
-            return (_this.range.min + space) + value.n * width;
-          }
+        } else {
+          return _this.range.max / 2 + _this.range.min / 2;
         }
-        return _this.range.max / 2 + _this.range.min / 2;
       });
       return this.finv = function() {
         return {};
@@ -4879,39 +4881,37 @@ attribute of that value.
       var _this = this;
 
       return this._NaNCheckWrap(function(value) {
-        var lower, space, upper, width, _ref;
+        var lower, space, upper, width;
 
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
-            if (value.f === 'identity') {
-              return value.v;
-            }
-            if (value.f === 'middle') {
-              return y(value.v + domain.bw / 2);
-            }
-            if (value.f === 'max') {
-              return _this.range.max + value.v;
-            }
-            if (value.f === 'min') {
-              return _this.range.min + value.v;
-            }
-            if ((_ref = value.f) === 'upper' || _ref === 'lower') {
-              upper = y(value.v + domain.bw);
-              lower = y(value.v);
-              space = (upper - lower) * _this.space;
-              if (value.f === 'upper' && !value.m) {
-                return upper - space;
-              }
-              if (value.f === 'lower' && !value.m) {
-                return lower + space;
-              }
-              width = (upper - lower - 2 * space) / value.m;
-              if (value.f === 'upper') {
-                return (lower + space) + (value.n + 1) * width;
-              }
-              if (value.f === 'lower') {
-                return (lower + space) + value.n * width;
-              }
+            switch (value.f) {
+              case 'identity':
+                return value.v;
+              case 'middle':
+                return y(value.v + domain.bw / 2);
+              case 'max':
+                return _this.range.max + value.v;
+              case 'min':
+                return _this.range.min + value.v;
+              case 'upper':
+              case 'lower':
+                upper = y(value.v + domain.bw);
+                lower = y(value.v);
+                space = (upper - lower) * _this.space;
+                if (value.f === 'upper' && !value.m) {
+                  return upper - space;
+                }
+                if (value.f === 'lower' && !value.m) {
+                  return lower + space;
+                }
+                width = (upper - lower - 2 * space) / value.m;
+                if (value.f === 'upper') {
+                  return (lower + space) + (value.n + 1) * width;
+                }
+                if (value.f === 'lower') {
+                  return (lower + space) + value.n * width;
+                }
             }
           }
           throw poly.error.input("Unknown object " + value + " is passed to a scale");
@@ -4924,89 +4924,87 @@ attribute of that value.
       var _this = this;
 
       return this._NaNCheckWrap(function(value) {
-        var lower, space, upper, width, _ref, _timeConversion;
+        var lower, space, upper, width, _timeConversion;
 
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
-            if (value.f === 'identity') {
-              return value.v;
-            }
-            if (value.f === 'max') {
-              return _this.range.max + value.v;
-            }
-            if (value.f === 'min') {
-              return _this.range.min + value.v;
-            }
-            if ((_ref = value.f) === 'upper' || _ref === 'middle' || _ref === 'lower') {
-              _timeConversion = function(n, timerange, lower) {
-                var m;
+            switch (value.f) {
+              case 'identity':
+                return value.v;
+              case 'max':
+                return _this.range.max + value.v;
+              case 'min':
+                return _this.range.min + value.v;
+              case 'upper':
+              case 'middle':
+              case 'lower':
+                _timeConversion = function(n, timerange, lower) {
+                  var m;
 
-                if (lower == null) {
-                  lower = 0;
+                  if (lower == null) {
+                    lower = 0;
+                  }
+                  m = moment.unix(value.v).startOf(timerange);
+                  m[timerange](n * Math.floor(m[timerange]() / n) + n * lower);
+                  return m.unix();
+                };
+                upper = y((function() {
+                  switch (domain.bw) {
+                    case 'week':
+                      return moment.unix(value.v).day(7).unix();
+                    case 'twomonth':
+                      return _timeConversion(2, 'month');
+                    case 'quarter':
+                      return _timeConversion(4, 'month');
+                    case 'sixmonth':
+                      return _timeConversion(6, 'month');
+                    case 'twoyear':
+                      return _timeConversion(2, 'year');
+                    case 'fiveyear':
+                      return _timeConversion(5, 'year');
+                    case 'decade':
+                      return _timeConversion(10, 'year');
+                    default:
+                      return moment.unix(value.v).endOf(domain.bw).unix();
+                  }
+                })());
+                lower = y((function() {
+                  switch (domain.bw) {
+                    case 'week':
+                      return moment.unix(value.v).day(0).unix();
+                    case 'twomonth':
+                      return _timeConversion(2, 'month', 1);
+                    case 'quarter':
+                      return _timeConversion(4, 'month', 1);
+                    case 'sixmonth':
+                      return _timeConversion(6, 'month', 1);
+                    case 'twoyear':
+                      return _timeConversion(2, 'year', 1);
+                    case 'fiveyear':
+                      return _timeConversion(5, 'year', 1);
+                    case 'decade':
+                      return _timeConversion(10, 'year', 1);
+                    default:
+                      return moment.unix(value.v).startOf(domain.bw).unix();
+                  }
+                })());
+                space = (upper - lower) * _this.space;
+                if (value.f === 'middle') {
+                  return upper / 2 + lower / 2;
                 }
-                m = moment.unix(value.v).startOf(timerange);
-                m[timerange](n * Math.floor(m[timerange]() / n) + n * lower);
-                return m.unix();
-              };
-              upper = (function() {
-                switch (domain.bw) {
-                  case 'week':
-                    return moment.unix(value.v).day(7).unix();
-                  case 'twomonth':
-                    return _timeConversion(2, 'month');
-                  case 'quarter':
-                    return _timeConversion(4, 'month');
-                  case 'sixmonth':
-                    return _timeConversion(6, 'month');
-                  case 'twoyear':
-                    return _timeConversion(2, 'year');
-                  case 'fiveyear':
-                    return _timeConversion(5, 'year');
-                  case 'decade':
-                    return _timeConversion(10, 'year');
-                  default:
-                    return moment.unix(value.v).endOf(domain.bw).unix();
+                if (value.f === 'upper' && !value.m) {
+                  return upper - space;
                 }
-              })();
-              upper = y(upper);
-              lower = (function() {
-                switch (domain.bw) {
-                  case 'week':
-                    return moment.unix(value.v).day(0).unix();
-                  case 'twomonth':
-                    return _timeConversion(2, 'month', 1);
-                  case 'quarter':
-                    return _timeConversion(4, 'month', 1);
-                  case 'sixmonth':
-                    return _timeConversion(6, 'month', 1);
-                  case 'twoyear':
-                    return _timeConversion(2, 'year', 1);
-                  case 'fiveyear':
-                    return _timeConversion(5, 'year', 1);
-                  case 'decade':
-                    return _timeConversion(10, 'year', 1);
-                  default:
-                    return moment.unix(value.v).startOf(domain.bw).unix();
+                if (value.f === 'lower' && !value.m) {
+                  return lower + space;
                 }
-              })();
-              lower = y(lower);
-              space = (upper - lower) * _this.space;
-              if (value.f === 'middle') {
-                return upper / 2 + lower / 2;
-              }
-              if (value.f === 'upper' && !value.m) {
-                return upper - space;
-              }
-              if (value.f === 'lower' && !value.m) {
-                return lower + space;
-              }
-              width = (upper - lower - 2 * space) / value.m;
-              if (value.f === 'upper') {
-                return (lower + space) + (value.n + 1) * width;
-              }
-              if (value.f === 'lower') {
-                return (lower + space) + value.n * width;
-              }
+                width = (upper - lower - 2 * space) / value.m;
+                if (value.f === 'upper') {
+                  return (lower + space) + (value.n + 1) * width;
+                }
+                if (value.f === 'lower') {
+                  return (lower + space) + value.n * width;
+                }
             }
           }
           throw poly.error.input("Unknown object " + value + " is passed to a scale");
@@ -5019,39 +5017,39 @@ attribute of that value.
       var _this = this;
 
       return this._NaNCheckWrap(function(value) {
-        var lower, space, upper, width, _ref;
+        var lower, space, upper, width;
 
         space = step * _this.space;
         if (_.isObject(value)) {
           if (value.t === 'scalefn') {
-            if (value.f === 'identity') {
-              return value.v;
-            }
-            if (value.f === 'max') {
-              return _this.range.max + value.v;
-            }
-            if (value.f === 'min') {
-              return _this.range.min + value.v;
-            }
-            if ((_ref = value.f) === 'upper' || _ref === 'middle' || _ref === 'lower') {
-              upper = y(value.v) + step;
-              lower = y(value.v);
-              if (value.f === 'middle') {
-                return upper / 2 + lower / 2;
-              }
-              if (value.f === 'upper' && !value.m) {
-                return upper - space;
-              }
-              if (value.f === 'lower' && !value.m) {
-                return lower + space;
-              }
-              width = (upper - lower - 2 * space) / value.m;
-              if (value.f === 'upper') {
-                return (lower + space) + (value.n + 1) * width;
-              }
-              if (value.f === 'lower') {
-                return (lower + space) + value.n * width;
-              }
+            switch (value.f) {
+              case 'identity':
+                return value.v;
+              case 'max':
+                return _this.range.max + value.v;
+              case 'min':
+                return _this.range.min + value.v;
+              case 'upper':
+              case 'middle':
+              case 'lower':
+                upper = y(value.v) + step;
+                lower = y(value.v);
+                if (value.f === 'middle') {
+                  return upper / 2 + lower / 2;
+                }
+                if (value.f === 'upper' && !value.m) {
+                  return upper - space;
+                }
+                if (value.f === 'lower' && !value.m) {
+                  return lower + space;
+                }
+                width = (upper - lower - 2 * space) / value.m;
+                if (value.f === 'upper') {
+                  return (lower + space) + (value.n + 1) * width;
+                }
+                if (value.f === 'lower') {
+                  return (lower + space) + value.n * width;
+                }
             }
           }
           throw poly.error.input("Unknown object " + value + " is passed to a scale");
@@ -5198,13 +5196,13 @@ attribute of that value.
     }
 
     Area.prototype._makeNum = function() {
-      var min, sq, ylin;
+      var min, sqrt, ylin;
 
       min = this.domain.min === 0 ? 0 : 1;
-      sq = Math.sqrt;
-      ylin = poly.linear(sq(this.domain.min), min, sq(this.domain.max), 10);
+      sqrt = Math.sqrt;
+      ylin = poly.linear(sqrt(this.domain.min), min, sqrt(this.domain.max), 10);
       return this.f = this._identityWrapper(function(x) {
-        return ylin(sq(x));
+        return ylin(sqrt(x));
       });
     };
 
@@ -5428,13 +5426,11 @@ attribute of that value.
   };
 
   poly.scale.make = function(spec) {
-    var type;
-
-    type = spec.type;
-    if (type in poly.scale.classes) {
-      return new poly.scale.classes[type](spec);
+    if (spec.type in poly.scale.classes) {
+      return new poly.scale.classes[spec.type](spec);
+    } else {
+      throw poly.error.defn("No such scale " + spec.type + ".");
     }
-    throw poly.error.defn("No such scale " + spec.type + ".");
   };
 
 }).call(this);
@@ -5481,7 +5477,7 @@ attribute of that value.
     };
 
     ScaleSet.prototype._makeScales = function(guideSpec, domains, ranges) {
-      var defaultSpec, scales, specScale;
+      var defaultSpec, scales, specScale, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
 
       specScale = function(a) {
         var possibleScales, _ref;
@@ -5493,34 +5489,28 @@ attribute of that value.
               "function": guideSpec[a].scale
             };
           } else {
-            switch (a) {
-              case 'x':
-                possibleScales = ['linear', 'log'];
-                break;
-              case 'y':
-                possibleScales = ['linear', 'log'];
-                break;
-              case 'color':
-                possibleScales = ['palette', 'gradient', 'gradient2'];
-                break;
-              case 'size':
-                possibleScales = ['linear', 'log'];
-                break;
-              case 'opacity':
-                possibleScales = ['opacity'];
-                break;
-              case 'shape':
-                possibleScales = ['linear', 'log', 'area'];
-                break;
-              case 'id':
-                possibleScales = ['identity'];
-                break;
-              case 'text':
-                possibleScales = ['identity'];
-                break;
-              default:
-                possibleScales = [];
-            }
+            possibleScales = (function() {
+              switch (a) {
+                case 'x':
+                  return ['linear', 'log'];
+                case 'y':
+                  return ['linear', 'log'];
+                case 'color':
+                  return ['palette', 'gradient', 'gradient2'];
+                case 'size':
+                  return ['linear', 'log'];
+                case 'opacity':
+                  return ['opacity'];
+                case 'shape':
+                  return ['linear', 'log', 'area'];
+                case 'id':
+                  return ['identity'];
+                case 'text':
+                  return ['identity'];
+                default:
+                  return [];
+              }
+            })();
             if (_ref = guideSpec[a].scale.type, __indexOf.call(possibleScales, _ref) >= 0) {
               return guideSpec[a].scale;
             } else {
@@ -5532,17 +5522,17 @@ attribute of that value.
         }
       };
       scales = {};
-      scales.x = poly.scale.make(specScale('x') || {
+      scales.x = poly.scale.make((_ref = specScale('x')) != null ? _ref : {
         type: 'linear'
       });
       scales.x.make(domains.x, ranges.x, this.getSpec('x').padding);
-      scales.y = poly.scale.make(specScale('y') || {
+      scales.y = poly.scale.make((_ref1 = specScale('y')) != null ? _ref1 : {
         type: 'linear'
       });
       scales.y.make(domains.y, ranges.y, this.getSpec('y').padding);
       if (domains.color != null) {
         if (domains.color.type === 'cat') {
-          scales.color = poly.scale.make(specScale('color') || {
+          scales.color = poly.scale.make((_ref2 = specScale('color')) != null ? _ref2 : {
             type: 'palette'
           });
         } else {
@@ -5551,18 +5541,18 @@ attribute of that value.
             upper: 'steelblue',
             lower: 'red'
           };
-          scales.color = poly.scale.make(specScale('color') || defaultSpec);
+          scales.color = poly.scale.make((_ref3 = specScale('color')) != null ? _ref3 : defaultSpec);
         }
         scales.color.make(domains.color);
       }
       if (domains.size != null) {
-        scales.size = poly.scale.make(specScale('size') || {
+        scales.size = poly.scale.make((_ref4 = specScale('size')) != null ? _ref4 : {
           type: 'area'
         });
         scales.size.make(domains.size);
       }
       if (domains.opacity != null) {
-        scales.opacity = poly.scale.make(specScale('opacity') || {
+        scales.opacity = poly.scale.make((_ref5 = specScale('opacity')) != null ? _ref5 : {
           type: 'opacity'
         });
         scales.opacity.make(domains.opacity);
@@ -5653,7 +5643,7 @@ attribute of that value.
         guideSpec: this.getSpec('x'),
         title: poly.getLabel(this.layers, 'x')
       });
-      return this.titles.y.make({
+      this.titles.y.make({
         guideSpec: this.getSpec('y'),
         title: poly.getLabel(this.layers, 'y')
       });
@@ -5688,7 +5678,7 @@ attribute of that value.
       o = this.axesOffset(dims);
       this.titles.x.render(renderer, dims, o);
       this.titles.y.render(renderer, dims, o);
-      return this.titles.main.render(renderer, dims, o);
+      this.titles.main.render(renderer, dims, o);
     };
 
     ScaleSet.prototype.makeAxes = function() {
@@ -5775,7 +5765,7 @@ attribute of that value.
         offset[dir] += (_ref1 = axesOffset[dir]) != null ? _ref1 : 0;
         offset[dir] += (_ref2 = titleOffset[dir]) != null ? _ref2 : 0;
       }
-      return this.legends.render(dims, renderer, offset);
+      this.legends.render(dims, renderer, offset);
     };
 
     return ScaleSet;
