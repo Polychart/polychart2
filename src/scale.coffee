@@ -256,19 +256,23 @@ class Palette extends Scale
         colors[i]
     else
       h = (v) => _.indexOf(@domain.levels, v) / n + 1/(2*n)
-      @f = (value) => Raphael.hsl(h(value),0.5,0.5)
+      @f = (value) =>
+        if Raphael? then Raphael.hsl(h(value),0.5,0.5)
+        else            "hsl(#{h(value)},0.5,0.5)"
 
 class Gradient extends Scale
   constructor: (params) ->
     {@lower, @upper} = params
   _makeNum: () =>
-    lower = Raphael.color(@lower)
-    upper = Raphael.color(@upper)
+    lower = if Raphael? then Raphael.color(@lower) else @lower
+    upper = if Raphael? then Raphael.color(@upper) else @upper
     r = poly.linear @domain.min, lower.r, @domain.max, upper.r
     g = poly.linear @domain.min, lower.g, @domain.max, upper.g
     b = poly.linear @domain.min, lower.b, @domain.max, upper.b
     @f =
-      @_identityWrapper (value) => Raphael.rgb r(value), g(value), b(value)
+      @_identityWrapper (value) =>
+        if Raphael? then Raphael.rgb r(value), g(value), b(value)
+        else            "rgb(#{r(value)},#{g(value)},#{b(value)})"
   _makeDate: () => @_makeNum()
 
 class Gradient2 extends Scale
@@ -276,9 +280,9 @@ class Gradient2 extends Scale
     {@lower, @middle, @upper, @midpoint} = params
     @midpoint ?= 0
   _makeNum: () =>
-    lower  = Raphael.color(@lower)
-    middle = Raphael.color(@middle)
-    upper  = Raphael.color(@upper)
+    lower  = if Raphael? then Raphael.color(@lower)  else @lower
+    middle = if Raphael? then Raphael.color(@middle) else @middle
+    upper  = if Raphael? then Raphael.color(@upper)  else @upper
     r1 = poly.linear @domain.min, lower.r, @midpoint, middle.r
     g1 = poly.linear @domain.min, lower.g, @midpoint, middle.g
     b1 = poly.linear @domain.min, lower.b, @midpoint, middle.b
@@ -288,9 +292,11 @@ class Gradient2 extends Scale
     @f =
       @_identityWrapper (value) =>
         if value < @midpoint
-          Raphael.rgb r1(value), g1(value), b1(value)
+          if Raphael? then Raphael.rgb r1(value), g1(value), b1(value)
+          else            "rgb(#{r1(value)},#{g1(value)},#{b1(value)})"
         else
-          Raphael.rgb r2(value), g2(value), b2(value)
+          if Raphael? then Raphael.rgb r2(value), g2(value), b2(value)
+          else            "rgb(#{r2(value)},#{g2(value)},#{b2(value)})"
   _makeCat: () =>
   _makeDate: () => @_makeNum()
 

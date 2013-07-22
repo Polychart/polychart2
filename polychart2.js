@@ -5486,7 +5486,11 @@ attribute of that value.
           return _.indexOf(_this.domain.levels, v) / n + 1 / (2 * n);
         };
         return this.f = function(value) {
-          return Raphael.hsl(h(value), 0.5, 0.5);
+          if (typeof Raphael !== "undefined" && Raphael !== null) {
+            return Raphael.hsl(h(value), 0.5, 0.5);
+          } else {
+            return "hsl(" + (h(value)) + ",0.5,0.5)";
+          }
         };
       }
     };
@@ -5507,13 +5511,17 @@ attribute of that value.
       var b, g, lower, r, upper,
         _this = this;
 
-      lower = Raphael.color(this.lower);
-      upper = Raphael.color(this.upper);
+      lower = typeof Raphael !== "undefined" && Raphael !== null ? Raphael.color(this.lower) : this.lower;
+      upper = typeof Raphael !== "undefined" && Raphael !== null ? Raphael.color(this.upper) : this.upper;
       r = poly.linear(this.domain.min, lower.r, this.domain.max, upper.r);
       g = poly.linear(this.domain.min, lower.g, this.domain.max, upper.g);
       b = poly.linear(this.domain.min, lower.b, this.domain.max, upper.b);
       return this.f = this._identityWrapper(function(value) {
-        return Raphael.rgb(r(value), g(value), b(value));
+        if (typeof Raphael !== "undefined" && Raphael !== null) {
+          return Raphael.rgb(r(value), g(value), b(value));
+        } else {
+          return "rgb(" + (r(value)) + "," + (g(value)) + "," + (b(value)) + ")";
+        }
       });
     };
 
@@ -5544,9 +5552,9 @@ attribute of that value.
       var b1, b2, g1, g2, lower, middle, r1, r2, upper,
         _this = this;
 
-      lower = Raphael.color(this.lower);
-      middle = Raphael.color(this.middle);
-      upper = Raphael.color(this.upper);
+      lower = typeof Raphael !== "undefined" && Raphael !== null ? Raphael.color(this.lower) : this.lower;
+      middle = typeof Raphael !== "undefined" && Raphael !== null ? Raphael.color(this.middle) : this.middle;
+      upper = typeof Raphael !== "undefined" && Raphael !== null ? Raphael.color(this.upper) : this.upper;
       r1 = poly.linear(this.domain.min, lower.r, this.midpoint, middle.r);
       g1 = poly.linear(this.domain.min, lower.g, this.midpoint, middle.g);
       b1 = poly.linear(this.domain.min, lower.b, this.midpoint, middle.b);
@@ -5555,9 +5563,17 @@ attribute of that value.
       b2 = poly.linear(this.midpoint, middle.b, this.domain.max, upper.b);
       return this.f = this._identityWrapper(function(value) {
         if (value < _this.midpoint) {
-          return Raphael.rgb(r1(value), g1(value), b1(value));
+          if (typeof Raphael !== "undefined" && Raphael !== null) {
+            return Raphael.rgb(r1(value), g1(value), b1(value));
+          } else {
+            return "rgb(" + (r1(value)) + "," + (g1(value)) + "," + (b1(value)) + ")";
+          }
         } else {
-          return Raphael.rgb(r2(value), g2(value), b2(value));
+          if (typeof Raphael !== "undefined" && Raphael !== null) {
+            return Raphael.rgb(r2(value), g2(value), b2(value));
+          } else {
+            return "rgb(" + (r2(value)) + "," + (g2(value)) + "," + (b2(value)) + ")";
+          }
         }
       });
     };
