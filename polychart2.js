@@ -988,10 +988,12 @@ Abstract classes, almost used like interfaces throughout the codebase
     };
 
     PolyCanvas.prototype.toBack = function(id) {
-      var item;
+      var bg, item;
 
       item = this.remove(id)[0];
-      return this.items.push(item);
+      bg = this.items.pop();
+      this.items.push(item);
+      return this.items.push(bg);
     };
 
     PolyCanvas.prototype.toFront = function(id) {
