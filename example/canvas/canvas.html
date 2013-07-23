@@ -94,38 +94,19 @@
       </div>
     </div>
     <script type="text/javascript">
-      var canv = document.getElementById('c'),
-          spec, jsondata, data, c;
+      var data = polyjs.data({data:{
+        cat: ['a', 'a', 'a', 'a', 'a', 'a', 'b', 'b', 'b', 'b', 'b', 'b'],
+        val: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12.12413252523523]
+      }});
 
-      jsondata = [];
-      for(var i = 0; i < 10; i++) {
-        var res = { index: i, value: Math.random() * 10 };
-        jsondata.push(res);
-      }
-
-      data = polyjs.data({ data: jsondata });
-
-      spec = {
-        layers: [
-          { data: data, type: 'bar', x: 'index', y: 'value', id: 'index', opacity: 'value' }
-        ],
-        guides: {
-          x: {
-            type: 'num',
-            bw: 1
-          },
-          y: {
-            type: 'num',
-            min: 0,
-            max: 10,
-            ticks: [2, 4, 6, 8],
-            labels: { 2: 'Two', 4: 'Four', 6: 'Six', 8: 'Eight' }
-          }
-        },
+      var spec = {
+        data: data,
+        value: 'sum(val)',
+        filter: {cat: {in: ['b']}},
         dom: {}
       };
 
-      c = polyjs.chart(spec, (function(err, graph){ console.error(err); console.log(graph); }));
+      c = polyjs.numeral(spec, (function(err, graph){ console.error(err); console.log(graph); }));
     </script>
   </body>
 </html>

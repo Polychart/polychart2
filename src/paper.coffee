@@ -67,7 +67,13 @@ class PolyCanvasItem
         when 'path'
           @_attr = _.extend @_attr, {path: params[0]}
         when 'text'
-          @_attr = _.extend @_attr, {x: params[0], y: params[1], text: params[2]}
+          @_attr = _.extend @_attr, {
+            x: params[0]
+            y: params[1]
+            text: params[2]
+            'font-size': '12pt'
+            'text-anchor': 'middle'
+          }
         else throw poly.error.defn "Unknown geometry type!"
     else if args.length == 1 and _.isObject args[0]
       for key, val of args[0]
@@ -76,9 +82,33 @@ class PolyCanvasItem
       @_attr[args[0]] = args[1]
     @
 
-  remove: () -> @canvas.remove @id
-  toBack: () -> @canvas.toBack(@id)
+  remove:  () -> @canvas.remove @id
+  toBack:  () -> @canvas.toBack(@id)
   toFront: () -> @canvas.toFront(@id)
+  getBBox: () ->
+    if @type is 'text'
+      fontSize = parseInt(@_attr['font-size'].slice(0, -2)) ? 12
+      width  = 0
+      height = fontSize * 1.04
+      for char in @_attr.text
+        if char in ",.1" # Half width
+          width += fontSize/4
+        else
+          width += fontSize
+      console.log width, height
+      {height, width}
+    else if @type is 'rect'
+      {height: @_attr.height, width: @_attr.width}
+    else if @type is 'circle'
+      {height: @_attr.r, width: @_attr.r}
+  transform: (trans) ->
+    if trans[0] is 's' # Scaling
+      scale = trans.slice 1
+      console.log scale
+      if 'font-size' of @_attr
+        @_attr['font-size'] = @_attr['font-size'].slice(0,-2) * scale + 'pt'
+      if 'width'  of @_attr then @_attr['width']  *= scale
+      if 'height' of @_attr then @_attr['height'] *= scale
 
   animate: (args...) -> @_attr.animate = args; @
 

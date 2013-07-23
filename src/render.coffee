@@ -3,7 +3,7 @@
 ###
 poly.paper = (dom, w, h, obj) ->
   if Raphael? then paper = Raphael(dom, w, h)
-  else paper = poly.canvas dom, w, h
+  else             paper = poly.canvas dom, w, h
   {graph, numeral} = obj
   # Handlers and events for clicking outside of graph geometry
   bg = paper.rect(0,0,w,h).attr

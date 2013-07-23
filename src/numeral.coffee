@@ -58,8 +58,8 @@ class Numeral
     if _.isNaN(@value) or @value is 'NaN' then @value = "Not a Number"
 
     if @prepare? then @prepare @
-    @dom = @spec.dom
-    @width = @spec.width ? 200
+    @dom    = @spec.dom
+    @width  = @spec.width  ? 200
     @height = @spec.height ? 100
     @paper ?= @_makePaper @dom, @width, @height, @
 
@@ -88,5 +88,10 @@ class Numeral
   _makePaper: (dom, width, height, numeral) ->
     paper = poly.paper dom, width, height, {numeral}
 
-
-poly.numeral = (spec, callback, prepare) -> new Numeral(spec, callback, prepare)
+poly.numeral = (spec, callback, prepare) ->
+  try
+    new Numeral(spec, callback, prepare)
+  catch err
+    console.log err
+    if callback? then callback err, null
+    else throw poly.error.defn "Bad specification."
