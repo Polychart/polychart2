@@ -1139,7 +1139,6 @@ Abstract classes, almost used like interfaces throughout the codebase
 
       if (trans[0] === 's') {
         scale = trans.slice(1);
-        console.log(scale);
         if ('font-size' in this._attr) {
           this._attr['font-size'] = this._attr['font-size'].slice(0, -2) * scale + 'pt';
         }
@@ -8701,6 +8700,7 @@ Dimension object has the following elements (all numeric in pixels):
           }
           if (type === 'guide') {
             pt.click(handleEvent('guide-click'));
+            pt.hover(handleEvent('gover'), handleEvent('gout'));
             poly.touchEvents(handleEvent, pt, true);
           } else if (type === 'guide-title' || type === 'guide-titleH' || type === 'guide-titleV') {
             pt.click(handleEvent(type));
@@ -10842,7 +10842,7 @@ The functions here makes it easier to create common types of interactions.
           }
         } else if (type === 'data') {
           obj.evtData = {};
-        } else if (type === 'reset' || type === 'click' || type === 'mover' || type === 'mout' || type === 'tover' || type === 'tout' || type === 'guide-click') {
+        } else if (type === 'reset' || type === 'click' || type === 'mover' || type === 'mout' || type === 'tover' || type === 'tout' || type === 'gover' || type === 'gout' || type === 'guide-click') {
           obj.tooltip = obj.data('t');
           obj.evtData = obj.data('e');
           if (type === 'guide-click' && obj.type === 'text') {

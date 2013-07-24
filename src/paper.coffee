@@ -103,7 +103,6 @@ class PolyCanvasItem
   transform: (trans) ->
     if trans[0] is 's' # Scaling
       scale = trans.slice 1
-      console.log scale
       if 'font-size' of @_attr
         @_attr['font-size'] = @_attr['font-size'].slice(0,-2) * scale + 'pt'
       if 'width'  of @_attr then @_attr['width']  *= scale
