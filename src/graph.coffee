@@ -159,6 +159,13 @@ class Graph
       else if type in ['reset', 'click', 'mover', 'mout', 'tover', 'tout', 'guide-click']
         obj.tooltip = obj.data('t')
         obj.evtData = obj.data('e')
+        if type is 'guide-click' and obj.type is 'text'
+          if obj.evtData?
+            if obj.evtData.value is 'legendTitle'
+              event = poly.event.make 'legend-title', obj
+            else
+              event = poly.event.make 'legend-label', obj
+            event.dispatch graph.dom
       else if type in ['guide-title', 'guide-titleH', 'guide-titleV']
         obj.tooltip = obj.data('t')
         obj.evtData = obj.data('e')

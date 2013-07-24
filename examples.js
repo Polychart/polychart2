@@ -403,7 +403,6 @@
           type: 'bar',
           x: 'index',
           y: 'value',
-          id: 'index',
           opacity: 'value'
         }
       ],
@@ -800,15 +799,15 @@
       guides: {
         color: {
           labels: {
-            'a': 'Even Numbers',
-            'b': 'Odd Numbers'
+            a: 'Even Numbers',
+            b: 'Odd Numbers'
           },
           title: 'Test'
         },
         x: {
           labels: {
-            'a': 'Even Numbers',
-            'b': 'Odd Numbers'
+            a: 'Even Numbers',
+            b: 'Odd Numbers'
           }
         },
         y: {

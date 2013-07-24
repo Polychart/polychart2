@@ -95,7 +95,6 @@ class PolyCanvasItem
           width += fontSize/4
         else
           width += fontSize
-      console.log width, height
       {height, width}
     else if @type is 'rect'
       {height: @_attr.height, width: @_attr.width}
