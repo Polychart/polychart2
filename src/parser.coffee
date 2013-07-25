@@ -31,7 +31,7 @@ mergeObjLists = (dicts) ->
     for key of dict
       fin[key] = dict[key].concat(dictGet(fin, key, []))
   fin
-dedup = (vals, trans = (x) -> x) ->
+dedup = (vals=[], trans = (x) -> x) ->
   unique = {}
   unique[trans val] = val for val in vals
   val for _, val of unique

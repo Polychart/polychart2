@@ -1970,6 +1970,9 @@ See the spec definition for more information.
   dedup = function(vals, trans) {
     var unique, val, _, _i, _len, _results;
 
+    if (vals == null) {
+      vals = [];
+    }
     if (trans == null) {
       trans = function(x) {
         return x;
