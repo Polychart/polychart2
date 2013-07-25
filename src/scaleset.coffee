@@ -29,19 +29,19 @@ class ScaleSet
     specScale = (a) ->
       if guideSpec and guideSpec[a]? and guideSpec[a].scale?
         if _.isFunction(guideSpec[a].scale)
-          type: 'custom'
+          type:     'custom'
           function: guideSpec[a].scale
         else
-          switch a
-            when 'x' then possibleScales = ['linear', 'log']
-            when 'y' then possibleScales = ['linear', 'log']
-            when 'color' then possibleScales = ['palette', 'gradient', 'gradient2']
-            when 'size' then possibleScales = ['linear', 'log']
-            when 'opacity' then possibleScales = ['opacity']
-            when 'shape' then possibleScales = ['linear', 'log', 'area']
-            when 'id' then possibleScales = ['identity']
-            when 'text' then possibleScales = ['identity']
-            else possibleScales = []
+          possibleScales = switch a
+            when 'x'       then   ['linear', 'log']
+            when 'y'       then   ['linear', 'log']
+            when 'color'   then   ['palette', 'gradient', 'gradient2']
+            when 'size'    then   ['linear', 'log']
+            when 'opacity' then   ['opacity']
+            when 'shape'   then   ['linear', 'log', 'area']
+            when 'id'      then   ['identity']
+            when 'text'    then   ['identity']
+            else []
           if guideSpec[a].scale.type in possibleScales
             guideSpec[a].scale
           else
@@ -50,26 +50,29 @@ class ScaleSet
         null
     scales = {}
     # x 
-    scales.x =  poly.scale.make specScale('x') || {type: 'linear'}
+    scales.x =  poly.scale.make specScale('x') ? {type: 'linear'}
     scales.x.make(domains.x, ranges.x, @getSpec('x').padding)
     # y
-    scales.y =  poly.scale.make specScale('y') || {type: 'linear'}
+    scales.y =  poly.scale.make specScale('y') ? {type: 'linear'}
     scales.y.make(domains.y, ranges.y, @getSpec('y').padding)
     # color
     if domains.color?
-      if domains.color.type == 'cat'
-        scales.color = poly.scale.make specScale('color') || {type: 'palette'}
+      if domains.color.type is 'cat'
+        scales.color = poly.scale.make specScale('color') ? {type: 'palette'}
       else
-        defaultSpec = {type:'gradient', upper:'steelblue', lower:'red'}
-        scales.color = poly.scale.make specScale('color') || defaultSpec
+        defaultSpec =
+          type: 'gradient'
+          upper:'steelblue'
+          lower:'red'
+        scales.color = poly.scale.make specScale('color') ? defaultSpec
       scales.color.make(domains.color)
     # size
     if domains.size?
-      scales.size = poly.scale.make specScale('size') || {type: 'area'}
+      scales.size = poly.scale.make specScale('size') ? {type: 'area'}
       scales.size.make(domains.size)
     # opacity
     if domains.opacity?
-      scales.opacity= poly.scale.make specScale('opacity') || {type: 'opacity'}
+      scales.opacity = poly.scale.make specScale('opacity') ? {type: 'opacity'}
       scales.opacity.make(domains.opacity)
     # text
     scales.text = poly.scale.make {type: 'identity'}
@@ -81,14 +84,14 @@ class ScaleSet
       {x, y} = @coord.getAes start, end, @reverse
     obj = {}
     for map in @layerMapping.x
-      if map.type? and map.type == 'map'
+      if map.type? and map.type is 'map'
         obj[map.value] = x ? null
     for map in @layerMapping.y
-      if map.type? and map.type == 'map'
+      if map.type? and map.type is 'map'
         obj[map.value] = y ? null
     obj
 
-  getSpec : (a) -> if @guideSpec? and @guideSpec[a]? then @guideSpec[a] else {}
+  getSpec: (a) -> if @guideSpec? and @guideSpec[a]? then @guideSpec[a] else {}
 
   makeGuides: (spec, dims) ->
     @makeAxes()
@@ -118,10 +121,11 @@ class ScaleSet
       position: "top"
     @titles.x.make
       guideSpec: @getSpec 'x'
-      title: poly.getLabel @layers, 'x'
+      title:     poly.getLabel @layers, 'x'
     @titles.y.make
       guideSpec: @getSpec 'y'
-      title: poly.getLabel @layers, 'y'
+      title:     poly.getLabel @layers, 'y'
+    return
   titleOffset: (dim) ->
     offset = {}
     for key, title of @titles
@@ -137,6 +141,7 @@ class ScaleSet
     @titles.x.render renderer, dims, o
     @titles.y.render renderer, dims, o
     @titles.main.render renderer, dims, o
+    return
 
   makeAxes: () ->
     @axes.make
@@ -153,24 +158,30 @@ class ScaleSet
       obj[aes] =
         _.map layers, (layer) ->
           if layer.mapping[aes]?
-            { type: 'map', value: layer.mapping[aes]}
+            { type:  'map'
+            , value: layer.mapping[aes]}
           else if layer.consts[aes]?
-            { type: 'const', value: layer.consts[aes]}
+            { type:  'const'
+            , value: layer.consts[aes]}
           else
             layer.defaults[aes]
     obj
   makeLegends: (position='right', dims) ->
     @legends.make
-      domains: @domains
-      layers: @layers
-      guideSpec: @guideSpec
-      scales: @scales
+      domains:      @domains
+      layers:       @layers
+      guideSpec:    @guideSpec
+      scales:       @scales
       layerMapping: @layerMapping
-      position: position
-      dims: dims
+      position:     position
+      dims:         dims
   legendOffset: (dims) -> @legends.getDimension(dims)
   renderLegends: (dims, renderer) ->
-    offset = { left: 0, right : 0, top: 0, bottom:0 } # initial spacing
+    offset = # Initial Spacing
+      left:   0
+      right:  0
+      top:    0
+      bottom: 0
     # axis offset
     axesOffset = @axesOffset(dims)
     titleOffset = @titleOffset(dims)
@@ -178,4 +189,5 @@ class ScaleSet
       offset[dir] += axesOffset[dir] ? 0
       offset[dir] += titleOffset[dir] ? 0
     @legends.render(dims, renderer, offset)
+    return
 typeError = (msg) -> msg

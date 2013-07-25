@@ -1,18 +1,21 @@
 ###
 # GLOBALS
 ###
-poly.paper = (dom, w, h, graph) ->
-  if not Raphael?
-    throw poly.error.depn "The dependency Raphael is not included."
-  paper = Raphael(dom, w, h)
+poly.paper = (dom, w, h, obj) ->
+  if Raphael? then paper = Raphael(dom, w, h)
+  else             paper = poly.canvas dom, w, h
+  {graph, numeral} = obj
   # Handlers and events for clicking outside of graph geometry
   bg = paper.rect(0,0,w,h).attr
     fill: 'white' # for FireFox
     opacity: 0    # for not showing background
     'stroke-width': 0
-  bg.click graph.handleEvent('reset')
-  poly.mouseEvents graph, bg, false
-  poly.touchEvents graph.handleEvent, bg, true
+  if graph?
+    bg.click graph.handleEvent('reset')
+    poly.mouseEvents graph, bg, false
+    poly.touchEvents graph.handleEvent, bg, true
+  else if numeral?
+    bg.click numeral.handleEvent('reset')
   paper
 
 ###
@@ -83,6 +86,7 @@ poly.render = (handleEvent, paper, scales, coord) -> (offset={}, clipping=false,
     # handlers
     if type is 'guide'
       pt.click handleEvent('guide-click')
+      pt.hover handleEvent('gover'), handleEvent('gout')
       poly.touchEvents handleEvent, pt, true
     else if type in ['guide-title', 'guide-titleH', 'guide-titleV']
       pt.click handleEvent(type)
@@ -117,12 +121,11 @@ class Renderer
     pt.animate @attr(scales, coord, offset, mark, mayflip), 300
   attr: (scales, coord, offset, mark, mayflip) -> throw poly.error.impl()
   _cantRender: (aes) -> throw poly.error.missingdata()
-  _makePath : (xs, ys, type='L') ->
-    switch type
-      when 'spline'
-        path = _.map xs, (x, i) -> (if i == 0 then "M #{x} #{ys[i]} R " else '') + "#{x} #{ys[i]}"
-      else
-        path = _.map xs, (x, i) -> (if i == 0 then 'M' else type) + x+' '+ys[i]
+  _makePath : (xs, ys, type='L ') ->
+    if type is 'spline'
+      path = _.map xs, (x, i) -> (if i == 0 then "M #{x} #{ys[i]} R " else '') + "#{x} #{ys[i]}"
+    else
+      path = _.map xs, (x, i) -> (if i == 0 then 'M ' else type) + x+' '+ys[i]
     path.join(' ')
   _maybeApply : (scales, mark, key) ->
     val = mark[key]

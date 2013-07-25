@@ -13,6 +13,7 @@ class Numeral
   constructor: (spec, callback, prepare) ->
     if not spec?
       throw poly.error.defn "No numeral specification is passed in!"
+    @handlers = []
     @callback = callback
     @prepare = prepare
     @make(spec)
@@ -26,27 +27,48 @@ class Numeral
     ps = new poly.DataProcess(@spec, [], @spec.strict, poly.parser.numeralToData)
     ps.make @spec, [], @render
 
-  handleEvent : (type) =>
+  handleEvent: (type) =>
+    numeral = @
+    handler = (event) ->
+      if type is 'guide-title'
+        event = poly.event.make type, @
+        event.dispatch numeral.dom
+      for h in numeral.handlers
+        if _.isFunction(h)
+          h(type, @, event, numeral)
+        else
+          h.handle(type, @, event, numeral)
+    _.throttle handler, 300
+
+  addHandler: (h) -> if h not in @handlers then @handlers.push h
 
   render: (err, statData, metaData) =>
+    if err?
+      console.error err
+      return
+
     @value = statData[0][@spec.value.var]
     @title = @spec.title ? @spec.value.var
     # formatting the value (temporary)
     degree =
-      if 0 < @value < 1      then undefined
+      if 0 < @value < 1       then undefined
       else if @value % 1 == 0 then 0
       else                        -1
     @value = poly.format.number(degree)(@value)
-    # pre-preparation process
-    if @prepare then @prepare @
-    # prepare the dom
-    @dom = @spec.dom
-    @width = @spec.width ? 200
+    if _.isNaN(@value) or @value is 'NaN' then @value = "Not a Number"
+
+    if @prepare? then @prepare @
+    @dom    = @spec.dom
+    @width  = @spec.width  ? 200
     @height = @spec.height ? 100
     @paper ?= @_makePaper @dom, @width, @height, @
-    # rendering the title
+
     @titleObj ?= @paper.text(@width/2, 10,  '')
     @titleObj.attr text: @title, 'font-size':'12px'
+
+    @titleObj.click @handleEvent('guide-title')
+    @titleObj.hover @handleEvent('tover'), @handleEvent('tout')
+
     # actually render the text --
     # first make a filler object; this makes rendering & re-rendering consistent
     @textObj ?= @paper.text(@width/2, @height/2,  '')
@@ -61,9 +83,15 @@ class Numeral
     @textObj.transform "s#{scale}"
 
     if @callback then @callback null, @
+    return
 
-  _makePaper: (dom, width, height, handleEvent) ->
-    paper = poly.paper dom, width, height, handleEvent
+  _makePaper: (dom, width, height, numeral) ->
+    paper = poly.paper dom, width, height, {numeral}
 
-
-poly.numeral = (spec, callback, prepare) -> new Numeral(spec, callback, prepare)
+poly.numeral = (spec, callback, prepare) ->
+  try
+    new Numeral(spec, callback, prepare)
+  catch err
+    console.log err
+    if callback? then callback err, null
+    else throw poly.error.defn "Bad specification."

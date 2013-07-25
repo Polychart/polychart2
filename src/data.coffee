@@ -367,7 +367,7 @@ class ApiData extends AbstractData
         {@key, @raw, @meta} =
           switch _getDataType(data)
             when 'json-object' then _getObject data, meta
-            when 'json-grid' then _getArrayofArrays data, meta
+            when 'json-grid' then _getArrayOfArrays data, meta
             when 'json-array' then _getArray data, meta
             when 'csv' then _getCSV data, meta
             else

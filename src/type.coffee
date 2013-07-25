@@ -46,7 +46,10 @@ poly.type.coerce = (value, meta) ->
       else
         moment(value, meta.format).unix()
     else
-      moment(value).unix()
+      if isFinite(value) and value >= Math.pow(10, 9) # Assume that unix time stamp
+        moment.unix(value).unix()
+      else
+        moment(value).unix()
   else
     undefined
 
