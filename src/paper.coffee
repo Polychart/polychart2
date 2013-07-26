@@ -90,8 +90,8 @@ class PolyCanvasItem
       fontSize = parseInt(@_attr['font-size'].slice(0, -2)) ? 12
       width  = 0
       height = fontSize * 1.04
-      for char in @_attr.text
-        if char in ",.1" # Half width
+      for character in @_attr.text
+        if character in ",.1" # Half width
           width += fontSize/4
         else
           width += fontSize

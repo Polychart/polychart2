@@ -1102,7 +1102,7 @@ Abstract classes, almost used like interfaces throughout the codebase
     };
 
     PolyCanvasItem.prototype.getBBox = function() {
-      var char, fontSize, height, width, _i, _len, _ref, _ref1;
+      var character, fontSize, height, width, _i, _len, _ref, _ref1;
 
       if (this.type === 'text') {
         fontSize = (_ref = parseInt(this._attr['font-size'].slice(0, -2))) != null ? _ref : 12;
@@ -1110,8 +1110,8 @@ Abstract classes, almost used like interfaces throughout the codebase
         height = fontSize * 1.04;
         _ref1 = this._attr.text;
         for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          char = _ref1[_i];
-          if (__indexOf.call(",.1", char) >= 0) {
+          character = _ref1[_i];
+          if (__indexOf.call(",.1", character) >= 0) {
             width += fontSize / 4;
           } else {
             width += fontSize;
@@ -6602,7 +6602,7 @@ of a dataset, or knows how to retrieve data from some source.
         hasFnStr = false;
       } else {
         hasFnStr = true;
-        compute = new Function('d', "with(this) { with(d) { return " + (fnstr('' ? "" : fnstr)) + ";}}");
+        compute = new Function('d', "with(this) { with(d) { return " + (fnstr || '""') + ";}}");
       }
       _ref = this.raw;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
