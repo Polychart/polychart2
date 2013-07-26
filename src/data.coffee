@@ -284,7 +284,7 @@ class FrontendData extends AbstractData
       hasFnStr = false
     else
       hasFnStr = true
-      compute = new Function('d', "with(this) { with(d) { return #{fnstr if '' then "" else fnstr};}}")
+      compute = new Function('d', "with(this) { with(d) { return #{fnstr or '""'};}}")
 
     for item in @raw
       value = compute.call context,item
