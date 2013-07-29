@@ -3486,13 +3486,21 @@ Helper functions to legends & axes for generating ticks
       };
     },
     'num': function(domain, numticks) {
-      var max, min, step, ticks, tmp;
+      var bw, max, min, step, ticks, tmp;
 
-      min = domain.min, max = domain.max;
-      step = getStep(max - min, numticks);
-      tmp = Math.ceil(min / step) * step;
+      min = domain.min, max = domain.max, bw = domain.bw;
+      if (bw) {
+        step = bw;
+        while ((max - min) / step > numticks * 1.4) {
+          step *= 2;
+        }
+        tmp = min;
+      } else {
+        step = getStep(max - min, numticks);
+        tmp = Math.ceil(min / step) * step;
+      }
       ticks = [];
-      while (tmp < max) {
+      while (tmp <= max) {
         ticks.push(tmp);
         tmp += step;
       }
@@ -3542,17 +3550,24 @@ Helper functions to legends & axes for generating ticks
       };
     },
     'date': function(domain, numticks) {
-      var current, max, min, momentjsStep, secs, step, ticks, timeInSeconds, timeRange, _ref;
+      var bw, current, max, min, momentjsStep, secs, step, ticks, timeInSeconds, timeRange, _ref;
 
-      min = domain.min, max = domain.max;
-      secs = (max - min) / numticks;
-      step = 'decade';
-      _ref = poly["const"].approxTimeInSeconds;
-      for (timeRange in _ref) {
-        timeInSeconds = _ref[timeRange];
-        if (secs < timeInSeconds * 1.4) {
-          step = timeRange;
-          break;
+      min = domain.min, max = domain.max, bw = domain.bw;
+      if (bw) {
+        step = bw;
+        while ((max - min) / poly["const"].approxTimeInSeconds[bw] > numticks * 1.4) {
+          step = poly["const"].timerange[_.indexOf(poly["const"].timerange, bw) + 1];
+        }
+      } else {
+        secs = (max - min) / numticks;
+        step = 'decade';
+        _ref = poly["const"].approxTimeInSeconds;
+        for (timeRange in _ref) {
+          timeInSeconds = _ref[timeRange];
+          if (secs < timeInSeconds * 1.4) {
+            step = timeRange;
+            break;
+          }
         }
       }
       ticks = [];
@@ -3578,7 +3593,7 @@ Helper functions to legends & axes for generating ticks
       if (current.unix() < min) {
         current.add(momentjsStep[0], momentjsStep[1]);
       }
-      while (current.unix() < max) {
+      while (current.unix() <= max) {
         ticks.push(current.unix());
         current.add(momentjsStep[0], momentjsStep[1]);
       }

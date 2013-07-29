@@ -13,13 +13,13 @@ test "domain: strict mode num & cat", ->
     layers: [ sampleLayer ]
     strict: true
     guides:
-      x: { type: 'num', min: 2, max: 4, bw : 3 }
+      x: { type: 'num', min: 0, max: 9, bw : 3 }
       y: { type: 'cat', levels: [1,2,3], labels: {1: 'One', 2: 'Five'} }
   graph = polyjs.debug.chart spec
   domains = graph.facet.panes[""].domains
   equal domains.x.type, 'num'
-  equal domains.x.min , 2
-  equal domains.x.max, 4
+  equal domains.x.min , 0
+  equal domains.x.max, 9
   equal domains.x.bw, 3
   equal domains.y.type, 'cat'
   deepEqual domains.y.levels, [1,2,3]
@@ -27,7 +27,7 @@ test "domain: strict mode num & cat", ->
 
   xticks = graph.scaleSet.axes.axes.x.ticks
   yticks = graph.scaleSet.axes.axes.y.ticks
-  deepEqual _.pluck(xticks, 'location'), [2, 2.5, 3, 3.5]
+  deepEqual _.pluck(xticks, 'location'), [0, 3, 6, 9]
   deepEqual _.pluck(yticks, 'location'), [3, 1, 2]
   deepEqual _.pluck(yticks, 'value'), [3, 'One', 'Five']
 

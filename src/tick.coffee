@@ -95,11 +95,17 @@ tickValues =
         ticks.push item
     ticks: ticks
   'num' : (domain, numticks) ->
-    {min, max} = domain
-    step = getStep max-min, numticks
-    tmp = Math.ceil(min/step) * step
+    {min, max, bw} = domain
+    if bw # there is binning
+      step = bw
+      while (max-min)/step > numticks*1.4
+        step*=2
+      tmp = min
+    else # no binning
+      step = getStep max-min, numticks
+      tmp = Math.ceil(min/step) * step
     ticks = []
-    while tmp < max
+    while tmp <= max
       ticks.push tmp
       tmp += step
     ticks: ticks
@@ -132,13 +138,18 @@ tickValues =
       tmp += step
     ticks: ticks
   'date' : (domain, numticks) ->
-    {min, max} = domain
-    secs = (max-min) / numticks
-    step = 'decade'
-    for timeRange, timeInSeconds of poly.const.approxTimeInSeconds
-      if secs < timeInSeconds*1.4
-        step = timeRange
-        break
+    {min, max, bw} = domain
+    if bw # there is binning
+      step = bw
+      while (max-min)/poly.const.approxTimeInSeconds[bw] > numticks*1.4
+        step = poly.const.timerange[_.indexOf(poly.const.timerange, bw)+1]
+    else # no binning
+      secs = (max-min) / numticks
+      step = 'decade'
+      for timeRange, timeInSeconds of poly.const.approxTimeInSeconds
+        if secs < timeInSeconds*1.4
+          step = timeRange
+          break
     ticks = []
     current = moment.unix(min).startOf(step)
     momentjsStep =
@@ -152,7 +163,7 @@ tickValues =
         else [step+'s', 1]
     if current.unix() < min
       current.add(momentjsStep[0], momentjsStep[1])
-    while current.unix() < max
+    while current.unix() <= max
       ticks.push current.unix()
       current.add(momentjsStep[0], momentjsStep[1])
     ticks: ticks

@@ -6552,6 +6552,27 @@
     return c = polyjs.chart(spec);
   };
 
+  this.examples.tiles2 = function(dom) {
+    var c, data, spec;
+
+    data = polyjs.data({
+      data: datafn()
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'tile',
+          x: 'bin(mod5, 1)',
+          y: 'bin(floor5,1)',
+          color: 'bin(value,3)'
+        }
+      ],
+      dom: dom
+    };
+    return c = polyjs.chart(spec);
+  };
+
   this.examples.tiles_bw = function(dom) {
     var c, data, spec;
 
