@@ -49,7 +49,7 @@ class PivotProcessedData
         restOfKeys = keys[1..]
         values = _.keys(item) # all possible values (or column headers)
         _.each @ticks[key].ticks, (tickValue, v) =>
-          if full or (tickValue.location in values)
+          if full or _.contains(values, ""+tickValue.location)
             indexV = _.clone(indexValues)
             indexV[key] = tickValue.value
             _recurse(accumulator, indexV, restOfKeys, item[tickValue.location])
