@@ -49,7 +49,7 @@ class ScaleSet
       else
         null
     scales = {}
-    # x 
+    # x
     scales.x =  poly.scale.make specScale('x') ? {type: 'linear'}
     scales.x.make(domains.x, ranges.x, @getSpec('x').padding)
     # y

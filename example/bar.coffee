@@ -46,7 +46,7 @@
     else if type is 'tout'
       obj.shadow.remove()
   window.c = c
- 
+
 @examples.bar_missing = (dom) ->
   data = polyjs.data data: [
     {a: 4, b: 2, c: 'B'}

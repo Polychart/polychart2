@@ -296,7 +296,7 @@ one = () -> Math.random()*10
   setTimeout(redraw, 1000)
 
 
- 
+
  @examples.pointerr2 = (dom) ->
   spec = () ->
     jsondata = ({x:one(), y:one(), c:one()} for i in [0..10])

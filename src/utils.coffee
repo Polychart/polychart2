@@ -41,8 +41,8 @@ Intersets values when filter key is common to both objects, add all values other
 
   TODO: handle the case when no intersection exist from a given common key
 ###
-poly.intersect = (filter1, filter2) -> 
-  intersectList = (key) -> 
+poly.intersect = (filter1, filter2) ->
+  intersectList = (key) ->
     newList = []
     for elem in filter1[key]["in"]
       if elem in filter2[key]["in"]
@@ -90,7 +90,7 @@ poly.intersect = (filter1, filter2) ->
       newIneq[type] = val
 
     if lowers[0].type and uppers[0].type
-      # There exists a lower & upper bound 
+      # There exists a lower & upper bound
       if lowers[0].val > uppers[0].val or (lowers[0].val == uppers[0].val and (lowers[0].key is "lt" or uppers[0].key is "gt"))
         # Seems like its not an intersection afterall
         throw "No intersection found!"
@@ -111,7 +111,7 @@ poly.intersect = (filter1, filter2) ->
     unless key of newFilter
       newFilter[key] = val
   newFilter
-  
+
 ###
 Produces a linear function that passes through two points.
 Input:

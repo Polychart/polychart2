@@ -222,7 +222,7 @@ class Facet
 Take a processedData from the data processing step and group it for faceting
 purposes.
 
-Input is in the format: 
+Input is in the format:
 processData = {
   layer_id : { statData: [...], metaData: {...} }
   ...

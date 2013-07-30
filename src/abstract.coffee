@@ -23,7 +23,7 @@ screen, and what needs to be rendered.
             @geoms = {
               'id' : {
                 marks: {
-                  # an assoc array of renderable "marks", acceptable by 
+                  # an assoc array of renderable "marks", acceptable by
                   # poly.render() function
                 },
                 evtData: {

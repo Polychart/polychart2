@@ -24,7 +24,7 @@ def uglify_js(source, dest):
   except Exception as e:
     print "Unable to run local closure compiler."
     print "Running online closure compilation."
-    options = [ 
+    options = [
       '-d', 'output_info=compiled_code',
       '-d', 'output_info=warnings',
       '-d', 'output_info=errors',
@@ -32,7 +32,7 @@ def uglify_js(source, dest):
       '-d', 'output_format=json',
       '-d', 'compilation_level=SIMPLE_OPTIMIZATIONS',
     ]
-    cmd = ['curl'] + options + [ 
+    cmd = ['curl'] + options + [
       '--data-urlencode', ('js_code@%s' % source),
       "http://closure-compiler.appspot.com/compile"
     ]
