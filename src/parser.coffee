@@ -254,9 +254,12 @@ pivotToDataSpec = (lspec) ->
         groups.push desc.var
       if 'sort' of desc
         sdesc = dictGets(desc, poly.const.metas)
-        sexpr = parse sdesc.sort
-        sdesc.sort = sexpr.pretty() # normalize name
-        result = extractOps sexpr
+        if sdesc.sort is 'count(*)'
+          result = {sort: 'count(*)', asc: sdesc.asc, stat: [], trans: []}
+        else
+          sexpr = parse sdesc.sort
+          sdesc.sort = sexpr.pretty() # normalize name
+          result = extractOps sexpr
         if result.stat.length isnt 0
           sdesc.stat = result.stat[0]
         metas[desc.var] = sdesc
