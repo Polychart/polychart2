@@ -790,7 +790,7 @@ Abstract classes, almost used like interfaces throughout the codebase
               @geoms = {
                 'id' : {
                   marks: {
-                    # an assoc array of renderable "marks", acceptable by 
+                    # an assoc array of renderable "marks", acceptable by
                     # poly.render() function
                   },
                   evtData: {
@@ -6748,16 +6748,19 @@ of a dataset, or knows how to retrieve data from some source.
       var _this = this;
 
       return this.apiFun(dataSpec, function(err, blob) {
-        var data, e, meta, _ref, _ref1;
+        var data, e, error, meta, _ref, _ref1;
 
         if (err != null) {
           return callback(err, null);
         }
-        try {
-          blob = JSON.parse(blob);
-        } catch (_error) {
-          e = _error;
+        if (_.isString(blob)) {
+          try {
+            blob = JSON.parse(blob);
+          } catch (_error) {
+            e = _error;
+          }
         }
+        error = null;
         try {
           data = blob.data;
           meta = (_ref = blob.meta) != null ? _ref : {};
@@ -6776,11 +6779,11 @@ of a dataset, or knows how to retrieve data from some source.
             }
           })(), _this.key = _ref1.key, _this.raw = _ref1.raw, _this.meta = _ref1.meta;
           _this.data = _this.raw;
-          return callback(null, _this);
         } catch (_error) {
           e = _error;
-          return callback(e);
+          error = e;
         }
+        return callback(error, _this);
       });
     };
 
@@ -10011,7 +10014,7 @@ The functions here makes it easier to create common types of interactions.
   Take a processedData from the data processing step and group it for faceting
   purposes.
   
-  Input is in the format: 
+  Input is in the format:
   processData = {
     layer_id : { statData: [...], metaData: {...} }
     ...

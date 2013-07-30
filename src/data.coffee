@@ -356,10 +356,13 @@ class ApiData extends AbstractData
   getData: (callback, dataSpec) =>
     @apiFun dataSpec, (err, blob) =>
       if err? then return callback err, null
-      try
-        blob = JSON.parse(blob)
-      catch e
 
+      if _.isString(blob)
+        try
+          blob = JSON.parse(blob)
+        catch e
+
+      error = null
       try
         # Need to merge this with above code
         data = blob.data
@@ -373,9 +376,9 @@ class ApiData extends AbstractData
             else
               throw poly.error.data "Unknown data format."
         @data = @raw
-        callback null, @
       catch e
-        callback e
+        error = e
+      callback error, @
   update: (params) ->
     @raw = null
     super()
