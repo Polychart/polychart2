@@ -3555,8 +3555,8 @@ Helper functions to legends & axes for generating ticks
       min = domain.min, max = domain.max, bw = domain.bw;
       if (bw) {
         step = bw;
-        while ((max - min) / poly["const"].approxTimeInSeconds[bw] > numticks * 1.4) {
-          step = poly["const"].timerange[_.indexOf(poly["const"].timerange, bw) + 1];
+        while (step !== 'decade' && (max - min) / poly["const"].approxTimeInSeconds[step] > numticks * 1.4) {
+          step = poly["const"].timerange[_.indexOf(poly["const"].timerange, step) + 1];
         }
       } else {
         secs = (max - min) / numticks;
