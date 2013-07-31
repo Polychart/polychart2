@@ -177,8 +177,8 @@ class Path extends Layer
         marks:
           0:
             type: 'path'
-            x: _.map data, (item) => @_getValue item, 'x'
-            y: _.map data, (item) => @_getValue item, 'y'
+            x: _.map(data, (item) => @_getValue item, 'x')
+            y: _.map(data, (item) => @_getValue item, 'y')
             color: @_getValue sample, 'color'
             opacity: @_getValue sample, 'opacity'
             size: @_getValue sample, 'size'
