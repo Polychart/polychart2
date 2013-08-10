@@ -21,6 +21,9 @@ test "expressions", ->
   equal polyjs.debug.parser.tokenize('log(mean(sum(A_0), 10), 2.7188, CCC)').toString(), '<symbol,log>,<(>,<symbol,mean>,<(>,<symbol,sum>,<(>,<symbol,A_0>,<)>,<,>,<literal,10>,<)>,<,>,<literal,2.7188>,<,>,<symbol,CCC>,<)>'
   equal polyjs.debug.parser.parse('log(mean(sum(A_0), 10), 2.7188, CCC)').toString(), 'Call(log,[Call(mean,[Call(sum,[Ident(A_0)]),Const(10)]),Const(2.7188),Ident(CCC)])'
 
+  equal polyjs.debug.parser.parse('[this is one identifier]').toString(), 'Ident(this is one identifier)'
+  equal polyjs.debug.parser.parse('[this is \\[also\\] one identifier]').toString(), 'Ident(this is [also] one identifier)'
+
   equal polyjs.debug.parser.tokenize('this(should, break').toString(), '<symbol,this>,<(>,<symbol,should>,<,>,<symbol,break>'
   try
     polyjs.debug.parser.parse('this(should, break').toString()
@@ -66,7 +69,7 @@ test "extraction: simple, one stat (smoke test)", ->
   deepEqual parser.filter, {}
   deepEqual parser.sort, {}
   deepEqual parser.select, ['a', 'sum(b)']
-  deepEqual parser.stats.stats, [key:'b', stat:'sum',name:'sum(b)']
+  deepEqual parser.stats.stats, [key:'b', stat:'sum', name:'sum(b)']
   deepEqual parser.stats.groups, ['a']
   deepEqual parser.trans, []
 
