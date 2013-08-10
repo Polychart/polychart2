@@ -51,7 +51,7 @@ class Stream
 
 class Token
   @Tag = {
-    symbol: 'symbol', literal: 'literal',
+    symbol: 'symbol', literal: 'literal', infixsymbol: 'infixsymbol',
     lparen: '(', rparen: ')', comma: ','}
   constructor: (@tag) ->
   toString: -> "<#{@contents().toString()}>"
@@ -64,9 +64,16 @@ class Symbol extends Token
 class Literal extends Token
   constructor: (@val) -> super Token.Tag.literal
   contents: -> super().concat([@val])
+class InfixSymbol extends Token
+  constructor: (@op) -> super Token.Tag.infixsymbol
+  contents: -> super().concat([@op])
 [LParen, RParen, Comma] = (new Token(tag) for tag in [
   Token.Tag.lparen, Token.Tag.rparen, Token.Tag.comma])
 
+# ordered from highest to lowest precedence for both tokenizing and grouping
+infixops = ['++', '*', '/', '%', '+', '-']
+infixpats = ((str.replace /[+*]/g, (m) -> '(\\' + m + ')') for str in infixops)
+infixpat = new RegExp('^(' + infixpats.join('|') + ')')
 tokenizers = [
   [/^\(/, () -> LParen],
   [/^\)/, () -> RParen],
@@ -78,6 +85,8 @@ tokenizers = [
   # TODO: quotes used to define category literals
   #[/^(\w|[^\u0000-\u0080])+|'((\\.)|[^\\'])+'|"((\\.)|[^\\"])+"/,
    #(name) -> new Symbol(name)],
+  # placed after numeric literal pattern to avoid ambiguity with +/-
+  [infixpat, (op) -> new InfixSymbol(op)],
 ]
 matchToken = (str) ->
   for [pat, op] in tokenizers
