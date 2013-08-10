@@ -1,12 +1,12 @@
 ###############################################################################
 # utilities
 ###############################################################################
-unquote = (str, quote) ->
+bracket = (str) -> '[' + str.replace(/[\[\]]/g, (match) -> '\\' + match) + ']'
+unbracket = (str) ->
   n = str.length
-  for quote in ['"', "'"]
-    if str[0] is quote and str[n-1] is quote
-      return str[1..(n-2)]
-  return str
+  if str[0] is '[' and str[n-1] is ']'
+    str = str[1..(n-2)]
+  return str.replace /\\./g, (match) -> match[1..]
 zipWith = (op) -> (xs, ys) ->
   #if xs.length isnt ys.length
   #  trow some error ("zipWith: lists have different length: [#{xs}], [#{ys}]")
@@ -58,13 +58,11 @@ class Token
   contents: -> [@tag]
 class Symbol extends Token
   constructor: (@name) ->
-    @name = unquote @name
+    @name = unbracket @name
     super Token.Tag.symbol
   contents: -> super().concat([@name])
 class Literal extends Token
-  constructor: (@val) ->
-    @val = unquote @val
-    super Token.Tag.literal
+  constructor: (@val) -> super Token.Tag.literal
   contents: -> super().concat([@val])
 [LParen, RParen, Comma] = (new Token(tag) for tag in [
   Token.Tag.lparen, Token.Tag.rparen, Token.Tag.comma])
@@ -75,8 +73,11 @@ tokenizers = [
   [/^,/, () -> Comma],
   [/^[+-]?(0x[0-9a-fA-F]+|0?\.\d+|[1-9]\d*(\.\d+)?|0)([eE][+-]?\d+)?/,
    (val) -> new Literal(val)],
-  [/^(\w|[^\u0000-\u0080])+|'((\\.)|[^\\'])+'|"((\\.)|[^\\"])+"/,
+  [/^(\w|[^\u0000-\u0080])+|\[((\\.)|[^\\\[\]])+\]/,
    (name) -> new Symbol(name)],
+  # TODO: quotes used to define category literals
+  #[/^(\w|[^\u0000-\u0080])+|'((\\.)|[^\\'])+'|"((\\.)|[^\\"])+"/,
+   #(name) -> new Symbol(name)],
 ]
 matchToken = (str) ->
   for [pat, op] in tokenizers
@@ -97,8 +98,8 @@ class Expr
 class Ident extends Expr
   constructor: (@name) ->
   contents: -> [@name]
-  pretty: -> @name
-  visit: (visitor) -> visitor.ident(@, @name)
+  pretty: -> bracket @name
+  visit: (visitor) -> visitor.ident(@, unbracket @name)
 class Const extends Expr
   constructor: (@val) ->
   contents: -> [@val]
@@ -107,9 +108,9 @@ class Const extends Expr
 class Call extends Expr
   constructor: (@fname, @args) ->
   contents: -> [@fname, showList(@args)]
-  pretty: -> showCall(@fname, arg.pretty() for arg in @args)
+  pretty: -> showCall(bracket @fname, arg.pretty() for arg in @args)
   visit: (visitor) ->
-    visitor.call(@, @fname, arg.visit(visitor) for arg in @args)
+    visitor.call(@, unbracket @fname, arg.visit(visitor) for arg in @args)
 
 expect = (stream, fail, alts) ->
   token = stream.peek()
