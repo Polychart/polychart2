@@ -8,13 +8,10 @@ class DataProcess
   constructor: (layerSpec, grouping, strictmode, @parseMethod=poly.parser.layerToData) ->
     @layerMeta = layerSpec.meta
     @dataObj = layerSpec.data
-    @initialSpec = @parseMethod layerSpec, grouping
     @prevSpec = null
     @strictmode = strictmode
     @statData = null
     @metaData = {}
-
-  reset : (callback) -> @make @initialSpec, callback
 
   ## calculate things...
   make : (spec, grouping, callback) =>

@@ -6829,16 +6829,11 @@ data processing to be done.
       this.make = __bind(this.make, this);
       this.layerMeta = layerSpec.meta;
       this.dataObj = layerSpec.data;
-      this.initialSpec = this.parseMethod(layerSpec, grouping);
       this.prevSpec = null;
       this.strictmode = strictmode;
       this.statData = null;
       this.metaData = {};
     }
-
-    DataProcess.prototype.reset = function(callback) {
-      return this.make(this.initialSpec, callback);
-    };
 
     DataProcess.prototype.make = function(spec, grouping, callback) {
       var dataSpec, wrappedCallback;

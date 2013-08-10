@@ -323,3 +323,19 @@
     dom: dom
   }
   c = polyjs.chart spec
+
+@examples.multi_word = (dom) ->
+  data = polyjs.data
+    "Hello world": ['a']
+    "Bye": [1]
+  spec = {
+    layers: [
+      data: data
+      type: 'bar'
+      x: '"Hello world"'
+      y: 'sum("Bye")'
+    ]
+    dom: dom
+  }
+  c = polyjs.chart spec
+
