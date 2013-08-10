@@ -8,8 +8,8 @@ unbracket = (str) ->
     str = str[1..(n-2)]
   return str.replace /\\./g, (match) -> match[1..]
 zipWith = (op) -> (xs, ys) ->
-  #if xs.length isnt ys.length
-  #  trow some error ("zipWith: lists have different length: [#{xs}], [#{ys}]")
+  if xs.length isnt ys.length
+    throw poly.error.defn("zipWith: lists have different length: [#{xs}], [#{ys}]")
   op(xval, ys[ix]) for xval, ix in xs
 zip = zipWith (xval, yval) -> [xval, yval]
 assocsToObj = (assocs) ->
@@ -99,7 +99,7 @@ class Ident extends Expr
   constructor: (@name) ->
   contents: -> [@name]
   pretty: -> bracket @name
-  visit: (visitor) -> visitor.ident(@, unbracket @name)
+  visit: (visitor) -> visitor.ident(@, @name)
 class Const extends Expr
   constructor: (@val) ->
   contents: -> [@val]
@@ -110,7 +110,7 @@ class Call extends Expr
   contents: -> [@fname, showList(@args)]
   pretty: -> showCall(bracket @fname, arg.pretty() for arg in @args)
   visit: (visitor) ->
-    visitor.call(@, unbracket @fname, arg.visit(visitor) for arg in @args)
+    visitor.call(@, @fname, arg.visit(visitor) for arg in @args)
 
 expect = (stream, fail, alts) ->
   token = stream.peek()
@@ -154,8 +154,8 @@ parseCallArgs = (acc) -> (stream) ->
 extractOps = (expr) ->
   results = { trans: [], stat: [] }
   extractor = {
-    ident: (expr, name) -> name,
-    const: (expr, val) -> val,
+    ident: (expr, name) -> expr,
+    const: (expr, val) -> expr,
     call: (expr, fname, args) ->
       optype =
         if fname of poly.const.trans
@@ -167,7 +167,7 @@ extractOps = (expr) ->
       if optype isnt 'none'
         opargs = poly.const[optype][fname]
         result = assocsToObj zip(opargs, args)
-        result.name = expr.pretty()
+        result.name = expr
         result[optype] = fname
         results[optype].push result
         result.name
@@ -180,8 +180,7 @@ extractOps = (expr) ->
 layerToDataSpec = (lspec, grouping=[]) ->
   filters = {}
   for key, val of lspec.filter ? {}
-    filters[(parse key).pretty()] = val # normalize name
-  grouping = ((parse key.var).pretty() for key in grouping) # normalize name
+    filters[parse key] = val
   aesthetics = _.pick lspec, poly.const.aes
   for key of aesthetics
     if 'var' not of aesthetics[key]
@@ -191,9 +190,8 @@ layerToDataSpec = (lspec, grouping=[]) ->
     if desc.var is 'count(*)'
       select.push desc.var
     else
-      expr = parse desc.var
-      desc.var = expr.pretty() # normalize name
-      ts = extractOps expr
+      desc.var = parse desc.var
+      ts = extractOps desc.var
       transstat.push ts
       select.push desc.var
       if ts.stat.length is 0
@@ -203,16 +201,14 @@ layerToDataSpec = (lspec, grouping=[]) ->
         if sdesc.sort is 'count(*)'
           result = {sort: 'count(*)', asc: sdesc.asc, stat: [], trans: []}
         else
-          sexpr = parse sdesc.sort
-          sdesc.sort = sexpr.pretty() # normalize name
-          result = extractOps sexpr
+          sdesc.sort = parse sdesc.sort
+          result = extractOps sdesc.sort
         if result.stat.length isnt 0
           sdesc.stat = result.stat[0]
         metas[desc.var] = sdesc
   for grpvar in grouping
-    expr = parse grpvar
-    grpvar = expr.pretty() # normalize name
-    ts = extractOps expr
+    grpvar = parse grpvar
+    ts = extractOps grpvar
     transstat.push ts
     select.push grpvar
     if ts.stat.length is 0
@@ -231,7 +227,7 @@ layerToDataSpec = (lspec, grouping=[]) ->
 pivotToDataSpec = (lspec) ->
   filters = {}
   for key, val of lspec.filter ? {}
-    filters[(parse key).pretty()] = val # normalize name
+    filters[parse key] = val
 
   aesthetics = _.pick lspec, ['columns', 'rows', 'values']
   aesthetics_list = []
@@ -246,9 +242,8 @@ pivotToDataSpec = (lspec) ->
     if desc.var is 'count(*)'
       select.push desc.var
     else
-      expr = parse desc.var
-      desc.var = expr.pretty() # normalize name
-      ts = extractOps expr
+      desc.var = parse desc.var
+      ts = extractOps desc.var
       transstat.push ts
       select.push desc.var
       if ts.stat.length is 0
@@ -258,9 +253,8 @@ pivotToDataSpec = (lspec) ->
         if sdesc.sort is 'count(*)'
           result = {sort: 'count(*)', asc: sdesc.asc, stat: [], trans: []}
         else
-          sexpr = parse sdesc.sort
-          sdesc.sort = sexpr.pretty() # normalize name
-          result = extractOps sexpr
+          sdesc.sort = parse sdesc.sort
+          result = extractOps sdesc.sort
         if result.stat.length isnt 0
           sdesc.stat = result.stat[0]
         metas[desc.var] = sdesc
@@ -275,7 +269,7 @@ pivotToDataSpec = (lspec) ->
 numeralToDataSpec = (lspec) ->
   filters = {}
   for key, val of lspec.filter ? {}
-    filters[(parse key).pretty()] = val # normalize name
+    filters[parse key] = val # normalize name
   aesthetics = _.pick lspec, ['value']
   for key of aesthetics
     if 'var' not of aesthetics[key]
@@ -285,18 +279,16 @@ numeralToDataSpec = (lspec) ->
     if desc.var is 'count(*)'
       select.push desc.var
     else
-      expr = parse desc.var
-      desc.var = expr.pretty() # normalize name
-      ts = extractOps expr
+      desc.var = parse desc.var
+      ts = extractOps desc.var
       transstat.push ts
       select.push desc.var
       if ts.stat.length is 0
         groups.push desc.var
       if 'sort' of desc
         sdesc = dictGets(desc, poly.const.metas)
-        sexpr = parse sdesc.sort
-        sdesc.sort = sexpr.pretty() # normalize name
-        result = extractOps sexpr
+        sdesc.sort = parse sdesc.sort
+        result = extractOps sdesc.sort
         if result.stat.length isnt 0
           sdesc.stat = result.stat[0]
         metas[desc.var] = sdesc
