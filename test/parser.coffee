@@ -43,6 +43,35 @@ test "expressions", ->
   catch e
     equal e.message, "There is an error in your specification at Stream([<symbol,should>,<symbol,break>])"
 
+parserEqual = (produced, expected) ->
+  parse = polyjs.debug.parser.parse
+  filter = {}
+  for key, val of expected.filter
+    filter[parse key] = val
+  deepEqual produced.filter, filter
+  sort = {}
+  for key, val of expected.sort
+    if 'sort' of val
+      val.sort = parse val.sort
+    sort[parse key] = val
+  deepEqual produced.sort, sort
+  deepEqual produced.select, (parse str for str in expected.select)
+  deepEqual produced.stats.groups, (parse str for str in expected.groups)
+  fix = (keyword, dict) ->
+    result = []
+    for item in dict
+      newitem = {}
+      for key, val of item
+        if key isnt keyword
+          newitem[key] = parse val
+      newitem[keyword] = item[keyword]
+      result.push newitem
+    result
+  stats = fix('stat', expected.stats)
+  deepEqual produced.stats.stats, stats
+  trans = fix('trans', expected.trans)
+  deepEqual produced.trans, trans
+
 test "extraction: nothing (smoke test)", ->
   layerparser = {
     type: "point",
@@ -52,26 +81,18 @@ test "extraction: nothing (smoke test)", ->
     opacity: {var: "c"},
   }
   parser = polyjs.debug.parser.layerToData layerparser
-  deepEqual parser.filter, {}
-  deepEqual parser.sort, {}
-  deepEqual parser.select, ['a', 'b', 'c']
-  deepEqual parser.stats.stats, []
-  deepEqual parser.trans, []
+  expected = {filter: {}, sort: {}, select: ['a', 'b', 'c'], groups: ['a', 'b', 'c'], stats: [], trans: []}
+  parserEqual parser, expected
 
 test "extraction: simple, one stat (smoke test)", ->
-  debugger
   layerparser = {
     type: "point",
     x: {var: "a"},
     y: {var: "sum(b)"},
   }
   parser = polyjs.debug.parser.layerToData layerparser
-  deepEqual parser.filter, {}
-  deepEqual parser.sort, {}
-  deepEqual parser.select, ['a', 'sum(b)']
-  deepEqual parser.stats.stats, [key:'b', stat:'sum', name:'sum(b)']
-  deepEqual parser.stats.groups, ['a']
-  deepEqual parser.trans, []
+  expected = {filter: {}, sort: {}, select: ['a', 'sum(b)'], groups: ['a'], stats: [{key:'b', stat:'sum', name:'sum(b)'}], trans: []}
+  parserEqual parser, expected
 
 test "extraction: stats", ->
   layerparser = {
@@ -83,12 +104,8 @@ test "extraction: stats", ->
     filter: {a: {gt: 0, lt: 100}},
   }
   parser = polyjs.debug.parser.layerToData layerparser
-  deepEqual parser.filter, layerparser.filter
-  deepEqual parser.sort, {b: {sort:'a', asc:false}}
-  deepEqual parser.select, ['a', 'b', 'sum(c)']
-  deepEqual parser.stats.groups, ['a','b']
-  deepEqual parser.stats.stats, [key:'c', name:'sum(c)', stat:'sum']
-  deepEqual parser.trans, []
+  expected = {filter: layerparser.filter, sort: {b: {sort:'a', asc:false}}, select: ['a', 'b', 'sum(c)'], groups: ['a', 'b'], stats: [key:'c', name:'sum(c)', stat:'sum'], trans: []}
+  parserEqual parser, expected
 
 test "extraction: transforms", ->
   layerparser = {
@@ -100,12 +117,8 @@ test "extraction: transforms", ->
     filter: {a: {gt: 0, lt: 100}},
   }
   parser = polyjs.debug.parser.layerToData layerparser
-  deepEqual parser.filter, layerparser.filter
-  deepEqual parser.sort, {b: {sort:'a', asc:false}}
-  deepEqual parser.select, ['lag(a,1)', 'b', 'sum(c)']
-  deepEqual parser.stats.groups, ['lag(a,1)', 'b']
-  deepEqual parser.stats.stats, [key:'c', name:'sum(c)', stat:'sum']
-  deepEqual parser.trans, [key:'a', lag:'1', name:'lag(a,1)', trans:'lag']
+  expected = {filter: layerparser.filter, sort: {b: {sort:'a', asc:false}}, select: ['lag(a,1)', 'b', 'sum(c)'], groups: ['lag(a,1)', 'b'], stats: [key:'c', name:'sum(c)', stat:'sum'], trans: [key:'a', lag:'1', name:'lag(a,1)', trans:'lag']}
+  parserEqual parser, expected
 
   layerparser = {
     type: "point",
@@ -116,12 +129,8 @@ test "extraction: transforms", ->
     filter: {a: {gt: 0, lt: 100}},
   }
   parser = polyjs.debug.parser.layerToData layerparser
-  deepEqual parser.filter, layerparser.filter
-  deepEqual parser.sort, {b: {sort:'a', asc:true}}
-  deepEqual parser.select, ['bin(a,1)', 'b', 'sum(c)']
-  deepEqual parser.stats.groups, ['bin(a,1)', 'b']
-  deepEqual parser.stats.stats, [key:'c', name:'sum(c)', stat:'sum']
-  deepEqual parser.trans, [key:'a', binwidth:'1', name:'bin(a,1)', trans:'bin']
+  expected = {filter: layerparser.filter, sort: {b: {sort:'a', asc:true}}, select: ['bin(a,1)', 'b', 'sum(c)'], groups: ['bin(a,1)', 'b'], stats: [key:'c', name:'sum(c)', stat:'sum'], trans: [key:'a', binwidth:'1', name:'bin(a,1)', trans:'bin']}
+  parserEqual parser, expected
 
   layerparser =
     type: "point"
@@ -130,11 +139,7 @@ test "extraction: transforms", ->
     color: {var: "mean(lag(c,0))"}
     opacity: {var: "bin(a, 10)"}
   parser = polyjs.debug.parser.layerToData layerparser
-  deepEqual parser.select, ["bin(a,0.10)", "lag(c,-0xaF1)", "mean(lag(c,0))", "bin(a,10)"]
-  deepEqual parser.stats.groups, ["bin(a,0.10)", "lag(c,-0xaF1)", "bin(a,10)"]
-  deepEqual parser.stats.stats, [key: "lag(c,0)", name: "mean(lag(c,0))", stat: "mean" ]
-  deepEqual parser.trans,
-    [
+  expected = {filter: {}, sort: {}, select: ["bin(a,0.10)", "lag(c,-0xaF1)", "mean(lag(c,0))", "bin(a,10)"], groups: ["bin(a,0.10)", "lag(c,-0xaF1)", "bin(a,10)"], stats: [key: "lag(c,0)", name: "mean(lag(c,0))", stat: "mean" ], trans: [
       {
         "key": "a",
         "binwidth": "10",
@@ -159,7 +164,8 @@ test "extraction: transforms", ->
         "name": "bin(a,0.10)",
         "trans": "bin"
       }
-    ]
+    ]}
+  parserEqual parser, expected
 
 test "extraction: UTF8", ->
   layerparser=
@@ -169,5 +175,5 @@ test "extraction: UTF8", ->
     color: {var: "mean(lag(c, -1))"}
     opacity: {var: "bin(\"a-+->\\\"b\", '漢\\\'字')"}
   parser = polyjs.debug.parser.layerToData layerparser
-  deepEqual parser.select, ["bin(汉字漢字,10.4e20", "lag(',f+/\\\'c',-1", "mean(lag(c,-1))", "bin(\"a-+->\\\"b\", '漢\\\'字')"]
+  deepEqual parser.select, (polyjs.debug.parser.parse str for str in ["bin(汉字漢字,10.4e20", "lag(',f+/\\\'c',-1", "mean(lag(c,-1))", "bin(\"a-+->\\\"b\", '漢\\\'字')"])
 
