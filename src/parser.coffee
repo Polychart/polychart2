@@ -44,29 +44,29 @@ showList = (xs) -> "[#{xs}]"
 ###############################################################################
 class Stream
   constructor: (src) -> @buffer = (val for val in src).reverse()
-  empty: -> @buffer.length is 0
-  peek: -> if @empty() then null else @buffer[@buffer.length - 1]
-  get: -> if @empty() then null else @buffer.pop()
-  toString: -> showCall('Stream', showList([@buffer...].reverse()))
+  empty: => @buffer.length is 0
+  peek: => if @empty() then null else @buffer[@buffer.length - 1]
+  get: => if @empty() then null else @buffer.pop()
+  toString: => showCall('Stream', showList([@buffer...].reverse()))
 
 class Token
   @Tag = {
     symbol: 'symbol', literal: 'literal', infixsymbol: 'infixsymbol',
     lparen: '(', rparen: ')', comma: ','}
   constructor: (@tag) ->
-  toString: -> "<#{@contents().toString()}>"
-  contents: -> [@tag]
+  toString: => "<#{@contents().toString()}>"
+  contents: => [@tag]
 class Symbol extends Token
   constructor: (@name) ->
     @name = unbracket @name
     super Token.Tag.symbol
-  contents: -> super().concat([@name])
+  contents: => super().concat([@name])
 class Literal extends Token
   constructor: (@val) -> super Token.Tag.literal
-  contents: -> super().concat([@val])
+  contents: => super().concat([@val])
 class InfixSymbol extends Token
   constructor: (@op) -> super Token.Tag.infixsymbol
-  contents: -> super().concat([@op])
+  contents: => super().concat([@op])
 [LParen, RParen, Comma] = (new Token(tag) for tag in [
   Token.Tag.lparen, Token.Tag.rparen, Token.Tag.comma])
 
@@ -106,19 +106,19 @@ class Expr
   toString: -> showCall(@constructor.name, @contents())
 class Ident extends Expr
   constructor: (@name) ->
-  contents: -> [@name]
-  pretty: -> bracket @name
-  visit: (visitor) -> visitor.ident(@, @name)
+  contents: => [@name]
+  pretty: => bracket @name
+  visit: (visitor) => visitor.ident(@, @name)
 class Const extends Expr
   constructor: (@val) ->
-  contents: -> [@val]
-  pretty: -> @val
-  visit: (visitor) -> visitor.const(@, @val)
+  contents: => [@val]
+  pretty: => @val
+  visit: (visitor) => visitor.const(@, @val)
 class Call extends Expr
   constructor: (@fname, @args) ->
-  contents: -> [@fname, showList(@args)]
-  pretty: -> showCall(bracket @fname, arg.pretty() for arg in @args)
-  visit: (visitor) ->
+  contents: => [@fname, showList(@args)]
+  pretty: => showCall(bracket @fname, arg.pretty() for arg in @args)
+  visit: (visitor) =>
     visitor.call(@, @fname, arg.visit(visitor) for arg in @args)
 
 expect = (stream, fail, alts) ->
