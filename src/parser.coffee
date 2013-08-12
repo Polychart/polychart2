@@ -72,6 +72,7 @@ class InfixSymbol extends Token
 
 # ordered from highest to lowest precedence for both tokenizing and grouping
 infixops = ['++', '*', '/', '%', '+', '-']
+infixGTEQ = (lop, rop) -> infixops.indexOf(lop) <= infixops.indexOf(rop)
 infixpats = ((str.replace /[+*]/g, (m) -> '(\\' + m + ')') for str in infixops)
 infixpat = new RegExp('^(' + infixpats.join('|') + ')')
 tokenizers = [
@@ -120,42 +121,98 @@ class Call extends Expr
   pretty: => showCall(bracket @fname, arg.pretty() for arg in @args)
   visit: (visitor) =>
     visitor.call(@, @fname, arg.visit(visitor) for arg in @args)
+class InfixOp extends Expr
+  constructor: (@opsym, @lhs, @rhs) ->
+  contents: => [@lhs, @opsym, @rhs]
+  pretty: => '(' + [@lhs.pretty(), @opsym, @rhs.pretty()].join(' ') + ')'
+  visit: (visitor) =>
+    visitor.infixop(@, @opsym, @lhs.visit(visitor), @rhs.visit(visitor))
 
-expect = (stream, fail, alts) ->
-  token = stream.peek()
-  if token isnt null
-    for [tag, express] in alts
-      if token.tag is tag
-        return express(stream)
-  fail stream
-parseFail = (stream) ->
-  throw poly.error.defn("There is an error in your specification at #{stream.toString()}")
+class OpStack
+  constructor: -> @ops = []
+  _reduce: (rhs, pred) =>
+    while @ops.length isnt 0
+      [lhs, lop] = @ops.pop()
+      if pred(lop) then rhs = new InfixOp(lop, lhs, rhs)
+      else
+        @ops.push [lhs, lop]
+        break
+    rhs
+  push: (rhs, op) =>
+    pred = (lop) -> infixGTEQ(lop, op)
+    rhs = @_reduce(rhs, pred)
+    @ops.push [rhs, op]
+  finish: (rhs) =>
+    pred = (lop) -> true
+    @_reduce(rhs, pred)
+
+assertIs = (received, expected) ->
+  if received isnt expected
+    throw poly.error.defn("Expected #{expected} but received #{received}")
+assertTagIs = (received, tag) -> return assertIs(received.tag, tag)
+class Parser
+  constructor: (@stream) -> @ops = new OpStack()
+  expect: (fail, alts) =>
+    token = @stream.peek()
+    if token isnt null
+      for [tag, express] in alts
+        if token.tag in tag
+          return express()
+    fail()
+  parseFail: =>
+    throw poly.error.defn("There is an error in your specification at #{@stream.toString()}")
+  parseTopExpr: =>
+    expr = @parseExpr()
+    if @stream.peek() isnt null then @parseFail()
+    expr
+  parseSubExpr: =>
+    parser = new Parser(@stream)
+    parser.parseExpr()
+  parseExpr: =>
+    expr = @expect(@parseFail,
+      [[[Token.Tag.lparen], @parseParenExpr],
+       [[Token.Tag.literal, Token.Tag.symbol], @parseAtomCall]])
+    @expect(@parseFinish(expr),
+      [[[Token.Tag.infixsymbol], @parseInfix expr]])
+  parseParenExpr: =>
+    assertIs(@stream.get(), LParen)  # would be a bug
+    expr = @parseSubExpr()
+    assertIs(@stream.get(), RParen)  # bad user input
+    expr
+  parseAtomCall: =>
+    tok = @stream.get()
+    atom =
+      if tok.tag is Token.Tag.literal then new Const(tok.val)
+      else if tok.tag is Token.Tag.symbol then new Ident(tok.name)
+      else assertIs(false, true)  # would be a bug
+    @expect((() -> atom),
+      [[[Token.Tag.lparen], @parseCall tok]])
+  parseCall: (tok) => (stream) =>
+    assertTagIs(tok, Token.Tag.symbol)  # bad user input
+    assertIs(@stream.get(), LParen)  # would be a bug
+    name = tok.name
+    args = @expect((@parseCallArgs []),
+      [[[Token.Tag.rparen], (() => @stream.get(); [])]])
+    new Call(name, args)
+  parseCallArgs: (acc) => () =>
+    arg = @parseSubExpr()
+    args = acc.concat [arg]
+    @expect(@parseFail,
+      [[[Token.Tag.rparen], (() => @stream.get(); args)],
+       [[Token.Tag.comma], (() => @stream.get(); @parseCallArgs(args)())]])
+  parseInfix: (rhs) => () =>
+    optok = @stream.get()
+    assertTagIs(optok, Token.Tag.infixsymbol)  # would be a bug
+    op = optok.op
+    @ops.push(rhs, op)
+    @parseExpr()
+  parseFinish: (expr) => () =>
+    @ops.finish expr
+
 parse = (str) ->
-  stream = new Stream (tokenize str)
-  expr = parseExpr(stream)
-  if stream.peek() isnt null
-    throw poly.error.defn("There is an error in your specification at #{stream.toString()}")
-  expr
-parseExpr = (stream) ->
-  expect(stream, parseFail,
-    [[Token.Tag.literal, parseConst],
-     [Token.Tag.symbol, parseSymbolic]])
-parseConst = (stream) -> new Const (stream.get().val)
-parseSymbolic = (stream) ->
-  name = stream.get().name
-  expect(stream, (() -> new Ident name),
-    [[Token.Tag.lparen, parseCall name]])
-parseCall = (name) -> (stream) ->
-  stream.get() # lparen
-  args = expect(stream, (parseCallArgs []),
-    [[Token.Tag.rparen, (ts) -> ts.get(); []]])
-  new Call(name, args)
-parseCallArgs = (acc) -> (stream) ->
-  arg = parseExpr stream
-  args = acc.concat [arg]
-  expect(stream, parseFail,
-    [[Token.Tag.rparen, (ts) -> ts.get(); args],
-     [Token.Tag.comma, (ts) -> ts.get(); (parseCallArgs args) ts]])
+  stream = new Stream(tokenize str)
+  parser = new Parser(stream)
+  parser.parseTopExpr()
 
 ###############################################################################
 # layerSpec -> dataSpec

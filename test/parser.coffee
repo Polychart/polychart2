@@ -25,6 +25,10 @@ test "expressions", ->
   equal polyjs.debug.parser.parse('[this is \\[also\\] one identifier]').toString(), 'Ident(this is [also] one identifier)'
 
   equal polyjs.debug.parser.tokenize('(3 + four * 5 - 6 / 7 % 8) ++ nine').toString(), '<(>,<literal,3>,<infixsymbol,+>,<symbol,four>,<infixsymbol,*>,<literal,5>,<infixsymbol,->,<literal,6>,<infixsymbol,/>,<literal,7>,<infixsymbol,%>,<literal,8>,<)>,<infixsymbol,++>,<symbol,nine>'
+  equal polyjs.debug.parser.parse('3 + four * 5 - six').pretty(), '((3 + ([four] * 5)) - [six])'
+  equal polyjs.debug.parser.parse('3 - four * 5 + six').pretty(), '(3 - (([four] * 5) + [six]))'
+  equal polyjs.debug.parser.parse('(3 + four * 5 - 6 / 7 % 8) ++ nine').pretty(), '(((3 + ([four] * 5)) - ((6 / 7) % 8)) ++ [nine])'
+  equal polyjs.debug.parser.parse('3 + four * 5 - 6 / 7 % 8 ++ nine').pretty(), '((3 + ([four] * 5)) - ((6 / 7) % (8 ++ [nine])))'
 
   equal polyjs.debug.parser.tokenize('this(should, break').toString(), '<symbol,this>,<(>,<symbol,should>,<,>,<symbol,break>'
   try
