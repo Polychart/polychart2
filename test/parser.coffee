@@ -1,5 +1,7 @@
 module "parsers"
 test "expressions", ->
+  equal polyjs.debug.parser.tc('4 + 5').toString(), ''
+  #polyjs.debug.parser.ttc()
   equal polyjs.debug.parser.tokenize('A').toString(), '<symbol,A>'
   equal polyjs.debug.parser.parse('A').toString(), 'Ident(A)'
 

@@ -40,6 +40,56 @@ showCall = (fname, args) -> "#{fname}(#{args})"
 showList = (xs) -> "[#{xs}]"
 
 ###############################################################################
+# data types
+###############################################################################
+class DataTypeError
+  constructor: (@msg) ->
+
+class DataType
+  constructor: (@name) ->
+  error: (context, msg) =>
+    #cmp = ("(#{t0.toString()} vs. #{t1.toString()})" for [t0, t1] in context)
+    cmp = ("(#{t0} vs. #{t1})" for [t0, t1] in context)
+    cmp.reverse()
+    comparison = cmp.join(' in ')
+    throw new DataTypeError(msg + ': ' + comparison)
+  mismatch: (context) => @error(context, 'type mismatch')
+  unify: (type) => type._known_unify(@)
+  _known_unify: (type) =>
+    @_runify([], type)
+    @
+  _runify: (context, type) => @_unify(context.concat([[@toString(), type.toString()]]), type)
+  _unify: (context, type) => if @name isnt type.name then @mismatch(context)
+class UnknownType extends DataType
+  constructor: ->
+    super '?'
+    @found = null
+  toString: =>
+    if @found is null then '?'
+    else @found.toString()
+  unify: (type) => @_known_unify(type)
+  _unify: (context, type) =>
+    if @found is null then @found = type
+    else @found._unify(context, type)
+class BaseType extends DataType
+  toString: => "#{@name}"
+class FuncType extends DataType
+  constructor: (@domains, @range) -> super '->'
+  toString: =>
+    domains = (domain.toString() for domain in @domains).join(', ')
+    "([#{domains}] -> #{@range})"
+  _unify: (context, type) =>
+    super(context, type)
+    if @domains.length isnt type.domains.length
+      @error(context, 'function domains differ in length')
+    for [d0, d1] in zip(@domains, type.domains)
+      d0._runify(context, d1)
+    @range._runify(context, type.range)
+
+DataType.Base = assocsToObj([n, new BaseType(s)] for n, s of {
+  cat: 'cat', num: 'num', date: 'date', stat: 'stat'})
+
+###############################################################################
 # parsing
 ###############################################################################
 class Stream
@@ -62,7 +112,7 @@ class Symbol extends Token
     super Token.Tag.symbol
   contents: => super().concat([@name])
 class Literal extends Token
-  constructor: (@val) -> super Token.Tag.literal
+  constructor: (@val, @type) -> super Token.Tag.literal
   contents: => super().concat([@val])
 class InfixSymbol extends Token
   constructor: (@op) -> super Token.Tag.infixsymbol
@@ -88,7 +138,7 @@ tokenizers = [
   [/^\)/, () -> RParen],
   [/^,/, () -> Comma],
   [/^[+-]?(0x[0-9a-fA-F]+|0?\.\d+|[1-9]\d*(\.\d+)?|0)([eE][+-]?\d+)?/,
-   (val) -> new Literal(val)],
+   (val) -> new Literal(val, DataType.Base.num)],
   [/^(\w|[^\u0000-\u0080])+|\[((\\.)|[^\\\[\]])+\]/, symbolOrKeyword],
   # TODO: quotes used to define category literals
   #[/^(\w|[^\u0000-\u0080])+|'((\\.)|[^\\'])+'|"((\\.)|[^\\"])+"/,
@@ -118,10 +168,10 @@ class Ident extends Expr
   pretty: => bracket @name
   visit: (visitor) => visitor.ident(@, @name)
 class Const extends Expr
-  constructor: (@val) ->
+  constructor: (@val, @vtype) ->
   contents: => [@val]
   pretty: => @val
-  visit: (visitor) => visitor.const(@, @val)
+  visit: (visitor) => visitor.const(@, @val, @vtype)
 class Call extends Expr
   constructor: (@fname, @args) ->
   contents: => [@fname, showList(@args)]
@@ -216,7 +266,7 @@ class Parser
   parseAtomCall: =>
     tok = @stream.get()
     atom =
-      if tok.tag is Token.Tag.literal then new Const(tok.val)
+      if tok.tag is Token.Tag.literal then new Const(tok.val, tok.type)
       else if tok.tag is Token.Tag.symbol then new Ident(tok.name)
       else assertIs(false, true)  # would be a bug
     @expect((() -> atom),
@@ -249,13 +299,42 @@ parse = (str) ->
   parser.parseTopExpr()
 
 ###############################################################################
+# type analysis
+###############################################################################
+exprType = (tenv, expr) ->
+  tapply = (fname, targs) ->
+    tfunc = tenv[fname]
+    tresult = new UnknownType
+    tfunc.unify(new FuncType(targs, tresult))
+    tresult.found
+  extractor = {
+    ident: (expr, name) -> tenv[name],
+    const: (expr, val, type) -> type,
+    call: (expr, fname, targs) -> tapply(fname, targs)
+    infixop: (expr, opname, tlhs, trhs) -> tapply(opname, [tlhs, trhs])
+    conditional: (expr, tcond, tconseq, taltern) ->
+      tcond.unify DataType.Base.num
+      tconseq.unify taltern
+      tconseq
+  }
+  expr.visit(extractor)
+
+tcat = DataType.Base.cat
+tnum = DataType.Base.num
+pairNumToNum = new FuncType([tnum, tnum], tnum)
+
+initialTypeEnv = {'++': new FuncType([tcat, tcat], tcat)}
+for opname in ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==']
+  initialTypeEnv[opname] = pairNumToNum
+
+###############################################################################
 # layerSpec -> dataSpec
 ###############################################################################
 extractOps = (expr) ->
   results = { trans: [], stat: [] }
   extractor = {
     ident: (expr, name) -> expr,
-    const: (expr, val) -> expr,
+    const: (expr, val, type) -> expr,
     call: (expr, fname, args) ->
       optype =
         if fname of poly.const.trans
@@ -400,8 +479,23 @@ numeralToDataSpec = (lspec) ->
     select: (dedup select), filter: filters
   }
 
+# TODO: remove after testing
+testTypeCheck = () ->
+  b0 = DataType.Base.cat
+  b1 = DataType.Base.num
+  u0 = new UnknownType
+  a0 = new FuncType([b0, b1, u0, b1], b1)
+  a1 = new FuncType([b0, b1, b0, u0], b1)
+  a0.unify a1
+
+# TODO: remove after testing
+typeCheck = (str) ->
+  expr = parse str
+  exprType(initialTypeEnv, expr)
 
 poly.parser =
+  tc: typeCheck  # TODO: remove after testing
+  ttc: testTypeCheck  # TODO: remove after testing
   tokenize: tokenize
   parse: parse
   layerToData: layerToDataSpec
