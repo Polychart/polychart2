@@ -74,7 +74,7 @@ class Keyword extends Token
   Token.Tag.lparen, Token.Tag.rparen, Token.Tag.comma])
 
 # ordered from highest to lowest precedence for both tokenizing and grouping
-infixops = ['++', '*', '/', '%', '+', '-']
+infixops = ['++', '*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==']
 infixGTEQ = (lop, rop) -> infixops.indexOf(lop) <= infixops.indexOf(rop)
 infixpats = ((str.replace /[+*]/g, (m) -> '(\\' + m + ')') for str in infixops)
 infixpat = new RegExp('^(' + infixpats.join('|') + ')')
@@ -134,6 +134,14 @@ class InfixOp extends Expr
   pretty: => '(' + [@lhs.pretty(), @opsym, @rhs.pretty()].join(' ') + ')'
   visit: (visitor) =>
     visitor.infixop(@, @opsym, @lhs.visit(visitor), @rhs.visit(visitor))
+class Conditional extends Expr
+  constructor: (@condition, @consequent, @alternative) ->
+  contents: => [@condition, @consequent, @alternative]
+  pretty: => "(if #{@condition.pretty()} " +
+    "then #{@consequent.pretty()} else #{@alternative.pretty()})"
+  visit: (visitor) =>
+    visitor.conditional(@, @condition.visit(visitor),
+      @consequent.visit(visitor), @alternative.visit(visitor))
 
 class OpStack
   constructor: -> @ops = []
@@ -178,9 +186,28 @@ class Parser
   parseExpr: =>
     expr = @expect(@parseFail,
       [[[Token.Tag.lparen], @parseParenExpr],
+       [[Token.Tag.keyword], @parseKeywordExpr],
        [[Token.Tag.literal, Token.Tag.symbol], @parseAtomCall]])
     @expect(@parseFinish(expr),
       [[[Token.Tag.infixsymbol], @parseInfix expr]])
+  parseKeywordExpr: =>
+    kw = @stream.peek()
+    assertTagIs(kw, Token.Tag.keyword)  # would be a bug
+    switch kw.name
+      when 'if' then @parseConditional()
+      else @parseFail()
+  parseKeyword: (expected) =>
+    kw = @stream.get()
+    assertTagIs(kw, Token.Tag.keyword)  # bug or bad user input
+    assertIs(kw.name, expected)  # bug or bad user input
+  parseConditional: =>
+    @parseKeyword 'if'
+    cond = @parseSubExpr()
+    @parseKeyword 'then'
+    conseq = @parseSubExpr()
+    @parseKeyword 'else'
+    altern = @parseSubExpr()
+    new Conditional(cond, conseq, altern)
   parseParenExpr: =>
     assertIs(@stream.get(), LParen)  # would be a bug
     expr = @parseSubExpr()

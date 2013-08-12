@@ -25,6 +25,8 @@ test "expressions", ->
   equal polyjs.debug.parser.parse('[this is \\[also\\] one identifier]').toString(), 'Ident(this is [also] one identifier)'
 
   equal polyjs.debug.parser.tokenize('if true then [then] else [else]').toString(), '<keyword,if>,<symbol,true>,<keyword,then>,<symbol,then>,<keyword,else>,<symbol,else>'
+  equal polyjs.debug.parser.parse('if 1 then 2 else 3').pretty(), '(if 1 then 2 else 3)'
+  equal polyjs.debug.parser.parse('7 * if 1 >= 2 then 3 + four else 5 + 6').pretty(), '(7 * (if (1 >= 2) then (3 + [four]) else (5 + 6)))'
 
   equal polyjs.debug.parser.tokenize('(3 + four * 5 - 6 / 7 % 8) ++ nine').toString(), '<(>,<literal,3>,<infixsymbol,+>,<symbol,four>,<infixsymbol,*>,<literal,5>,<infixsymbol,->,<literal,6>,<infixsymbol,/>,<literal,7>,<infixsymbol,%>,<literal,8>,<)>,<infixsymbol,++>,<symbol,nine>'
   equal polyjs.debug.parser.parse('3 + four * 5 - six').pretty(), '((3 + ([four] * 5)) - [six])'
