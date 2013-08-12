@@ -52,7 +52,7 @@ class Stream
 class Token
   @Tag = {
     symbol: 'symbol', literal: 'literal', infixsymbol: 'infixsymbol',
-    lparen: '(', rparen: ')', comma: ','}
+    keyword: 'keyword', lparen: '(', rparen: ')', comma: ','}
   constructor: (@tag) ->
   toString: => "<#{@contents().toString()}>"
   contents: => [@tag]
@@ -67,6 +67,9 @@ class Literal extends Token
 class InfixSymbol extends Token
   constructor: (@op) -> super Token.Tag.infixsymbol
   contents: => super().concat([@op])
+class Keyword extends Token
+  constructor: (@name) -> super Token.Tag.keyword
+  contents: => super().concat([@name])
 [LParen, RParen, Comma] = (new Token(tag) for tag in [
   Token.Tag.lparen, Token.Tag.rparen, Token.Tag.comma])
 
@@ -75,14 +78,18 @@ infixops = ['++', '*', '/', '%', '+', '-']
 infixGTEQ = (lop, rop) -> infixops.indexOf(lop) <= infixops.indexOf(rop)
 infixpats = ((str.replace /[+*]/g, (m) -> '(\\' + m + ')') for str in infixops)
 infixpat = new RegExp('^(' + infixpats.join('|') + ')')
+keywords = ['if', 'then', 'else']
+symbolOrKeyword = (name) ->
+  if name in keywords
+    return new Keyword(name)
+  new Symbol(name)
 tokenizers = [
   [/^\(/, () -> LParen],
   [/^\)/, () -> RParen],
   [/^,/, () -> Comma],
   [/^[+-]?(0x[0-9a-fA-F]+|0?\.\d+|[1-9]\d*(\.\d+)?|0)([eE][+-]?\d+)?/,
    (val) -> new Literal(val)],
-  [/^(\w|[^\u0000-\u0080])+|\[((\\.)|[^\\\[\]])+\]/,
-   (name) -> new Symbol(name)],
+  [/^(\w|[^\u0000-\u0080])+|\[((\\.)|[^\\\[\]])+\]/, symbolOrKeyword],
   # TODO: quotes used to define category literals
   #[/^(\w|[^\u0000-\u0080])+|'((\\.)|[^\\'])+'|"((\\.)|[^\\"])+"/,
    #(name) -> new Symbol(name)],
