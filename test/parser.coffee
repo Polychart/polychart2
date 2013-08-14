@@ -8,6 +8,11 @@ test "expressions", ->
   equal polyjs.debug.parser.tc('\'some\' ++ " thing"').toString(), 'cat'
   equal polyjs.debug.parser.tc('"some" ++ if 6 * 3 > 5 then " thing" else " stuff"').toString(), 'cat'
   #polyjs.debug.parser.ttc()
+
+  equal JSON.stringify(polyjs.debug.parser.tj('1 + 2')), '["infixop",{"opname":"+","lhs":["const",{"value":"1","type":"num"}],"rhs":["const",{"value":"2","type":"num"}]}]'
+  equal JSON.stringify(polyjs.debug.parser.tj('mean(log(mycol * 10) - 1)')), '["call",{"fname":"mean","args":[["infixop",{"opname":"-","lhs":["call",{"fname":"log","args":[["infixop",{"opname":"*","lhs":["ident",{"name":"mycol"}],"rhs":["const",{"value":"10","type":"num"}]}]]}],"rhs":["const",{"value":"1","type":"num"}]}]]}]'
+  equal JSON.stringify(polyjs.debug.parser.tj('"some" ++ if 6 * 3 > 5 then " thing" else " stuff"')), '["infixop",{"opname":"++","lhs":["const",{"value":"some","type":"cat"}],"rhs":["conditional",{"cond":["infixop",{"opname":">","lhs":["infixop",{"opname":"*","lhs":["const",{"value":"6","type":"num"}],"rhs":["const",{"value":"3","type":"num"}]}],"rhs":["const",{"value":"5","type":"num"}]}],"conseq":["const",{"value":" thing","type":"cat"}],"altern":["const",{"value":" stuff","type":"cat"}]}]}]'
+
   equal polyjs.debug.parser.tokenize('A').toString(), '<symbol,A>'
   equal polyjs.debug.parser.parse('A').toString(), 'Ident(A)'
 

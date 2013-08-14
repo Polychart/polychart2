@@ -342,6 +342,21 @@ for opname in ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==']
   initialTypeEnv[opname] = pairNumToNum
 
 ###############################################################################
+# JSON serialization
+###############################################################################
+exprJSON = (expr) ->
+  visitor = {
+    ident: (expr, name) -> ['ident', {name: name}]
+    const: (expr, val, type) -> ['const', {value: val, type: type.name}]
+    call: (expr, fname, args) -> ['call', {fname: fname, args: args}]
+    infixop: (expr, opname, lhs, rhs) ->
+      ['infixop', {opname: opname, lhs: lhs, rhs: rhs}]
+    conditional: (expr, cond, conseq, altern) ->
+      ['conditional', {cond: cond, conseq: conseq, altern: altern}]
+  }
+  expr.visit(visitor)
+
+###############################################################################
 # layerSpec -> dataSpec
 ###############################################################################
 extractOps = (expr) ->
@@ -507,7 +522,12 @@ typeCheck = (str) ->
   expr = parse str
   exprType(initialTypeEnv, expr)
 
+testExprJSON = (str) ->
+  expr = parse str
+  exprJSON expr
+
 poly.parser =
+  tj: testExprJSON  # TODO: remove after testing
   tc: typeCheck  # TODO: remove after testing
   ttc: testTypeCheck  # TODO: remove after testing
   tokenize: tokenize
