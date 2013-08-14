@@ -1,20 +1,22 @@
 ###############################################################################
 # utilities
 ###############################################################################
-bracket = (str) -> '[' + str.replace(/[\[\]]/g, (match) -> '\\' + match) + ']'
+bracket = (str) -> '[' + str.replace(/[\[\]\\]/g, (match) -> '\\' + match) + ']'
 unbracket = (str) ->
   n = str.length
   if str[0] is '[' and str[n-1] is ']'
     str = str[1..(n-2)]
-  return str.replace /\\./g, (match) -> match[1..]
-quote = (str) -> '"' + str.replace(/"/g, (match) -> '\\' + match) + '"'
+    str = str.replace /\\./g, (match) -> match[1..]
+  str
+quote = (str) -> '"' + str.replace(/["\\]/g, (match) -> '\\' + match) + '"'
 unquote = (str) ->
   n = str.length
   for qu in ['"', "'"]
     if str[0] is qu and str[n-1] is qu
       str = str[1..(n-2)]
+      str = str.replace /\\./g, (match) -> match[1..]
       break
-  return str.replace /\\./g, (match) -> match[1..]
+  str
 zipWith = (op) -> (xs, ys) ->
   if xs.length isnt ys.length
     throw poly.error.defn("zipWith: lists have different length: [#{xs}], [#{ys}]")
