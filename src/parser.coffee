@@ -139,10 +139,10 @@ tokenizers = [
   [/^,/, () -> Comma],
   [/^[+-]?(0x[0-9a-fA-F]+|0?\.\d+|[1-9]\d*(\.\d+)?|0)([eE][+-]?\d+)?/,
    (val) -> new Literal(val, DataType.Base.num)],
-  [/^(\w|[^\u0000-\u0080])+|\[((\\.)|[^\\\[\]])+\]/, symbolOrKeyword],
   # TODO: quotes used to define category literals
   #[/^(\w|[^\u0000-\u0080])+|'((\\.)|[^\\'])+'|"((\\.)|[^\\"])+"/,
    #(name) -> new Symbol(name)],
+  [/^((\w|[^\u0000-\u0080])+|\[((\\.)|[^\\\[\]])+\])/, symbolOrKeyword],
   # placed after numeric literal pattern to avoid ambiguity with +/-
   [infixpat, (op) -> new InfixSymbol(op)],
 ]
@@ -307,7 +307,7 @@ exprType = (tenv, expr) ->
     tresult = new UnknownType
     tfunc.unify(new FuncType(targs, tresult))
     tresult.found
-  extractor = {
+  visitor = {
     ident: (expr, name) -> tenv[name],
     const: (expr, val, type) -> type,
     call: (expr, fname, targs) -> tapply(fname, targs)
@@ -317,7 +317,7 @@ exprType = (tenv, expr) ->
       tconseq.unify taltern
       tconseq
   }
-  expr.visit(extractor)
+  expr.visit(visitor)
 
 tcat = DataType.Base.cat
 tnum = DataType.Base.num

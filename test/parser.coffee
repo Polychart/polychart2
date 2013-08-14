@@ -1,6 +1,9 @@
 module "parsers"
 test "expressions", ->
-  equal polyjs.debug.parser.tc('4 + 5').toString(), ''
+  equal polyjs.debug.parser.tc('4 + 5').toString(), 'num'
+  equal polyjs.debug.parser.tc('6 * 3 + 5.3 / 4 - 90').toString(), 'num'
+  equal polyjs.debug.parser.tc('8 + if 6 * 3 > 5 then 2 + 5.3 / 4 - 90 else 2 + 7').toString(), 'num'
+  equal polyjs.debug.parser.tc('8 + (if 6 * 3 > 5 then 2 + 5.3 / 4 - 90 else 2 + 7) / 2').toString(), 'num'
   #polyjs.debug.parser.ttc()
   equal polyjs.debug.parser.tokenize('A').toString(), '<symbol,A>'
   equal polyjs.debug.parser.parse('A').toString(), 'Ident(A)'
