@@ -4,6 +4,9 @@ test "expressions", ->
   equal polyjs.debug.parser.tc('6 * 3 + 5.3 / 4 - 90').toString(), 'num'
   equal polyjs.debug.parser.tc('8 + if 6 * 3 > 5 then 2 + 5.3 / 4 - 90 else 2 + 7').toString(), 'num'
   equal polyjs.debug.parser.tc('8 + (if 6 * 3 > 5 then 2 + 5.3 / 4 - 90 else 2 + 7) / 2').toString(), 'num'
+  equal polyjs.debug.parser.tc('"something"').toString(), 'cat'
+  equal polyjs.debug.parser.tc('\'some\' ++ " thing"').toString(), 'cat'
+  equal polyjs.debug.parser.tc('"some" ++ if 6 * 3 > 5 then " thing" else " stuff"').toString(), 'cat'
   #polyjs.debug.parser.ttc()
   equal polyjs.debug.parser.tokenize('A').toString(), '<symbol,A>'
   equal polyjs.debug.parser.parse('A').toString(), 'Ident(A)'
@@ -13,6 +16,10 @@ test "expressions", ->
 
   equal polyjs.debug.parser.tokenize('3.3445').toString(), '<literal,3.3445>'
   equal polyjs.debug.parser.parse('3.3445').toString(), 'Const(3.3445)'
+
+  equal polyjs.debug.parser.tokenize('"something \\"quoted\\""').toString(), '<literal,something "quoted">'
+  equal polyjs.debug.parser.parse('"something \\"quoted\\""').toString(), 'Const(something "quoted")'
+  equal polyjs.debug.parser.parse('"something \\"quoted\\""').pretty(), '"something \\"quoted\\""'
 
   equal polyjs.debug.parser.tokenize('mean(A )').toString(), '<symbol,mean>,<(>,<symbol,A>,<)>'
   equal polyjs.debug.parser.parse('mean(A )').toString(), 'Call(mean,[Ident(A)])'

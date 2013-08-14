@@ -7,6 +7,14 @@ unbracket = (str) ->
   if str[0] is '[' and str[n-1] is ']'
     str = str[1..(n-2)]
   return str.replace /\\./g, (match) -> match[1..]
+quote = (str) -> '"' + str.replace(/"/g, (match) -> '\\' + match) + '"'
+unquote = (str) ->
+  n = str.length
+  for qu in ['"', "'"]
+    if str[0] is qu and str[n-1] is qu
+      str = str[1..(n-2)]
+      break
+  return str.replace /\\./g, (match) -> match[1..]
 zipWith = (op) -> (xs, ys) ->
   if xs.length isnt ys.length
     throw poly.error.defn("zipWith: lists have different length: [#{xs}], [#{ys}]")
@@ -112,7 +120,10 @@ class Symbol extends Token
     super Token.Tag.symbol
   contents: => super().concat([@name])
 class Literal extends Token
-  constructor: (@val, @type) -> super Token.Tag.literal
+  constructor: (@val, @type) ->
+    super Token.Tag.literal
+    if @type is DataType.Base.cat
+      @val = unquote @val
   contents: => super().concat([@val])
 class InfixSymbol extends Token
   constructor: (@op) -> super Token.Tag.infixsymbol
@@ -139,10 +150,9 @@ tokenizers = [
   [/^,/, () -> Comma],
   [/^[+-]?(0x[0-9a-fA-F]+|0?\.\d+|[1-9]\d*(\.\d+)?|0)([eE][+-]?\d+)?/,
    (val) -> new Literal(val, DataType.Base.num)],
-  # TODO: quotes used to define category literals
-  #[/^(\w|[^\u0000-\u0080])+|'((\\.)|[^\\'])+'|"((\\.)|[^\\"])+"/,
-   #(name) -> new Symbol(name)],
   [/^((\w|[^\u0000-\u0080])+|\[((\\.)|[^\\\[\]])+\])/, symbolOrKeyword],
+  [/^('((\\.)|[^\\'])*'|"((\\.)|[^\\"])+")/,
+   (val) -> new Literal(val, DataType.Base.cat)],
   # placed after numeric literal pattern to avoid ambiguity with +/-
   [infixpat, (op) -> new InfixSymbol(op)],
 ]
@@ -170,7 +180,9 @@ class Ident extends Expr
 class Const extends Expr
   constructor: (@val, @vtype) ->
   contents: => [@val]
-  pretty: => @val
+  pretty: =>
+    if @vtype is DataType.Base.cat then quote @val
+    else @val
   visit: (visitor) => visitor.const(@, @val, @vtype)
 class Call extends Expr
   constructor: (@fname, @args) ->
