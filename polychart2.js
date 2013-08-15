@@ -2951,40 +2951,45 @@ See the spec definition for more information.
 
     visitor = {
       ident: function(expr, name) {
-        return {
-          cls: 'ident',
-          name: name
-        };
+        return [
+          'ident', {
+            name: name
+          }
+        ];
       },
       "const": function(expr, val, type) {
-        return {
-          cls: 'const',
-          value: val,
-          type: type.name
-        };
+        return [
+          'const', {
+            value: val,
+            type: type.name
+          }
+        ];
       },
       call: function(expr, fname, args) {
-        return {
-          cls: 'call',
-          fname: fname,
-          args: args
-        };
+        return [
+          'call', {
+            fname: fname,
+            args: args
+          }
+        ];
       },
       infixop: function(expr, opname, lhs, rhs) {
-        return {
-          cls: 'infixop',
-          opname: opname,
-          lhs: lhs,
-          rhs: rhs
-        };
+        return [
+          'infixop', {
+            opname: opname,
+            lhs: lhs,
+            rhs: rhs
+          }
+        ];
       },
       conditional: function(expr, cond, conseq, altern) {
-        return {
-          cls: 'conditional',
-          cond: cond,
-          conseq: conseq,
-          altern: altern
-        };
+        return [
+          'conditional', {
+            cond: cond,
+            conseq: conseq,
+            altern: altern
+          }
+        ];
       }
     };
     return expr.visit(visitor);

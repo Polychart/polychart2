@@ -23,8 +23,19 @@ test "expressions", ->
   equal polyjs.debug.parser.parse('3.3445').toString(), 'Const(3.3445)'
 
   equal polyjs.debug.parser.tokenize('"something \\"quoted\\""').toString(), '<literal,something "quoted">'
+  equal polyjs.debug.parser.tokenize('"something \\"quoted>\\""').toString(), '<literal,something "quoted>">'
   equal polyjs.debug.parser.parse('"something \\"quoted\\""').toString(), 'Const(something "quoted")'
   equal polyjs.debug.parser.parse('"something \\"quoted\\""').pretty(), '"something \\"quoted\\""'
+  equal polyjs.debug.parser.parse('"something \\"quoted>\\""').toString(), 'Const(something "quoted>")'
+  equal polyjs.debug.parser.parse('"something \\"quoted>\\""').pretty(), '"something \\"quoted>\\""'
+  equal polyjs.debug.parser.parse('[+-*/%abcdefg()\\]\\[._><]').pretty(), '[+-*/%abcdefg()\\]\\[._><]'
+  equal polyjs.debug.parser.parse('A').pretty(), '[A]'
+
+  # Testing Idempotency
+  for trial in ['[+-*/%abcdefg\\(\\)\\]\\[._><]', 'unquoted', '[quoted]', 'sum ( shit )', 'sum([ shitte ])', 'sum([\\[])', 'mean(log(2))', '3 + four * 5 - 6 / 7 % 8 ++ nine']
+    once = polyjs.debug.parser.parse(trial).pretty()
+    twice = polyjs.debug.parser.parse(once).pretty()
+    equal once, twice
 
   equal polyjs.debug.parser.tokenize('mean(A )').toString(), '<symbol,mean>,<(>,<symbol,A>,<)>'
   equal polyjs.debug.parser.parse('mean(A )').toString(), 'Call(mean,[Ident(A)])'
