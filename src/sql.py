@@ -1,3 +1,5 @@
+import json
+
 def escape(str): return str # TODO: implement
 def quote(str): return '"'+escape(str)+'"'
 
@@ -8,8 +10,10 @@ class ExprToSql(object): # more like Expr to MySQL
     return fn(payload)
   def ident(self, payload): return payload['name'] # TODO: check for SQL Injection
   def const(self, payload):
-    if payload['type'] is 'num': return payload['value']
-    else:                     return quote(payload['value'])
+    if payload['type'] == 'num':
+      return payload['value']
+    else:
+      return quote(payload['value'])
   def infixop(self, payload):
     lhsSql = self.toSql(payload['lhs'])
     rhsSql = self.toSql(payload['rhs'])
@@ -36,7 +40,7 @@ class ExprToSql(object): # more like Expr to MySQL
 
 sqlizer = ExprToSql()
 def sqlize(str):
-  return sqlizer.toSql(eval(str))
+  return sqlizer.toSql(json.loads(str))
 
 
 print sqlize('["infixop",{"opname":"+","lhs":["const",{"value":"1","type":"num"}],"rhs":["const",{"value":"2","type":"num"}]}]')
