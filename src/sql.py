@@ -3,34 +3,43 @@ import json
 def escape(str): return str # TODO: implement
 def quote(str): return '"'+escape(str)+'"'
 
-class ExprToSql(object): # more like Expr to MySQL
-  def toSql(self, params):
-    type, payload = params
-    fn = getattr(self, type)
-    return fn(payload)
-  def ident(self, payload): return payload['name'] # TODO: check for SQL Injection
-  def const(self, payload):
-    if payload['type'] == 'num':
-      return payload['value']
+class ASTVisitor(object):
+  def visit(self, ast):
+    tag, fields = ast
+    fn = getattr(self, '_' + tag)
+    return fn(fields)
+  def _mapVisit(self, fields, *names):
+    return [self.visit(fields[name]) for name in names]
+  def _ident(self, fields): return self.ident(fields['name'])
+  def _const(self, fields): return self.const(fields['type'], fields['value'])
+  def _infixop(self, fields):
+    visited = self._mapVisit(fields, 'lhs', 'rhs')
+    return self.infixop(fields['opname'], *visited)
+  def _conditional(self, fields):
+    visited = self._mapVisit(fields, 'cond', 'conseq', 'altern')
+    return self.conditional(*visited)
+  def _call(self, fields):
+    args = [self.visit(arg) for arg in fields['args']]
+    return self.call(fields['fname'], args)
+
+class ExprToSql(ASTVisitor): # more like Expr to MySQL
+  def ident(self, name): return name # TODO: check for SQL Injection
+  def const(self, type, value):
+    if type == 'num':
+      return value
     else:
-      return quote(payload['value'])
-  def infixop(self, payload):
-    lhsSql = self.toSql(payload['lhs'])
-    rhsSql = self.toSql(payload['rhs'])
-    if payload['opname'] in ["+", "-", "*", "/", "%", ">", "<"]:
-      return lhsSql + payload['opname'] + rhsSql
-    if payload['opname'] == "++":
-      return "CONCAT(%s, %s)" % (lhsSql, rhsSql)
-    raise Exception("Unknown operation %s" % payload["opname"])
-  def conditional(self, payload):
-    condSql = self.toSql(payload['cond'])
-    conseqSql = self.toSql(payload['conseq'])
-    alternSql = self.toSql(payload['altern'])
-    return "IF(%s, %s, %s)" % (condSql, conseqSql, alternSql)
-  def call(self, payload):
-    fn = getattr(self, "fn_%s"%payload['fname'])
-    argsSql = [self.toSql(arg) for arg in payload['args']]
-    return fn(argsSql)
+      return quote(value)
+  def infixop(self, opname, lhs, rhs):
+    if opname in ["+", "-", "*", "/", "%", ">", "<"]:
+      return lhs + opname + rhs
+    if opname == "++":
+      return "CONCAT(%s, %s)" % (lhs, rhs)
+    raise Exception("Unknown operation %s" % opname)
+  def conditional(self, cond, conseq, altern):
+    return "IF(%s, %s, %s)" % (cond, conseq, altern)
+  def call(self, fname, args):
+    fn = getattr(self, "fn_%s"%fname)
+    return fn(args)
   def fn_log(self, argsSql):
     if len(argsSql) != 1: raise Exception
     return "LOG(%s)" % argsSql[0]
@@ -40,8 +49,7 @@ class ExprToSql(object): # more like Expr to MySQL
 
 sqlizer = ExprToSql()
 def sqlize(str):
-  return sqlizer.toSql(json.loads(str))
-
+  return sqlizer.visit(json.loads(str))
 
 print sqlize('["infixop",{"opname":"+","lhs":["const",{"value":"1","type":"num"}],"rhs":["const",{"value":"2","type":"num"}]}]')
 print sqlize('["call",{"fname":"mean","args":[["infixop",{"opname":"-","lhs":["call",{"fname":"log","args":[["infixop",{"opname":"*","lhs":["ident",{"name":"mycol"}],"rhs":["const",{"value":"10","type":"num"}]}]]}],"rhs":["const",{"value":"1","type":"num"}]}]]}]')
