@@ -40,7 +40,9 @@ poly.type.coerce = (value, meta) ->
     else
       +((""+value).replace(/\$|\,/g,''))
   else if meta.type is 'date'
-    if meta.format
+    if _.isEmpty(value)
+      null
+    else if meta.format
       if meta.format is 'unix'
         moment.unix(value).unix() #sounds inefficient, but error checks?
       else
