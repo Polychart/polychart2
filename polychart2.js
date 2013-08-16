@@ -7428,16 +7428,15 @@ Shared constants
     };
 
     Layer.prototype._inLevels = function(item) {
-      var aes, _i, _len, _ref, _ref1;
+      var aes, _i, _len, _ref, _ref1, _ref2;
       _ref = ['x', 'y'];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         aes = _ref[_i];
-        if ((this.guideSpec[aes] != null) && (this.guideSpec[aes].levels != null)) {
-          return _ref1 = item[this.spec[aes]["var"]], __indexOf.call(this.guideSpec[aes].levels, _ref1) >= 0;
-        } else {
-          return true;
+        if ((((_ref1 = this.guideSpec[aes]) != null ? _ref1.levels : void 0) != null) && (_ref2 = item[this.spec[aes]["var"]], __indexOf.call(this.guideSpec[aes].levels, _ref2) < 0)) {
+          return false;
         }
       }
+      return true;
     };
 
     return Layer;

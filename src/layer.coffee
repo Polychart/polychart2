@@ -135,10 +135,9 @@ class Layer
   # Check that a certain item is in levels filter, if present
   _inLevels: (item) ->
     for aes in ['x', 'y']
-      if @guideSpec[aes]? and @guideSpec[aes].levels?
-        return item[@spec[aes].var] in @guideSpec[aes].levels
-      else
-        return true
+      if @guideSpec[aes]?.levels? and item[@spec[aes].var] not in @guideSpec[aes].levels
+        return false
+    true
 
 class Point extends Layer
   _calcGeoms: () ->
