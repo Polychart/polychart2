@@ -6859,6 +6859,9 @@ data processing to be done.
     _.each(filterSpec, function(spec, key) {
       return _.each(spec, function(value, predicate) {
         var filter;
+        if (!(predicate in filters)) {
+          return;
+        }
         filter = function(item) {
           return filters[predicate](item[key], value);
         };

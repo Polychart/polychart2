@@ -127,6 +127,7 @@ filterFactory = (filterSpec) ->
   filterFuncs = []
   _.each filterSpec, (spec, key) ->
     _.each spec, (value, predicate) ->
+      return if predicate not of filters
       filter = (item) -> filters[predicate](item[key], value)
       filterFuncs.push filter
   (item) ->
