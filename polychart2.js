@@ -1480,7 +1480,7 @@ Impute types from values
     length = 0;
     for (_i = 0, _len = values.length; _i < _len; _i++) {
       value = values[_i];
-      if ((value == null) || value === void 0 || value === null) {
+      if (value == null) {
         continue;
       }
       length++;

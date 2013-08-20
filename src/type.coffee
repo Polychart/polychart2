@@ -10,7 +10,7 @@ poly.type.impute = (values) ->
   num = 0
   length = 0
   for value in values
-    if not value? or value is undefined or value is null
+    if not value?
       continue
     length++
     # check if it's a number
