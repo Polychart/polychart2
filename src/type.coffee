@@ -40,7 +40,7 @@ poly.type.coerce = (value, meta) ->
     else
       +((""+value).replace(/\$|\,/g,''))
   else if meta.type is 'date'
-    if _.isEmpty(value)
+    if not _.isNumber(value) and _.isEmpty(value)
       null
     else if meta.format
       if meta.format is 'unix'
