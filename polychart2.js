@@ -2146,7 +2146,7 @@ See the spec definition for more information.
         return new Literal(val);
       }
     ], [
-      /^(\w|[^\u0000-\u0080])+|'((\\.)|[^\\'])+'|"((\\.)|[^\\"])+"/, function(name) {
+      /^([\w|\.]|[^\u0000-\u0080])+|'((\\.)|[^\\'])+'|"((\\.)|[^\\"])+"/, function(name) {
         return new Symbol(name);
       }
     ]
@@ -6829,7 +6829,9 @@ data processing to be done.
       this.parseMethod = parseMethod != null ? parseMethod : poly.parser.layerToData;
       this._wrap = __bind(this._wrap, this);
       this.make = __bind(this.make, this);
-      this.layerMeta = layerSpec.meta;
+      this.layerMeta = _.extend({}, layerSpec.meta, {
+        _additionalInfo: layerSpec.additionalInfo
+      });
       this.dataObj = layerSpec.data;
       this.prevSpec = null;
       this.strictmode = strictmode;

@@ -6,12 +6,12 @@ data processing to be done.
 class DataProcess
   ## save the specs
   constructor: (layerSpec, grouping, strictmode, @parseMethod=poly.parser.layerToData) ->
-    @layerMeta = layerSpec.meta
-    @dataObj = layerSpec.data
-    @prevSpec = null
+    @layerMeta  = _.extend {}, layerSpec.meta, _additionalInfo: layerSpec.additionalInfo
+    @dataObj    = layerSpec.data
+    @prevSpec   = null
     @strictmode = strictmode
-    @statData = null
-    @metaData = {}
+    @statData   = null
+    @metaData   = {}
 
   ## calculate things...
   make : (spec, grouping, callback) =>
