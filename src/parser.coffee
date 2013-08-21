@@ -53,7 +53,7 @@ showList = (xs) -> "[#{xs}]"
 # data types
 ###############################################################################
 class DataTypeError
-  constructor: (@msg) ->
+  constructor: (@message) ->
 
 class DataType
   constructor: (@name) ->
@@ -315,14 +315,18 @@ parse = (str) ->
 ###############################################################################
 # type analysis
 ###############################################################################
-exprType = (tenv, expr) ->
+exprType = (funcTypeEnv, colTypeEnv, expr) ->
   tapply = (fname, targs) ->
-    tfunc = tenv[fname]
+    if fname not of funcTypeEnv
+      throw poly.error.defn "unknown function name: #{fname}"
+    tfunc = funcTypeEnv[fname]
     tresult = new UnknownType
     tfunc.unify(new FuncType(targs, tresult))
     tresult.found
   visitor = {
-    ident: (expr, name) -> tenv[name],
+    ident: (expr, name) ->
+      if name of colTypeEnv then colTypeEnv[name]
+      else throw poly.error.defn "unknown column name: #{name}"
     const: (expr, val, type) -> type,
     call: (expr, fname, targs) -> tapply(fname, targs)
     infixop: (expr, opname, tlhs, trhs) -> tapply(opname, [tlhs, trhs])
@@ -337,9 +341,9 @@ tcat = DataType.Base.cat
 tnum = DataType.Base.num
 pairNumToNum = new FuncType([tnum, tnum], tnum)
 
-initialTypeEnv = {'++': new FuncType([tcat, tcat], tcat)}
+initialFuncTypeEnv = {'++': new FuncType([tcat, tcat], tcat)}
 for opname in ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==']
-  initialTypeEnv[opname] = pairNumToNum
+  initialFuncTypeEnv[opname] = pairNumToNum
 
 ###############################################################################
 # JSON serialization
@@ -517,10 +521,16 @@ testTypeCheck = () ->
   a1 = new FuncType([b0, b1, b0, u0], b1)
   a0.unify a1
 
+testFuncTypeEnv = _.clone initialFuncTypeEnv
+testFuncTypeEnv.sum = new FuncType([tnum], DataType.Base.stat)
+testFuncTypeEnv.log = new FuncType([tnum], tnum)
+testFuncTypeEnv.nameCollision = new FuncType([tcat], tnum)
+testColTypeEnv = { x: tnum, nameCollision: tcat }
+
 # TODO: remove after testing
 typeCheck = (str) ->
   expr = parse str
-  exprType(initialTypeEnv, expr)
+  exprType(testFuncTypeEnv, testColTypeEnv, expr)
 
 testExprJSON = (str) ->
   expr = parse str

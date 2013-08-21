@@ -7,7 +7,25 @@ test "expressions", ->
   equal polyjs.debug.parser.tc('"something"').toString(), 'cat'
   equal polyjs.debug.parser.tc('\'some\' ++ " thing"').toString(), 'cat'
   equal polyjs.debug.parser.tc('"some" ++ if 6 * 3 > 5 then " thing" else " stuff"').toString(), 'cat'
-  #polyjs.debug.parser.ttc()
+  equal polyjs.debug.parser.tc('log(x)').toString(), 'num'
+  equal polyjs.debug.parser.tc('sum(x)').toString(), 'stat'
+  equal polyjs.debug.parser.tc('sum(log(x))').toString(), 'stat'
+  equal polyjs.debug.parser.tc('nameCollision(nameCollision)').toString(), 'num'
+  try
+    polyjs.debug.parser.tc('sum(sum(x))')
+    ok false, 'sum(sum(x))'
+  catch e
+    equal e.message, 'type mismatch: (stat vs. num) in (([stat] -> ?) vs. ([num] -> stat))'
+  try
+    polyjs.debug.parser.tc('suum(x)')
+    ok false, 'suum(x)'
+  catch e
+    equal e.message, 'unknown function name: suum'
+  try
+    polyjs.debug.parser.tc('sum(y)')
+    ok false, 'sum(y)'
+  catch e
+    equal e.message, 'unknown column name: y'
 
   equal JSON.stringify(polyjs.debug.parser.tj('1 + 2')), '["infixop",{"opname":"+","lhs":["const",{"value":"1","type":"num"}],"rhs":["const",{"value":"2","type":"num"}]}]'
   equal JSON.stringify(polyjs.debug.parser.tj('mean(log(mycol * 10) - 1)')), '["call",{"fname":"mean","args":[["infixop",{"opname":"-","lhs":["call",{"fname":"log","args":[["infixop",{"opname":"*","lhs":["ident",{"name":"mycol"}],"rhs":["const",{"value":"10","type":"num"}]}]]}],"rhs":["const",{"value":"1","type":"num"}]}]]}]'
