@@ -6933,7 +6933,7 @@ data processing to be done.
       name = transSpec.name, binwidth = transSpec.binwidth;
       if (meta.type === 'num') {
         if (isNaN(binwidth)) {
-          throw poly.error.defn("The binwidth " + binwidth + " is invalid for a numeric varliable");
+          throw poly.error.defn("The binwidth " + binwidth + " is invalid for a numeric variable");
         }
         binwidth = +binwidth;
         binFn = function(item) {
@@ -6950,7 +6950,7 @@ data processing to be done.
       }
       if (meta.type === 'date') {
         if (!(__indexOf.call(poly["const"].timerange, binwidth) >= 0)) {
-          throw poly.error.defn("The binwidth " + binwidth + " is invalid for a datetime varliable");
+          throw poly.error.defn("The binwidth " + binwidth + " is invalid for a datetime variable");
         }
         binFn = function(item) {
           var _timeBinning,
