@@ -1728,12 +1728,13 @@ See the spec definition for more information.
   };
 
   extractFilters = function(input) {
-    var expr, exprType, filters, key, val, _ref;
+    var expr, exprType, filters, key, trans, val, _ref;
 
     if (input == null) {
       input = {};
     }
     filters = [];
+    trans = [];
     for (key in input) {
       val = input[key];
       _ref = poly.parser.getExpression(key), exprType = _ref.exprType, expr = _ref.expr;
@@ -1741,9 +1742,15 @@ See the spec definition for more information.
       if (exprType === 'stat') {
         throw poly.error.defn("Aggregate statistics in filters not allowed.");
       }
+      if (exprType === 'trans') {
+        trans.push(expr);
+      }
       filters.push(val);
     }
-    return filters;
+    return {
+      filters: filters,
+      trans: trans
+    };
   };
 
   pickAesthetics = function(spec, aes) {
@@ -1775,28 +1782,27 @@ See the spec definition for more information.
   };
 
   poly.spec.layerToData = function(lspec, grouping) {
-    var aesthetics, arg, args, desc, expr, exprType, filters, fname, groups, grpvar, key, sdesc, select, sort, stat, statInfo, trans, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4;
+    var aesthetics, arg, args, desc, expr, exprType, filters, fname, groups, grpvar, key, sdesc, select, sort, stat, statInfo, trans, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
 
     if (grouping == null) {
       grouping = [];
     }
-    filters = extractFilters((_ref = lspec.filter) != null ? _ref : {});
+    _ref1 = extractFilters((_ref = lspec.filter) != null ? _ref : {}), filters = _ref1.filters, trans = _ref1.trans;
     aesthetics = pickAesthetics(lspec, poly["const"].aes);
-    trans = [];
     stat = [];
     select = [];
     groups = [];
     sort = [];
     for (key in aesthetics) {
       desc = aesthetics[key];
-      _ref1 = poly.parser.getExpression(desc["var"]), exprType = _ref1.exprType, expr = _ref1.expr, statInfo = _ref1.statInfo;
+      _ref2 = poly.parser.getExpression(desc["var"]), exprType = _ref2.exprType, expr = _ref2.expr, statInfo = _ref2.statInfo;
       desc["var"] = expr.name;
       select.push(expr);
       if (exprType === 'trans') {
         trans.push(expr);
       }
       if (exprType === 'stat') {
-        _ref2 = statInfo(), fname = _ref2.fname, args = _ref2.args;
+        _ref3 = statInfo(), fname = _ref3.fname, args = _ref3.args;
         for (_i = 0, _len = args.length; _i < _len; _i++) {
           arg = args[_i];
           if (arg.expr[0] !== 'ident') {
@@ -1813,14 +1819,14 @@ See the spec definition for more information.
       }
       if ('sort' in desc) {
         sdesc = _.defaults(desc, poly["const"].sort);
-        _ref3 = poly.parser.getExpression(sdesc.sort), exprType = _ref3.exprType, expr = _ref3.expr, statInfo = _ref3.statInfo;
+        _ref4 = poly.parser.getExpression(sdesc.sort), exprType = _ref4.exprType, expr = _ref4.expr, statInfo = _ref4.statInfo;
         sdesc.sort = expr;
         sort.push(sdesc);
       }
     }
     for (_j = 0, _len1 = grouping.length; _j < _len1; _j++) {
       grpvar = grouping[_j];
-      _ref4 = poly.parser.getExpression(grpvar), exprType = _ref4.exprType, expr = _ref4.expr, statInfo = _ref4.statInfo;
+      _ref5 = poly.parser.getExpression(grpvar), exprType = _ref5.exprType, expr = _ref5.expr, statInfo = _ref5.statInfo;
       if (exprType === 'trans') {
         trans.push(expr);
       } else if (exprType === 'stat') {

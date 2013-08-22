@@ -70,19 +70,41 @@ test "extraction: transforms", ->
     trans: ['c + 2', 'log(b)']
   parserEqual dspec, expected
 
+test "extraction: complex filters", ->
+  layerparser =
+    type: "point"
+    y: {var: "y"}
+    filter: {
+      x: {in: ["a", "b"]},
+      'z * 2': {gt: 3},
+    }
+  dspec = polyjs.debug.spec.layerToData layerparser
+  expected =
+    filter: [
+      {expr: 'x', in: ['a', 'b']}
+      {expr: 'z * 2', gt: 3}
+    ]
+    sort: []
+    select: ['y']
+    stats: []
+    groups: ['y']
+    trans: ['z * 2']
+  parserEqual dspec, expected
+
 test "extraction: UTF8", ->
   layerparser=
     type: "point"
-    y: {var: "lag(',f+/\\\'c' , -1) "}
-    x: {var: "bin(汉字漢字, 10.4e20)"}
-    color: {var: "mean(lag(c, -1))"}
-    opacity: {var: "bin(\"a-+->\\\"b\", '漢\\\'字')"}
-  parser = polyjs.debug.spec.layerToData layerparser
-  deepEqual parser.select, (polyjs.debug.parser.parse str for str in ["bin(汉字漢字,10.4e20", "lag(',f+/\\\'c',-1", "mean(lag(c,-1))", "bin(\"a-+->\\\"b\", '漢\\\'字')"])
+    y: {var: "log([,f+/\\'c])"}
+    x: {var: "汉字漢字"}
+    color: {var: "mean(log(c + 2))"}
+    opacity: {var: "[\"a-+->\"b\", '漢\\\'字']"}
+  dspec = polyjs.debug.spec.layerToData layerparser
+  deepEqual dspec.select, (parse str for str in [
+    "log([,f+/\\\'c])", "汉字漢字", "mean(log(c + 2))", "[\"a-+->\"b\", '漢\\\'字']"
+  ])
 
-
+parse = (e) -> polyjs.debug.parser.getExpression(e).expr
 parserEqual = (produced, expected) ->
-  parse = (e) -> polyjs.debug.parser.getExpression(e).expr
   for f in expected.filter
     f.expr = parse(f.expr)
   deepEqual produced.filter, expected.filter, 'filter'

@@ -50,13 +50,16 @@ poly.spec.check = (spec) ->
 
 extractFilters = (input={}) ->
   filters = []
+  trans = []
   for key, val of input
     {exprType, expr} = poly.parser.getExpression(key)
     val.expr = expr
     if exprType is 'stat'
       throw poly.error.defn "Aggregate statistics in filters not allowed."
+    if exprType is 'trans'
+      trans.push(expr)
     filters.push(val)
-  filters
+  {filters, trans}
 
 pickAesthetics = (spec, aes) ->
   aesthetics = _.pick spec, aes
@@ -71,9 +74,9 @@ dedup = (expressions, key=(x)->x.name) ->
   _.values(dict)
 
 poly.spec.layerToData = (lspec, grouping=[]) ->
-  filters = extractFilters(lspec.filter ? {})
+  {filters, trans} = extractFilters(lspec.filter ? {})
   aesthetics = pickAesthetics(lspec, poly.const.aes)
-  trans = []; stat = []; select = []; groups = []; sort = []
+  stat = []; select = []; groups = []; sort = []
   for key, desc of aesthetics
     {exprType, expr, statInfo} = poly.parser.getExpression(desc.var)
     # TODO: add hack for count(*)
