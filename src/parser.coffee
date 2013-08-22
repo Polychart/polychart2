@@ -344,6 +344,10 @@ pairNumToNum = new FuncType([tnum, tnum], tnum)
 initialFuncTypeEnv = {'++': new FuncType([tcat, tcat], tcat)}
 for opname in ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==']
   initialFuncTypeEnv[opname] = pairNumToNum
+for fname in ['sum', 'count', 'unique', 'mean', 'box', 'median']
+  initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat)
+for fname in ['log']
+  initialFuncTypeEnv[fname] = new FuncType([tnum], tnum)
 
 ###############################################################################
 # JSON serialization
@@ -536,10 +540,31 @@ testExprJSON = (str) ->
   expr = parse str
   exprJSON expr
 
+# how to strip statistics?
+getExpression = (str) ->
+  expr = parse str # main expression
+  exprObj = (e) -> {name: e.pretty(), expr: exprJSON(e)} # helper functions
+  statInfo = ->
+
+  obj = exprObj(expr)
+  [rootType, etc] = obj.expr
+  exprType =
+    if rootType == "ident"
+      'ident' #just an identifier, nothing fancy
+    else if _.has(expr, 'fname') and _.has(expr, 'args')
+      statInfo = () -> {fname: expr.fname, args: [exprObj(a) for a in expr.args]}
+      'stat' #statistics
+    else
+      'trans' #transformation required
+  {exprType, expr:{name: expr.pretty(), json: obj.expr}, statInfo}
+
+makeTypeEnv = (meta) ->
+
 poly.parser =
   tj: testExprJSON  # TODO: remove after testing
   tc: typeCheck  # TODO: remove after testing
   ttc: testTypeCheck  # TODO: remove after testing
+  getExpression: getExpression
   tokenize: tokenize
   parse: parse
   layerToData: layerToDataSpec

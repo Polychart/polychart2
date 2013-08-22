@@ -48,3 +48,64 @@ poly.spec.check = (spec) ->
     throw poly.error.defn "No DOM element specified. Where to make plot?"
   spec
 
+extractFilters = (input={}) ->
+  filters = []
+  for key, val of input
+    {exprType, expr} = poly.parser.getExpression(key)
+    val.expr = expr
+    if exprType is 'stat'
+      throw poly.error.defn "Aggregate statistics in filters not allowed."
+    filters.push(val)
+  filters
+
+pickAesthetics = (spec, aes) ->
+  aesthetics = _.pick spec, aes
+  for key of aesthetics
+    if 'var' not of aesthetics[key]
+      delete aesthetics[key]
+  aesthetics
+
+dedup = (expressions, key=(x)->x.name) ->
+  dict = {}
+  dict[key(e)] = e for e in expressions
+  _.values(dict)
+
+poly.spec.layerToData = (lspec, grouping=[]) ->
+  filters = extractFilters(lspec.filter ? {})
+  aesthetics = pickAesthetics(lspec, poly.const.aes)
+  trans = []; stat = []; select = []; groups = []; sort = []
+  for key, desc of aesthetics
+    {exprType, expr, statInfo} = poly.parser.getExpression(desc.var)
+    # TODO: add hack for count(*)
+    desc.var = expr.name # replace current spec with prettified name
+    select.push(expr)
+    if exprType == 'trans'
+      trans.push(expr)
+    if exprType == 'stat'
+      {fname, args} = statInfo()
+      trans.push(arg) for arg in args
+      stat.push {name: fname, expr}
+    else # if exprType !== 'stat'
+      groups.push expr
+
+    if 'sort' of desc
+      sdesc = _.defaults(desc, poly.const.sort)
+      # TODO: add hack for count(*)
+      {exprType, expr, statInfo} = poly.parser.getExpression(sdesc.sort)
+      sdesc.sort = expr
+      sort.push(sdesc)
+
+  for grpvar in grouping
+    {exprType, expr, statInfo} = poly.parser.getExpression(grpvar)
+    if exprType == 'trans'
+      trans.push(expr)
+    else if exprType == 'stat'
+      throw poly.error.defn "Facet variable should not contain statistics!"
+
+  select: dedup(select)
+  trans: dedup(trans)
+  sort: dedup(sort, (x)->x.expr.name)
+  filter: filters
+  stats:
+    stats: dedup(stat, (x)->x.expr.name)
+    groups: dedup(groups)
