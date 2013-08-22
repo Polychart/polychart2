@@ -1,4 +1,3 @@
-
 fns =
   ident: (name) -> (row) -> row[name]
   const: (value) -> () -> value
@@ -58,14 +57,6 @@ createFunction = (node) ->
       fns.trans[payload.fname](args) # should all be transforms
   if fn then return fn
   throw poly.error.defn "Unknown operation of type: #{nodeType}"
-
-infixop = () ->
-  interpret(lhs)
-  interpret(rhs)
-
-interpret = (expr, data, metaData) ->
-  createFunction(expr)
-
 
 poly.interpret = {
   createFunction
