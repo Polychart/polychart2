@@ -1831,7 +1831,7 @@ See the spec definition for more information.
       select: dedup(select),
       trans: dedup(trans),
       sort: dedup(sort, function(x) {
-        return x.expr.name;
+        return x["var"].name;
       }),
       filter: filters,
       stats: {

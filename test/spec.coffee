@@ -7,15 +7,15 @@ test "extraction: nothing (smoke test)", ->
     color: {const: "blue"},
     opacity: {var: "c"},
   }
-  parser = polyjs.debug.spec.layerToData layerparser
+  dspec = polyjs.debug.spec.layerToData layerparser
   expected =
-    filter: {}
-    sort: {}
+    filter: []
+    sort: []
     select: ['a', 'b', 'c']
     stats: []
     groups: ['a', 'b', 'c']
     trans: []
-  parserEqual parser, expected
+  parserEqual dspec, expected
 
 test "extraction: simple, one stat (smoke test)", ->
   layerparser = {
@@ -23,28 +23,34 @@ test "extraction: simple, one stat (smoke test)", ->
     x: {var: "a"},
     y: {var: "sum(b)"},
   }
-  parser = polyjs.debug.spec.layerToData layerparser
+  dspec = polyjs.debug.spec.layerToData layerparser
   expected =
-    filter: {}
-    sort: {}
+    filter: []
+    sort: []
     select: ['a', 'sum(b)']
     stats: [{name:'sum', expr: 'sum(b)', args:['b']}]
     groups: ['a']
     trans: []
-  parserEqual parser, expected
+  parserEqual dspec, expected
 
 test "extraction: stats", ->
   layerparser = {
     type: "point",
-    y: {var: "b", sort: "a", guide: "y2"},
+    y: {var: "b", sort: "a"},
     x: {var: "a"},
     color: {const: "blue"},
     opacity: {var: "sum(c)"},
     filter: {a: {gt: 0, lt: 100}},
   }
-  parser = polyjs.debug.spec.layerToData layerparser
-  expected = {filter: layerparser.filter, sort: {b: {sort:'a', asc:false}}, select: ['a', 'b', 'sum(c)'], groups: ['a', 'b'], stats: [key:'c', name:'sum(c)', stat:'sum'], trans: []}
-  parserEqual parser, expected
+  dspec = polyjs.debug.spec.layerToData layerparser
+  expected =
+    filter: [{expr: 'a', gt: 0, lt: 100}]
+    sort: [{var: 'b', sort: 'a', limit: null, asc:false}]
+    select: ['a', 'b', 'sum(c)']
+    stats: [{name:'sum', expr: 'sum(c)', args:['c']}]
+    groups: ['a', 'b']
+    trans: []
+  parserEqual dspec, expected
 
 test "extraction: transforms", ->
   layerparser = {
@@ -119,17 +125,14 @@ test "extraction: UTF8", ->
 
 parserEqual = (produced, expected) ->
   parse = (e) -> polyjs.debug.parser.getExpression(e).expr
-  filter = []
-  for key, val of expected.filter
-    val.expr = parse(key)
-    filter.push val
-  deepEqual produced.filter, filter, 'filter'
+  for f in expected.filter
+    f.expr = parse(f.expr)
+  deepEqual produced.filter, expected.filter, 'filter'
 
-  sort = []
-  for key, val of expected.sort
+  for val in expected.sort
+    val.var = parse(val.var).name
     val.sort = parse val.sort
-    sort.push val
-  deepEqual produced.sort, sort, 'sort'
+  deepEqual produced.sort, expected.sort, 'sort'
   deepEqual produced.select, (parse str for str in expected.select), 'select'
 
   for stat in expected.stats

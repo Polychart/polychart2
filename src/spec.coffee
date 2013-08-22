@@ -94,6 +94,7 @@ poly.spec.layerToData = (lspec, grouping=[]) ->
       sdesc = _.defaults(desc, poly.const.sort)
       # TODO: add hack for count(*)
       {exprType, expr, statInfo} = poly.parser.getExpression(sdesc.sort)
+      #sdesc.var = sdesc.var # <-- note this exists!
       sdesc.sort = expr
       sort.push(sdesc)
 
@@ -106,7 +107,7 @@ poly.spec.layerToData = (lspec, grouping=[]) ->
 
   select: dedup(select)
   trans: dedup(trans)
-  sort: dedup(sort, (x)->x.expr.name)
+  sort: dedup(sort, (x)->x.var.name)
   filter: filters
   stats:
     stats: dedup(stat, (x)->x.expr.name)
