@@ -83,8 +83,10 @@ poly.spec.layerToData = (lspec, grouping=[]) ->
       trans.push(expr)
     if exprType == 'stat'
       {fname, args} = statInfo()
-      trans.push(arg) for arg in args
-      stat.push {name: fname, expr}
+      for arg in args
+        if arg.expr[0] isnt 'ident'
+          trans.push(arg)
+      stat.push {name: fname, args: args, expr: expr}
     else # if exprType !== 'stat'
       groups.push expr
 

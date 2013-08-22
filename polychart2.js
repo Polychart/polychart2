@@ -1799,10 +1799,13 @@ See the spec definition for more information.
         _ref2 = statInfo(), fname = _ref2.fname, args = _ref2.args;
         for (_i = 0, _len = args.length; _i < _len; _i++) {
           arg = args[_i];
-          trans.push(arg);
+          if (arg.expr[0] !== 'ident') {
+            trans.push(arg);
+          }
         }
         stat.push({
           name: fname,
+          args: args,
           expr: expr
         });
       } else {
@@ -2673,14 +2676,14 @@ See the spec definition for more information.
     Call.prototype.pretty = function() {
       var arg;
 
-      return showCall((function() {
+      return showCall(this.fname, (function() {
         var _i, _len, _ref2, _results;
 
         _ref2 = this.args;
         _results = [];
         for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
           arg = _ref2[_i];
-          _results.push(bracket(this.fname, arg.pretty()));
+          _results.push(arg.pretty());
         }
         return _results;
       }).call(this));
@@ -3427,27 +3430,22 @@ See the spec definition for more information.
 
       return {
         fname: expr.fname,
-        args: [
-          (function() {
-            var _l, _len3, _ref6, _results;
+        args: (function() {
+          var _l, _len3, _ref6, _results;
 
-            _ref6 = expr.args;
-            _results = [];
-            for (_l = 0, _len3 = _ref6.length; _l < _len3; _l++) {
-              a = _ref6[_l];
-              _results.push(exprObj(a));
-            }
-            return _results;
-          })()
-        ]
+          _ref6 = expr.args;
+          _results = [];
+          for (_l = 0, _len3 = _ref6.length; _l < _len3; _l++) {
+            a = _ref6[_l];
+            _results.push(exprObj(a));
+          }
+          return _results;
+        })()
       };
     }, 'stat') : 'trans';
     return {
       exprType: exprType,
-      expr: {
-        name: expr.pretty(),
-        json: obj.expr
-      },
+      expr: obj,
       statInfo: statInfo
     };
   };

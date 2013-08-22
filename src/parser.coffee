@@ -189,7 +189,7 @@ class Const extends Expr
 class Call extends Expr
   constructor: (@fname, @args) ->
   contents: => [@fname, showList(@args)]
-  pretty: => showCall(bracket @fname, arg.pretty() for arg in @args)
+  pretty: => showCall(@fname, arg.pretty() for arg in @args)
   visit: (visitor) =>
     visitor.call(@, @fname, arg.visit(visitor) for arg in @args)
 class InfixOp extends Expr
@@ -552,11 +552,11 @@ getExpression = (str) ->
     if rootType == "ident"
       'ident' #just an identifier, nothing fancy
     else if _.has(expr, 'fname') and _.has(expr, 'args')
-      statInfo = () -> {fname: expr.fname, args: [exprObj(a) for a in expr.args]}
+      statInfo = () -> {fname: expr.fname, args: exprObj(a) for a in expr.args}
       'stat' #statistics
     else
       'trans' #transformation required
-  {exprType, expr:{name: expr.pretty(), json: obj.expr}, statInfo}
+  {exprType, expr:obj, statInfo}
 
 makeTypeEnv = (meta) ->
 

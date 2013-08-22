@@ -28,13 +28,9 @@ test "extraction: simple, one stat (smoke test)", ->
     filter: {}
     sort: {}
     select: ['a', 'sum(b)']
-    stats: [{name:'sum', expr: 'a'}]
+    stats: [{name:'sum', expr: 'sum(b)', args:['b']}]
     groups: ['a']
     trans: []
-  parserEqual parser, expected
-
-
-  expected = {filter: {}, sort: {}, select: ['a', 'sum(b)'], groups: ['a'], stats: [{key:'b', stat:'sum', name:'sum(b)'}], trans: []}
   parserEqual parser, expected
 
 test "extraction: stats", ->
@@ -136,10 +132,10 @@ parserEqual = (produced, expected) ->
   deepEqual produced.sort, sort, 'sort'
   deepEqual produced.select, (parse str for str in expected.select), 'select'
 
-  stats = []
-  for stat in stats
-    stats.expr = parse stats.expr
-  deepEqual produced.stats.stats, stats, 'stats.stats'
+  for stat in expected.stats
+    stat.args = (parse(a) for a in stat.args)
+    stat.expr = parse stat.expr
+  deepEqual produced.stats.stats, expected.stats, 'stats.stats'
 
   deepEqual produced.stats.groups, (parse str for str in expected.groups), 'stats.groups'
   deepEqual produced.trans, (parse str for str in expected.trans), 'trans'
