@@ -33,7 +33,7 @@ test "extraction: simple, one stat (smoke test)", ->
     trans: []
   parserEqual dspec, expected
 
-test "extraction: stats", ->
+test "extraction: stats + filter", ->
   layerparser = {
     type: "point",
     y: {var: "b", sort: "a"},
@@ -55,62 +55,20 @@ test "extraction: stats", ->
 test "extraction: transforms", ->
   layerparser = {
     type: "point",
-    y: {var: "b", sort: "a", guide: "y2"},
-    x: {var: "lag(a, 1)"},
+    y: {var: "log(b)", sort: "a", asc:true},
+    x: {var: "c + 2"},
     color: {const: "blue"},
-    opacity: {var: "sum(c)"},
-    filter: {a: {gt: 0, lt: 100}},
+    opacity: {var: "count(d)"},
   }
-  parser = polyjs.debug.spec.layerToData layerparser
-  expected = {filter: layerparser.filter, sort: {b: {sort:'a', asc:false}}, select: ['lag(a,1)', 'b', 'sum(c)'], groups: ['lag(a,1)', 'b'], stats: [key:'c', name:'sum(c)', stat:'sum'], trans: [key:'a', lag:'1', name:'lag(a,1)', trans:'lag']}
-  parserEqual parser, expected
-
-  layerparser = {
-    type: "point",
-    y: {var: "b", sort: "a", guide: "y2", asc:true},
-    x: {var: "bin(a, 1)"},
-    color: {const: "blue"},
-    opacity: {var: "sum(c)"},
-    filter: {a: {gt: 0, lt: 100}},
-  }
-  parser = polyjs.debug.spec.layerToData layerparser
-  expected = {filter: layerparser.filter, sort: {b: {sort:'a', asc:true}}, select: ['bin(a,1)', 'b', 'sum(c)'], groups: ['bin(a,1)', 'b'], stats: [key:'c', name:'sum(c)', stat:'sum'], trans: [key:'a', binwidth:'1', name:'bin(a,1)', trans:'bin']}
-  parserEqual parser, expected
-
-  layerparser =
-    type: "point"
-    y: {var: "lag(c , -0xaF1) "}
-    x: {var: "bin(a, 0.10)"}
-    color: {var: "mean(lag(c,0))"}
-    opacity: {var: "bin(a, 10)"}
-  parser = polyjs.debug.spec.layerToData layerparser
-  expected = {filter: {}, sort: {}, select: ["bin(a,0.10)", "lag(c,-0xaF1)", "mean(lag(c,0))", "bin(a,10)"], groups: ["bin(a,0.10)", "lag(c,-0xaF1)", "bin(a,10)"], stats: [key: "lag(c,0)", name: "mean(lag(c,0))", stat: "mean" ], trans: [
-      {
-        "key": "a",
-        "binwidth": "10",
-        "name": "bin(a,10)",
-        "trans": "bin"
-      },
-      {
-        "key": "c",
-        "lag": "0",
-        "name": "lag(c,0)",
-        "trans": "lag"
-      },
-      {
-        "key": "c",
-        "lag": "-0xaF1",
-        "name": "lag(c,-0xaF1)",
-        "trans": "lag"
-      },
-      {
-        "key": "a",
-        "binwidth": "0.10",
-        "name": "bin(a,0.10)",
-        "trans": "bin"
-      }
-    ]}
-  parserEqual parser, expected
+  dspec = polyjs.debug.spec.layerToData layerparser
+  expected =
+    filter: []
+    sort: [{var: 'log(b)', sort: 'a', limit: null, asc:true}]
+    select: ['c + 2', 'log(b)', 'count(d)']
+    stats: [{name:'count', expr: 'count(d)', args:['d']}]
+    groups: ['c + 2', 'log(b)']
+    trans: ['c + 2', 'log(b)']
+  parserEqual dspec, expected
 
 test "extraction: UTF8", ->
   layerparser=

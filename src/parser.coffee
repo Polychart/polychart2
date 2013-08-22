@@ -551,7 +551,7 @@ getExpression = (str) ->
   exprType =
     if rootType == "ident"
       'ident' #just an identifier, nothing fancy
-    else if _.has(expr, 'fname') and _.has(expr, 'args')
+    else if _.has(expr, 'fname') and expr.fname in ['sum', 'count', 'unique', 'mean', 'box', 'median'] # hack
       statInfo = () -> {fname: expr.fname, args: exprObj(a) for a in expr.args}
       'stat' #statistics
     else

@@ -3413,7 +3413,7 @@ See the spec definition for more information.
   };
 
   getExpression = function(str) {
-    var etc, expr, exprObj, obj, rootType, statInfo, _ref5;
+    var etc, expr, exprObj, obj, rootType, statInfo, _ref5, _ref6;
 
     expr = parse(str);
     exprObj = function(e) {
@@ -3425,18 +3425,18 @@ See the spec definition for more information.
     statInfo = function() {};
     obj = exprObj(expr);
     _ref5 = obj.expr, rootType = _ref5[0], etc = _ref5[1];
-    exprType = rootType === "ident" ? 'ident' : _.has(expr, 'fname') && _.has(expr, 'args') ? (statInfo = function() {
+    exprType = rootType === "ident" ? 'ident' : _.has(expr, 'fname') && ((_ref6 = expr.fname) === 'sum' || _ref6 === 'count' || _ref6 === 'unique' || _ref6 === 'mean' || _ref6 === 'box' || _ref6 === 'median') ? (statInfo = function() {
       var a;
 
       return {
         fname: expr.fname,
         args: (function() {
-          var _l, _len3, _ref6, _results;
+          var _l, _len3, _ref7, _results;
 
-          _ref6 = expr.args;
+          _ref7 = expr.args;
           _results = [];
-          for (_l = 0, _len3 = _ref6.length; _l < _len3; _l++) {
-            a = _ref6[_l];
+          for (_l = 0, _len3 = _ref7.length; _l < _len3; _l++) {
+            a = _ref7[_l];
             _results.push(exprObj(a));
           }
           return _results;
