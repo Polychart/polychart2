@@ -24,7 +24,7 @@ poly.const =
     year:     60*60*24*365
     twoyear:  60*60*24*365*2
     fiveyear: 60*60*24*365*5 + 60*60*24 # Will be at least 1 leap year
-  sort: {sort: null, limit: null, asc: false},
+  sort: {key: null, sort: null, limit: null, asc: false},
   scaleFns :
     novalue : () ->      {v: null, f: 'novalue', t: 'scalefn'}
     max:      (v) ->     {v: v, f: 'max', t: 'scalefn'}

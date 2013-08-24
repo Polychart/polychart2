@@ -540,6 +540,15 @@ testExprJSON = (str) ->
   expr = parse str
   exprJSON expr
 
+createColTypeEnv = (metas) ->
+  colTypeEnv = {}
+  for key, meta of metas
+    colTypeEnv[key] = DataType.Base[meta.type]
+  colTypeEnv
+
+getType = (str, typeEnv) -> exprType(initialFuncTypeEnv, typeEnv, parse(str))
+  
+
 # how to strip statistics?
 getExpression = (str) ->
   expr = parse str # main expression
@@ -548,7 +557,7 @@ getExpression = (str) ->
 
   obj = exprObj(expr)
   [rootType, etc] = obj.expr
-  exprType =
+  type =
     if rootType == "ident"
       'ident' #just an identifier, nothing fancy
     else if _.has(expr, 'fname') and expr.fname in ['sum', 'count', 'unique', 'mean', 'box', 'median'] # hack
@@ -556,17 +565,22 @@ getExpression = (str) ->
       'stat' #statistics
     else
       'trans' #transformation required
-  {exprType, expr:obj, statInfo}
+  {exprType:type, expr:obj, statInfo}
 
 makeTypeEnv = (meta) ->
 
-poly.parser =
+poly.parser = {
   tj: testExprJSON  # TODO: remove after testing
   tc: typeCheck  # TODO: remove after testing
   ttc: testTypeCheck  # TODO: remove after testing
-  getExpression: getExpression
-  tokenize: tokenize
-  parse: parse
+  createColTypeEnv
+  getExpression
+  getType
+  tokenize
+  parse
+  bracket
+  unbracket
   layerToData: layerToDataSpec
   pivotToData: pivotToDataSpec
   numeralToData: numeralToDataSpec
+}

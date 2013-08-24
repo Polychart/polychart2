@@ -96,9 +96,16 @@ poly.spec.layerToData = (lspec, grouping=[]) ->
     if 'sort' of desc
       sdesc = _.defaults(desc, poly.const.sort)
       # TODO: add hack for count(*)
-      {exprType, expr, statInfo} = poly.parser.getExpression(sdesc.sort)
-      #sdesc.var = sdesc.var # <-- note this exists!
-      sdesc.sort = expr
+      sort = poly.parser.getExpression(sdesc.sort)
+      {expr, statInfo}
+      sdesc.key = expr      # the key grouping; thing to sort
+      sdesc.sort = sort.expr# value to sort by
+      {fname, args} = statInfo()
+      sdesc.stat = fname    # statistics
+      sdesc.args = args     # arguments to the statistics
+      for arg in args
+        if arg.expr[0] isnt 'ident'
+          trans.push(arg)
       sort.push(sdesc)
 
   for grpvar in grouping

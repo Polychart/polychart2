@@ -5,7 +5,7 @@ data processing to be done.
 
 class DataProcess
   ## save the specs
-  constructor: (layerSpec, grouping, strictmode, @parseMethod=poly.parser.layerToData) ->
+  constructor: (layerSpec, grouping, strictmode, @parseMethod=poly.spec.layerToData) ->
     @layerMeta = layerSpec.meta
     @dataObj = layerSpec.data
     @initialSpec = @parseMethod layerSpec, grouping
@@ -76,6 +76,7 @@ transforms =
       binwidth = +binwidth
       binFn = (item) ->
         item[name] = binwidth * Math.floor item[key]/binwidth
+
       return trans: binFn, meta: {bw: binwidth, binned: true, type:'num'}
     if meta.type is 'date'
       if not (binwidth in poly.const.timerange)
@@ -128,7 +129,9 @@ Helper function to figures out which filter to create, then creates it
 ###
 filterFactory = (filterSpec) ->
   filterFuncs = []
-  _.each filterSpec, (spec, key) ->
+  for filter in filterSpec
+    key = filter.expr.name
+    spec = _.pick(filter, 'lt', 'gt', 'le', 'ge', 'in')
     _.each spec, (value, predicate) ->
       filter = (item) -> filters[predicate](item[key], value)
       filterFuncs.push filter
@@ -145,17 +148,17 @@ the appropriate statistical function given the spec. Each statistics function
 produces one atomic value for each group of data.
 ###
 statistics =
-  sum : (spec) -> (values) -> _.reduce(_.without(values, undefined, null),
+  sum : (values) -> _.reduce(_.without(values, undefined, null),
                                                  ((v, m) -> v + m), 0)
-  mean: (spec) -> (values) ->
+  mean: (values) ->
     values = _.without(values, undefined, null)
     return _.reduce(values, ((v, m) -> v + m), 0) / values.length
-  count : (spec) -> (values) -> _.without(values, undefined, null).length
-  unique : (spec) -> (values) -> (_.uniq(_.without(values, undefined, null))).length
-  min: (spec) -> (values) -> _.min(values)
-  max: (spec) -> (values) -> _.max(values)
-  median: (spec) -> (values) -> poly.median(values)
-  box: (spec) -> (values) ->
+  count : (values) -> _.without(values, undefined, null).length
+  unique : (values) -> (_.uniq(_.without(values, undefined, null))).length
+  min: (values) -> _.min(values)
+  max: (values) -> _.max(values)
+  median: (values) -> poly.median(values)
+  box: (values) ->
     len = values.length
     if len > 5
       mid = len/2
@@ -197,28 +200,33 @@ calculateStats = (data, statSpecs) ->
   # define stat functions
   statFuncs = {}
   _.each statSpecs.stats, (statSpec) ->
-    {key, name} = statSpec
-    statFn = statsFactory statSpec
-    statFuncs[name] = (data) -> statFn _.pluck(data, key)
+    {name, expr, args} = statSpec
+    fn = statSpec[name]
+    key = statsFunc.args[0].name
+    statFuncs[expr.name] = (data) -> fn _.pluck(data, key)
   # calculate the statistics for each group
-  groupedData = poly.groupBy data, statSpecs.groups
+  groupedData = poly.groupBy data, (e.name for e in statSpecs.groups)
   _.map groupedData, (data) ->
     rep = {}
-    _.each statSpecs.groups, (g) -> rep[g] = data[0][g] # define a representative
-    _.each statFuncs, (stats, name) -> rep[name] = stats(data) # calc stats
+    for {name} in statSpecs.groups
+      rep[name] = data[0][name] # define a representative
+    for name, stats of statFuncs
+      rep[name] = stats(data) # calc stats
     return rep
 
 ###
-META
-----
+META SORTING
+------------
 Calculations of meta properties including sorting and limiting based on the
 values of statistical calculations
 ###
-calculateMeta = (key, metaSpec, data) ->
-  {sort, stat, limit, asc} = metaSpec
+calculateMeta = (metaSpec, data) ->
+  {key, sort, stat, args, limit, asc} = metaSpec
   # group the data by the key
   if stat
-    statSpec = stats: [stat], groups: [key]
+    statSpec =
+      stats: [{name:stat, expr: sort, args: args}]
+      groups: [key]
     data = calculateStats(data, statSpec)
   # sorting
   multiplier = if asc then 1 else -1
@@ -243,26 +251,28 @@ Coordinating the actual work being done
 Perform the necessary computation in the front end
 ###
 frontendProcess = (dataSpec, data, callback) ->
-  metaData = _.clone(data.meta)
-  data = _.clone(data.raw)
   # metaData and related f'ns
-  metaData ?= {}
-  addMeta = (key, meta) ->  metaData[key] = _.extend (metaData[key] ? {}), meta
+  metaData = _.clone(data.meta) ? {}
+  getMeta = poly.interpret.getMeta(metaData)
+  addMeta = (expr) ->
+    metaData[expr.name] = _.extend (metaData[expr.name] ? {}), getMeta(expr)
+  # data & related f'ns
+  data = _.clone(data.raw)
+  addData = (key, fn) ->
+    for d in data
+      d[key] = fn
   # transforms
   if dataSpec.trans
-    for transSpec in dataSpec.trans
-      {key} = transSpec
-      {trans, meta} = transformFactory(key, transSpec, metaData[key])
-      for d in data
-        trans(d)
-      addMeta transSpec.name, meta
+    for expr in dataSpec.trans
+      addData(expr.name, poly.interpret.createFunction(expr.expr))
+      addMeta(expr)
   # filter
   if dataSpec.filter
     data = _.filter data, filterFactory(dataSpec.filter)
   # meta + more filtering
   if dataSpec.sort
     additionalFilter = {}
-    for key, metaSpec of dataSpec.sort
+    for metaSpec of dataSpec.sort
       {meta, filter} = calculateMeta(key, metaSpec, data)
       additionalFilter[key] = filter
       addMeta key, meta
@@ -275,8 +285,9 @@ frontendProcess = (dataSpec, data, callback) ->
       addMeta name, {type: 'num'}
   # select: make sure everything selected is there
   for key in dataSpec.select ? []
-    if not metaData[key]? and key isnt 'count(*)'
-      throw poly.error.defn ("You referenced a data column #{key} that doesn't exist.")
+    name = poly.parser.unbracket(key.name)
+    if not metaData[name]? and name isnt 'count(*)'
+      throw poly.error.defn ("You referenced a data column #{name} that doesn't exist.")
   # done
   callback(null, data:data, meta:metaData)
 

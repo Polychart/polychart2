@@ -46,7 +46,7 @@ class Layer
     @consts = {}       # constants supplied by the spec
     for aes in aesthetics
       if spec[aes]
-        if spec[aes].var then @mapping[aes] = spec[aes].var
+        if spec[aes].var then @mapping[aes] = poly.parser.unbracket(spec[aes].var)
         if spec[aes].const then @consts[aes] = spec[aes].const
   calculate: (@statData, @meta) ->
     @_calcGeoms()

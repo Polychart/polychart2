@@ -186,9 +186,12 @@ class Graph
   _makePaper: (dom, width, height, graph) ->
     paper = poly.paper dom, width, height, {graph}
 
-poly.chart = (spec, callback, prepare) ->
-  try
+poly.chart = (spec, callback, prepare, notrycatch=true) ->
+  if notrycatch
     new Graph(spec, callback, prepare)
-  catch err
-    if callback? then callback err, null
-    else throw poly.error.defn "Bad specification."
+  else
+    try
+      new Graph(spec, callback, prepare)
+    catch err
+      if callback? then callback err, null
+      else throw poly.error.defn "Bad specification."

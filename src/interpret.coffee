@@ -58,6 +58,19 @@ createFunction = (node) ->
   if fn then return fn
   throw poly.error.defn "Unknown operation of type: #{nodeType}"
 
+getMeta = (metas) ->
+  typeEnv = poly.parser.createColTypeEnv(metas)
+  (expr) ->
+    [rootType, payload] = expr.expr
+    bw = null
+    if rootType is 'call' and payload.fname is 'bin'
+      [innerType, innerPayload] = payload.args[1]
+      if innerType is 'const'
+        bw = poly.type.coerce(innerPayload.value, {type: innerPayload.type})
+    type: poly.parser.getType(expr.name, typeEnv)
+    bw: bw
+
 poly.interpret = {
   createFunction
+  getMeta
 }
