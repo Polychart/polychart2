@@ -1,5 +1,8 @@
 fns =
-  ident: (name) -> (row) -> row[name]
+  ident: (name) -> (row) ->
+    if name of row
+      return row[name]
+    throw poly.error.defn "Referencing unknown column: #{name}"
   const: (value) -> () -> value
   conditional: (cond, conseq, altern) -> (row) ->
     if cond(row) then conseq(row) else altern(row)
@@ -14,6 +17,17 @@ fns =
     "++": (lhs, rhs) -> (row) -> lhs(row) + rhs(row)
   trans:
     "log": (args) -> (row) -> Math.log(args[0](row))
+    "lag": (args) ->
+      lastn = []
+      (row) ->
+        val = args[0](row)
+        lag = args[1](row) # need to be a const!
+        if currentLag=_.size(lastn) is 0
+          lastn = (undefined for i in [1..lag])
+        else if currentLag isnt lag
+          throw poly.error.defn "Lag period needs to be constant, but isn't!"
+        lastn.push(val)
+        lastn.shift()
     "bin": (args) -> (row) ->
       val = args[0](row)
       bw = args[1](row) # we actually need args[1] to be a const... :(

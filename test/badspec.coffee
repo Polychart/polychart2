@@ -41,6 +41,7 @@ test "referencing unknown variable", ->
       layers: [
         data: data, type: 'point', x: 'b', y: 'sum(a)'
       ]
+    ok true, 'NOT referencing unknown var'
   catch err
     ok false, 'NOT referencing unknown var'
 
@@ -50,6 +51,7 @@ test "referencing unknown variable", ->
       layers: [
         data: data, type: 'point', x: 'b', y: 'sum(lag(a,2))'
       ]
+    ok true, 'NOT referencing unknown var'
   catch err
     ok false, 'NOT referencing unknown var'
 

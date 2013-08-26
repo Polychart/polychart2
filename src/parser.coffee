@@ -321,7 +321,7 @@ exprType = (funcTypeEnv, colTypeEnv, expr) ->
       throw poly.error.defn "unknown function name: #{fname}"
     if fname is 'bin' and targs.length is 2 and targs[0] == tdate
       fname = 'bin_date'
-    if fname in ['count', 'unique'] and targs.length is 1
+    if fname in ['count', 'unique', 'lag'] and targs.length is 1
       if targs[0] == tcat
         fname = fname+'_cat'
       else if targs[0] == tdate
@@ -358,6 +358,10 @@ for fname in ['count', 'unique']
   initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat)
   initialFuncTypeEnv[fname+'_cat'] = new FuncType([tcat], DataType.Base.stat)
   initialFuncTypeEnv[fname+'_date'] = new FuncType([tdate], DataType.Base.stat)
+for fname in ['lag']
+  initialFuncTypeEnv[fname] = new FuncType([tnum, tnum], tnum)
+  initialFuncTypeEnv[fname+'_cat'] = new FuncType([tcat, tnum], tcat)
+  initialFuncTypeEnv[fname+'_date'] = new FuncType([tdate, tnum], tdate)
 for fname in ['log']
   initialFuncTypeEnv[fname] = new FuncType([tnum], tnum)
 initialFuncTypeEnv['bin'] = new FuncType([tnum, tnum], tnum)
