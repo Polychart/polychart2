@@ -62,6 +62,7 @@ class PositionScale extends Scale
           when 'middle'   then return @range.max/2 + @range.min/2
           when 'max'      then return @range.max
           when 'min'      then return @range.min
+          when 'novalue'   then return @range.max/2 + @range.min/2
           when 'upper'
             if not value.m then return @range.max - space
             else return (@range.min+space) + (value.n+1)*width(value.m)

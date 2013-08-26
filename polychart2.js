@@ -6232,6 +6232,8 @@ attribute of that value.
               return _this.range.max;
             case 'min':
               return _this.range.min;
+            case 'novalue':
+              return _this.range.max / 2 + _this.range.min / 2;
             case 'upper':
               if (!value.m) {
                 return _this.range.max - space;
