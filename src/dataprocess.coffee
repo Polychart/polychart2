@@ -200,7 +200,7 @@ calculateStats = (data, statSpecs) ->
     key = poly.parser.unbracket(args[0].name)
     statFuncs[expr.name] = (data) -> fn _.pluck(data, key)
   # calculate the statistics for each group
-  groupedData = poly.groupBy data, (e.name for e in statSpecs.groups)
+  groupedData = poly.groupBy data, (poly.parser.unbracket(e.name) for e in statSpecs.groups)
   _.map groupedData, (data) ->
     rep = {}
     for {name} in statSpecs.groups

@@ -2949,7 +2949,7 @@
       layers: [
         {
           data: data,
-          type: 'bar',
+          type: 'point',
           x: 'bin(dataset_id, 100)',
           y: 'public',
           color: 'count(user_id)'
@@ -2980,7 +2980,7 @@
         {
           data: data,
           type: 'bar',
-          x: 'bin(created, day)',
+          x: 'bin(created, "day")',
           y: 'count(id)'
         }
       ],
@@ -2988,11 +2988,6 @@
     };
     return c = polyjs.chart(spec);
   };
-
-  /*
-  This is a rather interesting example. What do we really expect in this case?
-  */
-
 
   this.examples.email_pie = function(dom) {
     var c, data, spec;
@@ -3013,7 +3008,7 @@
         {
           data: data,
           type: 'bar',
-          y: 'created',
+          y: 'count(created)',
           color: 'success'
         }
       ],
@@ -3045,7 +3040,7 @@
           data: data,
           type: 'bar',
           x: 'bin(id,100)',
-          y: 'success'
+          y: 'count(success)'
         }
       ],
       coord: {

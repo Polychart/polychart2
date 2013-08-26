@@ -320,7 +320,12 @@ exprType = (funcTypeEnv, colTypeEnv, expr) ->
     if fname not of funcTypeEnv
       throw poly.error.defn "unknown function name: #{fname}"
     if fname is 'bin' and targs.length is 2 and targs[0] == tdate
-      fname = 'bindate'
+      fname = 'bin_date'
+    if fname in ['count', 'unique'] and targs.length is 1
+      if targs[0] == tcat
+        fname = fname+'_cat'
+      else if targs[0] == tdate
+        fname = fname+'_date'
     tfunc = funcTypeEnv[fname]
     tresult = new UnknownType
     tfunc.unify(new FuncType(targs, tresult))
@@ -347,12 +352,16 @@ pairNumToNum = new FuncType([tnum, tnum], tnum)
 initialFuncTypeEnv = {'++': new FuncType([tcat, tcat], tcat)}
 for opname in ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==']
   initialFuncTypeEnv[opname] = pairNumToNum
-for fname in ['sum', 'count', 'unique', 'mean', 'box', 'median']
+for fname in ['sum', 'mean', 'box', 'median']
   initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat)
+for fname in ['count', 'unique']
+  initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat)
+  initialFuncTypeEnv[fname+'_cat'] = new FuncType([tcat], DataType.Base.stat)
+  initialFuncTypeEnv[fname+'_date'] = new FuncType([tdate], DataType.Base.stat)
 for fname in ['log']
   initialFuncTypeEnv[fname] = new FuncType([tnum], tnum)
 initialFuncTypeEnv['bin'] = new FuncType([tnum, tnum], tnum)
-initialFuncTypeEnv['bindate'] = new FuncType([tdate, tcat], tdate)
+initialFuncTypeEnv['bin_date'] = new FuncType([tdate, tcat], tdate)
 
 ###############################################################################
 # JSON serialization
