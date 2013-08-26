@@ -1729,7 +1729,7 @@ See the spec definition for more information.
   };
 
   extractFilters = function(input) {
-    var expr, exprType, filters, key, trans, val, _ref;
+    var expr, exprType, filterSpec, filters, key, trans, val, _ref;
 
     if (input == null) {
       input = {};
@@ -1737,7 +1737,8 @@ See the spec definition for more information.
     filters = [];
     trans = [];
     for (key in input) {
-      val = input[key];
+      filterSpec = input[key];
+      val = _.clone(filterSpec);
       _ref = poly.parser.getExpression(key), exprType = _ref.exprType, expr = _ref.expr;
       val.expr = expr;
       if (exprType === 'stat') {
@@ -1783,7 +1784,7 @@ See the spec definition for more information.
   };
 
   poly.spec.layerToData = function(lspec, grouping) {
-    var aesthetics, arg, args, desc, expr, exprType, filters, fname, groups, grpvar, key, sdesc, select, sort, stat, statInfo, trans, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    var aesthetics, arg, args, desc, expr, exprType, filters, fname, groups, grpvar, key, sdesc, select, sexpr, sort, stat, statInfo, statinfo, trans, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _ref4;
 
     if (grouping == null) {
       grouping = [];
@@ -1819,17 +1820,22 @@ See the spec definition for more information.
         groups.push(expr);
       }
       if ('sort' in desc) {
-        sdesc = _.defaults(desc, poly["const"].sort);
-        sort = poly.parser.getExpression(sdesc.sort);
-        ({
-          expr: expr,
-          statInfo: statInfo
-        });
-        sdesc.key = expr;
-        sdesc.sort = sort.expr;
-        _ref4 = statInfo(), fname = _ref4.fname, args = _ref4.args;
-        sdesc.stat = fname;
-        sdesc.args = args;
+        sexpr = poly.parser.getExpression(desc.sort);
+        statinfo = sexpr.statInfo();
+        if (statinfo) {
+          fname = statinfo.fname, args = statinfo.args;
+        } else {
+          fname = null;
+          args = [];
+        }
+        sdesc = {
+          key: expr,
+          sort: sexpr,
+          stat: fname,
+          args: args,
+          limit: desc.limit,
+          asc: desc.asc != null ? desc.asc : false
+        };
         for (_j = 0, _len1 = args.length; _j < _len1; _j++) {
           arg = args[_j];
           if (arg.expr[0] !== 'ident') {
@@ -1841,7 +1847,7 @@ See the spec definition for more information.
     }
     for (_k = 0, _len2 = grouping.length; _k < _len2; _k++) {
       grpvar = grouping[_k];
-      _ref5 = poly.parser.getExpression(grpvar), exprType = _ref5.exprType, expr = _ref5.expr, statInfo = _ref5.statInfo;
+      _ref4 = poly.parser.getExpression(grpvar["var"]), exprType = _ref4.exprType, expr = _ref4.expr, statInfo = _ref4.statInfo;
       if (exprType === 'trans') {
         trans.push(expr);
       } else if (exprType === 'stat') {
@@ -1851,9 +1857,7 @@ See the spec definition for more information.
     return {
       select: dedup(select),
       trans: dedup(trans),
-      sort: dedup(sort, function(x) {
-        return x["var"].name;
-      }),
+      sort: sort,
       filter: filters,
       stats: {
         stats: dedup(stat, function(x) {
@@ -8123,7 +8127,7 @@ data processing to be done.
     filterFuncs = [];
     for (_i = 0, _len = filterSpec.length; _i < _len; _i++) {
       filter = filterSpec[_i];
-      key = filter.expr.name;
+      key = poly.parser.unbracket(filter.expr.name);
       spec = _.pick(filter, 'lt', 'gt', 'le', 'ge', 'in');
       _.each(spec, function(value, predicate) {
         filter = function(item) {
@@ -8332,7 +8336,7 @@ data processing to be done.
 
 
   frontendProcess = function(dataSpec, data, callback) {
-    var addData, addMeta, additionalFilter, expr, filter, getMeta, key, meta, metaData, metaSpec, name, statSpec, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    var addData, addMeta, additionalFilter, expr, filter, getMeta, key, meta, metaData, metaSpec, name, statSpec, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
 
     metaData = (_ref = _.clone(data.meta)) != null ? _ref : {};
     getMeta = poly.interpret.getMeta(metaData);
@@ -8365,8 +8369,11 @@ data processing to be done.
     }
     if (dataSpec.sort) {
       additionalFilter = {};
-      for (metaSpec in dataSpec.sort) {
-        _ref2 = calculateMeta(key, metaSpec, data), meta = _ref2.meta, filter = _ref2.filter;
+      _ref2 = dataSpec.sort;
+      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+        metaSpec = _ref2[_j];
+        key = metaSpec.key;
+        _ref3 = calculateMeta(metaSpec, data), meta = _ref3.meta, filter = _ref3.filter;
         additionalFilter[key] = filter;
         addMeta(key, meta);
       }
@@ -8374,16 +8381,16 @@ data processing to be done.
     }
     if (dataSpec.stats && dataSpec.stats.stats && dataSpec.stats.stats.length > 0) {
       data = calculateStats(data, dataSpec.stats);
-      _ref3 = dataSpec.stats.stats;
-      for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
-        statSpec = _ref3[_j];
+      _ref4 = dataSpec.stats.stats;
+      for (_k = 0, _len2 = _ref4.length; _k < _len2; _k++) {
+        statSpec = _ref4[_k];
         expr = statSpec.expr;
         addMeta(expr);
       }
     }
-    _ref5 = (_ref4 = dataSpec.select) != null ? _ref4 : [];
-    for (_k = 0, _len2 = _ref5.length; _k < _len2; _k++) {
-      key = _ref5[_k];
+    _ref6 = (_ref5 = dataSpec.select) != null ? _ref5 : [];
+    for (_l = 0, _len3 = _ref6.length; _l < _len3; _l++) {
+      key = _ref6[_l];
       name = poly.parser.unbracket(key.name);
       if ((metaData[name] == null) && name !== 'count(*)') {
         throw poly.error.defn("You referenced a data column " + name + " that doesn't exist.");

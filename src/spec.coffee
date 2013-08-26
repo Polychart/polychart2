@@ -51,7 +51,8 @@ poly.spec.check = (spec) ->
 extractFilters = (input={}) ->
   filters = []
   trans = []
-  for key, val of input
+  for key, filterSpec of input
+    val = _.clone(filterSpec)
     {exprType, expr} = poly.parser.getExpression(key)
     val.expr = expr
     if exprType is 'stat'
@@ -94,22 +95,29 @@ poly.spec.layerToData = (lspec, grouping=[]) ->
       groups.push expr
 
     if 'sort' of desc
-      sdesc = _.defaults(desc, poly.const.sort)
       # TODO: add hack for count(*)
-      sort = poly.parser.getExpression(sdesc.sort)
-      {expr, statInfo}
-      sdesc.key = expr      # the key grouping; thing to sort
-      sdesc.sort = sort.expr# value to sort by
-      {fname, args} = statInfo()
-      sdesc.stat = fname    # statistics
-      sdesc.args = args     # arguments to the statistics
+      sexpr = poly.parser.getExpression(desc.sort)
+      statinfo = sexpr.statInfo()
+      if statinfo
+        {fname, args} = statinfo
+      else
+        fname = null
+        args = []
+      sdesc = {
+        key: expr    # key to grouping (i.e. thing to sort)
+        sort: sexpr  # value to sort by
+        stat: fname  # statistics
+        args: args   # arguments to the stats
+        limit: desc.limit
+        asc: if desc.asc? then desc.asc else false
+      }
       for arg in args
         if arg.expr[0] isnt 'ident'
           trans.push(arg)
       sort.push(sdesc)
 
   for grpvar in grouping
-    {exprType, expr, statInfo} = poly.parser.getExpression(grpvar)
+    {exprType, expr, statInfo} = poly.parser.getExpression(grpvar.var)
     if exprType == 'trans'
       trans.push(expr)
     else if exprType == 'stat'
@@ -117,7 +125,7 @@ poly.spec.layerToData = (lspec, grouping=[]) ->
 
   select: dedup(select)
   trans: dedup(trans)
-  sort: dedup(sort, (x)->x.var.name)
+  sort: sort
   filter: filters
   stats:
     stats: dedup(stat, (x)->x.expr.name)

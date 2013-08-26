@@ -130,7 +130,7 @@ Helper function to figures out which filter to create, then creates it
 filterFactory = (filterSpec) ->
   filterFuncs = []
   for filter in filterSpec
-    key = filter.expr.name
+    key = poly.parser.unbracket filter.expr.name
     spec = _.pick(filter, 'lt', 'gt', 'le', 'ge', 'in')
     _.each spec, (value, predicate) ->
       filter = (item) -> filters[predicate](item[key], value)
@@ -268,8 +268,9 @@ frontendProcess = (dataSpec, data, callback) ->
   # meta + more filtering
   if dataSpec.sort
     additionalFilter = {}
-    for metaSpec of dataSpec.sort
-      {meta, filter} = calculateMeta(key, metaSpec, data)
+    for metaSpec in dataSpec.sort
+      key = metaSpec.key
+      {meta, filter} = calculateMeta(metaSpec, data)
       additionalFilter[key] = filter
       addMeta key, meta
     data = _.filter data, filterFactory(additionalFilter)
