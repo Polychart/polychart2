@@ -3645,7 +3645,8 @@ See the spec definition for more information.
 
           val = args[0](row);
           lag = args[1](row);
-          if (currentLag = _.size(lastn) === 0) {
+          currentLag = _.size(lastn);
+          if (currentLag === 0) {
             lastn = (function() {
               var _i, _results;
 
@@ -3656,6 +3657,7 @@ See the spec definition for more information.
               return _results;
             })();
           } else if (currentLag !== lag) {
+            debugger;
             throw poly.error.defn("Lag period needs to be constant, but isn't!");
           }
           lastn.push(val);

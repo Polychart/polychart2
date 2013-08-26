@@ -104,6 +104,7 @@ test "extraction: UTF8", ->
   ])
 
 parse = (e) -> polyjs.debug.parser.getExpression(e).expr
+
 parserEqual = (produced, expected) ->
   for f in expected.filter
     f.expr = parse(f.expr)

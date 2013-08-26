@@ -1,9 +1,30 @@
 module "Data"
 
 ## HELPER FUNCTIONS
+parse = (e) -> polyjs.debug.parser.getExpression(e).expr
 transformData = (data, spec) ->
   data.getData (err, x)-> if err? then console.err err else x
   polyjs.data.frontendProcess spec, data, (err, x) -> if err? then console.err err else x
+fill = (dataSpec) ->
+  dataSpec.filter ?= []
+  for f in dataSpec.filter
+    f.expr = parse(f.expr)
+  dataSpec.sort ?= []
+  for val in dataSpec.sort
+    val.var = parse(val.var).name
+    val.sort = parse val.sort
+  dataSpec.select ?= []
+  dataSpec.select = (parse str for str in dataSpec.select)
+  dataSpec.trans ?= []
+  dataSpec.trans = (parse(a) for a in dataSpec.trans)
+  dataSpec.stats ?= {}
+  dataSpec.stats.stats ?= []
+  for stat in dataSpec.stats.stats
+    stat.args = (parse(a) for a in stat.args)
+    stat.expr = parse stat.expr
+  dataSpec.stats.groups ?= []
+  dataSpec.stats.groups = (parse(a) for a in dataSpec.stats.groups)
+  return dataSpec
 
 test "smoke test", ->
   jsondata= [
@@ -19,14 +40,11 @@ test "transforms -- numeric binning", ->
       {x: 12, y: 42},
       {x: 33, y: 56},
     ]
-  trans = transformData data,
-    trans: [
-      {key: 'x', trans: "bin", binwidth: 10, name: "bin(x, 10)" }
-      {key: 'y', trans: "bin", binwidth: 5, name: "bin(y, 5)" }
-    ]
+  trans = transformData data, fill(trans:["bin(x, 10)", "bin(y, 5)"])
+
   deepEqual trans.data, [
-      {x: 12, y: 42, 'bin(x, 10)': 10, 'bin(y, 5)': 40},
-      {x: 33, y: 56, 'bin(x, 10)': 30, 'bin(y, 5)': 55},
+      {x: 12, y: 42, 'bin([x],10)': 10, 'bin([y],5)': 40},
+      {x: 33, y: 56, 'bin([x],10)': 30, 'bin([y],5)': 55},
     ]
 
   data = polyjs.data
@@ -35,15 +53,11 @@ test "transforms -- numeric binning", ->
       {x: 3.3, y: 2},
       {x: 3.3, y: 3},
     ]
-  trans = transformData data,
-    trans: [
-      { key: 'x', trans: "bin", binwidth: 1, name: "bin(x, 1)" }
-      { key: 'y', trans: "lag", lag: 1, name: "lag(y, 1)" }
-    ]
+  trans = transformData data, fill(trans:["bin(x,1)", "lag(y,1)"])
   deepEqual trans.data, [
-      {x: 1.2, y: 1, 'bin(x, 1)': 1, 'lag(y, 1)': undefined},
-      {x: 3.3, y: 2, 'bin(x, 1)': 3, 'lag(y, 1)': 1},
-      {x: 3.3, y: 3, 'bin(x, 1)': 3, 'lag(y, 1)': 2},
+      {x: 1.2, y: 1, 'bin([x],1)': 1, 'lag([y],1)': undefined},
+      {x: 3.3, y: 2, 'bin([x],1)': 3, 'lag([y],1)': 1},
+      {x: 3.3, y: 3, 'bin([x],1)': 3, 'lag([y],1)': 2},
     ]
 
   data = polyjs.data
@@ -52,15 +66,11 @@ test "transforms -- numeric binning", ->
       {x: 3.3, y: 2},
       {x: 3.3, y: 3},
     ]
-  trans = transformData data,
-    trans: [
-      { key: 'x', trans: "bin", binwidth: 1, name: "bin(x, 1)" }
-      { key: 'y', trans: "lag", lag: 2, name: "lag(y, 2)" }
-    ]
+  trans = transformData data, fill(trans:["bin(x,1)", "lag(y,2)"])
   deepEqual trans.data, [
-      {x: 1.2, y: 1, 'bin(x, 1)': 1, 'lag(y, 2)': undefined},
-      {x: 3.3, y: 2, 'bin(x, 1)': 3, 'lag(y, 2)': undefined},
-      {x: 3.3, y: 3, 'bin(x, 1)': 3, 'lag(y, 2)': 1},
+      {x: 1.2, y: 1, 'bin([x],1)': 1, 'lag([y],2)': undefined},
+      {x: 3.3, y: 2, 'bin([x],1)': 3, 'lag([y],2)': undefined},
+      {x: 3.3, y: 3, 'bin([x],1)': 3, 'lag([y],2)': 1},
     ]
 
 test "transforms -- dates binning", ->

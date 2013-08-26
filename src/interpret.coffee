@@ -22,7 +22,8 @@ fns =
       (row) ->
         val = args[0](row)
         lag = args[1](row) # need to be a const!
-        if currentLag=_.size(lastn) is 0
+        currentLag = _.size(lastn)
+        if currentLag is 0
           lastn = (undefined for i in [1..lag])
         else if currentLag isnt lag
           throw poly.error.defn "Lag period needs to be constant, but isn't!"
