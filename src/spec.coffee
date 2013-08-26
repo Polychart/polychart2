@@ -80,7 +80,6 @@ poly.spec.layerToData = (lspec, grouping=[]) ->
   stat = []; select = []; groups = []; sort = []
   for key, desc of aesthetics
     {exprType, expr, statInfo} = poly.parser.getExpression(desc.var)
-    # TODO: add hack for count(*)
     desc.var = expr.name # replace current spec with prettified name
     select.push(expr)
     if exprType == 'trans'
@@ -95,7 +94,6 @@ poly.spec.layerToData = (lspec, grouping=[]) ->
       groups.push expr
 
     if 'sort' of desc
-      # TODO: add hack for count(*)
       sexpr = poly.parser.getExpression(desc.sort)
       statinfo = sexpr.statInfo()
       if statinfo

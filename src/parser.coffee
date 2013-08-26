@@ -567,9 +567,8 @@ getType = (str, typeEnv) ->
   else
     type.name
   
-
-# how to strip statistics?
 getExpression = (str) ->
+  if str is 'count(*)' then str = 'count(1)'
   expr = parse str # main expression
   exprObj = (e) -> {name: e.pretty(), expr: exprJSON(e)} # helper functions
   statInfo = ->

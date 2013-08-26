@@ -4,7 +4,7 @@
   data = polyjs.data {data: content, meta: {dataset_id: {type: 'num'}, user_id: {type: 'num'}, public: {type: 'cat'}}}
   spec = {
     layers: [
-      {data : data, type: 'point', x: 'bin(dataset_id, 100)', y: 'public', color: 'count(user_id)'}
+      {data : data, type: 'point', x: 'bin(dataset_id, 100)', y: 'public', color: 'count(*)'}
     ]
     dom: dom
   }

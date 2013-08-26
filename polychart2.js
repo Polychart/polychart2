@@ -3486,6 +3486,9 @@ See the spec definition for more information.
   getExpression = function(str) {
     var etc, expr, exprObj, obj, rootType, statInfo, type, _ref6, _ref7;
 
+    if (str === 'count(*)') {
+      str = 'count(1)';
+    }
     expr = parse(str);
     exprObj = function(e) {
       return {

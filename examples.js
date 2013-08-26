@@ -2952,7 +2952,7 @@
           type: 'point',
           x: 'bin(dataset_id, 100)',
           y: 'public',
-          color: 'count(user_id)'
+          color: 'count(*)'
         }
       ],
       dom: dom
