@@ -319,6 +319,8 @@ exprType = (funcTypeEnv, colTypeEnv, expr) ->
   tapply = (fname, targs) ->
     if fname not of funcTypeEnv
       throw poly.error.defn "unknown function name: #{fname}"
+    if fname is 'bin' and targs.length is 2 and targs[0] == tdate
+      fname = 'bindate'
     tfunc = funcTypeEnv[fname]
     tresult = new UnknownType
     tfunc.unify(new FuncType(targs, tresult))
@@ -339,6 +341,7 @@ exprType = (funcTypeEnv, colTypeEnv, expr) ->
 
 tcat = DataType.Base.cat
 tnum = DataType.Base.num
+tdate = DataType.Base.date
 pairNumToNum = new FuncType([tnum, tnum], tnum)
 
 initialFuncTypeEnv = {'++': new FuncType([tcat, tcat], tcat)}
@@ -348,6 +351,8 @@ for fname in ['sum', 'count', 'unique', 'mean', 'box', 'median']
   initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat)
 for fname in ['log']
   initialFuncTypeEnv[fname] = new FuncType([tnum], tnum)
+initialFuncTypeEnv['bin'] = new FuncType([tnum, tnum], tnum)
+initialFuncTypeEnv['bindate'] = new FuncType([tdate, tcat], tdate)
 
 ###############################################################################
 # JSON serialization
@@ -546,7 +551,12 @@ createColTypeEnv = (metas) ->
     colTypeEnv[key] = DataType.Base[meta.type]
   colTypeEnv
 
-getType = (str, typeEnv) -> exprType(initialFuncTypeEnv, typeEnv, parse(str))
+getType = (str, typeEnv) ->
+  type = exprType(initialFuncTypeEnv, typeEnv, parse(str))
+  if type.name is 'stat'
+    'num'
+  else
+    type.name
   
 
 # how to strip statistics?
@@ -569,6 +579,13 @@ getExpression = (str) ->
 
 makeTypeEnv = (meta) ->
 
+getName = (str) ->
+  expr = parse str
+  if 'name' of expr # shorthand for this being an identifier
+    expr.name
+  else
+    str
+
 poly.parser = {
   tj: testExprJSON  # TODO: remove after testing
   tc: typeCheck  # TODO: remove after testing
@@ -578,8 +595,7 @@ poly.parser = {
   getType
   tokenize
   parse
-  bracket
-  unbracket
+  unbracket: getName
   layerToData: layerToDataSpec
   pivotToData: pivotToDataSpec
   numeralToData: numeralToDataSpec

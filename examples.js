@@ -973,7 +973,7 @@
         {
           data: data,
           type: 'bar',
-          x: 'bin("time", "month")',
+          x: 'bin([time], "month")',
           y: 'sum(value)'
         }
       ],
@@ -1061,7 +1061,7 @@
         {
           data: data,
           type: 'bar',
-          x: 'bin("time", "month")',
+          x: 'bin([time], "month")',
           y: 'sum(value)'
         }
       ],

@@ -187,11 +187,6 @@ statistics =
     return {
       outliers: values
     }
-###
-Helper function to figures out which statistics to create, then creates it
-###
-statsFactory = (statSpec) ->
-  statistics[statSpec.stat](statSpec)
 
 ###
 Calculate statistics
@@ -201,14 +196,15 @@ calculateStats = (data, statSpecs) ->
   statFuncs = {}
   _.each statSpecs.stats, (statSpec) ->
     {name, expr, args} = statSpec
-    fn = statSpec[name]
-    key = statsFunc.args[0].name
+    fn = statistics[name]
+    key = poly.parser.unbracket(args[0].name)
     statFuncs[expr.name] = (data) -> fn _.pluck(data, key)
   # calculate the statistics for each group
   groupedData = poly.groupBy data, (e.name for e in statSpecs.groups)
   _.map groupedData, (data) ->
     rep = {}
     for {name} in statSpecs.groups
+      name = poly.parser.unbracket(name)
       rep[name] = data[0][name] # define a representative
     for name, stats of statFuncs
       rep[name] = stats(data) # calc stats
@@ -260,7 +256,7 @@ frontendProcess = (dataSpec, data, callback) ->
   data = _.clone(data.raw)
   addData = (key, fn) ->
     for d in data
-      d[key] = fn
+      d[key] = fn(d)
   # transforms
   if dataSpec.trans
     for expr in dataSpec.trans
@@ -281,8 +277,8 @@ frontendProcess = (dataSpec, data, callback) ->
   if dataSpec.stats and dataSpec.stats.stats and dataSpec.stats.stats.length > 0
     data = calculateStats(data, dataSpec.stats)
     for statSpec in dataSpec.stats.stats
-      {name} = statSpec
-      addMeta name, {type: 'num'}
+      {expr} = statSpec
+      addMeta(expr)
   # select: make sure everything selected is there
   for key in dataSpec.select ? []
     name = poly.parser.unbracket(key.name)
