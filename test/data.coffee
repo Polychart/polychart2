@@ -74,7 +74,28 @@ test "transforms -- numeric binning", ->
       {x: 3.3, y: 3, 'bin([x],1)': 3, 'lag([y],2)': 1},
     ]
 
-test "transforms -- dates binning", ->
+test "other functions", ->
+  data = polyjs.data
+    data: [
+      {x: 12, y: 42},
+      {x: 33, y: 56},
+    ]
+  trans = transformData data, fill(trans:["x + y"])
+  deepEqual trans.data, [
+      {x: 12, y: 42, '([x] + [y])': 54},
+      {x: 33, y: 56, '([x] + [y])': 89},
+    ]
+
+  data = polyjs.data
+    data: [
+      {x: 12, y: 42},
+      {x: 33, y: 56},
+    ]
+  trans = transformData data, fill(trans:["x * 2 + y"])
+  deepEqual trans.data, [
+      {x: 12, y: 42, '(([x] * 2) + [y])': 66},
+      {x: 33, y: 56, '(([x] * 2) + [y])': 122},
+    ]
 
 test "filtering", ->
   data = polyjs.data data: [
