@@ -1784,7 +1784,7 @@ See the spec definition for more information.
   };
 
   poly.spec.layerToData = function(lspec, grouping) {
-    var aesthetics, arg, args, desc, expr, exprType, filters, fname, groups, grpvar, key, sdesc, select, sexpr, sort, stat, statInfo, statinfo, trans, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _ref4;
+    var aesthetics, arg, args, desc, expr, exprType, filters, fname, groups, grpvar, key, sdesc, select, sexpr, sort, stat, statInfo, statinfo, trans, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
 
     if (grouping == null) {
       grouping = [];
@@ -1830,11 +1830,11 @@ See the spec definition for more information.
         }
         sdesc = {
           key: expr,
-          sort: sexpr,
+          sort: sexpr.expr,
           stat: fname,
           args: args,
           limit: desc.limit,
-          asc: desc.asc != null ? desc.asc : false
+          asc: (_ref4 = desc.asc) != null ? _ref4 : false
         };
         for (_j = 0, _len1 = args.length; _j < _len1; _j++) {
           arg = args[_j];
@@ -1847,7 +1847,7 @@ See the spec definition for more information.
     }
     for (_k = 0, _len2 = grouping.length; _k < _len2; _k++) {
       grpvar = grouping[_k];
-      _ref4 = poly.parser.getExpression(grpvar["var"]), exprType = _ref4.exprType, expr = _ref4.expr, statInfo = _ref4.statInfo;
+      _ref5 = poly.parser.getExpression(grpvar["var"]), exprType = _ref5.exprType, expr = _ref5.expr, statInfo = _ref5.statInfo;
       if (exprType === 'trans') {
         trans.push(expr);
       } else if (exprType === 'stat') {
@@ -3107,7 +3107,7 @@ See the spec definition for more information.
     initialFuncTypeEnv[opname] = pairNumToNum;
   }
 
-  _ref3 = ['sum', 'mean', 'box', 'median'];
+  _ref3 = ['sum', 'mean', 'box', 'median', 'min', 'max'];
   for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
     fname = _ref3[_j];
     initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat);
@@ -3507,7 +3507,7 @@ See the spec definition for more information.
     statInfo = function() {};
     obj = exprObj(expr);
     _ref7 = obj.expr, rootType = _ref7[0], etc = _ref7[1];
-    type = rootType === "ident" ? 'ident' : _.has(expr, 'fname') && ((_ref8 = expr.fname) === 'sum' || _ref8 === 'count' || _ref8 === 'unique' || _ref8 === 'mean' || _ref8 === 'box' || _ref8 === 'median') ? (statInfo = function() {
+    type = rootType === "ident" ? 'ident' : _.has(expr, 'fname') && ((_ref8 = expr.fname) === 'sum' || _ref8 === 'count' || _ref8 === 'unique' || _ref8 === 'mean' || _ref8 === 'box' || _ref8 === 'median' || _ref8 === 'min' || _ref8 === 'max') ? (statInfo = function() {
       var a;
 
       return {
@@ -3657,7 +3657,6 @@ See the spec definition for more information.
               return _results;
             })();
           } else if (currentLag !== lag) {
-            debugger;
             throw poly.error.defn("Lag period needs to be constant, but isn't!");
           }
           lastn.push(val);
@@ -8181,25 +8180,26 @@ data processing to be done.
 
 
   filterFactory = function(filterSpec) {
-    var filter, filterFuncs, key, spec, _i, _len;
+    var filterFuncs;
 
     filterFuncs = [];
-    for (_i = 0, _len = filterSpec.length; _i < _len; _i++) {
-      filter = filterSpec[_i];
+    _.each(filterSpec, function(filter) {
+      var key, spec;
+
       key = poly.parser.unbracket(filter.expr.name);
       spec = _.pick(filter, 'lt', 'gt', 'le', 'ge', 'in');
-      _.each(spec, function(value, predicate) {
+      return _.each(spec, function(value, predicate) {
         filter = function(item) {
           return filters[predicate](item[key], value);
         };
         return filterFuncs.push(filter);
       });
-    }
+    });
     return function(item) {
-      var f, _j, _len1;
+      var f, _i, _len;
 
-      for (_j = 0, _len1 = filterFuncs.length; _j < _len1; _j++) {
-        f = filterFuncs[_j];
+      for (_i = 0, _len = filterFuncs.length; _i < _len; _i++) {
+        f = filterFuncs[_i];
         if (!f(item)) {
           return false;
         }
@@ -8340,7 +8340,7 @@ data processing to be done.
 
 
   calculateMeta = function(metaSpec, data) {
-    var args, asc, comparator, key, limit, multiplier, sort, stat, statSpec, values;
+    var args, asc, comparator, key, limit, multiplier, sort, sortKey, stat, statSpec, values;
 
     key = metaSpec.key, sort = metaSpec.sort, stat = metaSpec.stat, args = metaSpec.args, limit = metaSpec.limit, asc = metaSpec.asc;
     if (stat) {
@@ -8357,11 +8357,12 @@ data processing to be done.
       data = calculateStats(data, statSpec);
     }
     multiplier = asc ? 1 : -1;
+    sortKey = poly.parser.unbracket(sort.name);
     comparator = function(a, b) {
-      if (a[sort] === b[sort]) {
+      if (a[sortKey] === b[sortKey]) {
         return 0;
       }
-      if (a[sort] >= b[sort]) {
+      if (a[sortKey] >= b[sortKey]) {
         return 1 * multiplier;
       }
       return -1 * multiplier;
@@ -8370,13 +8371,14 @@ data processing to be done.
     if (limit) {
       data = data.slice(0, +(limit - 1) + 1 || 9e9);
     }
-    values = _.uniq(_.pluck(data, key));
+    values = _.uniq(_.pluck(data, poly.parser.unbracket(key.name)));
     return {
       meta: {
         levels: values,
         sorted: true
       },
       filter: {
+        expr: key,
         "in": values
       }
     };
@@ -8399,10 +8401,13 @@ data processing to be done.
 
     metaData = (_ref = _.clone(data.meta)) != null ? _ref : {};
     getMeta = poly.interpret.getMeta(metaData);
-    addMeta = function(expr) {
+    addMeta = function(expr, meta) {
       var _ref1;
 
-      return metaData[expr.name] = _.extend((_ref1 = metaData[expr.name]) != null ? _ref1 : {}, getMeta(expr));
+      if (meta == null) {
+        meta = {};
+      }
+      return metaData[expr.name] = _.extend((_ref1 = metaData[expr.name]) != null ? _ref1 : {}, getMeta(expr), meta);
     };
     data = _.clone(data.raw);
     addData = function(key, fn) {
@@ -8427,16 +8432,17 @@ data processing to be done.
       data = _.filter(data, filterFactory(dataSpec.filter));
     }
     if (dataSpec.sort) {
-      additionalFilter = {};
+      additionalFilter = [];
       _ref2 = dataSpec.sort;
       for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
         metaSpec = _ref2[_j];
         key = metaSpec.key;
         _ref3 = calculateMeta(metaSpec, data), meta = _ref3.meta, filter = _ref3.filter;
-        additionalFilter[key] = filter;
+        additionalFilter.push(filter);
         addMeta(key, meta);
       }
       data = _.filter(data, filterFactory(additionalFilter));
+      console.log(data);
     }
     if (dataSpec.stats && dataSpec.stats.stats && dataSpec.stats.stats.length > 0) {
       data = calculateStats(data, dataSpec.stats);

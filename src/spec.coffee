@@ -103,11 +103,11 @@ poly.spec.layerToData = (lspec, grouping=[]) ->
         args = []
       sdesc = {
         key: expr    # key to grouping (i.e. thing to sort)
-        sort: sexpr  # value to sort by
+        sort: sexpr.expr  # value to sort by
         stat: fname  # statistics
         args: args   # arguments to the stats
         limit: desc.limit
-        asc: if desc.asc? then desc.asc else false
+        asc: desc.asc ? false
       }
       for arg in args
         if arg.expr[0] isnt 'ident'

@@ -129,7 +129,7 @@ Helper function to figures out which filter to create, then creates it
 ###
 filterFactory = (filterSpec) ->
   filterFuncs = []
-  for filter in filterSpec
+  _.each filterSpec, (filter) ->
     key = poly.parser.unbracket filter.expr.name
     spec = _.pick(filter, 'lt', 'gt', 'le', 'ge', 'in')
     _.each spec, (value, predicate) ->
@@ -226,16 +226,20 @@ calculateMeta = (metaSpec, data) ->
     data = calculateStats(data, statSpec)
   # sorting
   multiplier = if asc then 1 else -1
+  sortKey = poly.parser.unbracket sort.name
   comparator = (a, b) ->
-    if a[sort] == b[sort] then return 0
-    if a[sort] >= b[sort] then return 1 * multiplier
+    if a[sortKey] == b[sortKey] then return 0
+    if a[sortKey] >= b[sortKey] then return 1 * multiplier
     return -1 * multiplier
   data.sort comparator
   # limiting
   if limit
     data = data[0..limit-1]
-  values = _.uniq _.pluck data, key
-  return meta: { levels: values, sorted: true}, filter: { in: values}
+  values = _.uniq _.pluck data, poly.parser.unbracket key.name
+  return {
+    meta: { levels: values, sorted: true}
+    filter: {expr: key, in: values}
+  }
 
 ###
 GENERAL PROCESSING
@@ -250,8 +254,8 @@ frontendProcess = (dataSpec, data, callback) ->
   # metaData and related f'ns
   metaData = _.clone(data.meta) ? {}
   getMeta = poly.interpret.getMeta(metaData)
-  addMeta = (expr) ->
-    metaData[expr.name] = _.extend (metaData[expr.name] ? {}), getMeta(expr)
+  addMeta = (expr, meta={}) ->
+    metaData[expr.name] = _.extend (metaData[expr.name] ? {}), getMeta(expr), meta
   # data & related f'ns
   data = _.clone(data.raw)
   addData = (key, fn) ->
@@ -267,13 +271,14 @@ frontendProcess = (dataSpec, data, callback) ->
     data = _.filter data, filterFactory(dataSpec.filter)
   # meta + more filtering
   if dataSpec.sort
-    additionalFilter = {}
+    additionalFilter = []
     for metaSpec in dataSpec.sort
       key = metaSpec.key
       {meta, filter} = calculateMeta(metaSpec, data)
-      additionalFilter[key] = filter
+      additionalFilter.push(filter)
       addMeta key, meta
     data = _.filter data, filterFactory(additionalFilter)
+    console.log data
   # stats
   if dataSpec.stats and dataSpec.stats.stats and dataSpec.stats.stats.length > 0
     data = calculateStats(data, dataSpec.stats)

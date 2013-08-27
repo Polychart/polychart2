@@ -352,7 +352,7 @@ pairNumToNum = new FuncType([tnum, tnum], tnum)
 initialFuncTypeEnv = {'++': new FuncType([tcat, tcat], tcat)}
 for opname in ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==']
   initialFuncTypeEnv[opname] = pairNumToNum
-for fname in ['sum', 'mean', 'box', 'median']
+for fname in ['sum', 'mean', 'box', 'median', 'min', 'max']
   initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat)
 for fname in ['count', 'unique']
   initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat)
@@ -582,7 +582,7 @@ getExpression = (str) ->
   type =
     if rootType == "ident"
       'ident' #just an identifier, nothing fancy
-    else if _.has(expr, 'fname') and expr.fname in ['sum', 'count', 'unique', 'mean', 'box', 'median'] # hack
+    else if _.has(expr, 'fname') and expr.fname in ['sum', 'count', 'unique', 'mean', 'box', 'median', 'min', 'max'] # hack
       statInfo = () -> {fname: expr.fname, args: exprObj(a) for a in expr.args}
       'stat' #statistics
     else

@@ -45,7 +45,7 @@ test "extraction: stats + filter", ->
   dspec = polyjs.debug.spec.layerToData layerparser
   expected =
     filter: [{expr: 'a', gt: 0, lt: 100}]
-    sort: [{var: 'b', sort: 'a', limit: null, asc:false}]
+    sort: [{key: 'b', sort: 'a', limit: null, asc:false}]
     select: ['a', 'b', 'sum(c)']
     stats: [{name:'sum', expr: 'sum(c)', args:['c']}]
     groups: ['a', 'b']
@@ -63,7 +63,7 @@ test "extraction: transforms", ->
   dspec = polyjs.debug.spec.layerToData layerparser
   expected =
     filter: []
-    sort: [{var: 'log(b)', sort: 'a', limit: null, asc:true}]
+    sort: [{key: 'log(b)', sort: 'a', limit: null, asc:true}]
     select: ['c + 2', 'log(b)', 'count(d)']
     stats: [{name:'count', expr: 'count(d)', args:['d']}]
     groups: ['c + 2', 'log(b)']
@@ -111,8 +111,12 @@ parserEqual = (produced, expected) ->
   deepEqual produced.filter, expected.filter, 'filter'
 
   for val in expected.sort
-    val.var = parse(val.var).name
+    val.key = parse val.key
     val.sort = parse val.sort
+    val.args ?= []
+    val.limit ?= undefined
+    val.stat ?= null
+    val.asc ?= false
   deepEqual produced.sort, expected.sort, 'sort'
   deepEqual produced.select, (parse str for str in expected.select), 'select'
 

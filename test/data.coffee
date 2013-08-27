@@ -11,8 +11,9 @@ fill = (dataSpec) ->
     f.expr = parse(f.expr)
   dataSpec.sort ?= []
   for val in dataSpec.sort
-    val.var = parse(val.var).name
+    val.key = parse val.key
     val.sort = parse val.sort
+    val.args = (parse(a) for a in val.args ? [])
   dataSpec.select ?= []
   dataSpec.select = (parse str for str in dataSpec.select)
   dataSpec.trans ?= []
@@ -81,44 +82,34 @@ test "filtering", ->
     {x: 3.3, y: 2},
     {x: 3.4, y: 3},
   ]
-  trans = transformData data,
-    trans: [
-      { key: 'x', trans: "bin", binwidth: 1, name: "bin(x, 1)" }
-      { key: 'y', trans: "lag", lag: 1, name: "lag(y, 1)" }
+  trans = transformData data, fill(
+    trans: ["bin(x,1)", "lag([y], 1)"]
+    filter: [
+      {expr: 'x', lt: 3}
     ]
-    filter:
-      x:
-        lt: 3
+  )
   deepEqual trans.data, [
-      {x: 1.2, y: 1, 'bin(x, 1)': 1, 'lag(y, 1)': undefined},
+      {x: 1.2, y: 1, 'bin([x],1)': 1, 'lag([y],1)': undefined},
     ]
 
-  trans = transformData data,
-    trans: [
-      { key: 'x', trans: "bin", binwidth: 1, name: "bin(x, 1)"}
-      { key: 'y', trans: "lag", lag: 1, name: "lag(y, 1)"}
-    ]
-    filter:
-      x:
-        lt: 3.35
-        gt: 1.2
+  trans = transformData data, fill(
+    trans: ["bin(x, 1)", "lag(y, 1)"]
+    filter: [{expr:'x', lt: 3.35, gt: 1.2}]
+  )
   deepEqual trans.data, [
-      {x: 3.3, y: 2, 'bin(x, 1)': 3, 'lag(y, 1)': 1},
+      {x: 3.3, y: 2, 'bin([x],1)': 3, 'lag([y],1)': 1},
     ]
 
-  trans = transformData data,
-    trans: [
-      { key: 'x', trans: "bin", binwidth: 1, name: "bin(x, 1)"}
-      { key: 'y', trans: "lag", lag: 1, name: "lag(y, 1)"}
+  trans = transformData data, fill(
+    trans: ["bin(x, 1)", "lag(y, 1)"]
+    filter: [
+      { expr: 'x', le: 3.35, ge: 1.2 }
+      { expr: 'y', lt: 100 }
     ]
-    filter:
-      x:
-        le: 3.35, ge: 1.2
-      y:
-        lt: 100
+  )
   deepEqual trans.data, [
-      {x: 1.2, y: 1, 'bin(x, 1)': 1, 'lag(y, 1)': undefined},
-      {x: 3.3, y: 2, 'bin(x, 1)': 3, 'lag(y, 1)': 1},
+      {x: 1.2, y: 1, 'bin([x],1)': 1, 'lag([y],1)': undefined},
+      {x: 3.3, y: 2, 'bin([x],1)': 3, 'lag([y],1)': 1},
     ]
 
   data = polyjs.data data:[
@@ -126,15 +117,14 @@ test "filtering", ->
     {x: 3.3, y: 2, z: 'B'},
     {x: 3.4, y: 3, z: 'B'},
   ]
-  trans = transformData data,
-    filter: z: in: 'B'
+  trans = transformData data, fill(filter: [ {expr:'z', in: ['B']} ])
   deepEqual trans.data, [
       {x: 3.3, y: 2, z:'B'}
       {x: 3.4, y: 3, z:'B'}
     ]
 
   trans = transformData data,
-    filter: z: in: ['A', 'B']
+  trans = transformData data, fill(filter: [ {expr:'z', in: ['A', 'B']} ])
   deepEqual trans.data, [
       {x: 1.2, y: 1, z:'A'}
       {x: 3.3, y: 2, z:'B'}
@@ -156,55 +146,59 @@ test "statistics - count", ->
     {x: 'B', y: undefined, z:1}
     {x: 'B', y: null, z:2}
   ]
-  trans = transformData data,
+  trans = transformData data, fill(
     stats:
       stats: [
-        key: 'y', stat: 'count', name: 'count(y)'
+        {name: 'count', expr: 'count(y)', args:['y']}
       ]
       groups: ['x']
+  )
   deepEqual trans.data, [
-      {x: 'A', 'count(y)': 6}
-      {x: 'B', 'count(y)': 4}
+      {x: 'A', 'count([y])': 6}
+      {x: 'B', 'count([y])': 4}
     ]
 
-  trans = transformData data,
+  trans = transformData data, fill(
     stats:
       stats: [
-        key: 'y', stat: 'count', name: 'count(y)'
+        {name: 'count', expr: 'count(y)', args:['y']}
       ]
       groups: ['x', 'z']
+  )
   deepEqual trans.data, [
-      {x: 'A', z:1, 'count(y)': 3}
-      {x: 'A', z:2, 'count(y)': 3}
-      {x: 'B', z:1, 'count(y)': 2}
-      {x: 'B', z:2, 'count(y)': 2}
+      {x: 'A', z:1, 'count([y])': 3}
+      {x: 'A', z:2, 'count([y])': 3}
+      {x: 'B', z:1, 'count([y])': 2}
+      {x: 'B', z:2, 'count([y])': 2}
     ]
 
-  trans = transformData data,
+  trans = transformData data, fill(
     stats:
       stats: [
-        key: 'y', stat: 'unique', name: 'unique(y)'
+        {name:'unique', expr: 'unique(y)', args:['y']}
       ],
       groups: ['x', 'z']
+  )
   deepEqual trans.data, [
-      {x: 'A', z:1, 'unique(y)': 1}
-      {x: 'A', z:2, 'unique(y)': 1}
-      {x: 'B', z:1, 'unique(y)': 1}
-      {x: 'B', z:2, 'unique(y)': 1}
+      {x: 'A', z:1, 'unique([y])': 1}
+      {x: 'A', z:2, 'unique([y])': 1}
+      {x: 'B', z:1, 'unique([y])': 1}
+      {x: 'B', z:2, 'unique([y])': 1}
     ]
 
-  trans = transformData data,
+  trans = transformData data, fill(
     stats:
       stats: [
-        {key: 'y', stat: 'count', name: 'count(y)'}
-        {key: 'y', stat: 'unique', name: 'unique(y)'}
+        {name: 'count', expr: 'count(y)', args:['y']}
+        {name:'unique', expr: 'unique(y)', args:['y']}
       ]
       groups: ['x', 'z']
+  )
   deepEqual trans.data, [
-      {x: 'A', z:1, 'count(y)':3, 'unique(y)': 1}
-      {x: 'A', z:2, 'count(y)':3, 'unique(y)': 1}
-      {x: 'B', z:1, 'count(y)':2, 'unique(y)': 1}
-      {x: 'B', z:2, 'count(y)':2, 'unique(y)': 1}
+      {x: 'A', z:1, 'count([y])':3, 'unique([y])': 1}
+      {x: 'A', z:2, 'count([y])':3, 'unique([y])': 1}
+      {x: 'B', z:1, 'count([y])':2, 'unique([y])': 1}
+      {x: 'B', z:2, 'count([y])':2, 'unique([y])': 1}
     ]
 
   data = polyjs.data data:[
@@ -218,17 +212,18 @@ test "statistics - count", ->
     {x: 'B', y: 3, z:1}
     {x: 'B', y: 4, z:2}
   ]
-  trans = transformData data,
+  trans = transformData data, fill(
     stats:
       stats: [
-        {key: 'y', stat: 'min', name: 'min(y)'}
-        {key: 'y', stat: 'max', name: 'max(y)'}
-        {key: 'y', stat: 'median', name: 'median(y)'}
+        {args: ['y'], name: 'min', expr: 'min(y)'}
+        {args: ['y'], name: 'max', expr: 'max(y)'}
+        {args: ['y'], name: 'median', expr: 'median(y)'}
       ]
       groups: ['x']
+  )
   deepEqual trans.data, [
-      {x: 'A', 'min(y)': 1, 'max(y)': 5, 'median(y)': 3}
-      {x: 'B', 'min(y)': 1, 'max(y)': 4, 'median(y)': 2.5}
+      {x: 'A', 'min([y])': 1, 'max([y])': 5, 'median([y])': 3}
+      {x: 'B', 'min([y])': 1, 'max([y])': 4, 'median([y])': 2.5}
     ]
 
   data = polyjs.data data:[
@@ -244,15 +239,16 @@ test "statistics - count", ->
     {x: 'B', y: 3, z:1}
     {x: 'B', y: 4, z:2}
   ]
-  trans = transformData data,
+  trans = transformData data, fill(
     stats:
       stats: [
-        key: 'y', stat: 'box', name: 'box(y)'
+        args: ['y'], name: 'box', expr: 'box(y)'
       ]
       groups: ['x']
+  )
   deepEqual trans.data, [
-      {x: 'A', 'box(y)': {q1:1, q2:2.5, q3:4, q4:5.5, q5:6, outliers:[15]}}
-      {x: 'B', 'box(y)': {outliers:[1,2,3,4]}}
+      {x: 'A', 'box([y])': {q1:1, q2:2.5, q3:4, q4:5.5, q5:6, outliers:[15]}}
+      {x: 'B', 'box([y])': {outliers:[1,2,3,4]}}
     ]
 
 test "meta sorting", ->
@@ -261,19 +257,16 @@ test "meta sorting", ->
     {x: 'B', y: 1}
     {x: 'C', y: 2}
   ]
-  trans = transformData data,
-    sort:
-      x: {sort: 'y', asc: true}
+  trans = transformData data, fill
+    sort: [ {key: 'x', sort: 'y', asc: true} ]
   deepEqual _.pluck(trans.data, 'x'), ['B','C','A']
 
-  trans = transformData data,
-    sort:
-      x: {sort: 'y', asc: true, limit: 2}
+  trans = transformData data, fill
+    sort: [ {key: 'x', sort: 'y', asc: true, limit: 2} ]
   deepEqual _.pluck(trans.data, 'x'), ['B','C']
 
-  trans = transformData data,
-    sort:
-      x: {sort: 'y', asc: false, limit: 1}
+  trans = transformData data, fill
+    sort: [ {key: 'x', sort: 'y', asc: false, limit: 1} ]
   deepEqual _.pluck(trans.data, 'x'), ['A']
 
   data = polyjs.data data:[
@@ -282,12 +275,8 @@ test "meta sorting", ->
     {x: 'C', y: 2}
     {x: 'C', y: 2}
   ]
-  trans = transformData data,
-    sort: x:
-      sort: 'sum(y)',
-      stat: {key: 'y', stat:'sum', name:'sum(y)'},
-      asc: false,
-      limit: 1
+  trans = transformData data, fill
+    sort: [ {key: 'x', sort: 'sum(y)', stat: 'sum', asc: false, limit: 1, args: ['y']} ]
   deepEqual _.pluck(trans.data, 'x'), ['C', 'C']
 
   data = polyjs.data data:[
@@ -296,11 +285,7 @@ test "meta sorting", ->
     {x: 'C', y: 2}
     {x: 'C', y: 2}
   ]
-  trans = transformData data,
-    sort: x:
-      sort: 'sum(y)',
-      stat: {key: 'y', stat:'sum', name:'sum(y)'},
-      asc: true,
-      limit: 1
+  trans = transformData data, fill
+    sort: [ {key: 'x', sort: 'sum(y)', stat: 'sum', args: ['y'], asc: true, limit: 1} ]
   deepEqual _.pluck(trans.data, 'x'), ['B']
 
