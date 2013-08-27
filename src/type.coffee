@@ -10,7 +10,7 @@ poly.type.impute = (values) ->
   num = 0
   length = 0
   for value in values
-    if not value? or value is undefined or value is null
+    if not value?
       continue
     length++
     # check if it's a number
@@ -40,7 +40,9 @@ poly.type.coerce = (value, meta) ->
     else
       +((""+value).replace(/\$|\,/g,''))
   else if meta.type is 'date'
-    if meta.format
+    if not _.isNumber(value) and _.isEmpty(value)
+      null
+    else if meta.format
       if meta.format is 'unix'
         moment.unix(value).unix() #sounds inefficient, but error checks?
       else

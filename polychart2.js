@@ -1520,7 +1520,7 @@ Impute types from values
     length = 0;
     for (_i = 0, _len = values.length; _i < _len; _i++) {
       value = values[_i];
-      if ((value == null) || value === void 0 || value === null) {
+      if (value == null) {
         continue;
       }
       length++;
@@ -1558,7 +1558,9 @@ Impute types from values
         return +(("" + value).replace(/\$|\,/g, ''));
       }
     } else if (meta.type === 'date') {
-      if (meta.format) {
+      if (!_.isNumber(value) && _.isEmpty(value)) {
+        return null;
+      } else if (meta.format) {
         if (meta.format === 'unix') {
           return moment.unix(value).unix();
         } else {
@@ -7946,18 +7948,15 @@ data processing to be done.
       this.parseMethod = parseMethod != null ? parseMethod : poly.spec.layerToData;
       this._wrap = __bind(this._wrap, this);
       this.make = __bind(this.make, this);
-      this.layerMeta = layerSpec.meta;
+      this.layerMeta = _.extend({}, layerSpec.meta, {
+        _additionalInfo: layerSpec.additionalInfo
+      });
       this.dataObj = layerSpec.data;
-      this.initialSpec = this.parseMethod(layerSpec, grouping);
       this.prevSpec = null;
       this.strictmode = strictmode;
       this.statData = null;
       this.metaData = {};
     }
-
-    DataProcess.prototype.reset = function(callback) {
-      return this.make(this.initialSpec, callback);
-    };
 
     DataProcess.prototype.make = function(spec, grouping, callback) {
       var dataSpec, wrappedCallback;
@@ -8053,7 +8052,7 @@ data processing to be done.
       name = transSpec.name, binwidth = transSpec.binwidth;
       if (meta.type === 'num') {
         if (isNaN(binwidth)) {
-          throw poly.error.defn("The binwidth " + binwidth + " is invalid for a numeric varliable");
+          throw poly.error.defn("The binwidth " + binwidth + " is invalid for a numeric variable");
         }
         binwidth = +binwidth;
         binFn = function(item) {
@@ -8070,7 +8069,7 @@ data processing to be done.
       }
       if (meta.type === 'date') {
         if (!(__indexOf.call(poly["const"].timerange, binwidth) >= 0)) {
-          throw poly.error.defn("The binwidth " + binwidth + " is invalid for a datetime varliable");
+          throw poly.error.defn("The binwidth " + binwidth + " is invalid for a datetime variable");
         }
         binFn = function(item) {
           var _timeBinning,
@@ -8189,6 +8188,9 @@ data processing to be done.
       key = poly.parser.unbracket(filter.expr.name);
       spec = _.pick(filter, 'lt', 'gt', 'le', 'ge', 'in');
       return _.each(spec, function(value, predicate) {
+        if (!(predicate in filters)) {
+          return;
+        }
         filter = function(item) {
           return filters[predicate](item[key], value);
         };
@@ -8786,17 +8788,16 @@ Shared constants
     };
 
     Layer.prototype._inLevels = function(item) {
-      var aes, _i, _len, _ref, _ref1;
+      var aes, _i, _len, _ref, _ref1, _ref2;
 
       _ref = ['x', 'y'];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         aes = _ref[_i];
-        if ((this.guideSpec[aes] != null) && (this.guideSpec[aes].levels != null)) {
-          return _ref1 = item[this.spec[aes]["var"]], __indexOf.call(this.guideSpec[aes].levels, _ref1) >= 0;
-        } else {
-          return true;
+        if ((((_ref1 = this.guideSpec[aes]) != null ? _ref1.levels : void 0) != null) && (_ref2 = item[this.spec[aes]["var"]], __indexOf.call(this.guideSpec[aes].levels, _ref2) < 0)) {
+          return false;
         }
       }
+      return true;
     };
 
     return Layer;

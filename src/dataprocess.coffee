@@ -6,15 +6,12 @@ data processing to be done.
 class DataProcess
   ## save the specs
   constructor: (layerSpec, grouping, strictmode, @parseMethod=poly.spec.layerToData) ->
-    @layerMeta = layerSpec.meta
-    @dataObj = layerSpec.data
-    @initialSpec = @parseMethod layerSpec, grouping
-    @prevSpec = null
+    @layerMeta  = _.extend {}, layerSpec.meta, _additionalInfo: layerSpec.additionalInfo
+    @dataObj    = layerSpec.data
+    @prevSpec   = null
     @strictmode = strictmode
-    @statData = null
-    @metaData = {}
-
-  reset : (callback) -> @make @initialSpec, callback
+    @statData   = null
+    @metaData   = {}
 
   ## calculate things...
   make : (spec, grouping, callback) =>
@@ -72,7 +69,7 @@ transforms =
     {name, binwidth} = transSpec
     if meta.type is 'num'
       if isNaN(binwidth)
-        throw poly.error.defn "The binwidth #{binwidth} is invalid for a numeric varliable"
+        throw poly.error.defn "The binwidth #{binwidth} is invalid for a numeric variable"
       binwidth = +binwidth
       binFn = (item) ->
         item[name] = binwidth * Math.floor item[key]/binwidth
@@ -80,7 +77,7 @@ transforms =
       return trans: binFn, meta: {bw: binwidth, binned: true, type:'num'}
     if meta.type is 'date'
       if not (binwidth in poly.const.timerange)
-        throw poly.error.defn "The binwidth #{binwidth} is invalid for a datetime varliable"
+        throw poly.error.defn "The binwidth #{binwidth} is invalid for a datetime variable"
       binFn = (item) ->
         _timeBinning = (n, timerange) =>
           m = moment.unix(item[key]).startOf(timerange)
@@ -133,6 +130,7 @@ filterFactory = (filterSpec) ->
     key = poly.parser.unbracket filter.expr.name
     spec = _.pick(filter, 'lt', 'gt', 'le', 'ge', 'in')
     _.each spec, (value, predicate) ->
+      return if predicate not of filters
       filter = (item) -> filters[predicate](item[key], value)
       filterFuncs.push filter
   (item) ->
