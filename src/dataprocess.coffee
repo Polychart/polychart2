@@ -60,52 +60,83 @@ poly.data.process = (dataObj, layerSpec, strictmode, callback) ->
 ###
 TRANSFORMS
 ----------
-Key:value pair of available transformations to a function that creates that
-transformation. Also, a metadata description of the transformation is returned
-when appropriate. (e.g for binning)
+Functions to interpret the arithmetic and other expressions --
 ###
-transforms =
-  'bin' : (key, transSpec, meta) ->
-    {name, binwidth} = transSpec
-    if meta.type is 'num'
-      if isNaN(binwidth)
-        throw poly.error.defn "The binwidth #{binwidth} is invalid for a numeric variable"
-      binwidth = +binwidth
-      binFn = (item) ->
-        item[name] = binwidth * Math.floor item[key]/binwidth
 
-      return trans: binFn, meta: {bw: binwidth, binned: true, type:'num'}
-    if meta.type is 'date'
-      if not (binwidth in poly.const.timerange)
-        throw poly.error.defn "The binwidth #{binwidth} is invalid for a datetime variable"
-      binFn = (item) ->
-        _timeBinning = (n, timerange) =>
-          m = moment.unix(item[key]).startOf(timerange)
-          m[timerange] n * Math.floor(m[timerange]()/n)
-          item[name] = m.unix()
-        switch binwidth
-          when 'week' then item[name] = moment.unix(item[key]).day(0).unix()
-          when 'twomonth' then _timeBinning 2, 'month'
-          when 'quarter' then _timeBinning 4, 'month'
-          when 'sixmonth' then _timeBinning 6, 'month'
-          when 'twoyear' then _timeBinning 2, 'year'
-          when 'fiveyear' then _timeBinning 5, 'year'
-          when 'decade' then _timeBinning 10, 'year'
-          else item[name] = moment.unix(item[key]).startOf(binwidth).unix()
-      return trans: binFn, meta: {bw: binwidth, binned: true, type:'date'}
-  'lag' : (key, transSpec, meta) ->
-    {name, lag} = transSpec
-    lastn = (undefined for i in [1..lag])
-    lagFn = (item) ->
-      lastn.push(item[key])
-      item[name] = lastn.shift()
-    return trans: lagFn, meta: {type: meta.type}
+evaluate =
+  ident: (name) -> (row) ->
+    if name of row
+      return row[name]
+    throw poly.error.defn "Referencing unknown column: #{name}"
+  const: (value) -> () -> value
+  conditional: (cond, conseq, altern) -> (row) ->
+    if cond(row) then conseq(row) else altern(row)
+  infixop:
+    "+": (lhs, rhs) -> (row) -> lhs(row) + rhs(row)
+    "-": (lhs, rhs) -> (row) -> lhs(row) - rhs(row)
+    "*": (lhs, rhs) -> (row) -> lhs(row) * rhs(row)
+    "/": (lhs, rhs) -> (row) -> lhs(row) / rhs(row)
+    "%": (lhs, rhs) -> (row) -> lhs(row) % rhs(row)
+    ">": (lhs, rhs) -> (row) -> lhs(row) > rhs(row)
+    "<": (lhs, rhs) -> (row) -> lhs(row) < rhs(row)
+    "++": (lhs, rhs) -> (row) -> lhs(row) + rhs(row)
+  trans:
+    "log": (args) -> (row) -> Math.log(args[0](row))
+    "lag": (args) ->
+      lastn = []
+      (row) ->
+        val = args[0](row)
+        lag = args[1](row) # need to be a const!
+        currentLag = _.size(lastn)
+        if currentLag is 0
+          lastn = (undefined for i in [1..lag])
+        else if currentLag isnt lag
+          throw poly.error.defn "Lag period needs to be constant, but isn't!"
+        lastn.push(val)
+        lastn.shift()
+    "bin": (args) -> (row) ->
+      val = args[0](row)
+      bw = args[1](row) # we actually need args[1] to be a const... :(
+      # numeric
+      if _.isNumber(bw)
+        return Math.floor(val/bw)*bw
+      # non-numeric
+      _timeBinning = (n, timerange) =>
+        m = moment.unix(val).startOf(timerange)
+        m[timerange] n * Math.floor(m[timerange]()/n)
+        m.unix()
+      switch bw
+        when 'week' then moment.unix(val).day(0).unix()
+        when 'twomonth' then _timeBinning 2, 'month'
+        when 'quarter' then _timeBinning 4, 'month'
+        when 'sixmonth' then _timeBinning 6, 'month'
+        when 'twoyear' then _timeBinning 2, 'year'
+        when 'fiveyear' then _timeBinning 5, 'year'
+        when 'decade' then _timeBinning 10, 'year'
+        else moment.unix(val).startOf(bw).unix()
 
-###
-Helper function to figures out which transformation to create, then creates it
-###
-transformFactory = (key, transSpec, meta) ->
-  transforms[transSpec.trans](key, transSpec, meta ? {})
+createFunction = (node) ->
+  [nodeType, payload] = node
+  fn =
+    if nodeType is 'ident'
+      evaluate.ident(payload.name)
+    else if nodeType is 'const'
+      value = poly.type.coerce(payload.value, {type: payload.type})
+      evaluate.const(value)
+    else if nodeType is 'infixop'
+      lhs = createFunction(payload.lhs)
+      rhs = createFunction(payload.rhs)
+      evaluate.infixop[payload.opname](lhs, rhs)
+    else if nodeType is 'conditional'
+      cond = createFunction(payload.cond)
+      conseq = createFunction(payload.conseq)
+      altern = createFunction(payload.altern)
+      evaluate.conditional(cond, conseq, altern)
+    else if nodeType is 'call'
+      args = (createFunction(arg) for arg in payload.args)
+      evaluate.trans[payload.fname](args) # should all be transforms
+  if fn then return fn
+  throw poly.error.defn "Unknown operation of type: #{nodeType}"
 
 ###
 FILTERS
@@ -242,6 +273,25 @@ calculateMeta = (metaSpec, data) ->
 ###
 GENERAL PROCESSING
 ------------------
+Figure out what the metadata of a column should be based on what we know about
+other columns, and by the expression
+###
+interpretMeta = (metas) ->
+  typeEnv = poly.parser.createColTypeEnv(metas)
+  (expr) ->
+    [rootType, payload] = expr.expr
+    bw = null
+    if rootType is 'call' and payload.fname is 'bin'
+      [innerType, innerPayload] = payload.args[1]
+      if innerType is 'const'
+        bw = poly.type.coerce(innerPayload.value, {type: innerPayload.type})
+    type: poly.parser.getType(expr.name, typeEnv)
+    bw: bw
+
+
+###
+GENERAL PROCESSING
+------------------
 Coordinating the actual work being done
 ###
 
@@ -251,7 +301,7 @@ Perform the necessary computation in the front end
 frontendProcess = (dataSpec, data, callback) ->
   # metaData and related f'ns
   metaData = _.clone(data.meta) ? {}
-  getMeta = poly.interpret.getMeta(metaData)
+  getMeta = interpretMeta(metaData)
   addMeta = (expr, meta={}) ->
     metaData[expr.name] = _.extend (metaData[expr.name] ? {}), getMeta(expr), meta
   # data & related f'ns
@@ -262,7 +312,7 @@ frontendProcess = (dataSpec, data, callback) ->
   # transforms
   if dataSpec.trans
     for expr in dataSpec.trans
-      addData(expr.name, poly.interpret.createFunction(expr.expr))
+      addData(expr.name, createFunction(expr.expr))
       addMeta(expr)
   # filter
   if dataSpec.filter
@@ -301,3 +351,4 @@ backendProcess = (dataSpec, dataObj, callback) ->
 For debug purposes only
 ###
 poly.data.frontendProcess = frontendProcess
+poly.data.createFunction = createFunction

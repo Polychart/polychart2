@@ -2,7 +2,7 @@ module "Interpreter"
 
 evaluate = (e, data) ->
   e = polyjs.debug.parser.getExpression(e).expr.expr
-  f = polyjs.debug.interpret.createFunction(e)
+  f = polyjs.debug.data.createFunction(e)
   (f(row) for row in data)
 
 test "identifier", ->

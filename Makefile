@@ -28,7 +28,6 @@ polychart2:
     tmp/src/spec.js \
     tmp/src/ajax.js \
     tmp/src/parser.js \
-    tmp/src/interpret.js \
     tmp/src/coord.js \
     tmp/src/domain.js \
     tmp/src/tick.js \
