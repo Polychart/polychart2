@@ -127,12 +127,12 @@
   data = polyjs.data data:jsondata
   spec = {
     layers: [
-      { data: data, type: 'bar', x : 'index', y : 'value', id: 'index'}
+      { data: data, type: 'bar', x : 'index', y : 'value * 1.5', id: 'index'}
     ]
     guides:
       x: type:'num', bw:1
       y :
-        type:'num', min:0, max:10, ticks:[2,4,6,8],
+        type:'num', min:0, max:15, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
     dom: dom
   }

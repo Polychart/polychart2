@@ -697,7 +697,7 @@
           data: data,
           type: 'bar',
           x: 'index',
-          y: 'value',
+          y: 'value * 1.5',
           id: 'index'
         }
       ],
@@ -709,7 +709,7 @@
         y: {
           type: 'num',
           min: 0,
-          max: 10,
+          max: 15,
           ticks: [2, 4, 6, 8],
           labels: {
             2: 'Two',
