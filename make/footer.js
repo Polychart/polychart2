@@ -5,6 +5,7 @@
     pivot: poly.pivot,
     numeral: poly.numeral,
     handler: poly.handler,
+    parse: poly.parser.getExpression,
     debug: poly
   }
 })(window.polyjs);
