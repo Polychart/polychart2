@@ -411,53 +411,6 @@ extractOps = (expr) ->
   expr.visit(extractor)
   results
 
-layerToDataSpec = (lspec, grouping=[]) ->
-  filters = {}
-  for key, val of lspec.filter ? {}
-    filters[parse key] = val
-  aesthetics = _.pick lspec, poly.const.aes
-  for key of aesthetics
-    if 'var' not of aesthetics[key]
-      delete aesthetics[key]
-  transstat = []; select = []; groups = []; metas = {}
-  for key, desc of aesthetics
-    if desc.var is 'count(*)'
-      select.push desc.var
-    else
-      desc.var = parse desc.var
-      ts = extractOps desc.var
-      transstat.push ts
-      select.push desc.var
-      if ts.stat.length is 0
-        groups.push desc.var
-      if 'sort' of desc
-        sdesc = dictGets(desc, poly.const.metas)
-        if sdesc.sort is 'count(*)'
-          result = {sort: 'count(*)', asc: sdesc.asc, stat: [], trans: []}
-        else
-          sdesc.sort = parse sdesc.sort
-          result = extractOps sdesc.sort
-        if result.stat.length isnt 0
-          sdesc.stat = result.stat[0]
-        metas[desc.var] = sdesc
-  for grpvar in grouping
-    grpvar = parse grpvar
-    ts = extractOps grpvar
-    transstat.push ts
-    select.push grpvar
-    if ts.stat.length is 0
-      groups.push grpvar
-    else
-      throw poly.error.defn "Facet variable should not contain statistics!"
-
-  transstats = mergeObjLists transstat
-  dedupByName = dedupOnKey 'name'
-  stats = {stats: dedupByName(transstats.stat), groups: (dedup groups)}
-  {
-    trans: dedupByName(transstats.trans), stats: stats, sort: metas,
-    select: (dedup select), filter: filters
-  }
-
 pivotToDataSpec = (lspec) ->
   filters = {}
   for key, val of lspec.filter ? {}
@@ -608,7 +561,6 @@ poly.parser = {
   tokenize
   parse
   unbracket: getName
-  layerToData: layerToDataSpec
   pivotToData: pivotToDataSpec
   numeralToData: numeralToDataSpec
 }

@@ -1645,7 +1645,10 @@ See the spec definition for more information.
 
 
 (function() {
-  var dedup, extractFilters, pickAesthetics;
+  var LayerSpecTranslator, SpecTranslator, _ref,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   poly.spec = {};
 
@@ -1730,144 +1733,210 @@ See the spec definition for more information.
     return spec;
   };
 
-  extractFilters = function(input) {
-    var expr, exprType, filterSpec, filters, key, trans, val, _ref;
+  SpecTranslator = (function() {
+    function SpecTranslator() {
+      this["return"] = __bind(this["return"], this);
+      this.reset = __bind(this.reset, this);
+      this.processGrouping = __bind(this.processGrouping, this);
+      this.processMapping = __bind(this.processMapping, this);
+      this.addSort = __bind(this.addSort, this);
+      this.pickAesthetics = __bind(this.pickAesthetics, this);
+      this.extractFilters = __bind(this.extractFilters, this);
+      this.translate = __bind(this.translate, this);
+    }
 
-    if (input == null) {
-      input = {};
-    }
-    filters = [];
-    trans = [];
-    for (key in input) {
-      filterSpec = input[key];
-      val = _.clone(filterSpec);
-      _ref = poly.parser.getExpression(key), exprType = _ref.exprType, expr = _ref.expr;
-      val.expr = expr;
-      if (exprType === 'stat') {
-        throw poly.error.defn("Aggregate statistics in filters not allowed.");
+    SpecTranslator.prototype.translate = function(lspec, grouping) {
+      if (grouping == null) {
+        grouping = [];
       }
-      if (exprType === 'trans') {
-        trans.push(expr);
-      }
-      filters.push(val);
-    }
-    return {
-      filters: filters,
-      trans: trans
     };
-  };
 
-  pickAesthetics = function(spec, aes) {
-    var aesthetics, key;
+    SpecTranslator.prototype.extractFilters = function(input) {
+      var expr, exprType, filterSpec, key, val, _ref, _results;
 
-    aesthetics = _.pick(spec, aes);
-    for (key in aesthetics) {
-      if (!('var' in aesthetics[key])) {
-        delete aesthetics[key];
+      if (input == null) {
+        input = {};
       }
-    }
-    return aesthetics;
-  };
+      _results = [];
+      for (key in input) {
+        filterSpec = input[key];
+        val = _.clone(filterSpec);
+        _ref = poly.parser.getExpression(key), exprType = _ref.exprType, expr = _ref.expr;
+        val.expr = expr;
+        if (exprType === 'stat') {
+          throw poly.error.defn("Aggregate statistics in filters not allowed.");
+        }
+        if (exprType === 'trans') {
+          this.trans.push(expr);
+        }
+        _results.push(this.filters.push(val));
+      }
+      return _results;
+    };
 
-  dedup = function(expressions, key) {
-    var dict, e, _i, _len;
+    SpecTranslator.prototype.pickAesthetics = function(spec, aes) {
+      var aesthetics, key;
 
-    if (key == null) {
-      key = function(x) {
-        return x.name;
+      aesthetics = _.pick(spec, aes);
+      for (key in aesthetics) {
+        if (!('var' in aesthetics[key])) {
+          delete aesthetics[key];
+        }
+      }
+      return aesthetics;
+    };
+
+    SpecTranslator.prototype.addSort = function(desc, expr) {
+      var arg, args, fname, sdesc, sexpr, statinfo, _i, _len, _ref;
+
+      sexpr = poly.parser.getExpression(desc.sort);
+      statinfo = sexpr.statInfo();
+      if (statinfo) {
+        fname = statinfo.fname, args = statinfo.args;
+      } else {
+        fname = null;
+        args = [];
+      }
+      sdesc = {
+        key: expr,
+        sort: sexpr.expr,
+        stat: fname,
+        args: args,
+        limit: desc.limit,
+        asc: (_ref = desc.asc) != null ? _ref : false
       };
-    }
-    dict = {};
-    for (_i = 0, _len = expressions.length; _i < _len; _i++) {
-      e = expressions[_i];
-      dict[key(e)] = e;
-    }
-    return _.values(dict);
-  };
+      for (_i = 0, _len = args.length; _i < _len; _i++) {
+        arg = args[_i];
+        if (arg.expr[0] !== 'ident') {
+          this.trans.push(arg);
+        }
+      }
+      return this.sort.push(sdesc);
+    };
 
-  poly.spec.layerToData = function(lspec, grouping) {
-    var aesthetics, arg, args, desc, expr, exprType, filters, fname, groups, grpvar, key, sdesc, select, sexpr, sort, stat, statInfo, statinfo, trans, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    SpecTranslator.prototype.processMapping = function(desc) {
+      var arg, args, expr, exprType, fname, statInfo, _i, _len, _ref, _ref1;
 
-    if (grouping == null) {
-      grouping = [];
-    }
-    _ref1 = extractFilters((_ref = lspec.filter) != null ? _ref : {}), filters = _ref1.filters, trans = _ref1.trans;
-    aesthetics = pickAesthetics(lspec, poly["const"].aes);
-    stat = [];
-    select = [];
-    groups = [];
-    sort = [];
-    for (key in aesthetics) {
-      desc = aesthetics[key];
-      _ref2 = poly.parser.getExpression(desc["var"]), exprType = _ref2.exprType, expr = _ref2.expr, statInfo = _ref2.statInfo;
+      _ref = poly.parser.getExpression(desc["var"]), exprType = _ref.exprType, expr = _ref.expr, statInfo = _ref.statInfo;
       desc["var"] = expr.name;
-      select.push(expr);
+      this.select.push(expr);
       if (exprType === 'trans') {
-        trans.push(expr);
+        this.trans.push(expr);
       }
       if (exprType === 'stat') {
-        _ref3 = statInfo(), fname = _ref3.fname, args = _ref3.args;
+        _ref1 = statInfo(), fname = _ref1.fname, args = _ref1.args;
         for (_i = 0, _len = args.length; _i < _len; _i++) {
           arg = args[_i];
           if (arg.expr[0] !== 'ident') {
-            trans.push(arg);
+            this.trans.push(arg);
           }
         }
-        stat.push({
+        this.stat.push({
           name: fname,
           args: args,
           expr: expr
         });
       } else {
-        groups.push(expr);
+        this.groups.push(expr);
       }
       if ('sort' in desc) {
-        sexpr = poly.parser.getExpression(desc.sort);
-        statinfo = sexpr.statInfo();
-        if (statinfo) {
-          fname = statinfo.fname, args = statinfo.args;
-        } else {
-          fname = null;
-          args = [];
-        }
-        sdesc = {
-          key: expr,
-          sort: sexpr.expr,
-          stat: fname,
-          args: args,
-          limit: desc.limit,
-          asc: (_ref4 = desc.asc) != null ? _ref4 : false
-        };
-        for (_j = 0, _len1 = args.length; _j < _len1; _j++) {
-          arg = args[_j];
-          if (arg.expr[0] !== 'ident') {
-            trans.push(arg);
-          }
-        }
-        sort.push(sdesc);
+        return this.addSort(desc, expr);
       }
-    }
-    for (_k = 0, _len2 = grouping.length; _k < _len2; _k++) {
-      grpvar = grouping[_k];
-      _ref5 = poly.parser.getExpression(grpvar["var"]), exprType = _ref5.exprType, expr = _ref5.expr, statInfo = _ref5.statInfo;
+    };
+
+    SpecTranslator.prototype.processGrouping = function(grpvar) {
+      var expr, exprType, statInfo, _ref;
+
+      _ref = poly.parser.getExpression(grpvar["var"]), exprType = _ref.exprType, expr = _ref.expr, statInfo = _ref.statInfo;
       if (exprType === 'trans') {
-        trans.push(expr);
+        return this.trans.push(expr);
       } else if (exprType === 'stat') {
         throw poly.error.defn("Facet variable should not contain statistics!");
       }
-    }
-    return {
-      select: dedup(select),
-      trans: dedup(trans),
-      sort: sort,
-      filter: filters,
-      stats: {
-        stats: dedup(stat, function(x) {
-          return x.expr.name;
-        }),
-        groups: dedup(groups)
-      }
     };
+
+    SpecTranslator.prototype.reset = function() {
+      this.filters = [];
+      this.trans = [];
+      this.stat = [];
+      this.select = [];
+      this.groups = [];
+      return this.sort = [];
+    };
+
+    SpecTranslator.prototype["return"] = function() {
+      var dedup;
+
+      dedup = function(expressions, key) {
+        var dict, e, _i, _len;
+
+        if (key == null) {
+          key = function(x) {
+            return x.name;
+          };
+        }
+        dict = {};
+        for (_i = 0, _len = expressions.length; _i < _len; _i++) {
+          e = expressions[_i];
+          dict[key(e)] = e;
+        }
+        return _.values(dict);
+      };
+      return {
+        select: dedup(this.select),
+        trans: dedup(this.trans),
+        sort: this.sort,
+        filter: this.filters,
+        stats: {
+          stats: dedup(this.stat, function(x) {
+            return x.expr.name;
+          }),
+          groups: dedup(this.groups)
+        }
+      };
+    };
+
+    return SpecTranslator;
+
+  })();
+
+  LayerSpecTranslator = (function(_super) {
+    __extends(LayerSpecTranslator, _super);
+
+    function LayerSpecTranslator() {
+      this.translate = __bind(this.translate, this);      _ref = LayerSpecTranslator.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    LayerSpecTranslator.prototype.translate = function(lspec, grouping) {
+      var aesthetics, desc, grpvar, key, _i, _len, _ref1;
+
+      if (grouping == null) {
+        grouping = [];
+      }
+      this.reset();
+      this.extractFilters((_ref1 = lspec.filter) != null ? _ref1 : {});
+      aesthetics = this.pickAesthetics(lspec, poly["const"].aes);
+      for (key in aesthetics) {
+        desc = aesthetics[key];
+        this.processMapping(desc);
+      }
+      for (_i = 0, _len = grouping.length; _i < _len; _i++) {
+        grpvar = grouping[_i];
+        this.processGrouping(grpvar);
+      }
+      return this["return"]();
+    };
+
+    return LayerSpecTranslator;
+
+  })(SpecTranslator);
+
+  poly.spec.layerToData = function(lspec, grouping) {
+    if (grouping == null) {
+      grouping = [];
+    }
+    return new LayerSpecTranslator().translate(lspec, grouping);
   };
 
 }).call(this);
@@ -2034,7 +2103,7 @@ See the spec definition for more information.
 }).call(this);
 // Generated by CoffeeScript 1.6.2
 (function() {
-  var BaseType, Call, Comma, Conditional, Const, DataType, DataTypeError, Expr, FuncType, Ident, InfixOp, InfixSymbol, Keyword, LParen, Literal, OpStack, Parser, RParen, Stream, Symbol, Token, UnknownType, assertIs, assertTagIs, assocsToObj, bracket, createColTypeEnv, dedup, dedupOnKey, dictGet, dictGets, exprJSON, exprType, extractOps, fname, getExpression, getName, getType, infixGTEQ, infixops, infixpat, infixpats, initialFuncTypeEnv, keywords, layerToDataSpec, makeTypeEnv, matchToken, mergeObjLists, n, numeralToDataSpec, opname, pairNumToNum, parse, pivotToDataSpec, quote, s, showCall, showList, str, symbolOrKeyword, tag, tcat, tdate, testColTypeEnv, testExprJSON, testFuncTypeEnv, testTypeCheck, tnum, tokenize, tokenizers, typeCheck, unbracket, unquote, zip, zipWith, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6,
+  var BaseType, Call, Comma, Conditional, Const, DataType, DataTypeError, Expr, FuncType, Ident, InfixOp, InfixSymbol, Keyword, LParen, Literal, OpStack, Parser, RParen, Stream, Symbol, Token, UnknownType, assertIs, assertTagIs, assocsToObj, bracket, createColTypeEnv, dedup, dedupOnKey, dictGet, dictGets, exprJSON, exprType, extractOps, fname, getExpression, getName, getType, infixGTEQ, infixops, infixpat, infixpats, initialFuncTypeEnv, keywords, makeTypeEnv, matchToken, mergeObjLists, n, numeralToDataSpec, opname, pairNumToNum, parse, pivotToDataSpec, quote, s, showCall, showList, str, symbolOrKeyword, tag, tcat, tdate, testColTypeEnv, testExprJSON, testFuncTypeEnv, testTypeCheck, tnum, tokenize, tokenizers, typeCheck, unbracket, unquote, zip, zipWith, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3224,87 +3293,6 @@ See the spec definition for more information.
     return results;
   };
 
-  layerToDataSpec = function(lspec, grouping) {
-    var aesthetics, dedupByName, desc, filters, groups, grpvar, key, metas, result, sdesc, select, stats, transstat, transstats, ts, val, _len5, _n, _ref7, _ref8;
-
-    if (grouping == null) {
-      grouping = [];
-    }
-    filters = {};
-    _ref8 = (_ref7 = lspec.filter) != null ? _ref7 : {};
-    for (key in _ref8) {
-      val = _ref8[key];
-      filters[parse(key)] = val;
-    }
-    aesthetics = _.pick(lspec, poly["const"].aes);
-    for (key in aesthetics) {
-      if (!('var' in aesthetics[key])) {
-        delete aesthetics[key];
-      }
-    }
-    transstat = [];
-    select = [];
-    groups = [];
-    metas = {};
-    for (key in aesthetics) {
-      desc = aesthetics[key];
-      if (desc["var"] === 'count(*)') {
-        select.push(desc["var"]);
-      } else {
-        desc["var"] = parse(desc["var"]);
-        ts = extractOps(desc["var"]);
-        transstat.push(ts);
-        select.push(desc["var"]);
-        if (ts.stat.length === 0) {
-          groups.push(desc["var"]);
-        }
-        if ('sort' in desc) {
-          sdesc = dictGets(desc, poly["const"].metas);
-          if (sdesc.sort === 'count(*)') {
-            result = {
-              sort: 'count(*)',
-              asc: sdesc.asc,
-              stat: [],
-              trans: []
-            };
-          } else {
-            sdesc.sort = parse(sdesc.sort);
-            result = extractOps(sdesc.sort);
-          }
-          if (result.stat.length !== 0) {
-            sdesc.stat = result.stat[0];
-          }
-          metas[desc["var"]] = sdesc;
-        }
-      }
-    }
-    for (_n = 0, _len5 = grouping.length; _n < _len5; _n++) {
-      grpvar = grouping[_n];
-      grpvar = parse(grpvar);
-      ts = extractOps(grpvar);
-      transstat.push(ts);
-      select.push(grpvar);
-      if (ts.stat.length === 0) {
-        groups.push(grpvar);
-      } else {
-        throw poly.error.defn("Facet variable should not contain statistics!");
-      }
-    }
-    transstats = mergeObjLists(transstat);
-    dedupByName = dedupOnKey('name');
-    stats = {
-      stats: dedupByName(transstats.stat),
-      groups: dedup(groups)
-    };
-    return {
-      trans: dedupByName(transstats.trans),
-      stats: stats,
-      sort: metas,
-      select: dedup(select),
-      filter: filters
-    };
-  };
-
   pivotToDataSpec = function(lspec) {
     var aesthetics, aesthetics_list, dedupByName, desc, filters, groups, item, key, list, metas, result, sdesc, select, stats, transstat, transstats, ts, val, _len5, _len6, _n, _o, _ref7, _ref8;
 
@@ -3557,7 +3545,6 @@ See the spec definition for more information.
     tokenize: tokenize,
     parse: parse,
     unbracket: getName,
-    layerToData: layerToDataSpec,
     pivotToData: pivotToDataSpec,
     numeralToData: numeralToDataSpec
   };

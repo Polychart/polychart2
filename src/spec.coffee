@@ -48,83 +48,98 @@ poly.spec.check = (spec) ->
     throw poly.error.defn "No DOM element specified. Where to make plot?"
   spec
 
-extractFilters = (input={}) ->
-  filters = []
-  trans = []
-  for key, filterSpec of input
-    val = _.clone(filterSpec)
-    {exprType, expr} = poly.parser.getExpression(key)
-    val.expr = expr
-    if exprType is 'stat'
-      throw poly.error.defn "Aggregate statistics in filters not allowed."
-    if exprType is 'trans'
-      trans.push(expr)
-    filters.push(val)
-  {filters, trans}
-
-pickAesthetics = (spec, aes) ->
-  aesthetics = _.pick spec, aes
-  for key of aesthetics
-    if 'var' not of aesthetics[key]
-      delete aesthetics[key]
-  aesthetics
-
-dedup = (expressions, key=(x)->x.name) ->
-  dict = {}
-  dict[key(e)] = e for e in expressions
-  _.values(dict)
-
-poly.spec.layerToData = (lspec, grouping=[]) ->
-  {filters, trans} = extractFilters(lspec.filter ? {})
-  aesthetics = pickAesthetics(lspec, poly.const.aes)
-  stat = []; select = []; groups = []; sort = []
-  for key, desc of aesthetics
+class SpecTranslator
+  translate: (lspec, grouping=[]) =>
+  extractFilters: (input={}) =>
+    for key, filterSpec of input
+      val = _.clone(filterSpec)
+      {exprType, expr} = poly.parser.getExpression(key)
+      val.expr = expr
+      if exprType is 'stat'
+        throw poly.error.defn "Aggregate statistics in filters not allowed."
+      if exprType is 'trans'
+        @trans.push(expr)
+      @filters.push(val)
+  pickAesthetics: (spec, aes) =>
+    aesthetics = _.pick spec, aes
+    for key of aesthetics
+      if 'var' not of aesthetics[key]
+        delete aesthetics[key]
+    aesthetics
+  addSort: (desc, expr) =>
+    sexpr = poly.parser.getExpression(desc.sort)
+    statinfo = sexpr.statInfo()
+    if statinfo
+      {fname, args} = statinfo
+    else
+      fname = null
+      args = []
+    sdesc = {
+      key: expr    # key to grouping (i.e. thing to sort)
+      sort: sexpr.expr  # value to sort by
+      stat: fname  # statistics
+      args: args   # arguments to the stats
+      limit: desc.limit
+      asc: desc.asc ? false
+    }
+    for arg in args
+      if arg.expr[0] isnt 'ident'
+        @trans.push(arg)
+    @sort.push(sdesc)
+  processMapping: (desc) =>
     {exprType, expr, statInfo} = poly.parser.getExpression(desc.var)
     desc.var = expr.name # replace current spec with prettified name
-    select.push(expr)
+    @select.push(expr)
     if exprType == 'trans'
-      trans.push(expr)
+      @trans.push(expr)
     if exprType == 'stat'
       {fname, args} = statInfo()
       for arg in args
         if arg.expr[0] isnt 'ident'
-          trans.push(arg)
-      stat.push {name: fname, args: args, expr: expr}
+          @trans.push(arg)
+      @stat.push {name: fname, args: args, expr: expr}
     else # if exprType !== 'stat'
-      groups.push expr
-
+      @groups.push expr
     if 'sort' of desc
-      sexpr = poly.parser.getExpression(desc.sort)
-      statinfo = sexpr.statInfo()
-      if statinfo
-        {fname, args} = statinfo
-      else
-        fname = null
-        args = []
-      sdesc = {
-        key: expr    # key to grouping (i.e. thing to sort)
-        sort: sexpr.expr  # value to sort by
-        stat: fname  # statistics
-        args: args   # arguments to the stats
-        limit: desc.limit
-        asc: desc.asc ? false
-      }
-      for arg in args
-        if arg.expr[0] isnt 'ident'
-          trans.push(arg)
-      sort.push(sdesc)
-
-  for grpvar in grouping
+      @addSort(desc, expr)
+  processGrouping: (grpvar) =>
     {exprType, expr, statInfo} = poly.parser.getExpression(grpvar.var)
     if exprType == 'trans'
-      trans.push(expr)
+      @trans.push(expr)
     else if exprType == 'stat'
       throw poly.error.defn "Facet variable should not contain statistics!"
 
-  select: dedup(select)
-  trans: dedup(trans)
-  sort: sort
-  filter: filters
-  stats:
-    stats: dedup(stat, (x)->x.expr.name)
-    groups: dedup(groups)
+  reset: () =>
+    @filters = []
+    @trans = []
+    @stat = []
+    @select = []
+    @groups = []
+    @sort = []
+  return: () =>
+    dedup = (expressions, key=(x)->x.name) ->
+      dict = {}
+      dict[key(e)] = e for e in expressions
+      _.values(dict)
+    select: dedup(@select)
+    trans: dedup(@trans)
+    sort: @sort
+    filter: @filters
+    stats:
+      stats: dedup(@stat, (x)->x.expr.name)
+      groups: dedup(@groups)
+
+class LayerSpecTranslator extends SpecTranslator
+  translate: (lspec, grouping=[]) =>
+    @reset()
+    @extractFilters(lspec.filter ? {})
+    aesthetics = @pickAesthetics(lspec, poly.const.aes)
+    for key, desc of aesthetics
+      @processMapping(desc)
+    for grpvar in grouping
+      @processGrouping(grpvar)
+    @return()
+
+poly.spec.layerToData = (lspec, grouping=[]) ->
+  new LayerSpecTranslator().translate(lspec, grouping)
+
