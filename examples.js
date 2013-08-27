@@ -3445,7 +3445,7 @@
     return polyjs.pivot({
       data: data,
       columns: [],
-      rows: ['bin(date, month)'],
+      rows: ['bin(date, "month")'],
       values: ['sum(val1)'],
       dom: dom,
       full: true

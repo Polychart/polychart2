@@ -1645,7 +1645,7 @@ See the spec definition for more information.
 
 
 (function() {
-  var LayerSpecTranslator, SpecTranslator, _ref,
+  var LST, LayerSpecTranslator, NST, NumeralSpecTranslator, PST, PivotSpecTranslator, SpecTranslator, _ref, _ref1, _ref2,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -1740,7 +1740,6 @@ See the spec definition for more information.
       this.processGrouping = __bind(this.processGrouping, this);
       this.processMapping = __bind(this.processMapping, this);
       this.addSort = __bind(this.addSort, this);
-      this.pickAesthetics = __bind(this.pickAesthetics, this);
       this.extractFilters = __bind(this.extractFilters, this);
       this.translate = __bind(this.translate, this);
     }
@@ -1772,18 +1771,6 @@ See the spec definition for more information.
         _results.push(this.filters.push(val));
       }
       return _results;
-    };
-
-    SpecTranslator.prototype.pickAesthetics = function(spec, aes) {
-      var aesthetics, key;
-
-      aesthetics = _.pick(spec, aes);
-      for (key in aesthetics) {
-        if (!('var' in aesthetics[key])) {
-          delete aesthetics[key];
-        }
-      }
-      return aesthetics;
     };
 
     SpecTranslator.prototype.addSort = function(desc, expr) {
@@ -1865,7 +1852,7 @@ See the spec definition for more information.
     };
 
     SpecTranslator.prototype["return"] = function() {
-      var dedup;
+      var dedup, obj;
 
       dedup = function(expressions, key) {
         var dict, e, _i, _len;
@@ -1882,7 +1869,7 @@ See the spec definition for more information.
         }
         return _.values(dict);
       };
-      return {
+      obj = {
         select: dedup(this.select),
         trans: dedup(this.trans),
         sort: this.sort,
@@ -1894,6 +1881,8 @@ See the spec definition for more information.
           groups: dedup(this.groups)
         }
       };
+      console.log(obj);
+      return obj;
     };
 
     return SpecTranslator;
@@ -1904,6 +1893,7 @@ See the spec definition for more information.
     __extends(LayerSpecTranslator, _super);
 
     function LayerSpecTranslator() {
+      this.pickAesthetics = __bind(this.pickAesthetics, this);
       this.translate = __bind(this.translate, this);      _ref = LayerSpecTranslator.__super__.constructor.apply(this, arguments);
       return _ref;
     }
@@ -1928,16 +1918,115 @@ See the spec definition for more information.
       return this["return"]();
     };
 
+    LayerSpecTranslator.prototype.pickAesthetics = function(spec, aes) {
+      var aesthetics, key;
+
+      aesthetics = _.pick(spec, aes);
+      for (key in aesthetics) {
+        if (!('var' in aesthetics[key])) {
+          delete aesthetics[key];
+        }
+      }
+      return aesthetics;
+    };
+
     return LayerSpecTranslator;
 
   })(SpecTranslator);
 
-  poly.spec.layerToData = function(lspec, grouping) {
-    if (grouping == null) {
-      grouping = [];
+  PivotSpecTranslator = (function(_super) {
+    __extends(PivotSpecTranslator, _super);
+
+    function PivotSpecTranslator() {
+      this.pickAesthetics = __bind(this.pickAesthetics, this);
+      this.translate = __bind(this.translate, this);      _ref1 = PivotSpecTranslator.__super__.constructor.apply(this, arguments);
+      return _ref1;
     }
-    return new LayerSpecTranslator().translate(lspec, grouping);
-  };
+
+    PivotSpecTranslator.prototype.translate = function(lspec) {
+      debugger;
+      var aesthetics, desc, _i, _len, _ref2;
+
+      this.reset();
+      this.extractFilters((_ref2 = lspec.filter) != null ? _ref2 : {});
+      aesthetics = this.pickAesthetics(lspec);
+      for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
+        desc = aesthetics[_i];
+        this.processMapping(desc);
+      }
+      return this["return"]();
+    };
+
+    PivotSpecTranslator.prototype.pickAesthetics = function(lspec) {
+      var aesthetics, aesthetics_list, item, key, list, _i, _len;
+
+      aesthetics = _.pick(lspec, ['columns', 'rows', 'values']);
+      aesthetics_list = [];
+      for (key in aesthetics) {
+        list = aesthetics[key];
+        for (_i = 0, _len = list.length; _i < _len; _i++) {
+          item = list[_i];
+          if ('var' in item) {
+            aesthetics_list.push(item);
+          }
+        }
+      }
+      return aesthetics_list;
+    };
+
+    return PivotSpecTranslator;
+
+  })(SpecTranslator);
+
+  NumeralSpecTranslator = (function(_super) {
+    __extends(NumeralSpecTranslator, _super);
+
+    function NumeralSpecTranslator() {
+      this.pickAesthetics = __bind(this.pickAesthetics, this);
+      this.translate = __bind(this.translate, this);      _ref2 = NumeralSpecTranslator.__super__.constructor.apply(this, arguments);
+      return _ref2;
+    }
+
+    NumeralSpecTranslator.prototype.translate = function(lspec) {
+      var aesthetics, desc, key, _ref3;
+
+      this.reset();
+      this.extractFilters((_ref3 = lspec.filter) != null ? _ref3 : {});
+      aesthetics = this.pickAesthetics(lspec);
+      for (key in aesthetics) {
+        desc = aesthetics[key];
+        this.processMapping(desc);
+      }
+      return this["return"]();
+    };
+
+    NumeralSpecTranslator.prototype.pickAesthetics = function(lspec) {
+      var aesthetics, key;
+
+      aesthetics = _.pick(lspec, ['value']);
+      for (key in aesthetics) {
+        if (!('var' in aesthetics[key])) {
+          delete aesthetics[key];
+        }
+      }
+      return aesthetics;
+    };
+
+    return NumeralSpecTranslator;
+
+  })(SpecTranslator);
+
+  LST = new LayerSpecTranslator();
+
+  PST = new PivotSpecTranslator();
+
+  NST = new NumeralSpecTranslator();
+
+  poly.spec.layerToData = LST.translate;
+
+  poly.spec.pivotToData = PST.translate;
+
+  poly.spec.numeralToData = NST.translate;
 
 }).call(this);
 // Generated by CoffeeScript 1.6.2
@@ -2103,7 +2192,7 @@ See the spec definition for more information.
 }).call(this);
 // Generated by CoffeeScript 1.6.2
 (function() {
-  var BaseType, Call, Comma, Conditional, Const, DataType, DataTypeError, Expr, FuncType, Ident, InfixOp, InfixSymbol, Keyword, LParen, Literal, OpStack, Parser, RParen, Stream, Symbol, Token, UnknownType, assertIs, assertTagIs, assocsToObj, bracket, createColTypeEnv, dedup, dedupOnKey, dictGet, dictGets, exprJSON, exprType, extractOps, fname, getExpression, getName, getType, infixGTEQ, infixops, infixpat, infixpats, initialFuncTypeEnv, keywords, makeTypeEnv, matchToken, mergeObjLists, n, numeralToDataSpec, opname, pairNumToNum, parse, pivotToDataSpec, quote, s, showCall, showList, str, symbolOrKeyword, tag, tcat, tdate, testColTypeEnv, testExprJSON, testFuncTypeEnv, testTypeCheck, tnum, tokenize, tokenizers, typeCheck, unbracket, unquote, zip, zipWith, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6,
+  var BaseType, Call, Comma, Conditional, Const, DataType, DataTypeError, Expr, FuncType, Ident, InfixOp, InfixSymbol, Keyword, LParen, Literal, OpStack, Parser, RParen, Stream, Symbol, Token, UnknownType, assertIs, assertTagIs, assocsToObj, bracket, createColTypeEnv, dedup, dedupOnKey, dictGet, dictGets, exprJSON, exprType, extractOps, fname, getExpression, getName, getType, infixGTEQ, infixops, infixpat, infixpats, initialFuncTypeEnv, keywords, makeTypeEnv, matchToken, mergeObjLists, n, opname, pairNumToNum, parse, quote, s, showCall, showList, str, symbolOrKeyword, tag, tcat, tdate, testColTypeEnv, testExprJSON, testFuncTypeEnv, testTypeCheck, tnum, tokenize, tokenizers, typeCheck, unbracket, unquote, zip, zipWith, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -3293,134 +3382,6 @@ See the spec definition for more information.
     return results;
   };
 
-  pivotToDataSpec = function(lspec) {
-    var aesthetics, aesthetics_list, dedupByName, desc, filters, groups, item, key, list, metas, result, sdesc, select, stats, transstat, transstats, ts, val, _len5, _len6, _n, _o, _ref7, _ref8;
-
-    filters = {};
-    _ref8 = (_ref7 = lspec.filter) != null ? _ref7 : {};
-    for (key in _ref8) {
-      val = _ref8[key];
-      filters[parse(key)] = val;
-    }
-    aesthetics = _.pick(lspec, ['columns', 'rows', 'values']);
-    aesthetics_list = [];
-    for (key in aesthetics) {
-      list = aesthetics[key];
-      for (_n = 0, _len5 = list.length; _n < _len5; _n++) {
-        item = list[_n];
-        if ('var' in item) {
-          aesthetics_list.push(item);
-        }
-      }
-    }
-    transstat = [];
-    select = [];
-    groups = [];
-    metas = {};
-    for (_o = 0, _len6 = aesthetics_list.length; _o < _len6; _o++) {
-      desc = aesthetics_list[_o];
-      if (desc["var"] === 'count(*)') {
-        select.push(desc["var"]);
-      } else {
-        desc["var"] = parse(desc["var"]);
-        ts = extractOps(desc["var"]);
-        transstat.push(ts);
-        select.push(desc["var"]);
-        if (ts.stat.length === 0) {
-          groups.push(desc["var"]);
-        }
-        if ('sort' in desc) {
-          sdesc = dictGets(desc, poly["const"].metas);
-          if (sdesc.sort === 'count(*)') {
-            result = {
-              sort: 'count(*)',
-              asc: sdesc.asc,
-              stat: [],
-              trans: []
-            };
-          } else {
-            sdesc.sort = parse(sdesc.sort);
-            result = extractOps(sdesc.sort);
-          }
-          if (result.stat.length !== 0) {
-            sdesc.stat = result.stat[0];
-          }
-          metas[desc["var"]] = sdesc;
-        }
-      }
-    }
-    transstats = mergeObjLists(transstat);
-    dedupByName = dedupOnKey('name');
-    stats = {
-      stats: dedupByName(transstats.stat),
-      groups: dedup(groups)
-    };
-    return {
-      trans: dedupByName(transstats.trans),
-      stats: stats,
-      sort: metas,
-      select: dedup(select),
-      filter: filters
-    };
-  };
-
-  numeralToDataSpec = function(lspec) {
-    var aesthetics, dedupByName, desc, filters, groups, key, metas, result, sdesc, select, stats, transstat, transstats, ts, val, _ref10, _ref7, _ref8, _ref9;
-
-    filters = {};
-    _ref8 = (_ref7 = lspec.filter) != null ? _ref7 : {};
-    for (key in _ref8) {
-      val = _ref8[key];
-      filters[parse(key)] = val;
-    }
-    aesthetics = _.pick(lspec, ['value']);
-    for (key in aesthetics) {
-      if (!('var' in aesthetics[key])) {
-        delete aesthetics[key];
-      }
-    }
-    transstat = [];
-    select = [];
-    groups = [];
-    metas = {};
-    for (key in aesthetics) {
-      desc = aesthetics[key];
-      if (desc["var"] === 'count(*)') {
-        select.push(desc["var"]);
-      } else {
-        desc["var"] = parse(desc["var"]);
-        ts = extractOps(desc["var"]);
-        transstat.push(ts);
-        select.push(desc["var"]);
-        if (ts.stat.length === 0) {
-          groups.push(desc["var"]);
-        }
-        if ('sort' in desc) {
-          sdesc = dictGets(desc, poly["const"].metas);
-          sdesc.sort = parse(sdesc.sort);
-          result = extractOps(sdesc.sort);
-          if (result.stat.length !== 0) {
-            sdesc.stat = result.stat[0];
-          }
-          metas[desc["var"]] = sdesc;
-        }
-      }
-    }
-    transstats = mergeObjLists(transstat);
-    dedupByName = dedupOnKey('name');
-    stats = {
-      stats: dedupByName((_ref9 = transstats.stat) != null ? _ref9 : []),
-      groups: dedup(groups)
-    };
-    return {
-      trans: dedupByName((_ref10 = transstats.trans) != null ? _ref10 : []),
-      stats: stats,
-      sort: metas,
-      select: dedup(select),
-      filter: filters
-    };
-  };
-
   testTypeCheck = function() {
     var a0, a1, b0, b1, u0;
 
@@ -3544,9 +3505,7 @@ See the spec definition for more information.
     getType: getType,
     tokenize: tokenize,
     parse: parse,
-    unbracket: getName,
-    pivotToData: pivotToDataSpec,
-    numeralToData: numeralToDataSpec
+    unbracket: getName
   };
 
 }).call(this);
@@ -11250,7 +11209,7 @@ The functions here makes it easier to create common types of interactions.
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           item = _ref[_i];
-          _results.push(item["var"]);
+          _results.push(poly.parser.unbracket(item["var"]));
         }
         return _results;
       }).call(this);
@@ -11261,7 +11220,7 @@ The functions here makes it easier to create common types of interactions.
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           item = _ref[_i];
-          _results.push(item["var"]);
+          _results.push(poly.parser.unbracket(item["var"]));
         }
         return _results;
       }).call(this);
@@ -11336,7 +11295,7 @@ The functions here makes it easier to create common types of interactions.
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           item = _ref[_i];
-          _results.push(item["var"]);
+          _results.push(poly.parser.unbracket(item["var"]));
         }
         return _results;
       }).call(this);
@@ -11395,7 +11354,7 @@ The functions here makes it easier to create common types of interactions.
       var ps;
 
       this.spec = toStrictMode(spec);
-      ps = new poly.DataProcess(this.spec, [], this.spec.strict, poly.parser.pivotToData);
+      ps = new poly.DataProcess(this.spec, [], this.spec.strict, poly.spec.pivotToData);
       return ps.make(this.spec, [], this.render);
     };
 
@@ -11409,7 +11368,7 @@ The functions here makes it easier to create common types of interactions.
         _ref1 = spec[aes];
         for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
           item = _ref1[_j];
-          key = item["var"];
+          key = poly.parser.unbracket(item["var"]);
           meta = metaData[key];
           values = _.pluck(statData, key);
           domain = poly.domain.single(values, metaData[key], {});
@@ -11428,7 +11387,7 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Pivot.prototype.render = function(err, statData, metaData) {
-      var cell, colHeaders, cols, cols_mindex, colspan, formatters, i, j, k, key, pivotData, pivotMeta, row, rowHeaders, rows, rows_mindex, rowspan, space, table, ticks, v, val, value, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
+      var cell, colHeaders, cols, cols_mindex, colspan, formatters, i, j, k, key, name, pivotData, pivotMeta, row, rowHeaders, rows, rows_mindex, rowspan, space, table, ticks, v, val, value, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
 
       ticks = this.generateTicks(this.spec, statData, metaData);
       pivotData = new PivotProcessedData(statData, ticks, this.spec);
@@ -11448,7 +11407,7 @@ The functions here makes it easier to create common types of interactions.
       i = 0;
       while (i < pivotMeta.ncol) {
         row = $('<tr></tr>');
-        key = this.spec.columns[i]["var"];
+        key = poly.parser.unbracket(this.spec.columns[i]["var"]);
         if (i === 0) {
           if (pivotMeta.nrow > 1) {
             space = $('<td></td>');
@@ -11481,7 +11440,7 @@ The functions here makes it easier to create common types of interactions.
       }
       i = 0;
       while (i < pivotMeta.nrow) {
-        key = this.spec.rows[i]["var"];
+        key = poly.parser.unbracket(this.spec.rows[i]["var"]);
         row.append($("<th>" + key + "</th>").attr('align', 'center'));
         i++;
       }
@@ -11490,7 +11449,7 @@ The functions here makes it easier to create common types of interactions.
         _ref1 = this.spec.values;
         for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
           v = _ref1[_i];
-          cell = $("<td>" + v["var"] + "</td>");
+          cell = $("<td>" + (poly.parser.unbracket(v["var"])) + "</td>");
           cell.attr('align', 'center');
           row.append(cell);
         }
@@ -11505,7 +11464,7 @@ The functions here makes it easier to create common types of interactions.
         _ref2 = this.spec.rows;
         for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
           key = _ref2[_j];
-          key = key["var"];
+          key = poly.parser.unbracket(key["var"]);
           value = rowHeaders[i][key];
           if ((i === 0) || value !== rowHeaders[i - 1][key]) {
             rowspan = 1;
@@ -11525,8 +11484,9 @@ The functions here makes it easier to create common types of interactions.
           _ref3 = this.spec.values;
           for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
             val = _ref3[_k];
-            v = pivotData.get(rows, cols, val["var"]);
-            v = v ? formatters[val["var"]](v) : '-';
+            name = poly.parser.unbracket(val["var"]);
+            v = pivotData.get(rows, cols, name);
+            v = v ? formatters[name](v) : '-';
             row.append($("<td>" + v + "</td>").attr('align', 'right'));
           }
           j++;
@@ -11594,7 +11554,7 @@ The functions here makes it easier to create common types of interactions.
         throw poly.error.defn("No value defined in numeral.");
       }
       this.spec = toStrictMode(spec);
-      ps = new poly.DataProcess(this.spec, [], this.spec.strict, poly.parser.numeralToData);
+      ps = new poly.DataProcess(this.spec, [], this.spec.strict, poly.spec.numeralToData);
       return ps.make(this.spec, [], this.render);
     };
 
@@ -11631,14 +11591,15 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Numeral.prototype.render = function(err, statData, metaData) {
-      var degree, height, scale, width, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+      var degree, height, name, scale, width, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
 
       if (err != null) {
         console.error(err);
         return;
       }
-      this.value = statData[0][this.spec.value["var"]];
-      this.title = (_ref = this.spec.title) != null ? _ref : this.spec.value["var"];
+      name = poly.parser.unbracket(this.spec.value["var"]);
+      this.value = statData[0][name];
+      this.title = (_ref = this.spec.title) != null ? _ref : name;
       degree = (0 < (_ref1 = this.value) && _ref1 < 1) ? void 0 : this.value % 1 === 0 ? 0 : -1;
       this.value = poly.format.number(degree)(this.value);
       if (_.isNaN(this.value) || this.value === 'NaN') {

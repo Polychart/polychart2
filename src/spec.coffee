@@ -60,12 +60,6 @@ class SpecTranslator
       if exprType is 'trans'
         @trans.push(expr)
       @filters.push(val)
-  pickAesthetics: (spec, aes) =>
-    aesthetics = _.pick spec, aes
-    for key of aesthetics
-      if 'var' not of aesthetics[key]
-        delete aesthetics[key]
-    aesthetics
   addSort: (desc, expr) =>
     sexpr = poly.parser.getExpression(desc.sort)
     statinfo = sexpr.statInfo()
@@ -121,13 +115,16 @@ class SpecTranslator
       dict = {}
       dict[key(e)] = e for e in expressions
       _.values(dict)
-    select: dedup(@select)
-    trans: dedup(@trans)
-    sort: @sort
-    filter: @filters
-    stats:
-      stats: dedup(@stat, (x)->x.expr.name)
-      groups: dedup(@groups)
+    obj =
+      select: dedup(@select)
+      trans: dedup(@trans)
+      sort: @sort
+      filter: @filters
+      stats:
+        stats: dedup(@stat, (x)->x.expr.name)
+        groups: dedup(@groups)
+    console.log obj
+    obj
 
 class LayerSpecTranslator extends SpecTranslator
   translate: (lspec, grouping=[]) =>
@@ -139,7 +136,51 @@ class LayerSpecTranslator extends SpecTranslator
     for grpvar in grouping
       @processGrouping(grpvar)
     @return()
+  pickAesthetics: (spec, aes) =>
+    aesthetics = _.pick spec, aes
+    for key of aesthetics
+      if 'var' not of aesthetics[key]
+        delete aesthetics[key]
+    aesthetics
 
-poly.spec.layerToData = (lspec, grouping=[]) ->
-  new LayerSpecTranslator().translate(lspec, grouping)
+class PivotSpecTranslator extends SpecTranslator
+  translate: (lspec) =>
+    debugger
+    @reset()
+    @extractFilters(lspec.filter ? {})
+    aesthetics = @pickAesthetics(lspec)
+    for desc in aesthetics
+      @processMapping(desc)
+    @return()
+  pickAesthetics: (lspec) =>
+    aesthetics = _.pick lspec, ['columns', 'rows', 'values']
+    aesthetics_list = []
+    for key, list of aesthetics
+      for item in list
+        if 'var' of item
+          aesthetics_list.push(item)
+    aesthetics_list
+
+class NumeralSpecTranslator extends SpecTranslator
+  translate: (lspec) =>
+    @reset()
+    @extractFilters(lspec.filter ? {})
+    aesthetics = @pickAesthetics(lspec)
+    for key, desc of aesthetics
+      @processMapping(desc)
+    @return()
+  pickAesthetics: (lspec) =>
+    aesthetics = _.pick lspec, ['value']
+    for key of aesthetics
+      if 'var' not of aesthetics[key]
+        delete aesthetics[key]
+    aesthetics
+
+LST = new LayerSpecTranslator()
+PST = new PivotSpecTranslator()
+NST = new NumeralSpecTranslator()
+
+poly.spec.layerToData = LST.translate
+poly.spec.pivotToData = PST.translate
+poly.spec.numeralToData = NST.translate
 

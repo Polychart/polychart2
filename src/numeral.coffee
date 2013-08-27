@@ -24,7 +24,7 @@ class Numeral
       throw poly.error.defn "No value defined in numeral."
 
     @spec = toStrictMode(spec)
-    ps = new poly.DataProcess(@spec, [], @spec.strict, poly.parser.numeralToData)
+    ps = new poly.DataProcess(@spec, [], @spec.strict, poly.spec.numeralToData)
     ps.make @spec, [], @render
 
   handleEvent: (type) =>
@@ -46,9 +46,9 @@ class Numeral
     if err?
       console.error err
       return
-
-    @value = statData[0][@spec.value.var]
-    @title = @spec.title ? @spec.value.var
+    name = poly.parser.unbracket @spec.value.var
+    @value = statData[0][name]
+    @title = @spec.title ? name
     # formatting the value (temporary)
     degree =
       if 0 < @value < 1       then undefined
