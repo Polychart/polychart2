@@ -2735,7 +2735,7 @@ See the spec definition for more information.
       /^[+-]?(0x[0-9a-fA-F]+|0?\.\d+|[1-9]\d*(\.\d+)?|0)([eE][+-]?\d+)?/, function(val) {
         return new Literal(val, DataType.Base.num);
       }
-    ], [/^((\w|[^\u0000-\u0080])+|\[((\\.)|[^\\\[\]])+\])/, symbolOrKeyword], [
+    ], [/^(([\w|\.]|[^\u0000-\u0080])+|\[((\\.)|[^\\\[\]])+\])/, symbolOrKeyword], [
       /^('((\\.)|[^\\'])*'|"((\\.)|[^\\"])+")/, function(val) {
         return new Literal(val, DataType.Base.cat);
       }
