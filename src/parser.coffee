@@ -27,25 +27,6 @@ assocsToObj = (assocs) ->
   for [key, val] in assocs
     obj[key] = val
   obj
-dictGet = (dict, key, defval = null) -> (key of dict and dict[key]) or defval
-dictGets = (dict, keyVals) ->
-  fin = {}
-  for key, defval of keyVals
-    val = dictGet(dict, key, defval)
-    if val isnt null
-      fin[key] = val
-  fin
-mergeObjLists = (dicts) ->
-  fin = {}
-  for dict in dicts
-    for key of dict
-      fin[key] = dict[key].concat(dictGet(fin, key, []))
-  fin
-dedup = (vals=[], trans = (x) -> x) ->
-  unique = {}
-  unique[trans val] = val for val in vals
-  val for _, val of unique
-dedupOnKey = (key) -> (vals) -> dedup(vals, (val) -> val[key])
 showCall = (fname, args) -> "#{fname}(#{args})"
 showList = (xs) -> "[#{xs}]"
 
