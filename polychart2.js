@@ -11960,6 +11960,7 @@ The functions here makes it easier to create common types of interactions.
     pivot: poly.pivot,
     numeral: poly.numeral,
     handler: poly.handler,
+    parse: poly.parser.getExpression,
     debug: poly
   }
 })(window.polyjs);
