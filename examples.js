@@ -1103,8 +1103,8 @@
         {
           data: data,
           type: 'bar',
-          x: '"Hello world"',
-          y: 'sum("Bye")'
+          x: '[Hello world]',
+          y: 'sum([Bye])'
         }
       ],
       dom: dom
