@@ -7462,7 +7462,13 @@ of a dataset, or knows how to retrieve data from some source.
         _this = this;
 
       if ((this.raw != null) && (!this.computeBackend)) {
-        return callback(null, this);
+        if (dataSpec == null) {
+          return callback(null, this);
+        }
+        poly.data.frontendProcess(dataSpec, this, function(err, dataObj) {
+          dataObj.raw = dataObj.data;
+          return callback(err, dataObj);
+        });
       }
       chr = _.indexOf(this.url, "?") === -1 ? '?' : '&';
       url = this.url;

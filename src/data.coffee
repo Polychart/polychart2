@@ -311,7 +311,16 @@ class BackendData extends AbstractData
   #   @callback - the callback function once data is retrieved
   #   @params - additional parameters to send to the backend
   getData: (callback, dataSpec) =>
-    if @raw? and (not @computeBackend) then return callback null, @
+    if @raw? and (not @computeBackend)
+      if not dataSpec?
+        return callback null, @
+      poly.data.frontendProcess dataSpec, @, (err, dataObj) ->
+        # There is a bit of a difficulty here... in other parts of this
+        # function, a PolyJS Data Object is returned. Here, we don't do
+        # that, which is ugly. But if we do turn the dataObj into a PolyJS
+        # Data Obj, then we might lose metaData info like binning, etc
+        dataObj.raw = dataObj.data
+        callback(err, dataObj)
     chr = if _.indexOf(@url, "?") is -1 then '?' else '&'
     url = @url
     if @limit
