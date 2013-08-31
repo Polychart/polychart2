@@ -98,7 +98,7 @@ test "parsing & tokenization", ->
     equal e.message, "There is an error in your specification at Stream([<symbol,should>,<symbol,break>])"
 
 test "idempotence", ->
-  for trial in ['[+-*/%abcdefg\\(\\)\\]\\[._><]', 'unquoted', '[quoted]', 'sum ( shit )', 'sum([ shitte ])', 'sum([\\[])', 'mean(log(2))', '3 + four * 5 - 6 / 7 % 8 ++ nine']
+  for trial in ['sum([+-*/%abcdefg\\(\\)\\]\\[._><])', 'unquoted', '[quoted]', 'sum ( shit )', 'sum([ shitte ])', 'sum([\\[])', 'mean(log(2))', '3 + four * 5 - 6 / 7 % 8 ++ nine']
     once = polyjs.debug.parser.parse(trial).pretty()
     twice = polyjs.debug.parser.parse(once).pretty()
     equal once, twice
