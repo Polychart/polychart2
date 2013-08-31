@@ -326,7 +326,6 @@ frontendProcess = (dataSpec, data, callback) ->
       additionalFilter.push(filter)
       addMeta key, meta
     data = _.filter data, filterFactory(additionalFilter)
-    console.log data
   # stats
   if dataSpec.stats and dataSpec.stats.stats and dataSpec.stats.stats.length > 0
     data = calculateStats(data, dataSpec.stats)

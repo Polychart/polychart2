@@ -123,7 +123,6 @@ class SpecTranslator
       stats:
         stats: dedup(@stat, (x)->x.expr.name)
         groups: dedup(@groups)
-    console.log obj
     obj
 
 class LayerSpecTranslator extends SpecTranslator

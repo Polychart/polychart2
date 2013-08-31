@@ -1881,7 +1881,6 @@ See the spec definition for more information.
           groups: dedup(this.groups)
         }
       };
-      console.log(obj);
       return obj;
     };
 
@@ -8202,7 +8201,6 @@ data processing to be done.
         addMeta(key, meta);
       }
       data = _.filter(data, filterFactory(additionalFilter));
-      console.log(data);
     }
     if (dataSpec.stats && dataSpec.stats.stats && dataSpec.stats.stats.length > 0) {
       data = calculateStats(data, dataSpec.stats);
