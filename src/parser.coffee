@@ -17,16 +17,6 @@ unquote = (str) ->
       str = str.replace /\\./g, (match) -> match[1..]
       break
   str
-zipWith = (op) -> (xs, ys) ->
-  if xs.length isnt ys.length
-    throw poly.error.defn("zipWith: lists have different length: [#{xs}], [#{ys}]")
-  op(xval, ys[ix]) for xval, ix in xs
-zip = zipWith (xval, yval) -> [xval, yval]
-assocsToObj = (assocs) ->
-  obj = {}
-  for [key, val] in assocs
-    obj[key] = val
-  obj
 showCall = (fname, args) -> "#{fname}(#{args})"
 showList = (xs) -> "[#{xs}]"
 
@@ -73,11 +63,11 @@ class FuncType extends DataType
     super(context, type)
     if @domains.length isnt type.domains.length
       @error(context, 'function domains differ in length')
-    for [d0, d1] in zip(@domains, type.domains)
+    for [d0, d1] in _.zip(@domains, type.domains)
       d0._runify(context, d1)
     @range._runify(context, type.range)
 
-DataType.Base = assocsToObj([n, new BaseType(s)] for n, s of {
+DataType.Base = _.object([n, new BaseType(s)] for n, s of {
   cat: 'cat', num: 'num', date: 'date', stat: 'stat'})
 
 ###############################################################################
@@ -381,7 +371,7 @@ extractOps = (expr) ->
           'none'
       if optype isnt 'none'
         opargs = poly.const[optype][fname]
-        result = assocsToObj zip(opargs, args)
+        result = _.object(opargs, args)
         result.name = expr
         result[optype] = fname
         results[optype].push result
