@@ -195,7 +195,19 @@ class FrontendData extends AbstractData
   constructor: (params) ->
     super()
     @_setData params
-  getData: (callback) -> callback null, @
+  getData: (callback, dataSpec) ->
+    if not dataSpec?
+      callback null, @
+      return
+    poly.data.frontendProcess dataSpec, @, (err, dataObj) ->
+      # There is a bit of a difficulty here... in other parts of this
+      # function, a PolyJS Data Object is returned. Here, we don't do
+      # that, which is ugly. But if we do turn the dataObj into a PolyJS
+      # Data Obj, then we might lose metaData info like binning, etc
+      # also true @ BackendData.getData()
+      dataObj.raw = dataObj.data
+      callback(err, dataObj)
+
   update: (params) ->
     @_setData params
     super()
@@ -315,12 +327,10 @@ class BackendData extends AbstractData
       if not dataSpec?
         return callback null, @
       poly.data.frontendProcess dataSpec, @, (err, dataObj) ->
-        # There is a bit of a difficulty here... in other parts of this
-        # function, a PolyJS Data Object is returned. Here, we don't do
-        # that, which is ugly. But if we do turn the dataObj into a PolyJS
-        # Data Obj, then we might lose metaData info like binning, etc
+        # see note @ FrontendData.getData()
         dataObj.raw = dataObj.data
         callback(err, dataObj)
+      return
     chr = if _.indexOf(@url, "?") is -1 then '?' else '&'
     url = @url
     if @limit

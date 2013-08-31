@@ -7245,8 +7245,15 @@ of a dataset, or knows how to retrieve data from some source.
       this._setData(params);
     }
 
-    FrontendData.prototype.getData = function(callback) {
-      return callback(null, this);
+    FrontendData.prototype.getData = function(callback, dataSpec) {
+      if (dataSpec == null) {
+        callback(null, this);
+        return;
+      }
+      return poly.data.frontendProcess(dataSpec, this, function(err, dataObj) {
+        dataObj.raw = dataObj.data;
+        return callback(err, dataObj);
+      });
     };
 
     FrontendData.prototype.update = function(params) {
@@ -7469,6 +7476,7 @@ of a dataset, or knows how to retrieve data from some source.
           dataObj.raw = dataObj.data;
           return callback(err, dataObj);
         });
+        return;
       }
       chr = _.indexOf(this.url, "?") === -1 ? '?' : '&';
       url = this.url;
