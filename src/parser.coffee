@@ -455,5 +455,6 @@ poly.parser = {
   getType
   tokenize
   parse
+  bracket
   unbracket: getName
 }
