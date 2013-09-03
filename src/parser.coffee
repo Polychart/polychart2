@@ -1,12 +1,14 @@
 ###############################################################################
 # utilities
 ###############################################################################
-bracket = (str) -> '[' + str.replace(/[\[\]\\]/g, (match) -> '\\' + match) + ']'
+escape = (str) -> str.replace(/[\[\]\\]/g, (match) -> '\\' + match)
+unescape = (str) -> str.replace /\\./g, (match) -> match[1..]
+bracket = (str) -> '[' + escape(str)  + ']'
 unbracket = (str) ->
   n = str.length
   if str[0] is '[' and str[n-1] is ']'
     str = str[1..(n-2)]
-    str = str.replace /\\./g, (match) -> match[1..]
+    str = unescape(str)
   str
 quote = (str) -> '"' + str.replace(/["\\]/g, (match) -> '\\' + match) + '"'
 unquote = (str) ->
@@ -14,7 +16,7 @@ unquote = (str) ->
   for qu in ['"', "'"]
     if str[0] is qu and str[n-1] is qu
       str = str[1..(n-2)]
-      str = str.replace /\\./g, (match) -> match[1..]
+      str = unescape(str)
       break
   str
 showCall = (fname, args) -> "#{fname}(#{args})"

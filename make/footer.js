@@ -9,7 +9,9 @@
       bracket: poly.parser.bracket,
       unbracket: poly.parser.unbracket,
       parse: poly.parser.parse,
-      getExpression: poly.parser.getExpression
+      getExpression: poly.parser.getExpression,
+      'escape': poly.parser['escape'],
+      'unescape': poly.parser['unescape']
     },
     debug: poly
   }
