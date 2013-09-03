@@ -144,7 +144,6 @@ class LayerSpecTranslator extends SpecTranslator
 
 class PivotSpecTranslator extends SpecTranslator
   translate: (lspec) =>
-    debugger
     @reset()
     @extractFilters(lspec.filter ? {})
     aesthetics = @pickAesthetics(lspec)

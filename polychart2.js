@@ -1943,7 +1943,6 @@ See the spec definition for more information.
     }
 
     PivotSpecTranslator.prototype.translate = function(lspec) {
-      debugger;
       var aesthetics, desc, _i, _len, _ref2;
 
       this.reset();
