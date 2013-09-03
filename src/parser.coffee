@@ -459,4 +459,6 @@ poly.parser = {
   parse
   bracket
   unbracket: getName
+  escape
+  unescape
 }

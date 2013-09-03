@@ -3414,7 +3414,9 @@ See the spec definition for more information.
     tokenize: tokenize,
     parse: parse,
     bracket: bracket,
-    unbracket: getName
+    unbracket: getName,
+    escape: escape,
+    unescape: unescape
   };
 
 }).call(this);
