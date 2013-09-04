@@ -15,17 +15,17 @@ test "type checking", ->
     polyjs.debug.parser.tc('sum(sum(x))')
     ok false, 'sum(sum(x))'
   catch e
-    equal e.message, 'type mismatch: (stat vs. num) in (([stat] -> ?) vs. ([num] -> stat))'
+    equal e.message, 'Type mismatch: (stat vs. num) in (([stat] -> ?) vs. ([num] -> stat))'
   try
     polyjs.debug.parser.tc('suum(x)')
     ok false, 'suum(x)'
   catch e
-    equal e.message, 'unknown function name: suum'
+    equal e.message, 'Unknown function name: suum'
   try
     polyjs.debug.parser.tc('sum(y)')
     ok false, 'sum(y)'
   catch e
-    equal e.message, 'unknown column name: y'
+    equal e.message, 'Unknown column name: y'
 
 test "jsonification", ->
   equal JSON.stringify(polyjs.debug.parser.tj('1 + 2')), '["infixop",{"opname":"+","lhs":["const",{"value":"1","type":"num"}],"rhs":["const",{"value":"2","type":"num"}]}]'

@@ -36,7 +36,7 @@ class DataType
     cmp.reverse()
     comparison = cmp.join(' in ')
     throw new DataTypeError(msg + ': ' + comparison)
-  mismatch: (context) => @error(context, 'type mismatch')
+  mismatch: (context) => @error(context, 'Type mismatch')
   unify: (type) => type._known_unify(@)
   _known_unify: (type) =>
     @_runify([], type)
@@ -291,7 +291,7 @@ parse = (str) ->
 exprType = (funcTypeEnv, colTypeEnv, expr) ->
   tapply = (fname, targs) ->
     if fname not of funcTypeEnv
-      throw poly.error.defn "unknown function name: #{fname}"
+      throw poly.error.defn "Unknown function name: #{fname}"
     if fname is 'bin' and targs.length is 2 and targs[0] == tdate
       fname = 'bin_date'
     if fname in ['count', 'unique', 'lag'] and targs.length is 1
@@ -306,7 +306,7 @@ exprType = (funcTypeEnv, colTypeEnv, expr) ->
   visitor = {
     ident: (expr, name) ->
       if name of colTypeEnv then colTypeEnv[name]
-      else throw poly.error.defn "unknown column name: #{name}"
+      else throw poly.error.defn "Unknown column name: #{name}"
     const: (expr, val, type) -> type,
     call: (expr, fname, targs) -> tapply(fname, targs)
     infixop: (expr, opname, tlhs, trhs) -> tapply(opname, [tlhs, trhs])
@@ -414,13 +414,13 @@ createColTypeEnv = (metas) ->
     colTypeEnv[key] = DataType.Base[meta.type]
   colTypeEnv
 
-getType = (str, typeEnv) ->
+getType = (str, typeEnv, combineStat=true) ->
   type = exprType(initialFuncTypeEnv, typeEnv, parse(str))
-  if type.name is 'stat'
-    'num'
+  if combineStat and type.name is 'stat'
+    'num' # all statistics end up as numbers; sometimes we treat it as such
   else
-    type.name
-  
+    type.name # other times they are different
+    
 getExpression = (str) ->
   if str is 'count(*)' then str = 'count(1)'
   expr = parse str # main expression

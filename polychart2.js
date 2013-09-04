@@ -2293,7 +2293,7 @@ See the spec definition for more information.
     };
 
     DataType.prototype.mismatch = function(context) {
-      return this.error(context, 'type mismatch');
+      return this.error(context, 'Type mismatch');
     };
 
     DataType.prototype.unify = function(type) {
@@ -3113,7 +3113,7 @@ See the spec definition for more information.
       var tfunc, tresult;
 
       if (!(fname in funcTypeEnv)) {
-        throw poly.error.defn("unknown function name: " + fname);
+        throw poly.error.defn("Unknown function name: " + fname);
       }
       if (fname === 'bin' && targs.length === 2 && targs[0] === tdate) {
         fname = 'bin_date';
@@ -3135,7 +3135,7 @@ See the spec definition for more information.
         if (name in colTypeEnv) {
           return colTypeEnv[name];
         } else {
-          throw poly.error.defn("unknown column name: " + name);
+          throw poly.error.defn("Unknown column name: " + name);
         }
       },
       "const": function(expr, val, type) {
@@ -3338,11 +3338,14 @@ See the spec definition for more information.
     return colTypeEnv;
   };
 
-  getType = function(str, typeEnv) {
+  getType = function(str, typeEnv, combineStat) {
     var type;
 
+    if (combineStat == null) {
+      combineStat = true;
+    }
     type = exprType(initialFuncTypeEnv, typeEnv, parse(str));
-    if (type.name === 'stat') {
+    if (combineStat && type.name === 'stat') {
       return 'num';
     } else {
       return type.name;
