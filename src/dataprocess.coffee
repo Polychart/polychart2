@@ -114,6 +114,34 @@ evaluate =
       str = args[0](row)
       format = args[1](row)
       moment(str, format).unix()
+    "year": (args) -> (row) ->
+      ts = args[0](row)
+      debugger
+      moment.unix(ts).year()
+    "month": (args) -> (row) ->
+      ts = args[0](row)
+      moment.unix(ts).month()+1 # make it 1-indexed
+    "dayOfMonth": (args) -> (row) ->
+      ts = args[0](row)
+      moment.unix(ts).date()
+    "dayOfYear": (args) -> (row) ->
+      ts = args[0](row)
+      debugger
+      moment.unix(ts).dayOfYear()
+    "dayOfWeek": (args) -> (row) ->
+      ts = args[0](row)
+      moment.unix(ts).day()
+    "hour": (args) -> (row) ->
+      ts = args[0](row)
+      moment.unix(ts).hour()
+    "minute": (args) -> (row) ->
+      ts = args[0](row)
+      moment.unix(ts).minute()
+    "second": (args) -> (row) ->
+      ts = args[0](row)
+      moment.unix(ts).second()
+
+
     "log": (args) -> (row) -> Math.log(args[0](row))
     "lag": (args) ->
       lastn = []

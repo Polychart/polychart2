@@ -58,6 +58,23 @@ test "transforms -- string functions", ->
   trans = transformData data, fill(trans:["parseNum(x)"])
   deepEqual _.pluck(trans.data, "parseNum([x])"), [NaN, NaN, 3]
 
+test "transforms -- date functions", ->
+  _equal = (expr, value) ->
+    trans = transformData data, fill(trans:[expr])
+    deepEqual _.pluck(trans.data, expr), [value]
+
+  data = polyjs.data
+    data: [ {x: 1378329043} ]
+    meta: {x: {type: 'date', format: 'unix'}}
+  _equal 'year([x])', 2013
+  _equal 'month([x])', 9
+  _equal 'dayOfMonth([x])', 4
+  _equal 'dayOfYear([x])', 247
+  _equal 'dayOfWeek([x])', 3
+  _equal 'hour([x])', 17
+  _equal 'minute([x])', 10
+  _equal 'second([x])', 43
+
 
 
 test "transforms -- numeric binning", ->

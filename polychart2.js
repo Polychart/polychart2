@@ -3171,7 +3171,7 @@ See the spec definition for more information.
     '++': new FuncType([tcat, tcat], tcat)
   };
 
-  _ref2 = ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==', '=', '++'];
+  _ref2 = ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==', '='];
   for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
     opname = _ref2[_i];
     initialFuncTypeEnv[opname] = pairNumToNum;
@@ -3218,6 +3218,24 @@ See the spec definition for more information.
   initialFuncTypeEnv.parseDate = new FuncType([tcat, tcat], tdate);
 
   initialFuncTypeEnv.parseDateDefault = new FuncType([tcat], tdate);
+
+  initialFuncTypeEnv.year = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv.quarter = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv.month = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv.dayOfMonth = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv.dayOfYear = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv.dayOfWeek = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv.hour = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv.minute = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv.second = new FuncType([tdate], tnum);
 
   initialFuncTypeEnv['bin'] = new FuncType([tnum, tnum], tnum);
 
@@ -7895,6 +7913,72 @@ data processing to be done.
           str = args[0](row);
           format = args[1](row);
           return moment(str, format).unix();
+        };
+      },
+      "year": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          debugger;
+          return moment.unix(ts).year();
+        };
+      },
+      "month": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          return moment.unix(ts).month() + 1;
+        };
+      },
+      "dayOfMonth": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          return moment.unix(ts).date();
+        };
+      },
+      "dayOfYear": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          debugger;
+          return moment.unix(ts).dayOfYear();
+        };
+      },
+      "dayOfWeek": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          return moment.unix(ts).day();
+        };
+      },
+      "hour": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          return moment.unix(ts).hour();
+        };
+      },
+      "minute": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          return moment.unix(ts).minute();
+        };
+      },
+      "second": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          return moment.unix(ts).second();
         };
       },
       "log": function(args) {

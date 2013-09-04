@@ -327,9 +327,9 @@ pairNumToNum = new FuncType([tnum, tnum], tnum)
 ###############################################################################
 # type environments
 ###############################################################################
-initialFuncTypeEnv = {'++': new FuncType([tcat, tcat], tcat)}
 # infix ops
-for opname in ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==', '=', '++']
+initialFuncTypeEnv = {'++': new FuncType([tcat, tcat], tcat)}
+for opname in ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==', '=']
   initialFuncTypeEnv[opname] = pairNumToNum
 # statistics
 for fname in ['sum', 'mean', 'box', 'median', 'min', 'max']
@@ -353,7 +353,15 @@ initialFuncTypeEnv.indexOf = new FuncType([tcat, tcat], tnum)
 initialFuncTypeEnv.parseNum = new FuncType([tcat], tnum)
 initialFuncTypeEnv.parseDate = new FuncType([tcat, tcat], tdate)
 initialFuncTypeEnv.parseDateDefault = new FuncType([tcat], tdate)
-
+initialFuncTypeEnv.year = new FuncType([tdate], tnum)
+initialFuncTypeEnv.quarter = new FuncType([tdate], tnum)
+initialFuncTypeEnv.month = new FuncType([tdate], tnum)
+initialFuncTypeEnv.dayOfMonth = new FuncType([tdate], tnum)
+initialFuncTypeEnv.dayOfYear = new FuncType([tdate], tnum)
+initialFuncTypeEnv.dayOfWeek = new FuncType([tdate], tnum)
+initialFuncTypeEnv.hour = new FuncType([tdate], tnum)
+initialFuncTypeEnv.minute = new FuncType([tdate], tnum)
+initialFuncTypeEnv.second = new FuncType([tdate], tnum)
 initialFuncTypeEnv['bin'] = new FuncType([tnum, tnum], tnum)
 initialFuncTypeEnv['bin_date'] = new FuncType([tdate, tcat], tdate)
 
