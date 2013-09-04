@@ -78,9 +78,42 @@ evaluate =
     "/": (lhs, rhs) -> (row) -> lhs(row) / rhs(row)
     "%": (lhs, rhs) -> (row) -> lhs(row) % rhs(row)
     ">": (lhs, rhs) -> (row) -> lhs(row) > rhs(row)
+    ">=": (lhs, rhs) -> (row) -> lhs(row) >= rhs(row)
     "<": (lhs, rhs) -> (row) -> lhs(row) < rhs(row)
+    "<=": (lhs, rhs) -> (row) -> lhs(row) <= rhs(row)
+    "!=": (lhs, rhs) -> (row) -> lhs(row) != rhs(row)
+    "==": (lhs, rhs) -> (row) -> lhs(row) == rhs(row)
+    "=": (lhs, rhs) -> (row) -> lhs(row) == rhs(row)
     "++": (lhs, rhs) -> (row) -> lhs(row) + rhs(row)
   trans:
+    "substr": (args) -> (row) ->
+      str = args[0](row).toString()
+      start = args[1](row)
+      end = args[2](row)
+      str.substr(start, end)
+    "length": (args) -> (row) ->
+      str = args[0](row).toString()
+      _.size(str)
+    "upper": (args) -> (row) ->
+      str = args[0](row).toString()
+      str.toUpperCase()
+    "lower": (args) -> (row) ->
+      str = args[0](row).toString()
+      str.toLowerCase()
+    "indexOf": (args) -> (row) ->
+      haystack = args[0](row).toString()
+      needle = args[1](row).toString()
+      haystack.indexOf(needle)
+    "parseNum": (args) -> (row) ->
+      str = args[0](row).toString()
+      +str
+    "parseDateDefault": (args) -> (row) ->
+      str = args[0](row)
+      moment(str).unix()
+    "parseDate": (args) -> (row) ->
+      str = args[0](row)
+      format = args[1](row)
+      moment(str, format).unix()
     "log": (args) -> (row) -> Math.log(args[0](row))
     "lag": (args) ->
       lastn = []

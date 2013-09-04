@@ -35,6 +35,31 @@ test "smoke test", ->
   data = polyjs.data (data: jsondata)
   deepEqual data.raw, jsondata
 
+test "transforms -- string functions", ->
+  data = polyjs.data data: [
+    {x: 'calenDar '}, {x: 'pUppies'}, {x: 3}
+  ]
+  trans = transformData data, fill(trans:["substr([x], 0, 2)"])
+  deepEqual _.pluck(trans.data, "substr([x],0,2)"), ['ca', 'pU', '3']
+
+  trans = transformData data, fill(trans:["length(x)"])
+  deepEqual _.pluck(trans.data, "length([x])"), [9,7, 1]
+
+  trans = transformData data, fill(trans:["upper(x)"])
+  deepEqual _.pluck(trans.data, "upper([x])"), ['CALENDAR ', 'PUPPIES', '3']
+
+  trans = transformData data, fill(trans:["lower(x)"])
+  deepEqual _.pluck(trans.data, "lower([x])"), ['calendar ', 'puppies', '3']
+
+  trans = transformData data, fill(trans:["indexOf(x, 'e')"])
+  deepEqual _.pluck(trans.data, 'indexOf([x],"e")'), [3, 5, -1]
+
+
+  trans = transformData data, fill(trans:["parseNum(x)"])
+  deepEqual _.pluck(trans.data, "parseNum([x])"), [NaN, NaN, 3]
+
+
+
 test "transforms -- numeric binning", ->
   data = polyjs.data
     data: [

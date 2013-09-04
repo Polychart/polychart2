@@ -299,6 +299,8 @@ exprType = (funcTypeEnv, colTypeEnv, expr) ->
         fname = fname+'_cat'
       else if targs[0] == tdate
         fname = fname+'_date'
+    if fname is 'parseDate' and targs.length is 1
+      fname = 'parseDateDefault'
     tfunc = funcTypeEnv[fname]
     tresult = new UnknownType
     tfunc.unify(new FuncType(targs, tresult))
@@ -322,21 +324,36 @@ tnum = DataType.Base.num
 tdate = DataType.Base.date
 pairNumToNum = new FuncType([tnum, tnum], tnum)
 
+###############################################################################
+# type environments
+###############################################################################
 initialFuncTypeEnv = {'++': new FuncType([tcat, tcat], tcat)}
-for opname in ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==']
+# infix ops
+for opname in ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==', '=', '++']
   initialFuncTypeEnv[opname] = pairNumToNum
+# statistics
 for fname in ['sum', 'mean', 'box', 'median', 'min', 'max']
   initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat)
 for fname in ['count', 'unique']
   initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat)
   initialFuncTypeEnv[fname+'_cat'] = new FuncType([tcat], DataType.Base.stat)
   initialFuncTypeEnv[fname+'_date'] = new FuncType([tdate], DataType.Base.stat)
+# transforms
 for fname in ['lag']
   initialFuncTypeEnv[fname] = new FuncType([tnum, tnum], tnum)
   initialFuncTypeEnv[fname+'_cat'] = new FuncType([tcat, tnum], tcat)
   initialFuncTypeEnv[fname+'_date'] = new FuncType([tdate, tnum], tdate)
-for fname in ['log']
-  initialFuncTypeEnv[fname] = new FuncType([tnum], tnum)
+initialFuncTypeEnv.log = new FuncType([tnum], tnum)
+initialFuncTypeEnv.substr = new FuncType([tcat, tnum, tnum], tnum)
+initialFuncTypeEnv.length = new FuncType([tcat], tnum)
+initialFuncTypeEnv.upper = new FuncType([tcat], tnum)
+initialFuncTypeEnv.lower = new FuncType([tcat], tnum)
+initialFuncTypeEnv.find = new FuncType([tcat], tnum)
+initialFuncTypeEnv.indexOf = new FuncType([tcat, tcat], tnum)
+initialFuncTypeEnv.parseNum = new FuncType([tcat], tnum)
+initialFuncTypeEnv.parseDate = new FuncType([tcat, tcat], tdate)
+initialFuncTypeEnv.parseDateDefault = new FuncType([tcat], tdate)
+
 initialFuncTypeEnv['bin'] = new FuncType([tnum, tnum], tnum)
 initialFuncTypeEnv['bin_date'] = new FuncType([tdate, tcat], tdate)
 
