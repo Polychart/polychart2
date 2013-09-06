@@ -152,7 +152,7 @@ class Pivot
         colspan = 1
         while ((j+colspan) < colHeaders.length) and (value is colHeaders[j+colspan][key])
           colspan++
-        cell = $("<td>#{value}</td>").attr('colspan', colspan*pivotMeta.nval)
+        cell = $("<td class='heading'>#{value}</td>").attr('colspan', colspan*pivotMeta.nval)
         cell.attr('align', 'center')
         row.append(cell)
         j += colspan
@@ -164,7 +164,7 @@ class Pivot
     row = $('<tr></tr>')
     if pivotMeta.nrow is 0
       ## SPACE
-      space = $("<td></td>")
+      space = $("<td class='spacing'></td>")
       space.attr('rowspan', rowHeaders.length+1)
       row.append(space)
 
@@ -177,7 +177,7 @@ class Pivot
     k = 0
     while k < colHeaders.length
       for v in @spec.values
-        cell = $("<td>#{poly.parser.unbracket v.var}</td>")
+        cell = $("<td class='heading'>#{poly.parser.unbracket v.var}</td>")
         cell.attr('align', 'center')
         row.append(cell)
       k++
@@ -198,7 +198,7 @@ class Pivot
           while (i+rowspan < rowHeaders.length) and value == rowHeaders[i+rowspan][key]
             rowspan++
           # add a cell!!
-          cell = $("<td>#{value}</td>").attr('rowspan', rowspan)
+          cell = $("<td class='heading'>#{value}</td>").attr('rowspan', rowspan)
           cell.attr('align', 'center')
           cell.attr('valign', 'middle')
           row.append(cell)
@@ -213,7 +213,7 @@ class Pivot
           name = poly.parser.unbracket val.var
           v = pivotData.get(rows, cols, name)
           v = if v then formatters[name](v) else '-'
-          row.append $("<td>#{v}</td>").attr('align', 'right')
+          row.append $("<td class='value'>#{v}</td>").attr('align', 'right')
         j++
 
       table.append(row)

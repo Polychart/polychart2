@@ -11437,7 +11437,7 @@ The functions here makes it easier to create common types of interactions.
           while (((j + colspan) < colHeaders.length) && (value === colHeaders[j + colspan][key])) {
             colspan++;
           }
-          cell = $("<td>" + value + "</td>").attr('colspan', colspan * pivotMeta.nval);
+          cell = $("<td class='heading'>" + value + "</td>").attr('colspan', colspan * pivotMeta.nval);
           cell.attr('align', 'center');
           row.append(cell);
           j += colspan;
@@ -11447,7 +11447,7 @@ The functions here makes it easier to create common types of interactions.
       }
       row = $('<tr></tr>');
       if (pivotMeta.nrow === 0) {
-        space = $("<td></td>");
+        space = $("<td class='spacing'></td>");
         space.attr('rowspan', rowHeaders.length + 1);
         row.append(space);
       }
@@ -11462,7 +11462,7 @@ The functions here makes it easier to create common types of interactions.
         _ref1 = this.spec.values;
         for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
           v = _ref1[_i];
-          cell = $("<td>" + (poly.parser.unbracket(v["var"])) + "</td>");
+          cell = $("<td class='heading'>" + (poly.parser.unbracket(v["var"])) + "</td>");
           cell.attr('align', 'center');
           row.append(cell);
         }
@@ -11484,7 +11484,7 @@ The functions here makes it easier to create common types of interactions.
             while ((i + rowspan < rowHeaders.length) && value === rowHeaders[i + rowspan][key]) {
               rowspan++;
             }
-            cell = $("<td>" + value + "</td>").attr('rowspan', rowspan);
+            cell = $("<td class='heading'>" + value + "</td>").attr('rowspan', rowspan);
             cell.attr('align', 'center');
             cell.attr('valign', 'middle');
             row.append(cell);
@@ -11500,7 +11500,7 @@ The functions here makes it easier to create common types of interactions.
             name = poly.parser.unbracket(val["var"]);
             v = pivotData.get(rows, cols, name);
             v = v ? formatters[name](v) : '-';
-            row.append($("<td>" + v + "</td>").attr('align', 'right'));
+            row.append($("<td class='value'>" + v + "</td>").attr('align', 'right'));
           }
           j++;
         }
