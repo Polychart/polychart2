@@ -10751,6 +10751,7 @@ The functions here makes it easier to create common types of interactions.
       for (aes in mapping) {
         key = mapping[aes];
         if (this.spec.facet[aes]) {
+          key = poly.parser.unbracket(key);
           this.specgroups[key] = this.spec.facet[aes];
         }
       }
@@ -11010,7 +11011,7 @@ The functions here makes it easier to create common types of interactions.
             throw poly.error.defn("You didn't specify a variable to facet on.");
           }
           if (spec["var"]) {
-            retobj.mapping["var"] = spec["var"]["var"];
+            retobj.mapping["var"] = poly.parser.unbracket(spec["var"]["var"]);
           }
         } else if (spec.type === 'grid') {
           retobj.type = 'grid';
@@ -11018,10 +11019,10 @@ The functions here makes it easier to create common types of interactions.
             throw poly.error.defn("You didn't specify a variable to facet on.");
           }
           if (spec.x) {
-            retobj.mapping.x = spec.x["var"];
+            retobj.mapping.x = poly.parser.unbracket(spec.x["var"]);
           }
           if (spec.y) {
-            retobj.mapping.y = spec.y["var"];
+            retobj.mapping.y = poly.parser.unbracket(spec.y["var"]);
           }
         }
       }
@@ -11029,31 +11030,43 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Facet.prototype._makeIndices = function(datas, groups) {
-      var aes, data, index, indexValues, indices, key, meta, sortfn, stringify, v, val, values, _i, _len, _ref;
+      var aes, data, grps, index, indexValues, indices, key, meta, name, sortfn, stringify, v, val, values, x, _i, _len, _ref;
 
       values = {};
       for (aes in groups) {
         key = groups[aes];
+        name = poly.parser.unbracket(key["var"]);
         if (key.levels) {
-          values[key["var"]] = key.levels;
+          values[name] = key.levels;
         } else {
           v = [];
           sortfn = null;
           for (index in datas) {
             data = datas[index];
-            if (meta = data.metaData[key["var"]]) {
+            if (meta = data.metaData[name]) {
               if (meta && ((_ref = meta.type) === 'num' || _ref === 'date')) {
                 poly.type.compare(meta.type);
               }
             }
-            v = _.uniq(_.union(v, _.pluck(data.statData, key["var"])));
+            v = _.uniq(_.union(v, _.pluck(data.statData, name)));
           }
-          values[key["var"]] = sortfn != null ? v.sort(sortfn) : v;
+          values[name] = sortfn != null ? v.sort(sortfn) : v;
         }
       }
       indexValues = poly.cross(values);
       indices = {};
-      stringify = poly.stringify(_.pluck(groups, 'var'));
+      grps = (function() {
+        var _i, _len, _ref1, _results;
+
+        _ref1 = _.pluck(groups, 'var');
+        _results = [];
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          x = _ref1[_i];
+          _results.push(poly.parser.unbracket(x));
+        }
+        return _results;
+      })();
+      stringify = poly.stringify(grps);
       for (_i = 0, _len = indexValues.length; _i < _len; _i++) {
         val = indexValues[_i];
         indices[stringify(val)] = val;

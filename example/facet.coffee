@@ -21,6 +21,27 @@
   }
   c = polyjs.chart spec
 
+@examples.facet_bracketed = (dom) ->
+  o = (i) -> if i%3 is 0 then 'yay' else if i%3 is 1 then 'no' else 'nodisplay'
+  jsondata = ({index:i%7, value:Math.random()*10, o: o(i)} for i in [0..20])
+  data = polyjs.data data:jsondata
+  spec = {
+    layers: [
+      data: data, type: 'bar',
+      x : 'bin(index,1)', y : 'value', color: 'o'
+      position:'dodge'
+    ]
+    dom: dom
+    facet:
+      type: 'wrap'
+      var: {var: '[o]', levels: ['yay', 'no']}
+      formatter: (x) -> if x.o is 'yay' then 'First Group' else 'Second Group'
+    width: 600
+    height: 200
+
+  }
+  c = polyjs.chart spec
+
 @examples.facet_grid = (dom) ->
   o = (i) -> if i%2 is 0 then 'yay' else 'no'
   jsondata = ({index:i%3, value:Math.random()*10, o: o(i)} for i in [0..10])
@@ -34,7 +55,7 @@
     dom: dom
     facet:
       type: 'grid'
-      x: 'o'
+      x: '[o]'
       y: 'o'
     width: 600
     height: 500
@@ -77,7 +98,7 @@
     facet:
       type: 'grid'
       x: 'o'
-      y: 'p'
+      y: '[p]'
     width: 600
     height: 500
 

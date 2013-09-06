@@ -1266,6 +1266,66 @@
     return c = polyjs.chart(spec);
   };
 
+  this.examples.facet_bracketed = function(dom) {
+    var c, data, i, jsondata, o, spec;
+
+    o = function(i) {
+      if (i % 3 === 0) {
+        return 'yay';
+      } else if (i % 3 === 1) {
+        return 'no';
+      } else {
+        return 'nodisplay';
+      }
+    };
+    jsondata = (function() {
+      var _i, _results;
+
+      _results = [];
+      for (i = _i = 0; _i <= 20; i = ++_i) {
+        _results.push({
+          index: i % 7,
+          value: Math.random() * 10,
+          o: o(i)
+        });
+      }
+      return _results;
+    })();
+    data = polyjs.data({
+      data: jsondata
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: 'bin(index,1)',
+          y: 'value',
+          color: 'o',
+          position: 'dodge'
+        }
+      ],
+      dom: dom,
+      facet: {
+        type: 'wrap',
+        "var": {
+          "var": '[o]',
+          levels: ['yay', 'no']
+        },
+        formatter: function(x) {
+          if (x.o === 'yay') {
+            return 'First Group';
+          } else {
+            return 'Second Group';
+          }
+        }
+      },
+      width: 600,
+      height: 200
+    };
+    return c = polyjs.chart(spec);
+  };
+
   this.examples.facet_grid = function(dom) {
     var c, data, i, jsondata, o, spec;
 
@@ -1305,7 +1365,7 @@
       dom: dom,
       facet: {
         type: 'grid',
-        x: 'o',
+        x: '[o]',
         y: 'o'
       },
       width: 600,
@@ -1397,7 +1457,7 @@
       facet: {
         type: 'grid',
         x: 'o',
-        y: 'p'
+        y: '[p]'
       },
       width: 600,
       height: 500
