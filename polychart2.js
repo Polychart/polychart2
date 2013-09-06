@@ -3209,8 +3209,6 @@ See the spec definition for more information.
 
   initialFuncTypeEnv.lower = new FuncType([tcat], tnum);
 
-  initialFuncTypeEnv.find = new FuncType([tcat], tnum);
-
   initialFuncTypeEnv.indexOf = new FuncType([tcat, tcat], tnum);
 
   initialFuncTypeEnv.parseNum = new FuncType([tcat], tnum);
@@ -3220,8 +3218,6 @@ See the spec definition for more information.
   initialFuncTypeEnv.parseDateDefault = new FuncType([tcat], tdate);
 
   initialFuncTypeEnv.year = new FuncType([tdate], tnum);
-
-  initialFuncTypeEnv.quarter = new FuncType([tdate], tnum);
 
   initialFuncTypeEnv.month = new FuncType([tdate], tnum);
 
