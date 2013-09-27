@@ -294,6 +294,8 @@ exprType = (funcTypeEnv, colTypeEnv, expr) ->
       throw poly.error.defn "Unknown function name: #{fname}"
     if fname is 'bin' and targs.length is 2 and targs[0] == tdate
       fname = 'bin_date'
+    if fname in ['min', 'max'] and targs.length is 1 and targs[0] == tdate
+      fname = fname+'_date'
     if fname in ['count', 'unique', 'lag'] and targs.length is 1
       if targs[0] == tcat
         fname = fname+'_cat'
@@ -332,8 +334,11 @@ initialFuncTypeEnv = {'++': new FuncType([tcat, tcat], tcat)}
 for opname in ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==', '=']
   initialFuncTypeEnv[opname] = pairNumToNum
 # statistics
-for fname in ['sum', 'mean', 'box', 'median', 'min', 'max']
+for fname in ['sum', 'mean', 'box', 'median']
   initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat)
+for fname in ['min', 'max']
+  initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat)
+  initialFuncTypeEnv[fname+'_date'] = new FuncType([tdate], DataType.Base.stat)
 for fname in ['count', 'unique']
   initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat)
   initialFuncTypeEnv[fname+'_cat'] = new FuncType([tcat], DataType.Base.stat)

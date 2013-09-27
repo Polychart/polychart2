@@ -289,6 +289,26 @@ test "statistics - count", ->
       {x: 'B', 'min([y])': 1, 'max([y])': 4, 'median([y])': 2.5}
     ]
 
+
+  data = polyjs.data data:[
+    {x: '2010-01-01'}
+    {x: '2010-01-02'}
+  ]
+  trans = transformData data, fill(
+    stats:
+      stats: [
+        {args: ['x'], name: 'min', expr: 'min(x)'}
+        {args: ['x'], name: 'max', expr: 'max(x)'}
+      ]
+      groups: []
+  )
+  deepEqual trans.data, [
+    {
+      "min([x])": 1262322000
+      "max([x])": 1262408400
+    }
+  ]
+
   data = polyjs.data data:[
     {x: 'A', y: 15, z:1}
     {x: 'A', y: 3, z:2}
