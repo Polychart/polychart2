@@ -3211,13 +3211,13 @@ See the spec definition for more information.
 
   initialFuncTypeEnv.log = new FuncType([tnum], tnum);
 
-  initialFuncTypeEnv.substr = new FuncType([tcat, tnum, tnum], tnum);
+  initialFuncTypeEnv.substr = new FuncType([tcat, tnum, tnum], tcat);
 
   initialFuncTypeEnv.length = new FuncType([tcat], tnum);
 
-  initialFuncTypeEnv.upper = new FuncType([tcat], tnum);
+  initialFuncTypeEnv.upper = new FuncType([tcat], tcat);
 
-  initialFuncTypeEnv.lower = new FuncType([tcat], tnum);
+  initialFuncTypeEnv.lower = new FuncType([tcat], tcat);
 
   initialFuncTypeEnv.indexOf = new FuncType([tcat, tcat], tnum);
 
