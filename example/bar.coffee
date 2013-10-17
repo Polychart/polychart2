@@ -3,17 +3,29 @@
 @examples.bar = (dom) ->
   jsondata = ({index:i, value:Math.random()*10} for i in [0..10])
   data = polyjs.data data:jsondata
-  spec = {
+  spec =
     layers: [
-      { data: data, type: 'bar', x : 'index', y : 'value', id: 'index', opacity:'value'}
+      data: data
+      type: 'bar'
+      x: 'index'
+      y: 'value'
+      opacity:'value'
     ]
     guides:
-      x: type:'num', bw:1
-      y :
-        type:'num', min:0, max:10, ticks:[2,4,6,8],
-        labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
+      x:
+        type: 'num'
+        bw: 1
+      y:
+        type: 'num'
+        min: 0
+        max: 10
+        ticks: [2,4,6,8]
+        labels:
+          2: 'Two'
+          4: 'Four'
+          6: 'Six'
+          8: 'Eight'
     dom: dom
-  }
   c = polyjs.chart spec
 
   c.addHandler (type, e) ->
@@ -27,8 +39,14 @@
       debugger
       alert("You clicked on index: " + data.index.in[0])
     #if type == 'select' then console.log data
+  c.addHandler (type, obj, evt, graph) ->
+    if type is 'tover'
+      obj.shadow = obj.clone().attr({color: 'purple'}).insertBefore(obj)
+      obj.shadow.blur(1)
+    else if type is 'tout'
+      obj.shadow.remove()
   window.c = c
- 
+
 @examples.bar_missing = (dom) ->
   data = polyjs.data data: [
     {a: 4, b: 2, c: 'B'}
@@ -149,9 +167,18 @@
       id: 'two'
     ]
     guides:
-      color: labels:{'a':'Even Numbers', 'b':'Odd Numbers'}, title:'Test'
-      x: labels:{'a':'Even Numbers', 'b':'Odd Numbers'}
-      y: min:0, max: 30
+      color:
+          labels:
+            a: 'Even Numbers'
+            b: 'Odd Numbers'
+          title:'Test'
+      x:
+        labels:
+          a: 'Even Numbers'
+          b: 'Odd Numbers'
+      y:
+        min: 0
+        max: 30
     dom: dom
   }
   c = polyjs.chart spec
@@ -296,3 +323,19 @@
     dom: dom
   }
   c = polyjs.chart spec
+
+@examples.multi_word = (dom) ->
+  data = polyjs.data
+    "Hello world": ['a']
+    "Bye": [1]
+  spec = {
+    layers: [
+      data: data
+      type: 'bar'
+      x: '"Hello world"'
+      y: 'sum("Bye")'
+    ]
+    dom: dom
+  }
+  c = polyjs.chart spec
+

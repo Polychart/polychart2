@@ -95,7 +95,7 @@ class ParserTests(unittest.TestCase):
   def test_fail_on_parse_order(self):
     order_without_sort = { 'limit': 2}
     self.assertRaises(AssertionError, Parser.parse_order, order_without_sort)
-  
+
 class QueryBuilderTests(unittest.TestCase):
   def test_succeed_build_sort_query(self):
     table = 'example1'

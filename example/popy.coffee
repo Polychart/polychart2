@@ -10,7 +10,7 @@
         {gr: "Grade 11", p: 50, colgrp: '2'},
         {gr: "Grade 12", p: 70, colgrp: '2'},
       ]
- 
+
   c = polyjs.chart
     layers: [
       { data: data, type: 'bar', y:'p', color: 'colgrp' }
@@ -45,7 +45,7 @@
 
   data.derive ((x) -> x.p + 5), 'p_10'
   data.derive ((x) -> "#{x.p}%"), 'percent'
-  
+
   c = polyjs.chart
     layers: [
       { data: data, type: 'bar', x:'gr', y:'p' , color: {const:'#ABC'} }
@@ -71,7 +71,7 @@
 
   data.derive ((x) -> x.num+40), 'p_50'
   data.derive ((x) -> "#{Math.round(x.num/800*100)}%"), 'percent'
-  
+
   c = polyjs.chart
     layers: [
       { data: data, type: 'bar', x: {var: 'gr', sort:'num'}, y:'num' }
@@ -103,7 +103,7 @@
 
   data.derive ((x) -> x.num+50), 'p_50'
   data.derive ((x) -> "#{Math.round(x.num/800*100)}%"), 'percent'
-  
+
   c = polyjs.chart
     layers: [
       { data: data, type: 'bar', x: {var: 'gr', sort:'num'}, y:'num', color: 'type',  position:'dodge' }
@@ -125,7 +125,7 @@
         {gr: "Poor", num: 370}
         {gr: "Terrible", num: 70}
       ]
-  
+
   c = polyjs.chart
     layers: [
       { data: data, type: 'bar', x: {var: 'gr', sort:'num'}, y:'num' }
@@ -146,7 +146,7 @@
         {gr: "Poor", num: 370}
         {gr: "Terrible", num: 70}
       ]
-  
+
   c = polyjs.chart
     layers: [
       { data: data, type: 'bar', y:'num', color: 'gr' }

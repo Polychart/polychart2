@@ -64,73 +64,78 @@ makeDomain = (params) ->
     when 'cat' then return new CategoricalDomain(params)
 
 ###
+Make a single domain out of some set of values
+###
+poly.domain.single = (values, meta, guide) ->
+  if values.length is 0
+    throw poly.error.input("Dataset is none?")
+  fromspec = (item) -> if guide? then guide[item] else null
+  switch meta.type
+    when 'num'
+      bw = fromspec('bw') ? meta.bw
+      if values.length > 1
+        min = fromspec('min') ? _.min(values)
+        max = fromspec('max') ?  (_.max(values) + (bw ? 0))
+      else if values.length == 1
+        if bw
+          min = fromspec('min') ? values[0]
+          max = fromspec('max') ? values[0]+bw
+        else
+          min = fromspec('min') ? values[0]-1
+          max = fromspec('max') ? values[0]+1
+      else
+        min = fromspec('min') ? 0
+        max = fromspec('max') ? bw ? 1
+      return makeDomain {
+        type: 'num'
+        min: min
+        max: max
+        bw: bw
+      }
+    when 'date'
+      bw = fromspec('bw') ? meta.bw
+      min = fromspec('min') ? _.min(values)
+      max = fromspec('max')
+      if not max?
+        max = _.max(values)
+        max =
+          switch bw
+            when 'week' then moment.unix(max).add('days',7).unix()
+            when 'twomonth' then moment.unix(max).add('months',2).unix()
+            when 'quarter' then moment.unix(max).add('months',4).unix()
+            when 'sixmonth' then moment.unix(max).add('months',6).unix()
+            when 'twoyear' then moment.unix(max).add('years',2).unix()
+            when 'fiveyear' then moment.unix(max).add('years',5).unix()
+            when 'decade' then moment.unix(max).add('years',10).unix()
+            else moment.unix(max).add(bw+'s',1).unix()
+      return  makeDomain {
+        type: 'date'
+        min: min
+        max: max
+        bw: bw
+      }
+    when 'cat'
+      return makeDomain {
+        type: 'cat'
+        levels: fromspec('levels') ? meta.levels ? _.uniq(values)
+        sorted : fromspec('levels') ? meta.sorted ? false
+        #sorted = true <=> user specified
+      }
+
+###
 Make a domain set. A domain set is an associate array of domains, with the
 keys being aesthetics
 ###
 makeDomainSet = (geoms, metas, guideSpec, strictmode) ->
   domain = {}
   for aes, meta of metas
+    guide = guideSpec[aes]
     if aes in poly.const.noDomain then continue
     if strictmode
       domain[aes] = makeDomain guideSpec[aes]
     else
       values = flattenGeoms(geoms, aes)
-      if values.length is 0
-        throw poly.error.input("Dataset is none?")
-      fromspec = (item) -> if guideSpec[aes]? then guideSpec[aes][item] else null
-      switch meta.type
-        when 'num'
-          bw = fromspec('bw') ? meta.bw
-          if values.length > 1
-            min = fromspec('min') ? _.min(values)
-            max = fromspec('max') ?  (_.max(values) + (bw ? 0))
-          else if values.length == 1
-            debugger
-            if bw
-              min = fromspec('min') ? values[0]
-              max = fromspec('max') ? values[0]+bw
-            else
-              min = fromspec('min') ? values[0]-1
-              max = fromspec('max') ? values[0]+1
-          else
-            min = fromspec('min') ? 0
-            max = fromspec('max') ? bw ? 1
-          domain[aes] = makeDomain {
-            type: 'num'
-            min: min
-            max: max
-            bw: bw
-          }
-        when 'date'
-          bw = fromspec('bw') ? meta.bw
-          min = fromspec('min') ? _.min(values)
-          max = fromspec('max')
-          if not max?
-            max = _.max(values)
-            max =
-              switch bw
-                when 'week' then moment.unix(max).add('days',7).unix()
-                when 'twomonth' then moment.unix(max).add('months',2).unix()
-                when 'quarter' then moment.unix(max).add('months',4).unix()
-                when 'sixmonth' then moment.unix(max).add('months',6).unix()
-                when 'twoyear' then moment.unix(max).add('years',2).unix()
-                when 'fiveyear' then moment.unix(max).add('years',5).unix()
-                when 'decade' then moment.unix(max).add('years',10).unix()
-                else moment.unix(max).add(bw+'s',1).unix()
-          domain[aes] = makeDomain {
-            type: 'date'
-            min: min
-            max: max
-            bw: bw
-          }
-        when 'cat'
-          domain[aes] = makeDomain {
-            type: 'cat'
-            levels: fromspec('levels') ? meta.levels ? _.uniq(values)
-            sorted : fromspec('levels') ? meta.sorted ? false
-            #sorted = true <=> user specified
-          }
-
+      domain[aes] = poly.domain.single(values, meta, guide)
   domain
 
 ###

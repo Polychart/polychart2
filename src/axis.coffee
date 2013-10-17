@@ -87,6 +87,7 @@ class Axes extends poly.GuideSet
         for k, pts of @axesGeoms[key][aes].pts
           if pts.grid
             pts.grid.toBack()
+    return
   dispose: (renderer) ->
     for key, axes of @axesGeoms
       axes.x.dispose(renderer)

@@ -156,9 +156,16 @@ class Graph
           obj.evtData = null
       else if type == 'data'
         obj.evtData = {}
-      else if type in ['reset', 'click', 'mover', 'mout', 'guide-click']
+      else if type in ['reset', 'click', 'mover', 'mout', 'tover', 'tout', 'gover', 'gout', 'guide-click']
         obj.tooltip = obj.data('t')
         obj.evtData = obj.data('e')
+        if type is 'guide-click' and obj.type is 'text'
+          if obj.evtData?
+            if obj.evtData.value is 'legendTitle'
+              event = poly.event.make 'legend-title', obj
+            else
+              event = poly.event.make 'legend-label', obj
+            event.dispatch graph.dom
       else if type in ['guide-title', 'guide-titleH', 'guide-titleV']
         obj.tooltip = obj.data('t')
         obj.evtData = obj.data('e')
@@ -176,8 +183,8 @@ class Graph
   _makeDimensions: (spec, scaleSet, facet, tmpDims) ->
     scaleSet.makeGuides(spec, tmpDims)
     poly.dim.make spec, scaleSet, facet.getGrid()
-  _makePaper: (dom, width, height, handleEvent) ->
-    paper = poly.paper dom, width, height, handleEvent
+  _makePaper: (dom, width, height, graph) ->
+    paper = poly.paper dom, width, height, {graph}
 
 poly.chart = (spec, callback, prepare) ->
   try

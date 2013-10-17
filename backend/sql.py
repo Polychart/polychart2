@@ -123,7 +123,7 @@ class QueryBuilder:
 
   def set_orderby(self, raw_order):
     assert type(raw_order) is dict
-    assert 'sort' in raw_order 
+    assert 'sort' in raw_order
     self.orderby = Parser.parse_order(raw_order)
 
   def set_limit(self, raw_limit):
@@ -156,7 +156,7 @@ class QueryBuilder:
       query += 'GROUP BY %s ' % self.groupby
     if self.orderby is not None:
       category, orientation = self.orderby
-      query += 'ORDER BY ? %s ' % orientation 
+      query += 'ORDER BY ? %s ' % orientation
       params.append(category)
     if self.limit is not None:
       query += 'LIMIT ?'
@@ -176,12 +176,12 @@ class QueryBuilder:
     if 'limit' in meta[builder.select]:
       builder.set_limit(meta[builder.select]['limit'])
     return builder.build()
-    
+
   @staticmethod
   def build_calc_query(table, spec, limit, categories=None):
     builder = QueryBuilder(table)
     meta = spec['meta']
-    
+
     where = copy.deepcopy(spec['filter']) if spec['filter'] != {} else {}
     if categories is not None:
       category = meta.iterkeys().next()
@@ -203,7 +203,7 @@ def process_fn(execute):
       # Step 2:
       query, params = QueryBuilder.build_calc_query(table, spec, limit, result)
       result = execute(query, params)
-    else: 
+    else:
       query, params = QueryBuilder.build_calc_query(table, spec, limit)
       result = execute(query, params)
     return { 'data': result, 'meta': spec['select'] }

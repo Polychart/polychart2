@@ -2,32 +2,30 @@
 Wrapper around the data processing piece that keeps track of the kind of
 data processing to be done.
 ###
+
 class DataProcess
   ## save the specs
-  constructor: (layerSpec, grouping, strictmode) ->
-    @layerMeta = layerSpec.meta
-    @dataObj = layerSpec.data
-    @initialSpec = poly.parser.layerToData layerSpec, grouping
-    @prevSpec = null
+  constructor: (layerSpec, grouping, strictmode, @parseMethod=poly.parser.layerToData) ->
+    @layerMeta  = _.extend {}, layerSpec.meta, _additionalInfo: layerSpec.additionalInfo
+    @dataObj    = layerSpec.data
+    @prevSpec   = null
     @strictmode = strictmode
-    @statData = null
-    @metaData = {}
-
-  reset : (callback) -> @make @initialSpec, callback
+    @statData   = null
+    @metaData   = {}
 
   ## calculate things...
-  make : (spec, grouping, callback) ->
+  make : (spec, grouping, callback) =>
     wrappedCallback = @_wrap callback
     if @strictmode
       wrappedCallback
         data: @dataObj.raw
         meta: @dataObj.meta
     if @dataObj.computeBackend
-      dataSpec = poly.parser.layerToData spec, grouping
-      if @layerMeta and _.size(dataSpec.meta) < 1 then dataSpec.meta = @layerMeta
+      dataSpec = @parseMethod spec, grouping
+      if @layerMeta then dataSpec.meta = @layerMeta
       backendProcess(dataSpec, @dataObj, wrappedCallback)
     else
-      dataSpec = poly.parser.layerToData spec, grouping
+      dataSpec = @parseMethod spec, grouping
       @dataObj.getData (err, data) ->
         if err? then return wrappedCallback err, null
 
@@ -71,14 +69,14 @@ transforms =
     {name, binwidth} = transSpec
     if meta.type is 'num'
       if isNaN(binwidth)
-        throw poly.error.defn "The binwidth #{binwidth} is invalid for a numeric varliable"
+        throw poly.error.defn "The binwidth #{binwidth} is invalid for a numeric variable"
       binwidth = +binwidth
       binFn = (item) ->
         item[name] = binwidth * Math.floor item[key]/binwidth
       return trans: binFn, meta: {bw: binwidth, binned: true, type:'num'}
     if meta.type is 'date'
       if not (binwidth in poly.const.timerange)
-        throw poly.error.defn "The binwidth #{binwidth} is invalid for a datetime varliable"
+        throw poly.error.defn "The binwidth #{binwidth} is invalid for a datetime variable"
       binFn = (item) ->
         _timeBinning = (n, timerange) =>
           m = moment.unix(item[key]).startOf(timerange)
@@ -129,6 +127,7 @@ filterFactory = (filterSpec) ->
   filterFuncs = []
   _.each filterSpec, (spec, key) ->
     _.each spec, (value, predicate) ->
+      return if predicate not of filters
       filter = (item) -> filters[predicate](item[key], value)
       filterFuncs.push filter
   (item) ->
@@ -259,9 +258,9 @@ frontendProcess = (dataSpec, data, callback) ->
   if dataSpec.filter
     data = _.filter data, filterFactory(dataSpec.filter)
   # meta + more filtering
-  if dataSpec.meta
+  if dataSpec.sort
     additionalFilter = {}
-    for key, metaSpec of dataSpec.meta
+    for key, metaSpec of dataSpec.sort
       {meta, filter} = calculateMeta(key, metaSpec, data)
       additionalFilter[key] = filter
       addMeta key, meta

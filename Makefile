@@ -21,6 +21,7 @@ polychart2:
     tmp/src/const.js \
     tmp/src/error.js \
     tmp/src/abstract.js\
+		tmp/src/paper.js \
     tmp/src/mouse.js \
     tmp/src/format.js \
     tmp/src/type.js \
@@ -43,6 +44,8 @@ polychart2:
     tmp/src/render.js \
     tmp/src/interact.js \
     tmp/src/facet.js \
+    tmp/src/pivot.js \
+    tmp/src/numeral.js \
 		tmp/src/event.js \
     tmp/src/graph.js > tmp/polychart2.bare.js
 	cat $(HEADER) tmp/polychart2.bare.js $(FOOTER) > polychart2.js
@@ -66,4 +69,4 @@ clean-folders:
 	-rm -r tmp || echo "Done removing tmp/" && false
 
 clean: clean-folders
-	rm $(OBJS)
+	-rm $(OBJS)

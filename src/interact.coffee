@@ -88,7 +88,7 @@ poly.handler.tooltip = () ->
                                  _boxRadius
         tooltip.box.attr { fill: '#213' }
         tooltip.text.toFront()
-        
+
         tooltip = _positionTooltip tooltip, mousePos
         # Add handler on to the object to move box/text on mousemove
         # TODO: Add handler to object so will monitor data changes

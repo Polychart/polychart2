@@ -24,11 +24,13 @@ formatNumber = (n) ->
     s = v.join('.')
   s
 
+poly.format.getExp = (num) ->
+  Math.floor(Math.log(Math.abs(if num is 0 then 1 else num))/Math.LN10)
+
 poly.format.number = (exp_original) -> (num) ->
   exp_fixed = 0
   exp_precision = 0
-  exp = if exp_original? then exp_original else
-    Math.floor(Math.log(Math.abs(if num is 0 then 1 else num))/Math.LN10)
+  exp = exp_original ? poly.format.getExp(num)
   if exp_original? && (exp == 2 || exp == 5 || exp == 8 || exp == 11)
     exp_fixed = exp + 1
     exp_precision = 1

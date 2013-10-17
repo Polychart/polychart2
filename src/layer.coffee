@@ -135,10 +135,9 @@ class Layer
   # Check that a certain item is in levels filter, if present
   _inLevels: (item) ->
     for aes in ['x', 'y']
-      if @guideSpec[aes]? and @guideSpec[aes].levels?
-        return item[@spec[aes].var] in @guideSpec[aes].levels
-      else
-        return true
+      if @guideSpec[aes]?.levels? and item[@spec[aes].var] not in @guideSpec[aes].levels
+        return false
+    true
 
 class Point extends Layer
   _calcGeoms: () ->
@@ -234,7 +233,7 @@ class Bar extends Layer
     else
       if @mapping.x
         m = @meta[@mapping.x]
-        if m.type isnt 'cat' and not m.bw and not m.binned # Check that the bw is set in guides. Hackish.  
+        if m.type isnt 'cat' and not m.bw and not m.binned # Check that the bw is set in guides. Hackish.
           if m.type is 'num' and not @guideSpec.x.bw?
             throw poly.error.type "Bar chart x-values need to be binned. Set binwidth or use the bin() transform!"
       @position = @spec.position ? 'stack'

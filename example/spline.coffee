@@ -15,7 +15,7 @@
     dom: dom
   }
   c = polyjs.chart spec
-  
+
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})
@@ -331,7 +331,7 @@
     dom: dom
   }
   c = polyjs.chart spec
-  
+
   redraw = () ->
     jsondata.shift()
     jsondata.push({index:i++, value:Math.random()*10})

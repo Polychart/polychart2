@@ -180,7 +180,11 @@ class Legend extends poly.Guide
     {@ticks, _} = poly.tick.make domain, guideSpec, type
   calculate: () ->
     geoms = {}
-    geoms['title'] = marks: 0: @_makeTitle(@titletext)
+    geoms['title'] =
+      marks: 0: @_makeTitle(@titletext)
+      evtData:
+        aes: @aes[0]
+        value: 'legendTitle'
     for key, tick of @ticks
       marks = {}
       marks.tick = @_makeTick(tick)
@@ -244,7 +248,9 @@ class Legend extends poly.Guide
     for aes, value of @mapping
       for v in value
         if aes in @aes and v.type is 'map'
-          evtData[v.value] = tick.evtData
+          evtData[v.value] = _.extend tick.evtData,
+            value: tick.location
+            aes: aes
     evtData
 
 class VerticalLegend extends Legend

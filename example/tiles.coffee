@@ -24,6 +24,20 @@ datafn = () ->
   }
   c = polyjs.chart spec
 
+@examples.tiles2 = (dom) ->
+  data = polyjs.data data:datafn()
+  spec = {
+    layers: [
+      data: data
+      type: 'tile'
+      x : 'bin(mod5, 1)'
+      y : 'bin(floor5,1)'
+      color: 'bin(value,3)'
+    ]
+    dom: dom
+  }
+  c = polyjs.chart spec
+
 @examples.tiles_bw = (dom) ->
   data = polyjs.data data:datafn()
   spec = {

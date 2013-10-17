@@ -10,7 +10,8 @@ poly.data = (blob) ->
   type = undefined
   data = undefined
   meta = undefined
-  if _.isObject(blob) and _.keys(blob).length < 4 and 'data' of blob
+
+  if _.isObject(blob) and 'data' of blob and (((len=_.keys(blob).length) < 7 and 'meta' of blob) or len < 5)
     data = blob.data
     meta = blob.meta
   else
@@ -283,7 +284,7 @@ class FrontendData extends AbstractData
       hasFnStr = false
     else
       hasFnStr = true
-      compute = new Function('d', "with(this) { with(d) { return #{fnstr if '' then "" else fnstr};}}")
+      compute = new Function('d', "with(this) { with(d) { return #{fnstr or '""'};}}")
 
     for item in @raw
       value = compute.call context,item
@@ -355,10 +356,13 @@ class ApiData extends AbstractData
   getData: (callback, dataSpec) =>
     @apiFun dataSpec, (err, blob) =>
       if err? then return callback err, null
-      try
-        blob = JSON.parse(blob)
-      catch e
 
+      if _.isString(blob)
+        try
+          blob = JSON.parse(blob)
+        catch e
+
+      error = null
       try
         # Need to merge this with above code
         data = blob.data
@@ -366,15 +370,15 @@ class ApiData extends AbstractData
         {@key, @raw, @meta} =
           switch _getDataType(data)
             when 'json-object' then _getObject data, meta
-            when 'json-grid' then _getArrayofArrays data, meta
+            when 'json-grid' then _getArrayOfArrays data, meta
             when 'json-array' then _getArray data, meta
             when 'csv' then _getCSV data, meta
             else
               throw poly.error.data "Unknown data format."
         @data = @raw
-        callback null, @
       catch e
-        callback e
+        error = e
+      callback error, @
   update: (params) ->
     @raw = null
     super()

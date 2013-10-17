@@ -4,26 +4,40 @@ CONSTANTS
 These are constants that are referred to throughout the coebase
 ###
 poly.const =
-  aes : ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id', 'text']
-  noDomain: ['id', 'text', 'tooltip']
-  noLegend: ['x', 'y', 'id', 'text', 'tooltip']
-  trans: {'bin': ['key', 'binwidth'], 'lag': ['key', 'lag']},
-  stat: {'count': ['key'], 'unique': ['key'], 'sum': ['key'], 'mean': ['key'], 'box': ['key'], 'median': ['key']}
-  timerange: ['second','minute','hour','day','week','month','twomonth','quarter','sixmonth','year',  'twoyear', 'fiveyear', 'decade']
+  aes :      ['x', 'y', 'color', 'size', 'opacity', 'shape', 'id', 'text']
+  pivot_aes: ['row', 'column', 'value']
+  noDomain:  ['id', 'text', 'tooltip']
+  noLegend:  ['x', 'y', 'id', 'text', 'tooltip']
+  trans:     {'bin': ['key', 'binwidth'], 'lag': ['key', 'lag']},
+  stat:      {'count': ['key'], 'unique': ['key'], 'sum': ['key'], 'mean': ['key'], 'box': ['key'], 'median': ['key']}
+  timerange: ['second','minute','hour','day','week','month','twomonth','quarter','sixmonth','year','twoyear','fiveyear','decade']
+  approxTimeInSeconds: # approximate!
+    second:   1
+    minute:   60
+    hour:     60*60
+    day:      60*60*24
+    week:     60*60*24*7
+    month:    60*60*24*30
+    twomonth: 60*60*24*30*2
+    quarter:  60*60*24*30*4
+    sixmonth: 60*60*24*30*6
+    year:     60*60*24*365
+    twoyear:  60*60*24*365*2
+    fiveyear: 60*60*24*365*5 + 60*60*24 # Will be at least 1 leap year
   metas: {sort: null, stat: null, limit: null, asc: false},
   scaleFns :
-    novalue : () -> {v: null, f: 'novalue', t: 'scalefn'}
-    max: (v) -> {v: v, f: 'max', t: 'scalefn'}
-    min: (v) -> {v: v, f: 'min', t: 'scalefn'}
-    upper: (v,n,m) -> {v: v, n:n, m:m, f: 'upper', t: 'scalefn'}
-    lower: (v,n,m) -> {v: v, n:n, m:m, f: 'lower', t: 'scalefn'}
-    middle: (v) -> {v: v, f: 'middle', t: 'scalefn'}
-    jitter: (v) -> {v: v, f: 'jitter', t: 'scalefn'}
-    identity: (v) -> {v: v, f: 'identity', t: 'scalefn'}
+    novalue : () ->      {v: null, f: 'novalue', t: 'scalefn'}
+    max:      (v) ->     {v: v, f: 'max', t: 'scalefn'}
+    min:      (v) ->     {v: v, f: 'min', t: 'scalefn'}
+    upper:    (v,n,m) -> {v: v, n:n, m:m, f: 'upper', t: 'scalefn'}
+    lower:    (v,n,m) -> {v: v, n:n, m:m, f: 'lower', t: 'scalefn'}
+    middle:   (v) ->     {v: v, f: 'middle', t: 'scalefn'}
+    jitter:   (v) ->     {v: v, f: 'jitter', t: 'scalefn'}
+    identity: (v) ->     {v: v, f: 'identity', t: 'scalefn'}
   epsilon : Math.pow(10, -7)
   defaults :
-    'x': {v: null, f: 'novalue', t: 'scalefn'}
-    'y': {v: null, f: 'novalue', t: 'scalefn'}
-    'color': 'steelblue'
-    'size': 2
+    'x':       {v: null, f: 'novalue', t: 'scalefn'}
+    'y':       {v: null, f: 'novalue', t: 'scalefn'}
+    'color':   'steelblue'
+    'size':    2
     'opacity': 0.7

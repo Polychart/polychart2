@@ -120,13 +120,13 @@ data = {
           yearly_spec.guides.y.min = min
           yearly_spec.guides.y.max = max
         yearly.make yearly_spec
- 
+
   today.addHandler show_country
   yearly.addHandler yscale_toggle()
   yearly.addHandler show_breakdown
   breakdown.addHandler show_country
 
-  
+
 @examples.populationerr1 = (dom, dom2, dom3) ->
   polyd = polyjs.data data: data
   polyd.derive ((x) -> if x.year < 2012 then 'actual' else 'estimate'), 'type'
@@ -241,7 +241,7 @@ data = {
           yearly_spec.guides.y.min = min
           yearly_spec.guides.y.max = max
         yearly.make yearly_spec
- 
+
   today.addHandler show_country
   yearly.addHandler yscale_toggle()
   yearly.addHandler show_breakdown

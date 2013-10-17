@@ -252,17 +252,17 @@ test "meta sorting", ->
     {x: 'C', y: 2}
   ]
   trans = transformData data,
-    meta:
+    sort:
       x: {sort: 'y', asc: true}
   deepEqual _.pluck(trans.data, 'x'), ['B','C','A']
 
   trans = transformData data,
-    meta:
+    sort:
       x: {sort: 'y', asc: true, limit: 2}
   deepEqual _.pluck(trans.data, 'x'), ['B','C']
 
   trans = transformData data,
-    meta:
+    sort:
       x: {sort: 'y', asc: false, limit: 1}
   deepEqual _.pluck(trans.data, 'x'), ['A']
 
@@ -273,7 +273,7 @@ test "meta sorting", ->
     {x: 'C', y: 2}
   ]
   trans = transformData data,
-    meta: x:
+    sort: x:
       sort: 'sum(y)',
       stat: {key: 'y', stat:'sum', name:'sum(y)'},
       asc: false,
@@ -287,7 +287,7 @@ test "meta sorting", ->
     {x: 'C', y: 2}
   ]
   trans = transformData data,
-    meta: x:
+    sort: x:
       sort: 'sum(y)',
       stat: {key: 'y', stat:'sum', name:'sum(y)'},
       asc: true,

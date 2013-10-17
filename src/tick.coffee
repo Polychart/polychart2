@@ -95,11 +95,17 @@ tickValues =
         ticks.push item
     ticks: ticks
   'num' : (domain, numticks) ->
-    {min, max} = domain
-    step = getStep max-min, numticks
-    tmp = Math.ceil(min/step) * step
+    {min, max, bw} = domain
+    if bw # there is binning
+      step = bw
+      while (max-min)/step > numticks*1.4
+        step*=2
+      tmp = min
+    else # no binning
+      step = getStep max-min, numticks
+      tmp = Math.ceil(min/step) * step
     ticks = []
-    while tmp < max
+    while tmp <= max
       ticks.push tmp
       tmp += step
     ticks: ticks
@@ -132,22 +138,18 @@ tickValues =
       tmp += step
     ticks: ticks
   'date' : (domain, numticks) ->
-    {min, max} = domain
-    step = (max-min) / numticks
-    step =
-      if      step < 1.4*1 then 'second'
-      else if step < 1.4*60 then 'minute'
-      else if step < 1.4*60*60 then 'hour'
-      else if step < 1.4*24*60*60 then 'day'
-      else if step < 1.4*7*24*60*60 then 'week'
-      else if step < 1.4*30*24*60*60 then 'month'
-      else if step < 1.4*30*24*60*60*2 then 'twomonth'
-      else if step < 1.4*30*24*60*60*4 then 'quarter'
-      else if step < 1.4*30*24*60*60*6 then 'sixmonth'
-      else if step < 1.4*24*60*60*365 then 'year'
-      else if step < 1.4*24*60*60*365*2 then 'twoyear'
-      else if step < 1.4*24*60*60*365*5 then 'fiveyear'
-      else 'decade'
+    {min, max, bw} = domain
+    if bw # there is binning
+      step = bw
+      while step isnt 'decade' and (max-min)/poly.const.approxTimeInSeconds[step] > numticks*1.4
+        step = poly.const.timerange[_.indexOf(poly.const.timerange, step)+1]
+    else # no binning
+      secs = (max-min) / numticks
+      step = 'decade'
+      for timeRange, timeInSeconds of poly.const.approxTimeInSeconds
+        if secs < timeInSeconds*1.4
+          step = timeRange
+          break
     ticks = []
     current = moment.unix(min).startOf(step)
     momentjsStep =
@@ -161,7 +163,7 @@ tickValues =
         else [step+'s', 1]
     if current.unix() < min
       current.add(momentjsStep[0], momentjsStep[1])
-    while current.unix() < max
+    while current.unix() <= max
       ticks.push current.unix()
       current.add(momentjsStep[0], momentjsStep[1])
     ticks: ticks

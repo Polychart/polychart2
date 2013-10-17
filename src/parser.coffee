@@ -31,7 +31,7 @@ mergeObjLists = (dicts) ->
     for key of dict
       fin[key] = dict[key].concat(dictGet(fin, key, []))
   fin
-dedup = (vals, trans = (x) -> x) ->
+dedup = (vals=[], trans = (x) -> x) ->
   unique = {}
   unique[trans val] = val for val in vals
   val for _, val of unique
@@ -75,7 +75,7 @@ tokenizers = [
   [/^,/, () -> Comma],
   [/^[+-]?(0x[0-9a-fA-F]+|0?\.\d+|[1-9]\d*(\.\d+)?|0)([eE][+-]?\d+)?/,
    (val) -> new Literal(val)],
-  [/^(\w|[^\u0000-\u0080])+|'((\\.)|[^\\'])+'|"((\\.)|[^\\"])+"/,
+  [/^([\w|\.]|[^\u0000-\u0080])+|'((\\.)|[^\\'])+'|"((\\.)|[^\\"])+"/,
    (name) -> new Symbol(name)],
 ]
 matchToken = (str) ->
@@ -223,11 +223,94 @@ layerToDataSpec = (lspec, grouping=[]) ->
   dedupByName = dedupOnKey 'name'
   stats = {stats: dedupByName(transstats.stat), groups: (dedup groups)}
   {
-    trans: dedupByName(transstats.trans), stats: stats, meta: metas,
+    trans: dedupByName(transstats.trans), stats: stats, sort: metas,
     select: (dedup select), filter: filters
   }
+
+pivotToDataSpec = (lspec) ->
+  filters = {}
+  for key, val of lspec.filter ? {}
+    filters[(parse key).pretty()] = val # normalize name
+
+  aesthetics = _.pick lspec, ['columns', 'rows', 'values']
+  aesthetics_list = []
+
+  for key, list of aesthetics
+    for item in list
+      if 'var' of item
+        aesthetics_list.push(item)
+
+  transstat = []; select = []; groups = []; metas = {}
+  for desc in aesthetics_list
+    if desc.var is 'count(*)'
+      select.push desc.var
+    else
+      expr = parse desc.var
+      desc.var = expr.pretty() # normalize name
+      ts = extractOps expr
+      transstat.push ts
+      select.push desc.var
+      if ts.stat.length is 0
+        groups.push desc.var
+      if 'sort' of desc
+        sdesc = dictGets(desc, poly.const.metas)
+        if sdesc.sort is 'count(*)'
+          result = {sort: 'count(*)', asc: sdesc.asc, stat: [], trans: []}
+        else
+          sexpr = parse sdesc.sort
+          sdesc.sort = sexpr.pretty() # normalize name
+          result = extractOps sexpr
+        if result.stat.length isnt 0
+          sdesc.stat = result.stat[0]
+        metas[desc.var] = sdesc
+  transstats = mergeObjLists transstat
+  dedupByName = dedupOnKey 'name'
+  stats = {stats: dedupByName(transstats.stat), groups: (dedup groups)}
+  {
+    trans: dedupByName(transstats.trans), stats: stats, sort: metas,
+    select: (dedup select), filter: filters
+  }
+
+numeralToDataSpec = (lspec) ->
+  filters = {}
+  for key, val of lspec.filter ? {}
+    filters[(parse key).pretty()] = val # normalize name
+  aesthetics = _.pick lspec, ['value']
+  for key of aesthetics
+    if 'var' not of aesthetics[key]
+      delete aesthetics[key]
+  transstat = []; select = []; groups = []; metas = {}
+  for key, desc of aesthetics
+    if desc.var is 'count(*)'
+      select.push desc.var
+    else
+      expr = parse desc.var
+      desc.var = expr.pretty() # normalize name
+      ts = extractOps expr
+      transstat.push ts
+      select.push desc.var
+      if ts.stat.length is 0
+        groups.push desc.var
+      if 'sort' of desc
+        sdesc = dictGets(desc, poly.const.metas)
+        sexpr = parse sdesc.sort
+        sdesc.sort = sexpr.pretty() # normalize name
+        result = extractOps sexpr
+        if result.stat.length isnt 0
+          sdesc.stat = result.stat[0]
+        metas[desc.var] = sdesc
+  transstats = mergeObjLists transstat
+  dedupByName = dedupOnKey 'name'
+  stats = {stats: dedupByName(transstats.stat ? []), groups: (dedup groups)}
+  {
+    trans: dedupByName(transstats.trans ? []), stats: stats, sort: metas,
+    select: (dedup select), filter: filters
+  }
+
 
 poly.parser =
   tokenize: tokenize
   parse: parse
   layerToData: layerToDataSpec
+  pivotToData: pivotToDataSpec
+  numeralToData: numeralToDataSpec
