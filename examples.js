@@ -1030,6 +1030,55 @@
     return c = polyjs.chart(spec);
   };
 
+  this.examples.bar_date_binned_nozoom = function(dom) {
+    var c, data, i, point, spec;
+
+    point = function() {
+      return {
+        time: moment().add('minutes', Math.random() * 23803).unix(),
+        value: Math.random()
+      };
+    };
+    data = polyjs.data({
+      data: (function() {
+        var _i, _results;
+
+        _results = [];
+        for (i = _i = 0; _i <= 500; i = ++_i) {
+          _results.push(point());
+        }
+        return _results;
+      })(),
+      meta: {
+        time: {
+          type: 'date',
+          format: 'unix'
+        }
+      }
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: 'bin(time, "day")',
+          y: 'median(value)'
+        }, {
+          data: data,
+          type: 'line',
+          x: 'time',
+          y: 'value',
+          color: {
+            "const": 'black'
+          }
+        }
+      ],
+      dom: dom,
+      zoom: false
+    };
+    return c = polyjs.chart(spec);
+  };
+
   this.examples.bar_date_binned3 = function(dom) {
     var c, data, i, point, spec;
 

@@ -291,6 +291,32 @@
   }
   c = polyjs.chart spec
 
+@examples.bar_date_binned_nozoom = (dom) ->
+  point = () ->
+    time: moment().add('minutes', Math.random()*23803).unix()
+    value: Math.random()
+  data = polyjs.data
+    data:(point() for i in [0..500])
+    meta: { time: { type: 'date', format: 'unix' } }
+  spec = {
+    layers: [ {
+        data: data
+        type: 'bar'
+        x: 'bin(time, "day")'
+        y: 'median(value)'
+      }, {
+        data: data
+        type: 'line'
+        x: 'time'
+        y: 'value'
+        color: {const: 'black'}
+      }
+    ]
+    dom: dom
+    zoom: false
+  }
+  c = polyjs.chart spec
+
 @examples.bar_date_binned3 = (dom) ->
   point = () ->
     time: moment().add('minutes', Math.random()*206232*4).unix()

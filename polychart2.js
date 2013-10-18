@@ -9689,9 +9689,12 @@ Dimension object has the following elements (all numeric in pixels):
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  poly.paper = function(dom, w, h, obj) {
+  poly.paper = function(dom, w, h, obj, showBox) {
     var bg, graph, numeral, paper;
 
+    if (showBox == null) {
+      showBox = true;
+    }
     if (typeof Raphael !== "undefined" && Raphael !== null) {
       paper = Raphael(dom, w, h);
     } else {
@@ -9705,7 +9708,8 @@ Dimension object has the following elements (all numeric in pixels):
     });
     if (graph != null) {
       bg.click(graph.handleEvent('reset'));
-      poly.mouseEvents(graph, bg, false);
+      debugger;
+      poly.mouseEvents(graph, bg, showBox);
       poly.touchEvents(graph.handleEvent, bg, true);
     } else if (numeral != null) {
       bg.click(numeral.handleEvent('reset'));
@@ -10669,7 +10673,7 @@ The functions here makes it easier to create common types of interactions.
       };
     };
     return function(type, obj, event, graph) {
-      var aesVar, data, guides, layer, spec, v, _i, _j, _k, _len, _len1, _len2, _ref2, _ref3, _ref4, _ref5, _ref6, _results;
+      var aesVar, data, guides, layer, spec, v, _i, _j, _k, _len, _len1, _len2, _ref2, _ref3, _ref4, _ref5, _results;
 
       if (initHandlers == null) {
         initHandlers = _.clone(graph.handlers);
@@ -10696,7 +10700,7 @@ The functions here makes it easier to create common types of interactions.
               if (!(zoomOptions[v] && (layer[v] != null))) {
                 continue;
               }
-              aesVar = layer[v]["var"];
+              aesVar = poly.parser.unbracket(layer[v]["var"]);
               if ((_ref3 = graph.axes.domains[v].type) === 'num' || _ref3 === 'date') {
                 if (data[aesVar].le - data[aesVar].ge > poly["const"].epsilon) {
                   if ((_ref4 = guides[v]) == null) {
@@ -10705,12 +10709,13 @@ The functions here makes it easier to create common types of interactions.
                       max: null
                     };
                   }
-                  _ref5 = [data[aesVar].ge, data[aesVar].le], guides[v].min = _ref5[0], guides[v].max = _ref5[1];
+                  guides[v].min = data[aesVar].ge;
+                  guides[v].max = data[aesVar].le;
                 }
               }
               if (graph.axes.domains[v].type === 'cat') {
                 if (data[aesVar]["in"].length !== 0) {
-                  if ((_ref6 = guides[v]) == null) {
+                  if ((_ref5 = guides[v]) == null) {
                     guides[v] = {
                       levels: null
                     };
@@ -11680,7 +11685,7 @@ The functions here makes it easier to create common types of interactions.
 
       return paper = poly.paper(dom, width, height, {
         numeral: numeral
-      });
+      }, false);
     };
 
     return Numeral;
@@ -11811,8 +11816,15 @@ The functions here makes it easier to create common types of interactions.
       this.dataSubscribed = [];
       this.callback = callback;
       this.prepare = prepare;
+      this.showTooltip = !((spec.tooltip != null) && !spec.tooltip);
+      this.showZoom = !((spec.zoom != null) && !spec.zoom);
       this.make(spec);
-      this.addHandler(poly.handler.tooltip());
+      if (this.showTooltip) {
+        this.addHandler(poly.handler.tooltip());
+      }
+      if (this.showZoom) {
+        this.addHandler(poly.handler.zoom(spec));
+      }
     }
 
     /*
@@ -12062,7 +12074,7 @@ The functions here makes it easier to create common types of interactions.
 
       return paper = poly.paper(dom, width, height, {
         graph: graph
-      });
+      }, this.showZoom);
     };
 
     return Graph;

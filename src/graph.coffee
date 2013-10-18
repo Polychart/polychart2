@@ -24,12 +24,17 @@ class Graph
     @dataSubscribed = []
     @callback = callback
     @prepare = prepare
-    @make spec
 
     # Post make work, things that do not have to be updated
     # Default handlers
-    @addHandler poly.handler.tooltip()
-    #@addHandler poly.handler.zoom(spec)
+    @showTooltip = not (spec.tooltip? and not spec.tooltip)
+    @showZoom = not (spec.zoom? and not spec.zoom)
+
+    @make spec
+
+    if @showTooltip then @addHandler(poly.handler.tooltip())
+    if @showZoom then @addHandler(poly.handler.zoom(spec))
+
 
   ###
   Remove all existing items on the graph, if necessary
@@ -184,7 +189,7 @@ class Graph
     scaleSet.makeGuides(spec, tmpDims)
     poly.dim.make spec, scaleSet, facet.getGrid()
   _makePaper: (dom, width, height, graph) ->
-    paper = poly.paper dom, width, height, {graph}
+    paper = poly.paper dom, width, height, {graph}, @showZoom
 
 poly.chart = (spec, callback, prepare, notrycatch=true) ->
   if notrycatch

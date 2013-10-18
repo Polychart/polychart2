@@ -1,7 +1,7 @@
 ###
 # GLOBALS
 ###
-poly.paper = (dom, w, h, obj) ->
+poly.paper = (dom, w, h, obj, showBox=true) ->
   if Raphael? then paper = Raphael(dom, w, h)
   else             paper = poly.canvas dom, w, h
   {graph, numeral} = obj
@@ -12,7 +12,7 @@ poly.paper = (dom, w, h, obj) ->
     'stroke-width': 0
   if graph?
     bg.click graph.handleEvent('reset')
-    poly.mouseEvents graph, bg, false
+    poly.mouseEvents graph, bg, showBox
     poly.touchEvents graph.handleEvent, bg, true
   else if numeral?
     bg.click numeral.handleEvent('reset')

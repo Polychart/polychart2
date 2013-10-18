@@ -86,7 +86,7 @@ class Numeral
     return
 
   _makePaper: (dom, width, height, numeral) ->
-    paper = poly.paper dom, width, height, {numeral}
+    paper = poly.paper dom, width, height, {numeral}, false
 
 poly.numeral = (spec, callback, prepare) ->
   try
