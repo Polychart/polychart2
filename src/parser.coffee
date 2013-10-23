@@ -471,11 +471,13 @@ getExpression = (str) ->
 makeTypeEnv = (meta) ->
 
 getName = (str) ->
-  expr = parse str
-  if 'name' of expr # shorthand for this being an identifier
-    expr.name
-  else
-    str
+  try
+    expr = parse str
+    if 'name' of expr # shorthand for this being an identifier
+      return expr.name
+  catch e
+    #pass
+  return str
 
 poly.parser = {
   tj: testExprJSON  # TODO: remove after testing

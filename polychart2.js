@@ -3439,14 +3439,17 @@ See the spec definition for more information.
   makeTypeEnv = function(meta) {};
 
   getName = function(str) {
-    var expr;
+    var e, expr;
 
-    expr = parse(str);
-    if ('name' in expr) {
-      return expr.name;
-    } else {
-      return str;
+    try {
+      expr = parse(str);
+      if ('name' in expr) {
+        return expr.name;
+      }
+    } catch (_error) {
+      e = _error;
     }
+    return str;
   };
 
   poly.parser = {
