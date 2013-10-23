@@ -1836,10 +1836,12 @@ See the spec definition for more information.
 
       _ref = poly.parser.getExpression(grpvar["var"]), exprType = _ref.exprType, expr = _ref.expr, statInfo = _ref.statInfo;
       if (exprType === 'trans') {
-        return this.trans.push(expr);
+        this.trans.push(expr);
       } else if (exprType === 'stat') {
         throw poly.error.defn("Facet variable should not contain statistics!");
       }
+      this.select.push(expr);
+      return this.groups.push(expr);
     };
 
     SpecTranslator.prototype.reset = function() {
@@ -9708,7 +9710,6 @@ Dimension object has the following elements (all numeric in pixels):
     });
     if (graph != null) {
       bg.click(graph.handleEvent('reset'));
-      debugger;
       poly.mouseEvents(graph, bg, showBox);
       poly.touchEvents(graph.handleEvent, bg, true);
     } else if (numeral != null) {

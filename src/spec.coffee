@@ -102,6 +102,8 @@ class SpecTranslator
       @trans.push(expr)
     else if exprType == 'stat'
       throw poly.error.defn "Facet variable should not contain statistics!"
+    @select.push expr
+    @groups.push expr
 
   reset: () =>
     @filters = []
