@@ -11206,7 +11206,7 @@ The functions here makes it easier to create common types of interactions.
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   toStrictMode = function(spec) {
-    var aes, i, mappedTo, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
+    var aes, i, key, mappedTo, val, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
 
     _ref = ['row', 'column', 'value'];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -11233,6 +11233,15 @@ The functions here makes it easier to create common types of interactions.
     }
     if ((_ref3 = spec.full) == null) {
       spec.full = false;
+    }
+    if ((_ref4 = spec.formatter) == null) {
+      spec.formatter = {};
+    }
+    _ref5 = spec.formatter;
+    for (key in _ref5) {
+      val = _ref5[key];
+      key = poly.parser.unbracket(poly.parser.parse(key).pretty());
+      spec.formatter[key] = val;
     }
     return spec;
   };
@@ -11347,9 +11356,7 @@ The functions here makes it easier to create common types of interactions.
       formatters = {};
       for (_i = 0, _len = values.length; _i < _len; _i++) {
         v = values[_i];
-        exp = poly.format.getExp(_.min(_.pluck(this.statData, v)));
-        degree = exp;
-        formatters[v] = poly.format.number(degree);
+        formatters[v] = v in this.spec.formatter ? this.spec.formatter[v] : (exp = poly.format.getExp(_.min(_.pluck(this.statData, v))), degree = exp, poly.format.number(degree));
       }
       return formatters;
     };

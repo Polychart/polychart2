@@ -15,6 +15,11 @@ toStrictMode = (spec) ->
       if _.isString mappedTo
         spec[aes][i] = { var: mappedTo }
   spec.full ?= false
+  spec.formatter ?= {}
+  for key, val of spec.formatter
+    # normalize key names
+    key = poly.parser.unbracket(poly.parser.parse(key).pretty())
+    spec.formatter[key] = val
   spec
 
 class PivotProcessedData
@@ -63,10 +68,13 @@ class PivotProcessedData
     values = (poly.parser.unbracket item.var for item in @spec.values)
     formatters = {}
     for v in values
-      exp = poly.format.getExp(_.min(_.pluck(@statData, v)))
-      degree = exp
-      formatters[v] = poly.format.number(degree)
-
+      formatters[v] =
+        if v of @spec.formatter
+          @spec.formatter[v]
+        else
+          exp = poly.format.getExp(_.min(_.pluck(@statData, v)))
+          degree = exp
+          poly.format.number(degree)
     formatters
 
   get: (rowMindex, colMindex, val) =>

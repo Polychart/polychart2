@@ -16,6 +16,8 @@ data = polyjs.data data:{
     columns: ['cat1', 'cat2']
     rows: ['cat3']
     values: ['sum(val1)', 'mean(val1)']
+    formatter:
+      'sum(val1)': (x) -> x+' thousand'
     dom: dom
 
 @examples.pivot_both_smallnum = (dom) ->

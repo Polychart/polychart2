@@ -3468,6 +3468,11 @@
       columns: ['cat1', 'cat2'],
       rows: ['cat3'],
       values: ['sum(val1)', 'mean(val1)'],
+      formatter: {
+        'sum(val1)': function(x) {
+          return x + ' thousand';
+        }
+      },
       dom: dom
     });
   };
