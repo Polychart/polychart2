@@ -65,6 +65,7 @@ class PivotProcessedData
     {@rowHeaders, @colHeaders}
 
   makeFormatters: () =>
+    # must have formatter for values
     values = (poly.parser.unbracket item.var for item in @spec.values)
     formatters = {}
     for v in values
@@ -75,6 +76,10 @@ class PivotProcessedData
           exp = poly.format.getExp(_.min(_.pluck(@statData, v)))
           degree = exp
           poly.format.number(degree)
+    # can optionally have formatter for columns & rows
+    for v in @columns.concat(@rows)
+      if v of @spec.formatter
+        formatters[v] = @spec.formatter[v]
     formatters
 
   get: (rowMindex, colMindex, val) =>
@@ -160,6 +165,7 @@ class Pivot
         colspan = 1
         while ((j+colspan) < colHeaders.length) and (value is colHeaders[j+colspan][key])
           colspan++
+        if formatters[key] then value = formatters[key](value)
         cell = $("<td class='heading'>#{value}</td>").attr('colspan', colspan*pivotMeta.nval)
         cell.attr('align', 'center')
         row.append(cell)
@@ -206,6 +212,7 @@ class Pivot
           while (i+rowspan < rowHeaders.length) and value == rowHeaders[i+rowspan][key]
             rowspan++
           # add a cell!!
+          if formatters[key] then value = formatters[key](value)
           cell = $("<td class='heading'>#{value}</td>").attr('rowspan', rowspan)
           cell.attr('align', 'center')
           cell.attr('valign', 'middle')

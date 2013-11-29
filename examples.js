@@ -3471,6 +3471,15 @@
       formatter: {
         'sum(val1)': function(x) {
           return x + ' thousand';
+        },
+        'cat1': function(x) {
+          return x.toUpperCase();
+        },
+        'cat2': function(x) {
+          return '_' + x.toUpperCase();
+        },
+        'cat3': function(x) {
+          return '_' + x.toUpperCase() + '_';
         }
       },
       dom: dom

@@ -11340,7 +11340,7 @@ The functions here makes it easier to create common types of interactions.
     };
 
     PivotProcessedData.prototype.makeFormatters = function() {
-      var degree, exp, formatters, item, v, values, _i, _len;
+      var degree, exp, formatters, item, v, values, _i, _j, _len, _len1, _ref;
 
       values = (function() {
         var _i, _len, _ref, _results;
@@ -11357,6 +11357,13 @@ The functions here makes it easier to create common types of interactions.
       for (_i = 0, _len = values.length; _i < _len; _i++) {
         v = values[_i];
         formatters[v] = v in this.spec.formatter ? this.spec.formatter[v] : (exp = poly.format.getExp(_.min(_.pluck(this.statData, v))), degree = exp, poly.format.number(degree));
+      }
+      _ref = this.columns.concat(this.rows);
+      for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+        v = _ref[_j];
+        if (v in this.spec.formatter) {
+          formatters[v] = this.spec.formatter[v];
+        }
       }
       return formatters;
     };
@@ -11476,6 +11483,9 @@ The functions here makes it easier to create common types of interactions.
           while (((j + colspan) < colHeaders.length) && (value === colHeaders[j + colspan][key])) {
             colspan++;
           }
+          if (formatters[key]) {
+            value = formatters[key](value);
+          }
           cell = $("<td class='heading'>" + value + "</td>").attr('colspan', colspan * pivotMeta.nval);
           cell.attr('align', 'center');
           row.append(cell);
@@ -11522,6 +11532,9 @@ The functions here makes it easier to create common types of interactions.
             rowspan = 1;
             while ((i + rowspan < rowHeaders.length) && value === rowHeaders[i + rowspan][key]) {
               rowspan++;
+            }
+            if (formatters[key]) {
+              value = formatters[key](value);
             }
             cell = $("<td class='heading'>" + value + "</td>").attr('rowspan', rowspan);
             cell.attr('align', 'center');
