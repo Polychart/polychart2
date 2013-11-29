@@ -46,7 +46,7 @@ class Numeral
     if err?
       console.error err
       return
-    name = poly.parser.unbracket @spec.value.var
+    name = poly.parser.normalize @spec.value.var
     @value = statData[0][name]
     @title = @spec.title ? name
     # formatting the value (temporary)

@@ -11665,7 +11665,7 @@ The functions here makes it easier to create common types of interactions.
         console.error(err);
         return;
       }
-      name = poly.parser.unbracket(this.spec.value["var"]);
+      name = poly.parser.normalize(this.spec.value["var"]);
       this.value = statData[0][name];
       this.title = (_ref = this.spec.title) != null ? _ref : name;
       degree = (0 < (_ref1 = this.value) && _ref1 < 1) ? void 0 : this.value % 1 === 0 ? 0 : -1;
