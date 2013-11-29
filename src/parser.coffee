@@ -479,6 +479,8 @@ getName = (str) ->
     #pass
   return str
 
+normalize = (str) -> getName parse(str).pretty()
+
 poly.parser = {
   tj: testExprJSON  # TODO: remove after testing
   tc: typeCheck  # TODO: remove after testing
@@ -490,6 +492,7 @@ poly.parser = {
   parse
   bracket
   unbracket: getName
+  normalize
   escape
   unescape
 }

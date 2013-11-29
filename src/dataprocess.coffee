@@ -116,7 +116,6 @@ evaluate =
       moment(str, format).unix()
     "year": (args) -> (row) ->
       ts = args[0](row)
-      debugger
       moment.unix(ts).year()
     "month": (args) -> (row) ->
       ts = args[0](row)
@@ -126,7 +125,6 @@ evaluate =
       moment.unix(ts).date()
     "dayOfYear": (args) -> (row) ->
       ts = args[0](row)
-      debugger
       moment.unix(ts).dayOfYear()
     "dayOfWeek": (args) -> (row) ->
       ts = args[0](row)

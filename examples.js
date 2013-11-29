@@ -1315,6 +1315,49 @@
     return c = polyjs.chart(spec);
   };
 
+  this.examples.facet_math = function(dom) {
+    var c, data, i, jsondata, spec;
+
+    jsondata = (function() {
+      var _i, _results;
+
+      _results = [];
+      for (i = _i = 0; _i <= 20; i = ++_i) {
+        _results.push({
+          index: i % 7,
+          value: Math.random() * 10,
+          i: i
+        });
+      }
+      return _results;
+    })();
+    data = polyjs.data({
+      data: jsondata
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: 'bin(index,1)',
+          y: 'value',
+          color: 'i % 3',
+          position: 'dodge'
+        }
+      ],
+      dom: dom,
+      facet: {
+        type: 'wrap',
+        "var": {
+          "var": 'i % 3'
+        }
+      },
+      width: 600,
+      height: 200
+    };
+    return c = polyjs.chart(spec);
+  };
+
   this.examples.facet_bracketed = function(dom) {
     var c, data, i, jsondata, o, spec;
 

@@ -26,7 +26,7 @@ class Facet
     @specgroups = {}
     for aes, key of mapping
       if @spec.facet[aes]
-        key = poly.parser.unbracket(key)
+        key = poly.parser.normalize(key)
         @specgroups[key] = @spec.facet[aes]
     if @spec.facet.formatter
       @formatter = @spec.facet.formatter
@@ -168,18 +168,18 @@ class Facet
         retobj.type = 'wrap'
         if not spec.var
           throw poly.error.defn "You didn't specify a variable to facet on."
-        if spec.var then retobj.mapping.var = poly.parser.unbracket spec.var.var
+        if spec.var then retobj.mapping.var = poly.parser.normalize spec.var.var
       else if spec.type is 'grid'
         retobj.type = 'grid'
         if not spec.x and spec.y
           throw poly.error.defn "You didn't specify a variable to facet on."
-        if spec.x then retobj.mapping.x = poly.parser.unbracket spec.x.var
-        if spec.y then retobj.mapping.y = poly.parser.unbracket spec.y.var
+        if spec.x then retobj.mapping.x = poly.parser.normalize spec.x.var
+        if spec.y then retobj.mapping.y = poly.parser.normalize spec.y.var
     retobj
   _makeIndices: (datas, groups) ->
     values = {}
     for aes, key of groups
-      name = poly.parser.unbracket key.var
+      name = poly.parser.normalize key.var
       if key.levels
         values[name] = key.levels
       else
@@ -194,7 +194,7 @@ class Facet
     indexValues = poly.cross values
     # format
     indices = {}
-    grps = (poly.parser.unbracket x for x in _.pluck groups, 'var')
+    grps = (poly.parser.normalize x for x in _.pluck groups, 'var')
     stringify = poly.stringify grps
     for val in indexValues
       indices[stringify val] = val

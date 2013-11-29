@@ -18,7 +18,7 @@ toStrictMode = (spec) ->
   spec.formatter ?= {}
   for key, val of spec.formatter
     # normalize key names
-    key = poly.parser.unbracket(poly.parser.parse(key).pretty())
+    key = poly.parser.normalize(key)
     spec.formatter[key] = val
   spec
 

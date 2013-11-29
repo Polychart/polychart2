@@ -21,6 +21,25 @@
   }
   c = polyjs.chart spec
 
+@examples.facet_math = (dom) ->
+  jsondata = ({index:i%7, value:Math.random()*10, i: i} for i in [0..20])
+  data = polyjs.data data:jsondata
+  spec = {
+    layers: [
+      data: data, type: 'bar',
+      x : 'bin(index,1)', y : 'value', color: 'i % 3'
+      position:'dodge'
+    ]
+    dom: dom
+    facet:
+      type: 'wrap'
+      var: {var: 'i % 3'}
+    width: 600
+    height: 200
+
+  }
+  c = polyjs.chart spec
+
 @examples.facet_bracketed = (dom) ->
   o = (i) -> if i%3 is 0 then 'yay' else if i%3 is 1 then 'no' else 'nodisplay'
   jsondata = ({index:i%7, value:Math.random()*10, o: o(i)} for i in [0..20])
