@@ -127,12 +127,12 @@
   data = polyjs.data data:jsondata
   spec = {
     layers: [
-      { data: data, type: 'bar', x : 'index', y : 'value', id: 'index'}
+      { data: data, type: 'bar', x : 'index', y : 'value * 1.5', id: 'index'}
     ]
     guides:
       x: type:'num', bw:1
       y :
-        type:'num', min:0, max:10, ticks:[2,4,6,8],
+        type:'num', min:0, max:15, ticks:[2,4,6,8],
         labels:{2: 'Two', 4:'Four', 6:'Six', 8:'Eight'}
     dom: dom
   }
@@ -259,7 +259,7 @@
     layers: [
       data: data
       type: 'bar'
-      x: 'bin("time", "month")'
+      x: 'bin([time], "month")'
       y: 'sum(value)'
     ]
     dom: dom
@@ -277,7 +277,7 @@
     layers: [ {
         data: data
         type: 'bar'
-        x: 'bin(time, day)'
+        x: 'bin(time, "day")'
         y: 'median(value)'
       }, {
         data: data
@@ -288,6 +288,32 @@
       }
     ]
     dom: dom
+  }
+  c = polyjs.chart spec
+
+@examples.bar_date_binned_nozoom = (dom) ->
+  point = () ->
+    time: moment().add('minutes', Math.random()*23803).unix()
+    value: Math.random()
+  data = polyjs.data
+    data:(point() for i in [0..500])
+    meta: { time: { type: 'date', format: 'unix' } }
+  spec = {
+    layers: [ {
+        data: data
+        type: 'bar'
+        x: 'bin(time, "day")'
+        y: 'median(value)'
+      }, {
+        data: data
+        type: 'line'
+        x: 'time'
+        y: 'value'
+        color: {const: 'black'}
+      }
+    ]
+    dom: dom
+    zoom: false
   }
   c = polyjs.chart spec
 
@@ -302,7 +328,7 @@
     layers: [
       data: data
       type: 'bar'
-      x: 'bin("time", "month")'
+      x: 'bin([time], "month")'
       y: 'sum(value)'
     ]
     dom: dom
@@ -332,8 +358,8 @@
     layers: [
       data: data
       type: 'bar'
-      x: '"Hello world"'
-      y: 'sum("Bye")'
+      x: '[Hello world]'
+      y: 'sum([Bye])'
     ]
     dom: dom
   }

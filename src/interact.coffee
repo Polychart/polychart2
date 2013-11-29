@@ -170,11 +170,12 @@ poly.handler.zoom = (init_spec, zoomOptions = {x: true, y: true}) ->
         guides = graph.spec.guides
         for layer in graph.spec.layers
           for v in aes when (zoomOptions[v] and layer[v]?)
-            aesVar = layer[v].var
+            aesVar = poly.parser.unbracket layer[v].var
             if graph.axes.domains[v].type in ['num', 'date']
               if data[aesVar].le - data[aesVar].ge > poly.const.epsilon
                 guides[v] ?= {min: null, max: null}
-                [guides[v].min, guides[v].max] = [data[aesVar].ge, data[aesVar].le]
+                guides[v].min = data[aesVar].ge
+                guides[v].max = data[aesVar].le
             if graph.axes.domains[v].type is 'cat'
               if data[aesVar].in.length isnt 0
                 guides[v] ?= {levels: null}

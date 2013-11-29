@@ -48,3 +48,139 @@ poly.spec.check = (spec) ->
     throw poly.error.defn "No DOM element specified. Where to make plot?"
   spec
 
+class SpecTranslator
+  translate: (lspec, grouping=[]) =>
+  extractFilters: (input={}) =>
+    for key, filterSpec of input
+      val = _.clone(filterSpec)
+      {exprType, expr} = poly.parser.getExpression(key)
+      val.expr = expr
+      if exprType is 'stat'
+        throw poly.error.defn "Aggregate statistics in filters not allowed."
+      if exprType is 'trans'
+        @trans.push(expr)
+      @filters.push(val)
+  addSort: (desc, expr) =>
+    sexpr = poly.parser.getExpression(desc.sort)
+    statinfo = sexpr.statInfo()
+    if statinfo
+      {fname, args} = statinfo
+    else
+      fname = null
+      args = []
+    sdesc = {
+      key: expr    # key to grouping (i.e. thing to sort)
+      sort: sexpr.expr  # value to sort by
+      stat: fname  # statistics
+      args: args   # arguments to the stats
+      limit: desc.limit
+      asc: desc.asc ? false
+    }
+    for arg in args
+      if arg.expr[0] isnt 'ident'
+        @trans.push(arg)
+    @sort.push(sdesc)
+  processMapping: (desc) =>
+    {exprType, expr, statInfo} = poly.parser.getExpression(desc.var)
+    desc.var = expr.name # replace current spec with prettified name
+    @select.push(expr)
+    if exprType == 'trans'
+      @trans.push(expr)
+    if exprType == 'stat'
+      {fname, args} = statInfo()
+      for arg in args
+        if arg.expr[0] isnt 'ident'
+          @trans.push(arg)
+      @stat.push {name: fname, args: args, expr: expr}
+    else # if exprType !== 'stat'
+      @groups.push expr
+    if 'sort' of desc
+      @addSort(desc, expr)
+  processGrouping: (grpvar) =>
+    {exprType, expr, statInfo} = poly.parser.getExpression(grpvar.var)
+    if exprType == 'trans'
+      @trans.push(expr)
+    else if exprType == 'stat'
+      throw poly.error.defn "Facet variable should not contain statistics!"
+    @select.push expr
+    @groups.push expr
+
+  reset: () =>
+    @filters = []
+    @trans = []
+    @stat = []
+    @select = []
+    @groups = []
+    @sort = []
+  return: () =>
+    dedup = (expressions, key=(x)->x.name) ->
+      dict = {}
+      dict[key(e)] = e for e in expressions
+      _.values(dict)
+    obj =
+      select: dedup(@select)
+      trans: dedup(@trans)
+      sort: @sort
+      filter: @filters
+      stats:
+        stats: dedup(@stat, (x)->x.expr.name)
+        groups: dedup(@groups)
+    obj
+
+class LayerSpecTranslator extends SpecTranslator
+  translate: (lspec, grouping=[]) =>
+    @reset()
+    @extractFilters(lspec.filter ? {})
+    aesthetics = @pickAesthetics(lspec, poly.const.aes)
+    for key, desc of aesthetics
+      @processMapping(desc)
+    for grpvar in grouping
+      @processGrouping(grpvar)
+    @return()
+  pickAesthetics: (spec, aes) =>
+    aesthetics = _.pick spec, aes
+    for key of aesthetics
+      if 'var' not of aesthetics[key]
+        delete aesthetics[key]
+    aesthetics
+
+class PivotSpecTranslator extends SpecTranslator
+  translate: (lspec) =>
+    @reset()
+    @extractFilters(lspec.filter ? {})
+    aesthetics = @pickAesthetics(lspec)
+    for desc in aesthetics
+      @processMapping(desc)
+    @return()
+  pickAesthetics: (lspec) =>
+    aesthetics = _.pick lspec, ['columns', 'rows', 'values']
+    aesthetics_list = []
+    for key, list of aesthetics
+      for item in list
+        if 'var' of item
+          aesthetics_list.push(item)
+    aesthetics_list
+
+class NumeralSpecTranslator extends SpecTranslator
+  translate: (lspec) =>
+    @reset()
+    @extractFilters(lspec.filter ? {})
+    aesthetics = @pickAesthetics(lspec)
+    for key, desc of aesthetics
+      @processMapping(desc)
+    @return()
+  pickAesthetics: (lspec) =>
+    aesthetics = _.pick lspec, ['value']
+    for key of aesthetics
+      if 'var' not of aesthetics[key]
+        delete aesthetics[key]
+    aesthetics
+
+LST = new LayerSpecTranslator()
+PST = new PivotSpecTranslator()
+NST = new NumeralSpecTranslator()
+
+poly.spec.layerToData = LST.translate
+poly.spec.pivotToData = PST.translate
+poly.spec.numeralToData = NST.translate
+

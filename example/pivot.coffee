@@ -16,6 +16,11 @@ data = polyjs.data data:{
     columns: ['cat1', 'cat2']
     rows: ['cat3']
     values: ['sum(val1)', 'mean(val1)']
+    formatter:
+      'sum(val1)': (x) -> x+' thousand'
+      'cat1': (x) -> x.toUpperCase()
+      'cat2': (x) -> '_'+x.toUpperCase()
+      'cat3': (x) -> '_'+x.toUpperCase()+'_'
     dom: dom
 
 @examples.pivot_both_smallnum = (dom) ->
@@ -82,7 +87,7 @@ data = polyjs.data data:{
   polyjs.pivot
     data: data
     columns: []
-    rows: ['bin(date, month)']
+    rows: ['bin(date, "month")']
     values: ['sum(val1)']
     dom: dom
     full: true

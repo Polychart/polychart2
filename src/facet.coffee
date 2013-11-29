@@ -26,6 +26,7 @@ class Facet
     @specgroups = {}
     for aes, key of mapping
       if @spec.facet[aes]
+        key = poly.parser.normalize(key)
         @specgroups[key] = @spec.facet[aes]
     if @spec.facet.formatter
       @formatter = @spec.facet.formatter
@@ -167,32 +168,34 @@ class Facet
         retobj.type = 'wrap'
         if not spec.var
           throw poly.error.defn "You didn't specify a variable to facet on."
-        if spec.var then retobj.mapping.var = spec.var.var
+        if spec.var then retobj.mapping.var = poly.parser.normalize spec.var.var
       else if spec.type is 'grid'
         retobj.type = 'grid'
         if not spec.x and spec.y
           throw poly.error.defn "You didn't specify a variable to facet on."
-        if spec.x then retobj.mapping.x = spec.x.var
-        if spec.y then retobj.mapping.y = spec.y.var
+        if spec.x then retobj.mapping.x = poly.parser.normalize spec.x.var
+        if spec.y then retobj.mapping.y = poly.parser.normalize spec.y.var
     retobj
   _makeIndices: (datas, groups) ->
     values = {}
     for aes, key of groups
+      name = poly.parser.normalize key.var
       if key.levels
-        values[key.var] = key.levels
+        values[name] = key.levels
       else
         v = []
         sortfn = null
         for index, data of datas
-          if meta = data.metaData[key.var]
+          if meta = data.metaData[name]
             if meta and meta.type in ['num', 'date']
               poly.type.compare(meta.type)
-          v = _.uniq _.union(v, _.pluck(data.statData, key.var))
-        values[key.var] = if sortfn? then v.sort(sortfn) else v
+          v = _.uniq _.union(v, _.pluck(data.statData, name))
+        values[name] = if sortfn? then v.sort(sortfn) else v
     indexValues = poly.cross values
     # format
     indices = {}
-    stringify = poly.stringify _.pluck groups, 'var'
+    grps = (poly.parser.normalize x for x in _.pluck groups, 'var')
+    stringify = poly.stringify grps
     for val in indexValues
       indices[stringify val] = val
     {values, indices}

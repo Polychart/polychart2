@@ -15,6 +15,11 @@ toStrictMode = (spec) ->
       if _.isString mappedTo
         spec[aes][i] = { var: mappedTo }
   spec.full ?= false
+  spec.formatter ?= {}
+  for key, val of spec.formatter
+    # normalize key names
+    key = poly.parser.normalize(key)
+    spec.formatter[key] = val
   spec
 
 class PivotProcessedData
@@ -22,8 +27,8 @@ class PivotProcessedData
     # Construct the data
     # put data in a structure such that a data point can be fetched by
     # identifying the ROWS then COLS, and also COLS then ROWS
-    @rows = (item.var for item in @spec.rows)
-    @columns = (item.var for item in @spec.columns)
+    @rows = (poly.parser.unbracket item.var for item in @spec.rows)
+    @columns = (poly.parser.unbracket item.var for item in @spec.columns)
     indexRows = @rows.concat(@columns) # actually used
     indexCols = @columns              # only for header calculation
     @dataIndexByRows = {}
@@ -60,13 +65,21 @@ class PivotProcessedData
     {@rowHeaders, @colHeaders}
 
   makeFormatters: () =>
-    values = (item.var for item in @spec.values)
+    # must have formatter for values
+    values = (poly.parser.unbracket item.var for item in @spec.values)
     formatters = {}
     for v in values
-      exp = poly.format.getExp(_.min(_.pluck(@statData, v)))
-      degree = exp
-      formatters[v] = poly.format.number(degree)
-
+      formatters[v] =
+        if v of @spec.formatter
+          @spec.formatter[v]
+        else
+          exp = poly.format.getExp(_.min(_.pluck(@statData, v)))
+          degree = exp
+          poly.format.number(degree)
+    # can optionally have formatter for columns & rows
+    for v in @columns.concat(@rows)
+      if v of @spec.formatter
+        formatters[v] = @spec.formatter[v]
     formatters
 
   get: (rowMindex, colMindex, val) =>
@@ -90,14 +103,14 @@ class Pivot
 
   make: (spec) ->
     @spec = toStrictMode(spec)
-    ps = new poly.DataProcess(@spec, [], @spec.strict, poly.parser.pivotToData)
+    ps = new poly.DataProcess(@spec, [], @spec.strict, poly.spec.pivotToData)
     ps.make @spec, [], @render
 
   generateTicks: (spec, statData, metaData) =>
     ticks = {}
     for aes in ['rows', 'columns']
       for item in spec[aes]
-        key = item.var
+        key = poly.parser.unbracket item.var
         meta = metaData[key]
         values = _.pluck(statData, key)
         domain = poly.domain.single(values, metaData[key], {})
@@ -135,7 +148,7 @@ class Pivot
     #  COLUMN headers
     while i < pivotMeta.ncol
       row = $('<tr></tr>')
-      key = @spec.columns[i].var
+      key = poly.parser.unbracket @spec.columns[i].var
       ## SPACE in the FIRST ROW
       if i is 0
         if pivotMeta.nrow > 1
@@ -152,6 +165,7 @@ class Pivot
         colspan = 1
         while ((j+colspan) < colHeaders.length) and (value is colHeaders[j+colspan][key])
           colspan++
+        if formatters[key] then value = formatters[key](value)
         cell = $("<td class='heading'>#{value}</td>").attr('colspan', colspan*pivotMeta.nval)
         cell.attr('align', 'center')
         row.append(cell)
@@ -171,13 +185,13 @@ class Pivot
     ## ROW header names
     i = 0
     while i < pivotMeta.nrow
-      key = @spec.rows[i].var
+      key = poly.parser.unbracket @spec.rows[i].var
       row.append $("<th>#{key}</th>").attr('align', 'center')
       i++
     k = 0
     while k < colHeaders.length
       for v in @spec.values
-        cell = $("<td class='heading'>#{v.var}</td>")
+        cell = $("<td class='heading'>#{poly.parser.unbracket v.var}</td>")
         cell.attr('align', 'center')
         row.append(cell)
       k++
@@ -191,13 +205,14 @@ class Pivot
       row = $('<tr></tr>')
       # ROW HEADERS
       for key in @spec.rows
-        key = key.var
+        key = poly.parser.unbracket key.var
         value = rowHeaders[i][key]
         if (i is 0) or value != rowHeaders[i-1][key]
           rowspan = 1
           while (i+rowspan < rowHeaders.length) and value == rowHeaders[i+rowspan][key]
             rowspan++
           # add a cell!!
+          if formatters[key] then value = formatters[key](value)
           cell = $("<td class='heading'>#{value}</td>").attr('rowspan', rowspan)
           cell.attr('align', 'center')
           cell.attr('valign', 'middle')
@@ -210,8 +225,9 @@ class Pivot
         rows = rowHeaders[i]
 
         for val in @spec.values
-          v = pivotData.get(rows, cols, val.var)
-          v = if v then formatters[val.var](v) else '-'
+          name = poly.parser.unbracket val.var
+          v = pivotData.get(rows, cols, name)
+          v = if v then formatters[name](v) else '-'
           row.append $("<td class='value'>#{v}</td>").attr('align', 'right')
         j++
 

@@ -697,7 +697,7 @@
           data: data,
           type: 'bar',
           x: 'index',
-          y: 'value',
+          y: 'value * 1.5',
           id: 'index'
         }
       ],
@@ -709,7 +709,7 @@
         y: {
           type: 'num',
           min: 0,
-          max: 10,
+          max: 15,
           ticks: [2, 4, 6, 8],
           labels: {
             2: 'Two',
@@ -973,7 +973,7 @@
         {
           data: data,
           type: 'bar',
-          x: 'bin("time", "month")',
+          x: 'bin([time], "month")',
           y: 'sum(value)'
         }
       ],
@@ -1013,7 +1013,7 @@
         {
           data: data,
           type: 'bar',
-          x: 'bin(time, day)',
+          x: 'bin(time, "day")',
           y: 'median(value)'
         }, {
           data: data,
@@ -1026,6 +1026,55 @@
         }
       ],
       dom: dom
+    };
+    return c = polyjs.chart(spec);
+  };
+
+  this.examples.bar_date_binned_nozoom = function(dom) {
+    var c, data, i, point, spec;
+
+    point = function() {
+      return {
+        time: moment().add('minutes', Math.random() * 23803).unix(),
+        value: Math.random()
+      };
+    };
+    data = polyjs.data({
+      data: (function() {
+        var _i, _results;
+
+        _results = [];
+        for (i = _i = 0; _i <= 500; i = ++_i) {
+          _results.push(point());
+        }
+        return _results;
+      })(),
+      meta: {
+        time: {
+          type: 'date',
+          format: 'unix'
+        }
+      }
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: 'bin(time, "day")',
+          y: 'median(value)'
+        }, {
+          data: data,
+          type: 'line',
+          x: 'time',
+          y: 'value',
+          color: {
+            "const": 'black'
+          }
+        }
+      ],
+      dom: dom,
+      zoom: false
     };
     return c = polyjs.chart(spec);
   };
@@ -1061,7 +1110,7 @@
         {
           data: data,
           type: 'bar',
-          x: 'bin("time", "month")',
+          x: 'bin([time], "month")',
           y: 'sum(value)'
         }
       ],
@@ -1103,8 +1152,8 @@
         {
           data: data,
           type: 'bar',
-          x: '"Hello world"',
-          y: 'sum("Bye")'
+          x: '[Hello world]',
+          y: 'sum([Bye])'
         }
       ],
       dom: dom
@@ -1266,6 +1315,109 @@
     return c = polyjs.chart(spec);
   };
 
+  this.examples.facet_math = function(dom) {
+    var c, data, i, jsondata, spec;
+
+    jsondata = (function() {
+      var _i, _results;
+
+      _results = [];
+      for (i = _i = 0; _i <= 20; i = ++_i) {
+        _results.push({
+          index: i % 7,
+          value: Math.random() * 10,
+          i: i
+        });
+      }
+      return _results;
+    })();
+    data = polyjs.data({
+      data: jsondata
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: 'bin(index,1)',
+          y: 'value',
+          color: 'i % 3',
+          position: 'dodge'
+        }
+      ],
+      dom: dom,
+      facet: {
+        type: 'wrap',
+        "var": {
+          "var": 'i % 3'
+        }
+      },
+      width: 600,
+      height: 200
+    };
+    return c = polyjs.chart(spec);
+  };
+
+  this.examples.facet_bracketed = function(dom) {
+    var c, data, i, jsondata, o, spec;
+
+    o = function(i) {
+      if (i % 3 === 0) {
+        return 'yay';
+      } else if (i % 3 === 1) {
+        return 'no';
+      } else {
+        return 'nodisplay';
+      }
+    };
+    jsondata = (function() {
+      var _i, _results;
+
+      _results = [];
+      for (i = _i = 0; _i <= 20; i = ++_i) {
+        _results.push({
+          index: i % 7,
+          value: Math.random() * 10,
+          o: o(i)
+        });
+      }
+      return _results;
+    })();
+    data = polyjs.data({
+      data: jsondata
+    });
+    spec = {
+      layers: [
+        {
+          data: data,
+          type: 'bar',
+          x: 'bin(index,1)',
+          y: 'value',
+          color: 'o',
+          position: 'dodge'
+        }
+      ],
+      dom: dom,
+      facet: {
+        type: 'wrap',
+        "var": {
+          "var": '[o]',
+          levels: ['yay', 'no']
+        },
+        formatter: function(x) {
+          if (x.o === 'yay') {
+            return 'First Group';
+          } else {
+            return 'Second Group';
+          }
+        }
+      },
+      width: 600,
+      height: 200
+    };
+    return c = polyjs.chart(spec);
+  };
+
   this.examples.facet_grid = function(dom) {
     var c, data, i, jsondata, o, spec;
 
@@ -1305,7 +1457,7 @@
       dom: dom,
       facet: {
         type: 'grid',
-        x: 'o',
+        x: '[o]',
         y: 'o'
       },
       width: 600,
@@ -1397,7 +1549,7 @@
       facet: {
         type: 'grid',
         x: 'o',
-        y: 'p'
+        y: '[p]'
       },
       width: 600,
       height: 500
@@ -2970,10 +3122,10 @@
       layers: [
         {
           data: data,
-          type: 'bar',
+          type: 'point',
           x: 'bin(dataset_id, 100)',
           y: 'public',
-          color: 'count(user_id)'
+          color: 'count(*)'
         }
       ],
       dom: dom
@@ -3001,7 +3153,7 @@
         {
           data: data,
           type: 'bar',
-          x: 'bin(created, day)',
+          x: 'bin(created, "day")',
           y: 'count(id)'
         }
       ],
@@ -3009,11 +3161,6 @@
     };
     return c = polyjs.chart(spec);
   };
-
-  /*
-  This is a rather interesting example. What do we really expect in this case?
-  */
-
 
   this.examples.email_pie = function(dom) {
     var c, data, spec;
@@ -3034,7 +3181,7 @@
         {
           data: data,
           type: 'bar',
-          y: 'created',
+          y: 'count(created)',
           color: 'success'
         }
       ],
@@ -3066,7 +3213,7 @@
           data: data,
           type: 'bar',
           x: 'bin(id,100)',
-          y: 'success'
+          y: 'count(success)'
         }
       ],
       coord: {
@@ -3364,6 +3511,20 @@
       columns: ['cat1', 'cat2'],
       rows: ['cat3'],
       values: ['sum(val1)', 'mean(val1)'],
+      formatter: {
+        'sum(val1)': function(x) {
+          return x + ' thousand';
+        },
+        'cat1': function(x) {
+          return x.toUpperCase();
+        },
+        'cat2': function(x) {
+          return '_' + x.toUpperCase();
+        },
+        'cat3': function(x) {
+          return '_' + x.toUpperCase() + '_';
+        }
+      },
       dom: dom
     });
   };
@@ -3450,7 +3611,7 @@
     return polyjs.pivot({
       data: data,
       columns: [],
-      rows: ['bin(date, month)'],
+      rows: ['bin(date, "month")'],
       values: ['sum(val1)'],
       dom: dom,
       full: true
@@ -6318,71 +6479,6 @@
       dom: dom
     };
     return c = polyjs.chart(spec);
-  };
-
-  this.examples.step = function(dom) {
-    var c, data, i, jsondata, redraw, spec;
-
-    jsondata = (function() {
-      var _i, _results;
-
-      _results = [];
-      for (i = _i = 0; _i <= 10; i = ++_i) {
-        _results.push({
-          index: i,
-          value: Math.random() * 10
-        });
-      }
-      return _results;
-    })();
-    data = polyjs.data({
-      data: jsondata
-    });
-    spec = {
-      layers: [
-        {
-          data: data,
-          type: 'step',
-          x: 'index',
-          y: 'value'
-        }, {
-          data: data,
-          type: 'point',
-          x: 'index',
-          y: 'value',
-          id: 'index'
-        }
-      ],
-      guides: {
-        y: {
-          type: 'num',
-          min: 0,
-          max: 10,
-          ticks: [2, 4, 6, 8],
-          labels: {
-            2: 'Two',
-            4: 'Four',
-            6: 'Six',
-            8: 'Eight'
-          }
-        }
-      },
-      dom: dom
-    };
-    c = polyjs.chart(spec);
-    redraw = function() {
-      jsondata.shift();
-      jsondata.push({
-        index: i++,
-        value: Math.random() * 10
-      });
-      spec.layers[0].data.update({
-        data: jsondata
-      });
-      c.make(spec);
-      return setTimeout(redraw, 1000);
-    };
-    return setTimeout(redraw, 1000);
   };
 
 }).call(this);

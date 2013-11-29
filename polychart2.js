@@ -474,9 +474,9 @@ These are constants that are referred to throughout the coebase
       twoyear: 60 * 60 * 24 * 365 * 2,
       fiveyear: 60 * 60 * 24 * 365 * 5 + 60 * 60 * 24
     },
-    metas: {
+    sort: {
+      key: null,
       sort: null,
-      stat: null,
       limit: null,
       asc: false
     },
@@ -1645,6 +1645,11 @@ See the spec definition for more information.
 
 
 (function() {
+  var LST, LayerSpecTranslator, NST, NumeralSpecTranslator, PST, PivotSpecTranslator, SpecTranslator, _ref, _ref1, _ref2,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
   poly.spec = {};
 
   poly.spec.toStrictMode = function(spec) {
@@ -1727,6 +1732,301 @@ See the spec definition for more information.
     }
     return spec;
   };
+
+  SpecTranslator = (function() {
+    function SpecTranslator() {
+      this["return"] = __bind(this["return"], this);
+      this.reset = __bind(this.reset, this);
+      this.processGrouping = __bind(this.processGrouping, this);
+      this.processMapping = __bind(this.processMapping, this);
+      this.addSort = __bind(this.addSort, this);
+      this.extractFilters = __bind(this.extractFilters, this);
+      this.translate = __bind(this.translate, this);
+    }
+
+    SpecTranslator.prototype.translate = function(lspec, grouping) {
+      if (grouping == null) {
+        grouping = [];
+      }
+    };
+
+    SpecTranslator.prototype.extractFilters = function(input) {
+      var expr, exprType, filterSpec, key, val, _ref, _results;
+
+      if (input == null) {
+        input = {};
+      }
+      _results = [];
+      for (key in input) {
+        filterSpec = input[key];
+        val = _.clone(filterSpec);
+        _ref = poly.parser.getExpression(key), exprType = _ref.exprType, expr = _ref.expr;
+        val.expr = expr;
+        if (exprType === 'stat') {
+          throw poly.error.defn("Aggregate statistics in filters not allowed.");
+        }
+        if (exprType === 'trans') {
+          this.trans.push(expr);
+        }
+        _results.push(this.filters.push(val));
+      }
+      return _results;
+    };
+
+    SpecTranslator.prototype.addSort = function(desc, expr) {
+      var arg, args, fname, sdesc, sexpr, statinfo, _i, _len, _ref;
+
+      sexpr = poly.parser.getExpression(desc.sort);
+      statinfo = sexpr.statInfo();
+      if (statinfo) {
+        fname = statinfo.fname, args = statinfo.args;
+      } else {
+        fname = null;
+        args = [];
+      }
+      sdesc = {
+        key: expr,
+        sort: sexpr.expr,
+        stat: fname,
+        args: args,
+        limit: desc.limit,
+        asc: (_ref = desc.asc) != null ? _ref : false
+      };
+      for (_i = 0, _len = args.length; _i < _len; _i++) {
+        arg = args[_i];
+        if (arg.expr[0] !== 'ident') {
+          this.trans.push(arg);
+        }
+      }
+      return this.sort.push(sdesc);
+    };
+
+    SpecTranslator.prototype.processMapping = function(desc) {
+      var arg, args, expr, exprType, fname, statInfo, _i, _len, _ref, _ref1;
+
+      _ref = poly.parser.getExpression(desc["var"]), exprType = _ref.exprType, expr = _ref.expr, statInfo = _ref.statInfo;
+      desc["var"] = expr.name;
+      this.select.push(expr);
+      if (exprType === 'trans') {
+        this.trans.push(expr);
+      }
+      if (exprType === 'stat') {
+        _ref1 = statInfo(), fname = _ref1.fname, args = _ref1.args;
+        for (_i = 0, _len = args.length; _i < _len; _i++) {
+          arg = args[_i];
+          if (arg.expr[0] !== 'ident') {
+            this.trans.push(arg);
+          }
+        }
+        this.stat.push({
+          name: fname,
+          args: args,
+          expr: expr
+        });
+      } else {
+        this.groups.push(expr);
+      }
+      if ('sort' in desc) {
+        return this.addSort(desc, expr);
+      }
+    };
+
+    SpecTranslator.prototype.processGrouping = function(grpvar) {
+      var expr, exprType, statInfo, _ref;
+
+      _ref = poly.parser.getExpression(grpvar["var"]), exprType = _ref.exprType, expr = _ref.expr, statInfo = _ref.statInfo;
+      if (exprType === 'trans') {
+        this.trans.push(expr);
+      } else if (exprType === 'stat') {
+        throw poly.error.defn("Facet variable should not contain statistics!");
+      }
+      this.select.push(expr);
+      return this.groups.push(expr);
+    };
+
+    SpecTranslator.prototype.reset = function() {
+      this.filters = [];
+      this.trans = [];
+      this.stat = [];
+      this.select = [];
+      this.groups = [];
+      return this.sort = [];
+    };
+
+    SpecTranslator.prototype["return"] = function() {
+      var dedup, obj;
+
+      dedup = function(expressions, key) {
+        var dict, e, _i, _len;
+
+        if (key == null) {
+          key = function(x) {
+            return x.name;
+          };
+        }
+        dict = {};
+        for (_i = 0, _len = expressions.length; _i < _len; _i++) {
+          e = expressions[_i];
+          dict[key(e)] = e;
+        }
+        return _.values(dict);
+      };
+      obj = {
+        select: dedup(this.select),
+        trans: dedup(this.trans),
+        sort: this.sort,
+        filter: this.filters,
+        stats: {
+          stats: dedup(this.stat, function(x) {
+            return x.expr.name;
+          }),
+          groups: dedup(this.groups)
+        }
+      };
+      return obj;
+    };
+
+    return SpecTranslator;
+
+  })();
+
+  LayerSpecTranslator = (function(_super) {
+    __extends(LayerSpecTranslator, _super);
+
+    function LayerSpecTranslator() {
+      this.pickAesthetics = __bind(this.pickAesthetics, this);
+      this.translate = __bind(this.translate, this);      _ref = LayerSpecTranslator.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    LayerSpecTranslator.prototype.translate = function(lspec, grouping) {
+      var aesthetics, desc, grpvar, key, _i, _len, _ref1;
+
+      if (grouping == null) {
+        grouping = [];
+      }
+      this.reset();
+      this.extractFilters((_ref1 = lspec.filter) != null ? _ref1 : {});
+      aesthetics = this.pickAesthetics(lspec, poly["const"].aes);
+      for (key in aesthetics) {
+        desc = aesthetics[key];
+        this.processMapping(desc);
+      }
+      for (_i = 0, _len = grouping.length; _i < _len; _i++) {
+        grpvar = grouping[_i];
+        this.processGrouping(grpvar);
+      }
+      return this["return"]();
+    };
+
+    LayerSpecTranslator.prototype.pickAesthetics = function(spec, aes) {
+      var aesthetics, key;
+
+      aesthetics = _.pick(spec, aes);
+      for (key in aesthetics) {
+        if (!('var' in aesthetics[key])) {
+          delete aesthetics[key];
+        }
+      }
+      return aesthetics;
+    };
+
+    return LayerSpecTranslator;
+
+  })(SpecTranslator);
+
+  PivotSpecTranslator = (function(_super) {
+    __extends(PivotSpecTranslator, _super);
+
+    function PivotSpecTranslator() {
+      this.pickAesthetics = __bind(this.pickAesthetics, this);
+      this.translate = __bind(this.translate, this);      _ref1 = PivotSpecTranslator.__super__.constructor.apply(this, arguments);
+      return _ref1;
+    }
+
+    PivotSpecTranslator.prototype.translate = function(lspec) {
+      var aesthetics, desc, _i, _len, _ref2;
+
+      this.reset();
+      this.extractFilters((_ref2 = lspec.filter) != null ? _ref2 : {});
+      aesthetics = this.pickAesthetics(lspec);
+      for (_i = 0, _len = aesthetics.length; _i < _len; _i++) {
+        desc = aesthetics[_i];
+        this.processMapping(desc);
+      }
+      return this["return"]();
+    };
+
+    PivotSpecTranslator.prototype.pickAesthetics = function(lspec) {
+      var aesthetics, aesthetics_list, item, key, list, _i, _len;
+
+      aesthetics = _.pick(lspec, ['columns', 'rows', 'values']);
+      aesthetics_list = [];
+      for (key in aesthetics) {
+        list = aesthetics[key];
+        for (_i = 0, _len = list.length; _i < _len; _i++) {
+          item = list[_i];
+          if ('var' in item) {
+            aesthetics_list.push(item);
+          }
+        }
+      }
+      return aesthetics_list;
+    };
+
+    return PivotSpecTranslator;
+
+  })(SpecTranslator);
+
+  NumeralSpecTranslator = (function(_super) {
+    __extends(NumeralSpecTranslator, _super);
+
+    function NumeralSpecTranslator() {
+      this.pickAesthetics = __bind(this.pickAesthetics, this);
+      this.translate = __bind(this.translate, this);      _ref2 = NumeralSpecTranslator.__super__.constructor.apply(this, arguments);
+      return _ref2;
+    }
+
+    NumeralSpecTranslator.prototype.translate = function(lspec) {
+      var aesthetics, desc, key, _ref3;
+
+      this.reset();
+      this.extractFilters((_ref3 = lspec.filter) != null ? _ref3 : {});
+      aesthetics = this.pickAesthetics(lspec);
+      for (key in aesthetics) {
+        desc = aesthetics[key];
+        this.processMapping(desc);
+      }
+      return this["return"]();
+    };
+
+    NumeralSpecTranslator.prototype.pickAesthetics = function(lspec) {
+      var aesthetics, key;
+
+      aesthetics = _.pick(lspec, ['value']);
+      for (key in aesthetics) {
+        if (!('var' in aesthetics[key])) {
+          delete aesthetics[key];
+        }
+      }
+      return aesthetics;
+    };
+
+    return NumeralSpecTranslator;
+
+  })(SpecTranslator);
+
+  LST = new LayerSpecTranslator();
+
+  PST = new PivotSpecTranslator();
+
+  NST = new NumeralSpecTranslator();
+
+  poly.spec.layerToData = LST.translate;
+
+  poly.spec.pivotToData = PST.translate;
+
+  poly.spec.numeralToData = NST.translate;
 
 }).call(this);
 // Generated by CoffeeScript 1.6.2
@@ -1892,117 +2192,60 @@ See the spec definition for more information.
 }).call(this);
 // Generated by CoffeeScript 1.6.2
 (function() {
-  var Call, Comma, Const, Expr, Ident, LParen, Literal, RParen, Stream, Symbol, Token, assocsToObj, dedup, dedupOnKey, dictGet, dictGets, expect, extractOps, layerToDataSpec, matchToken, mergeObjLists, numeralToDataSpec, parse, parseCall, parseCallArgs, parseConst, parseExpr, parseFail, parseSymbolic, pivotToDataSpec, showCall, showList, tag, tokenize, tokenizers, unquote, zip, zipWith, _ref,
-    __slice = [].slice,
+  var BaseType, Call, Comma, Conditional, Const, DataType, DataTypeError, Expr, FuncType, Ident, InfixOp, InfixSymbol, Keyword, LParen, Literal, OpStack, Parser, RParen, Stream, Symbol, Token, UnknownType, assertIs, assertTagIs, bracket, createColTypeEnv, escape, exprJSON, exprType, extractOps, fname, getExpression, getName, getType, infixGTEQ, infixops, infixpat, infixpats, initialFuncTypeEnv, keywords, makeTypeEnv, matchToken, n, normalize, opname, pairNumToNum, parse, quote, s, showCall, showList, str, symbolOrKeyword, tag, tcat, tdate, testColTypeEnv, testExprJSON, testFuncTypeEnv, testTypeCheck, tnum, tokenize, tokenizers, typeCheck, unbracket, unescape, unquote, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __slice = [].slice,
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  unquote = function(str, quote) {
-    var n, _i, _len, _ref;
+  escape = function(str) {
+    return str.replace(/[\[\]\\]/g, function(match) {
+      return '\\' + match;
+    });
+  };
+
+  unescape = function(str) {
+    return str.replace(/\\./g, function(match) {
+      return match.slice(1);
+    });
+  };
+
+  bracket = function(str) {
+    return '[' + escape(str) + ']';
+  };
+
+  unbracket = function(str) {
+    var n;
 
     n = str.length;
-    _ref = ['"', "'"];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      quote = _ref[_i];
-      if (str[0] === quote && str[n - 1] === quote) {
-        return str.slice(1, +(n - 2) + 1 || 9e9);
-      }
+    if (str[0] === '[' && str[n - 1] === ']') {
+      str = str.slice(1, +(n - 2) + 1 || 9e9);
+      str = unescape(str);
     }
     return str;
   };
 
-  zipWith = function(op) {
-    return function(xs, ys) {
-      var ix, xval, _i, _len, _results;
-
-      _results = [];
-      for (ix = _i = 0, _len = xs.length; _i < _len; ix = ++_i) {
-        xval = xs[ix];
-        _results.push(op(xval, ys[ix]));
-      }
-      return _results;
-    };
+  quote = function(str) {
+    return '"' + str.replace(/["\\]/g, function(match) {
+      return '\\' + match;
+    }) + '"';
   };
 
-  zip = zipWith(function(xval, yval) {
-    return [xval, yval];
-  });
+  unquote = function(str) {
+    var n, qu, _i, _len, _ref;
 
-  assocsToObj = function(assocs) {
-    var key, obj, val, _i, _len, _ref;
-
-    obj = {};
-    for (_i = 0, _len = assocs.length; _i < _len; _i++) {
-      _ref = assocs[_i], key = _ref[0], val = _ref[1];
-      obj[key] = val;
-    }
-    return obj;
-  };
-
-  dictGet = function(dict, key, defval) {
-    if (defval == null) {
-      defval = null;
-    }
-    return (key in dict && dict[key]) || defval;
-  };
-
-  dictGets = function(dict, keyVals) {
-    var defval, fin, key, val;
-
-    fin = {};
-    for (key in keyVals) {
-      defval = keyVals[key];
-      val = dictGet(dict, key, defval);
-      if (val !== null) {
-        fin[key] = val;
+    n = str.length;
+    _ref = ['"', "'"];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      qu = _ref[_i];
+      if (str[0] === qu && str[n - 1] === qu) {
+        str = str.slice(1, +(n - 2) + 1 || 9e9);
+        str = unescape(str);
+        break;
       }
     }
-    return fin;
-  };
-
-  mergeObjLists = function(dicts) {
-    var dict, fin, key, _i, _len;
-
-    fin = {};
-    for (_i = 0, _len = dicts.length; _i < _len; _i++) {
-      dict = dicts[_i];
-      for (key in dict) {
-        fin[key] = dict[key].concat(dictGet(fin, key, []));
-      }
-    }
-    return fin;
-  };
-
-  dedup = function(vals, trans) {
-    var unique, val, _, _i, _len, _results;
-
-    if (vals == null) {
-      vals = [];
-    }
-    if (trans == null) {
-      trans = function(x) {
-        return x;
-      };
-    }
-    unique = {};
-    for (_i = 0, _len = vals.length; _i < _len; _i++) {
-      val = vals[_i];
-      unique[trans(val)] = val;
-    }
-    _results = [];
-    for (_ in unique) {
-      val = unique[_];
-      _results.push(val);
-    }
-    return _results;
-  };
-
-  dedupOnKey = function(key) {
-    return function(vals) {
-      return dedup(vals, function(val) {
-        return val[key];
-      });
-    };
+    return str;
   };
 
   showCall = function(fname, args) {
@@ -2013,8 +2256,191 @@ See the spec definition for more information.
     return "[" + xs + "]";
   };
 
+  DataTypeError = (function() {
+    function DataTypeError(message) {
+      this.message = message;
+    }
+
+    return DataTypeError;
+
+  })();
+
+  DataType = (function() {
+    function DataType(name) {
+      this.name = name;
+      this._unify = __bind(this._unify, this);
+      this._runify = __bind(this._runify, this);
+      this._known_unify = __bind(this._known_unify, this);
+      this.unify = __bind(this.unify, this);
+      this.mismatch = __bind(this.mismatch, this);
+      this.error = __bind(this.error, this);
+    }
+
+    DataType.prototype.error = function(context, msg) {
+      var cmp, comparison, t0, t1;
+
+      cmp = (function() {
+        var _i, _len, _ref, _results;
+
+        _results = [];
+        for (_i = 0, _len = context.length; _i < _len; _i++) {
+          _ref = context[_i], t0 = _ref[0], t1 = _ref[1];
+          _results.push("(" + t0 + " vs. " + t1 + ")");
+        }
+        return _results;
+      })();
+      cmp.reverse();
+      comparison = cmp.join(' in ');
+      throw new DataTypeError(msg + ': ' + comparison);
+    };
+
+    DataType.prototype.mismatch = function(context) {
+      return this.error(context, 'Type mismatch');
+    };
+
+    DataType.prototype.unify = function(type) {
+      return type._known_unify(this);
+    };
+
+    DataType.prototype._known_unify = function(type) {
+      this._runify([], type);
+      return this;
+    };
+
+    DataType.prototype._runify = function(context, type) {
+      return this._unify(context.concat([[this.toString(), type.toString()]]), type);
+    };
+
+    DataType.prototype._unify = function(context, type) {
+      if (this.name !== type.name) {
+        return this.mismatch(context);
+      }
+    };
+
+    return DataType;
+
+  })();
+
+  UnknownType = (function(_super) {
+    __extends(UnknownType, _super);
+
+    function UnknownType() {
+      this._unify = __bind(this._unify, this);
+      this.unify = __bind(this.unify, this);
+      this.toString = __bind(this.toString, this);      UnknownType.__super__.constructor.call(this, '?');
+      this.found = null;
+    }
+
+    UnknownType.prototype.toString = function() {
+      if (this.found === null) {
+        return '?';
+      } else {
+        return this.found.toString();
+      }
+    };
+
+    UnknownType.prototype.unify = function(type) {
+      return this._known_unify(type);
+    };
+
+    UnknownType.prototype._unify = function(context, type) {
+      if (this.found === null) {
+        return this.found = type;
+      } else {
+        return this.found._unify(context, type);
+      }
+    };
+
+    return UnknownType;
+
+  })(DataType);
+
+  BaseType = (function(_super) {
+    __extends(BaseType, _super);
+
+    function BaseType() {
+      this.toString = __bind(this.toString, this);      _ref = BaseType.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    BaseType.prototype.toString = function() {
+      return "" + this.name;
+    };
+
+    return BaseType;
+
+  })(DataType);
+
+  FuncType = (function(_super) {
+    __extends(FuncType, _super);
+
+    function FuncType(domains, range) {
+      this.domains = domains;
+      this.range = range;
+      this._unify = __bind(this._unify, this);
+      this.toString = __bind(this.toString, this);
+      FuncType.__super__.constructor.call(this, '->');
+    }
+
+    FuncType.prototype.toString = function() {
+      var domain, domains;
+
+      domains = ((function() {
+        var _i, _len, _ref1, _results;
+
+        _ref1 = this.domains;
+        _results = [];
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          domain = _ref1[_i];
+          _results.push(domain.toString());
+        }
+        return _results;
+      }).call(this)).join(', ');
+      return "([" + domains + "] -> " + this.range + ")";
+    };
+
+    FuncType.prototype._unify = function(context, type) {
+      var d0, d1, _i, _len, _ref1, _ref2;
+
+      FuncType.__super__._unify.call(this, context, type);
+      if (this.domains.length !== type.domains.length) {
+        this.error(context, 'function domains differ in length');
+      }
+      _ref1 = _.zip(this.domains, type.domains);
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        _ref2 = _ref1[_i], d0 = _ref2[0], d1 = _ref2[1];
+        d0._runify(context, d1);
+      }
+      return this.range._runify(context, type.range);
+    };
+
+    return FuncType;
+
+  })(DataType);
+
+  DataType.Base = _.object((function() {
+    var _ref1, _results;
+
+    _ref1 = {
+      cat: 'cat',
+      num: 'num',
+      date: 'date',
+      stat: 'stat'
+    };
+    _results = [];
+    for (n in _ref1) {
+      s = _ref1[n];
+      _results.push([n, new BaseType(s)]);
+    }
+    return _results;
+  })());
+
   Stream = (function() {
     function Stream(src) {
+      this.toString = __bind(this.toString, this);
+      this.get = __bind(this.get, this);
+      this.peek = __bind(this.peek, this);
+      this.empty = __bind(this.empty, this);
       var val;
 
       this.buffer = ((function() {
@@ -2061,6 +2487,8 @@ See the spec definition for more information.
     Token.Tag = {
       symbol: 'symbol',
       literal: 'literal',
+      infixsymbol: 'infixsymbol',
+      keyword: 'keyword',
       lparen: '(',
       rparen: ')',
       comma: ','
@@ -2068,6 +2496,8 @@ See the spec definition for more information.
 
     function Token(tag) {
       this.tag = tag;
+      this.contents = __bind(this.contents, this);
+      this.toString = __bind(this.toString, this);
     }
 
     Token.prototype.toString = function() {
@@ -2087,7 +2517,8 @@ See the spec definition for more information.
 
     function Symbol(name) {
       this.name = name;
-      this.name = unquote(this.name);
+      this.contents = __bind(this.contents, this);
+      this.name = unbracket(this.name);
       Symbol.__super__.constructor.call(this, Token.Tag.symbol);
     }
 
@@ -2102,10 +2533,14 @@ See the spec definition for more information.
   Literal = (function(_super) {
     __extends(Literal, _super);
 
-    function Literal(val) {
+    function Literal(val, type) {
       this.val = val;
-      this.val = unquote(this.val);
+      this.type = type;
+      this.contents = __bind(this.contents, this);
       Literal.__super__.constructor.call(this, Token.Tag.literal);
+      if (this.type === DataType.Base.cat) {
+        this.val = unquote(this.val);
+      }
     }
 
     Literal.prototype.contents = function() {
@@ -2116,17 +2551,81 @@ See the spec definition for more information.
 
   })(Token);
 
-  _ref = (function() {
-    var _i, _len, _ref, _results;
+  InfixSymbol = (function(_super) {
+    __extends(InfixSymbol, _super);
 
-    _ref = [Token.Tag.lparen, Token.Tag.rparen, Token.Tag.comma];
+    function InfixSymbol(op) {
+      this.op = op;
+      this.contents = __bind(this.contents, this);
+      InfixSymbol.__super__.constructor.call(this, Token.Tag.infixsymbol);
+    }
+
+    InfixSymbol.prototype.contents = function() {
+      return InfixSymbol.__super__.contents.call(this).concat([this.op]);
+    };
+
+    return InfixSymbol;
+
+  })(Token);
+
+  Keyword = (function(_super) {
+    __extends(Keyword, _super);
+
+    function Keyword(name) {
+      this.name = name;
+      this.contents = __bind(this.contents, this);
+      Keyword.__super__.constructor.call(this, Token.Tag.keyword);
+    }
+
+    Keyword.prototype.contents = function() {
+      return Keyword.__super__.contents.call(this).concat([this.name]);
+    };
+
+    return Keyword;
+
+  })(Token);
+
+  _ref1 = (function() {
+    var _i, _len, _ref1, _results;
+
+    _ref1 = [Token.Tag.lparen, Token.Tag.rparen, Token.Tag.comma];
     _results = [];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      tag = _ref[_i];
+    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+      tag = _ref1[_i];
       _results.push(new Token(tag));
     }
     return _results;
-  })(), LParen = _ref[0], RParen = _ref[1], Comma = _ref[2];
+  })(), LParen = _ref1[0], RParen = _ref1[1], Comma = _ref1[2];
+
+  infixops = ['++', '*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '=='];
+
+  infixGTEQ = function(lop, rop) {
+    return infixops.indexOf(lop) <= infixops.indexOf(rop);
+  };
+
+  infixpats = (function() {
+    var _i, _len, _results;
+
+    _results = [];
+    for (_i = 0, _len = infixops.length; _i < _len; _i++) {
+      str = infixops[_i];
+      _results.push(str.replace(/[+*]/g, function(m) {
+        return '(\\' + m + ')';
+      }));
+    }
+    return _results;
+  })();
+
+  infixpat = new RegExp('^(' + infixpats.join('|') + ')');
+
+  keywords = ['if', 'then', 'else'];
+
+  symbolOrKeyword = function(name) {
+    if (__indexOf.call(keywords, name) >= 0) {
+      return new Keyword(name);
+    }
+    return new Symbol(name);
+  };
 
   tokenizers = [
     [
@@ -2143,20 +2642,24 @@ See the spec definition for more information.
       }
     ], [
       /^[+-]?(0x[0-9a-fA-F]+|0?\.\d+|[1-9]\d*(\.\d+)?|0)([eE][+-]?\d+)?/, function(val) {
-        return new Literal(val);
+        return new Literal(val, DataType.Base.num);
+      }
+    ], [/^(([\w|\.]|[^\u0000-\u0080])+|\[((\\.)|[^\\\[\]])+\])/, symbolOrKeyword], [
+      /^('((\\.)|[^\\'])*'|"((\\.)|[^\\"])+")/, function(val) {
+        return new Literal(val, DataType.Base.cat);
       }
     ], [
-      /^([\w|\.]|[^\u0000-\u0080])+|'((\\.)|[^\\'])+'|"((\\.)|[^\\"])+"/, function(name) {
-        return new Symbol(name);
+      infixpat, function(op) {
+        return new InfixSymbol(op);
       }
     ]
   ];
 
   matchToken = function(str) {
-    var match, op, pat, substr, _i, _len, _ref1;
+    var match, op, pat, substr, _i, _len, _ref2;
 
     for (_i = 0, _len = tokenizers.length; _i < _len; _i++) {
-      _ref1 = tokenizers[_i], pat = _ref1[0], op = _ref1[1];
+      _ref2 = tokenizers[_i], pat = _ref2[0], op = _ref2[1];
       match = pat.exec(str);
       if (match) {
         substr = match[0];
@@ -2167,7 +2670,7 @@ See the spec definition for more information.
   };
 
   tokenize = function(str) {
-    var tok, _ref1, _results;
+    var tok, _ref2, _results;
 
     _results = [];
     while (true) {
@@ -2175,7 +2678,7 @@ See the spec definition for more information.
       if (!str) {
         break;
       }
-      _ref1 = matchToken(str), str = _ref1[0], tok = _ref1[1];
+      _ref2 = matchToken(str), str = _ref2[0], tok = _ref2[1];
       _results.push(tok);
     }
     return _results;
@@ -2197,6 +2700,9 @@ See the spec definition for more information.
 
     function Ident(name) {
       this.name = name;
+      this.visit = __bind(this.visit, this);
+      this.pretty = __bind(this.pretty, this);
+      this.contents = __bind(this.contents, this);
     }
 
     Ident.prototype.contents = function() {
@@ -2204,7 +2710,7 @@ See the spec definition for more information.
     };
 
     Ident.prototype.pretty = function() {
-      return this.name;
+      return bracket(this.name);
     };
 
     Ident.prototype.visit = function(visitor) {
@@ -2218,8 +2724,12 @@ See the spec definition for more information.
   Const = (function(_super) {
     __extends(Const, _super);
 
-    function Const(val) {
+    function Const(val, vtype) {
       this.val = val;
+      this.vtype = vtype;
+      this.visit = __bind(this.visit, this);
+      this.pretty = __bind(this.pretty, this);
+      this.contents = __bind(this.contents, this);
     }
 
     Const.prototype.contents = function() {
@@ -2227,11 +2737,15 @@ See the spec definition for more information.
     };
 
     Const.prototype.pretty = function() {
-      return this.val;
+      if (this.vtype === DataType.Base.cat) {
+        return quote(this.val);
+      } else {
+        return this.val;
+      }
     };
 
     Const.prototype.visit = function(visitor) {
-      return visitor["const"](this, this.val);
+      return visitor["const"](this, this.val, this.vtype);
     };
 
     return Const;
@@ -2244,6 +2758,9 @@ See the spec definition for more information.
     function Call(fname, args) {
       this.fname = fname;
       this.args = args;
+      this.visit = __bind(this.visit, this);
+      this.pretty = __bind(this.pretty, this);
+      this.contents = __bind(this.contents, this);
     }
 
     Call.prototype.contents = function() {
@@ -2254,12 +2771,12 @@ See the spec definition for more information.
       var arg;
 
       return showCall(this.fname, (function() {
-        var _i, _len, _ref1, _results;
+        var _i, _len, _ref2, _results;
 
-        _ref1 = this.args;
+        _ref2 = this.args;
         _results = [];
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          arg = _ref1[_i];
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          arg = _ref2[_i];
           _results.push(arg.pretty());
         }
         return _results;
@@ -2270,12 +2787,12 @@ See the spec definition for more information.
       var arg;
 
       return visitor.call(this, this.fname, (function() {
-        var _i, _len, _ref1, _results;
+        var _i, _len, _ref2, _results;
 
-        _ref1 = this.args;
+        _ref2 = this.args;
         _results = [];
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          arg = _ref1[_i];
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          arg = _ref2[_i];
           _results.push(arg.visit(visitor));
         }
         return _results;
@@ -2286,90 +2803,509 @@ See the spec definition for more information.
 
   })(Expr);
 
-  expect = function(stream, fail, alts) {
-    var express, token, _i, _len, _ref1;
+  InfixOp = (function(_super) {
+    __extends(InfixOp, _super);
 
-    token = stream.peek();
-    if (token !== null) {
-      for (_i = 0, _len = alts.length; _i < _len; _i++) {
-        _ref1 = alts[_i], tag = _ref1[0], express = _ref1[1];
-        if (token.tag === tag) {
-          return express(stream);
+    function InfixOp(opsym, lhs, rhs) {
+      this.opsym = opsym;
+      this.lhs = lhs;
+      this.rhs = rhs;
+      this.visit = __bind(this.visit, this);
+      this.pretty = __bind(this.pretty, this);
+      this.contents = __bind(this.contents, this);
+    }
+
+    InfixOp.prototype.contents = function() {
+      return [this.lhs, this.opsym, this.rhs];
+    };
+
+    InfixOp.prototype.pretty = function() {
+      return '(' + [this.lhs.pretty(), this.opsym, this.rhs.pretty()].join(' ') + ')';
+    };
+
+    InfixOp.prototype.visit = function(visitor) {
+      return visitor.infixop(this, this.opsym, this.lhs.visit(visitor), this.rhs.visit(visitor));
+    };
+
+    return InfixOp;
+
+  })(Expr);
+
+  Conditional = (function(_super) {
+    __extends(Conditional, _super);
+
+    function Conditional(condition, consequent, alternative) {
+      this.condition = condition;
+      this.consequent = consequent;
+      this.alternative = alternative;
+      this.visit = __bind(this.visit, this);
+      this.pretty = __bind(this.pretty, this);
+      this.contents = __bind(this.contents, this);
+    }
+
+    Conditional.prototype.contents = function() {
+      return [this.condition, this.consequent, this.alternative];
+    };
+
+    Conditional.prototype.pretty = function() {
+      return ("(if " + (this.condition.pretty()) + " ") + ("then " + (this.consequent.pretty()) + " else " + (this.alternative.pretty()) + ")");
+    };
+
+    Conditional.prototype.visit = function(visitor) {
+      return visitor.conditional(this, this.condition.visit(visitor), this.consequent.visit(visitor), this.alternative.visit(visitor));
+    };
+
+    return Conditional;
+
+  })(Expr);
+
+  OpStack = (function() {
+    function OpStack() {
+      this.finish = __bind(this.finish, this);
+      this.push = __bind(this.push, this);
+      this._reduce = __bind(this._reduce, this);      this.ops = [];
+    }
+
+    OpStack.prototype._reduce = function(rhs, pred) {
+      var lhs, lop, _ref2;
+
+      while (this.ops.length !== 0) {
+        _ref2 = this.ops.pop(), lhs = _ref2[0], lop = _ref2[1];
+        if (pred(lop)) {
+          rhs = new InfixOp(lop, lhs, rhs);
+        } else {
+          this.ops.push([lhs, lop]);
+          break;
         }
       }
+      return rhs;
+    };
+
+    OpStack.prototype.push = function(rhs, op) {
+      var pred;
+
+      pred = function(lop) {
+        return infixGTEQ(lop, op);
+      };
+      rhs = this._reduce(rhs, pred);
+      return this.ops.push([rhs, op]);
+    };
+
+    OpStack.prototype.finish = function(rhs) {
+      var pred;
+
+      pred = function(lop) {
+        return true;
+      };
+      return this._reduce(rhs, pred);
+    };
+
+    return OpStack;
+
+  })();
+
+  assertIs = function(received, expected) {
+    if (received !== expected) {
+      throw poly.error.defn("Expected " + expected + " but received " + received);
     }
-    return fail(stream);
   };
 
-  parseFail = function(stream) {
-    throw poly.error.defn("There is an error in your specification at " + (stream.toString()));
+  assertTagIs = function(received, tag) {
+    return assertIs(received.tag, tag);
   };
+
+  Parser = (function() {
+    function Parser(stream) {
+      this.stream = stream;
+      this.parseFinish = __bind(this.parseFinish, this);
+      this.parseInfix = __bind(this.parseInfix, this);
+      this.parseCallArgs = __bind(this.parseCallArgs, this);
+      this.parseCall = __bind(this.parseCall, this);
+      this.parseAtomCall = __bind(this.parseAtomCall, this);
+      this.parseParenExpr = __bind(this.parseParenExpr, this);
+      this.parseConditional = __bind(this.parseConditional, this);
+      this.parseKeyword = __bind(this.parseKeyword, this);
+      this.parseKeywordExpr = __bind(this.parseKeywordExpr, this);
+      this.parseExpr = __bind(this.parseExpr, this);
+      this.parseSubExpr = __bind(this.parseSubExpr, this);
+      this.parseTopExpr = __bind(this.parseTopExpr, this);
+      this.parseFail = __bind(this.parseFail, this);
+      this.expect = __bind(this.expect, this);
+      this.ops = new OpStack();
+    }
+
+    Parser.prototype.expect = function(fail, alts) {
+      var express, token, _i, _len, _ref2, _ref3;
+
+      token = this.stream.peek();
+      if (token !== null) {
+        for (_i = 0, _len = alts.length; _i < _len; _i++) {
+          _ref2 = alts[_i], tag = _ref2[0], express = _ref2[1];
+          if (_ref3 = token.tag, __indexOf.call(tag, _ref3) >= 0) {
+            return express();
+          }
+        }
+      }
+      return fail();
+    };
+
+    Parser.prototype.parseFail = function() {
+      throw poly.error.defn("There is an error in your specification at " + (this.stream.toString()));
+    };
+
+    Parser.prototype.parseTopExpr = function() {
+      var expr;
+
+      expr = this.parseExpr();
+      if (this.stream.peek() !== null) {
+        this.parseFail();
+      }
+      return expr;
+    };
+
+    Parser.prototype.parseSubExpr = function() {
+      var parser;
+
+      parser = new Parser(this.stream);
+      return parser.parseExpr();
+    };
+
+    Parser.prototype.parseExpr = function() {
+      var expr;
+
+      expr = this.expect(this.parseFail, [[[Token.Tag.lparen], this.parseParenExpr], [[Token.Tag.keyword], this.parseKeywordExpr], [[Token.Tag.literal, Token.Tag.symbol], this.parseAtomCall]]);
+      return this.expect(this.parseFinish(expr), [[[Token.Tag.infixsymbol], this.parseInfix(expr)]]);
+    };
+
+    Parser.prototype.parseKeywordExpr = function() {
+      var kw;
+
+      kw = this.stream.peek();
+      assertTagIs(kw, Token.Tag.keyword);
+      switch (kw.name) {
+        case 'if':
+          return this.parseConditional();
+        default:
+          return this.parseFail();
+      }
+    };
+
+    Parser.prototype.parseKeyword = function(expected) {
+      var kw;
+
+      kw = this.stream.get();
+      assertTagIs(kw, Token.Tag.keyword);
+      return assertIs(kw.name, expected);
+    };
+
+    Parser.prototype.parseConditional = function() {
+      var altern, cond, conseq;
+
+      this.parseKeyword('if');
+      cond = this.parseSubExpr();
+      this.parseKeyword('then');
+      conseq = this.parseSubExpr();
+      this.parseKeyword('else');
+      altern = this.parseSubExpr();
+      return new Conditional(cond, conseq, altern);
+    };
+
+    Parser.prototype.parseParenExpr = function() {
+      var expr;
+
+      assertIs(this.stream.get(), LParen);
+      expr = this.parseSubExpr();
+      assertIs(this.stream.get(), RParen);
+      return expr;
+    };
+
+    Parser.prototype.parseAtomCall = function() {
+      var atom, tok;
+
+      tok = this.stream.get();
+      atom = tok.tag === Token.Tag.literal ? new Const(tok.val, tok.type) : tok.tag === Token.Tag.symbol ? new Ident(tok.name) : assertIs(false, true);
+      return this.expect((function() {
+        return atom;
+      }), [[[Token.Tag.lparen], this.parseCall(tok)]]);
+    };
+
+    Parser.prototype.parseCall = function(tok) {
+      var _this = this;
+
+      return function(stream) {
+        var args, name;
+
+        assertTagIs(tok, Token.Tag.symbol);
+        assertIs(_this.stream.get(), LParen);
+        name = tok.name;
+        args = _this.expect(_this.parseCallArgs([]), [
+          [
+            [Token.Tag.rparen], (function() {
+              _this.stream.get();
+              return [];
+            })
+          ]
+        ]);
+        return new Call(name, args);
+      };
+    };
+
+    Parser.prototype.parseCallArgs = function(acc) {
+      var _this = this;
+
+      return function() {
+        var arg, args;
+
+        arg = _this.parseSubExpr();
+        args = acc.concat([arg]);
+        return _this.expect(_this.parseFail, [
+          [
+            [Token.Tag.rparen], (function() {
+              _this.stream.get();
+              return args;
+            })
+          ], [
+            [Token.Tag.comma], (function() {
+              _this.stream.get();
+              return _this.parseCallArgs(args)();
+            })
+          ]
+        ]);
+      };
+    };
+
+    Parser.prototype.parseInfix = function(rhs) {
+      var _this = this;
+
+      return function() {
+        var op, optok;
+
+        optok = _this.stream.get();
+        assertTagIs(optok, Token.Tag.infixsymbol);
+        op = optok.op;
+        _this.ops.push(rhs, op);
+        return _this.parseExpr();
+      };
+    };
+
+    Parser.prototype.parseFinish = function(expr) {
+      var _this = this;
+
+      return function() {
+        return _this.ops.finish(expr);
+      };
+    };
+
+    return Parser;
+
+  })();
 
   parse = function(str) {
-    var expr, stream;
+    var parser, stream;
 
     stream = new Stream(tokenize(str));
-    expr = parseExpr(stream);
-    if (stream.peek() !== null) {
-      throw poly.error.defn("There is an error in your specification at " + (stream.toString()));
-    }
-    return expr;
+    parser = new Parser(stream);
+    return parser.parseTopExpr();
   };
 
-  parseExpr = function(stream) {
-    return expect(stream, parseFail, [[Token.Tag.literal, parseConst], [Token.Tag.symbol, parseSymbolic]]);
-  };
+  exprType = function(funcTypeEnv, colTypeEnv, expr) {
+    var tapply, visitor;
 
-  parseConst = function(stream) {
-    return new Const((stream.get().val));
-  };
+    tapply = function(fname, targs) {
+      var tfunc, tresult;
 
-  parseSymbolic = function(stream) {
-    var name;
-
-    name = stream.get().name;
-    return expect(stream, (function() {
-      return new Ident(name);
-    }), [[Token.Tag.lparen, parseCall(name)]]);
-  };
-
-  parseCall = function(name) {
-    return function(stream) {
-      var args;
-
-      stream.get();
-      args = expect(stream, parseCallArgs([]), [
-        [
-          Token.Tag.rparen, function(ts) {
-            ts.get();
-            return [];
-          }
-        ]
-      ]);
-      return new Call(name, args);
+      if (!(fname in funcTypeEnv)) {
+        throw poly.error.defn("Unknown function name: " + fname);
+      }
+      if (fname === '++' && targs.length === 2) {
+        if (targs[1] === tnum && targs[0] === tcat) {
+          fname = "++_num1";
+        }
+        if (targs[0] === tnum && targs[1] === tcat) {
+          fname = "++_num2";
+        }
+      }
+      if (fname === 'bin' && targs.length === 2 && targs[0] === tdate) {
+        fname = 'bin_date';
+      }
+      if ((fname === 'min' || fname === 'max') && targs.length === 1 && targs[0] === tdate) {
+        fname = fname + '_date';
+      }
+      if ((fname === 'count' || fname === 'unique' || fname === 'lag') && targs.length === 1) {
+        if (targs[0] === tcat) {
+          fname = fname + '_cat';
+        } else if (targs[0] === tdate) {
+          fname = fname + '_date';
+        }
+      }
+      if (fname === 'parseDate' && targs.length === 1) {
+        fname = 'parseDateDefault';
+      }
+      tfunc = funcTypeEnv[fname];
+      tresult = new UnknownType;
+      tfunc.unify(new FuncType(targs, tresult));
+      return tresult.found;
     };
+    visitor = {
+      ident: function(expr, name) {
+        if (name in colTypeEnv) {
+          return colTypeEnv[name];
+        } else {
+          throw poly.error.defn("Unknown column name: " + name);
+        }
+      },
+      "const": function(expr, val, type) {
+        return type;
+      },
+      call: function(expr, fname, targs) {
+        return tapply(fname, targs);
+      },
+      infixop: function(expr, opname, tlhs, trhs) {
+        return tapply(opname, [tlhs, trhs]);
+      },
+      conditional: function(expr, tcond, tconseq, taltern) {
+        tcond.unify(DataType.Base.num);
+        tconseq.unify(taltern);
+        return tconseq;
+      }
+    };
+    return expr.visit(visitor);
   };
 
-  parseCallArgs = function(acc) {
-    return function(stream) {
-      var arg, args;
+  tcat = DataType.Base.cat;
 
-      arg = parseExpr(stream);
-      args = acc.concat([arg]);
-      return expect(stream, parseFail, [
-        [
-          Token.Tag.rparen, function(ts) {
-            ts.get();
-            return args;
+  tnum = DataType.Base.num;
+
+  tdate = DataType.Base.date;
+
+  pairNumToNum = new FuncType([tnum, tnum], tnum);
+
+  initialFuncTypeEnv = {
+    '++': new FuncType([tcat, tcat], tcat),
+    '++_num1': new FuncType([tcat, tnum], tcat),
+    '++_num2': new FuncType([tnum, tcat], tcat)
+  };
+
+  _ref2 = ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==', '='];
+  for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+    opname = _ref2[_i];
+    initialFuncTypeEnv[opname] = pairNumToNum;
+  }
+
+  _ref3 = ['sum', 'mean', 'box', 'median'];
+  for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
+    fname = _ref3[_j];
+    initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat);
+  }
+
+  _ref4 = ['min', 'max'];
+  for (_k = 0, _len2 = _ref4.length; _k < _len2; _k++) {
+    fname = _ref4[_k];
+    initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat);
+    initialFuncTypeEnv[fname + '_date'] = new FuncType([tdate], DataType.Base.stat);
+  }
+
+  _ref5 = ['count', 'unique'];
+  for (_l = 0, _len3 = _ref5.length; _l < _len3; _l++) {
+    fname = _ref5[_l];
+    initialFuncTypeEnv[fname] = new FuncType([tnum], DataType.Base.stat);
+    initialFuncTypeEnv[fname + '_cat'] = new FuncType([tcat], DataType.Base.stat);
+    initialFuncTypeEnv[fname + '_date'] = new FuncType([tdate], DataType.Base.stat);
+  }
+
+  _ref6 = ['lag'];
+  for (_m = 0, _len4 = _ref6.length; _m < _len4; _m++) {
+    fname = _ref6[_m];
+    initialFuncTypeEnv[fname] = new FuncType([tnum, tnum], tnum);
+    initialFuncTypeEnv[fname + '_cat'] = new FuncType([tcat, tnum], tcat);
+    initialFuncTypeEnv[fname + '_date'] = new FuncType([tdate, tnum], tdate);
+  }
+
+  initialFuncTypeEnv.log = new FuncType([tnum], tnum);
+
+  initialFuncTypeEnv.substr = new FuncType([tcat, tnum, tnum], tcat);
+
+  initialFuncTypeEnv.length = new FuncType([tcat], tnum);
+
+  initialFuncTypeEnv.upper = new FuncType([tcat], tcat);
+
+  initialFuncTypeEnv.lower = new FuncType([tcat], tcat);
+
+  initialFuncTypeEnv.indexOf = new FuncType([tcat, tcat], tnum);
+
+  initialFuncTypeEnv.parseNum = new FuncType([tcat], tnum);
+
+  initialFuncTypeEnv.parseDate = new FuncType([tcat, tcat], tdate);
+
+  initialFuncTypeEnv.parseDateDefault = new FuncType([tcat], tdate);
+
+  initialFuncTypeEnv.year = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv.month = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv.dayOfMonth = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv.dayOfYear = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv.dayOfWeek = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv.hour = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv.minute = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv.second = new FuncType([tdate], tnum);
+
+  initialFuncTypeEnv['bin'] = new FuncType([tnum, tnum], tnum);
+
+  initialFuncTypeEnv['bin_date'] = new FuncType([tdate, tcat], tdate);
+
+  exprJSON = function(expr) {
+    var visitor;
+
+    visitor = {
+      ident: function(expr, name) {
+        return [
+          'ident', {
+            name: name
           }
-        ], [
-          Token.Tag.comma, function(ts) {
-            ts.get();
-            return (parseCallArgs(args))(ts);
+        ];
+      },
+      "const": function(expr, val, type) {
+        return [
+          'const', {
+            value: val,
+            type: type.name
           }
-        ]
-      ]);
+        ];
+      },
+      call: function(expr, fname, args) {
+        return [
+          'call', {
+            fname: fname,
+            args: args
+          }
+        ];
+      },
+      infixop: function(expr, opname, lhs, rhs) {
+        return [
+          'infixop', {
+            opname: opname,
+            lhs: lhs,
+            rhs: rhs
+          }
+        ];
+      },
+      conditional: function(expr, cond, conseq, altern) {
+        return [
+          'conditional', {
+            cond: cond,
+            conseq: conseq,
+            altern: altern
+          }
+        ];
+      }
     };
+    return expr.visit(visitor);
   };
 
   extractOps = function(expr) {
@@ -2381,10 +3317,10 @@ See the spec definition for more information.
     };
     extractor = {
       ident: function(expr, name) {
-        return name;
+        return expr;
       },
-      "const": function(expr, val) {
-        return val;
+      "const": function(expr, val, type) {
+        return expr;
       },
       call: function(expr, fname, args) {
         var opargs, optype, result;
@@ -2392,8 +3328,8 @@ See the spec definition for more information.
         optype = fname in poly["const"].trans ? 'trans' : fname in poly["const"].stat ? 'stat' : 'none';
         if (optype !== 'none') {
           opargs = poly["const"][optype][fname];
-          result = assocsToObj(zip(opargs, args));
-          result.name = expr.pretty();
+          result = _.object(opargs, args);
+          result.name = expr;
           result[optype] = fname;
           results[optype].push(result);
           return result.name;
@@ -2406,238 +3342,144 @@ See the spec definition for more information.
     return results;
   };
 
-  layerToDataSpec = function(lspec, grouping) {
-    var aesthetics, dedupByName, desc, expr, filters, groups, grpvar, key, metas, result, sdesc, select, sexpr, stats, transstat, transstats, ts, val, _i, _len, _ref1, _ref2;
+  testTypeCheck = function() {
+    var a0, a1, b0, b1, u0;
 
-    if (grouping == null) {
-      grouping = [];
-    }
-    filters = {};
-    _ref2 = (_ref1 = lspec.filter) != null ? _ref1 : {};
-    for (key in _ref2) {
-      val = _ref2[key];
-      filters[(parse(key)).pretty()] = val;
-    }
-    grouping = (function() {
-      var _i, _len, _results;
+    b0 = DataType.Base.cat;
+    b1 = DataType.Base.num;
+    u0 = new UnknownType;
+    a0 = new FuncType([b0, b1, u0, b1], b1);
+    a1 = new FuncType([b0, b1, b0, u0], b1);
+    return a0.unify(a1);
+  };
 
-      _results = [];
-      for (_i = 0, _len = grouping.length; _i < _len; _i++) {
-        key = grouping[_i];
-        _results.push((parse(key["var"])).pretty());
-      }
-      return _results;
-    })();
-    aesthetics = _.pick(lspec, poly["const"].aes);
-    for (key in aesthetics) {
-      if (!('var' in aesthetics[key])) {
-        delete aesthetics[key];
-      }
+  testFuncTypeEnv = _.clone(initialFuncTypeEnv);
+
+  testFuncTypeEnv.sum = new FuncType([tnum], DataType.Base.stat);
+
+  testFuncTypeEnv.log = new FuncType([tnum], tnum);
+
+  testFuncTypeEnv.nameCollision = new FuncType([tcat], tnum);
+
+  testColTypeEnv = {
+    x: tnum,
+    nameCollision: tcat
+  };
+
+  typeCheck = function(str) {
+    var expr;
+
+    expr = parse(str);
+    return exprType(testFuncTypeEnv, testColTypeEnv, expr);
+  };
+
+  testExprJSON = function(str) {
+    var expr;
+
+    expr = parse(str);
+    return exprJSON(expr);
+  };
+
+  createColTypeEnv = function(metas) {
+    var colTypeEnv, key, meta;
+
+    colTypeEnv = {};
+    for (key in metas) {
+      meta = metas[key];
+      colTypeEnv[key] = DataType.Base[meta.type];
     }
-    transstat = [];
-    select = [];
-    groups = [];
-    metas = {};
-    for (key in aesthetics) {
-      desc = aesthetics[key];
-      if (desc["var"] === 'count(*)') {
-        select.push(desc["var"]);
-      } else {
-        expr = parse(desc["var"]);
-        desc["var"] = expr.pretty();
-        ts = extractOps(expr);
-        transstat.push(ts);
-        select.push(desc["var"]);
-        if (ts.stat.length === 0) {
-          groups.push(desc["var"]);
-        }
-        if ('sort' in desc) {
-          sdesc = dictGets(desc, poly["const"].metas);
-          if (sdesc.sort === 'count(*)') {
-            result = {
-              sort: 'count(*)',
-              asc: sdesc.asc,
-              stat: [],
-              trans: []
-            };
-          } else {
-            sexpr = parse(sdesc.sort);
-            sdesc.sort = sexpr.pretty();
-            result = extractOps(sexpr);
-          }
-          if (result.stat.length !== 0) {
-            sdesc.stat = result.stat[0];
-          }
-          metas[desc["var"]] = sdesc;
-        }
-      }
+    return colTypeEnv;
+  };
+
+  getType = function(str, typeEnv, combineStat) {
+    var type;
+
+    if (combineStat == null) {
+      combineStat = true;
     }
-    for (_i = 0, _len = grouping.length; _i < _len; _i++) {
-      grpvar = grouping[_i];
-      expr = parse(grpvar);
-      grpvar = expr.pretty();
-      ts = extractOps(expr);
-      transstat.push(ts);
-      select.push(grpvar);
-      if (ts.stat.length === 0) {
-        groups.push(grpvar);
-      } else {
-        throw poly.error.defn("Facet variable should not contain statistics!");
-      }
+    type = exprType(initialFuncTypeEnv, typeEnv, parse(str));
+    if (combineStat && type.name === 'stat') {
+      return 'num';
+    } else {
+      return type.name;
     }
-    transstats = mergeObjLists(transstat);
-    dedupByName = dedupOnKey('name');
-    stats = {
-      stats: dedupByName(transstats.stat),
-      groups: dedup(groups)
+  };
+
+  getExpression = function(str) {
+    var etc, expr, exprObj, obj, rootType, statInfo, type, _ref7, _ref8;
+
+    if (str === 'count(*)') {
+      str = 'count(1)';
+    }
+    expr = parse(str);
+    exprObj = function(e) {
+      return {
+        name: e.pretty(),
+        expr: exprJSON(e)
+      };
     };
+    statInfo = function() {};
+    obj = exprObj(expr);
+    _ref7 = obj.expr, rootType = _ref7[0], etc = _ref7[1];
+    type = rootType === "ident" ? 'ident' : _.has(expr, 'fname') && ((_ref8 = expr.fname) === 'sum' || _ref8 === 'count' || _ref8 === 'unique' || _ref8 === 'mean' || _ref8 === 'box' || _ref8 === 'median' || _ref8 === 'min' || _ref8 === 'max') ? (statInfo = function() {
+      var a;
+
+      return {
+        fname: expr.fname,
+        args: (function() {
+          var _len5, _n, _ref9, _results;
+
+          _ref9 = expr.args;
+          _results = [];
+          for (_n = 0, _len5 = _ref9.length; _n < _len5; _n++) {
+            a = _ref9[_n];
+            _results.push(exprObj(a));
+          }
+          return _results;
+        })()
+      };
+    }, 'stat') : 'trans';
     return {
-      trans: dedupByName(transstats.trans),
-      stats: stats,
-      sort: metas,
-      select: dedup(select),
-      filter: filters
+      exprType: type,
+      expr: obj,
+      statInfo: statInfo
     };
   };
 
-  pivotToDataSpec = function(lspec) {
-    var aesthetics, aesthetics_list, dedupByName, desc, expr, filters, groups, item, key, list, metas, result, sdesc, select, sexpr, stats, transstat, transstats, ts, val, _i, _j, _len, _len1, _ref1, _ref2;
+  makeTypeEnv = function(meta) {};
 
-    filters = {};
-    _ref2 = (_ref1 = lspec.filter) != null ? _ref1 : {};
-    for (key in _ref2) {
-      val = _ref2[key];
-      filters[(parse(key)).pretty()] = val;
-    }
-    aesthetics = _.pick(lspec, ['columns', 'rows', 'values']);
-    aesthetics_list = [];
-    for (key in aesthetics) {
-      list = aesthetics[key];
-      for (_i = 0, _len = list.length; _i < _len; _i++) {
-        item = list[_i];
-        if ('var' in item) {
-          aesthetics_list.push(item);
-        }
+  getName = function(str) {
+    var e, expr;
+
+    try {
+      expr = parse(str);
+      if ('name' in expr) {
+        return expr.name;
       }
+    } catch (_error) {
+      e = _error;
     }
-    transstat = [];
-    select = [];
-    groups = [];
-    metas = {};
-    for (_j = 0, _len1 = aesthetics_list.length; _j < _len1; _j++) {
-      desc = aesthetics_list[_j];
-      if (desc["var"] === 'count(*)') {
-        select.push(desc["var"]);
-      } else {
-        expr = parse(desc["var"]);
-        desc["var"] = expr.pretty();
-        ts = extractOps(expr);
-        transstat.push(ts);
-        select.push(desc["var"]);
-        if (ts.stat.length === 0) {
-          groups.push(desc["var"]);
-        }
-        if ('sort' in desc) {
-          sdesc = dictGets(desc, poly["const"].metas);
-          if (sdesc.sort === 'count(*)') {
-            result = {
-              sort: 'count(*)',
-              asc: sdesc.asc,
-              stat: [],
-              trans: []
-            };
-          } else {
-            sexpr = parse(sdesc.sort);
-            sdesc.sort = sexpr.pretty();
-            result = extractOps(sexpr);
-          }
-          if (result.stat.length !== 0) {
-            sdesc.stat = result.stat[0];
-          }
-          metas[desc["var"]] = sdesc;
-        }
-      }
-    }
-    transstats = mergeObjLists(transstat);
-    dedupByName = dedupOnKey('name');
-    stats = {
-      stats: dedupByName(transstats.stat),
-      groups: dedup(groups)
-    };
-    return {
-      trans: dedupByName(transstats.trans),
-      stats: stats,
-      sort: metas,
-      select: dedup(select),
-      filter: filters
-    };
+    return str;
   };
 
-  numeralToDataSpec = function(lspec) {
-    var aesthetics, dedupByName, desc, expr, filters, groups, key, metas, result, sdesc, select, sexpr, stats, transstat, transstats, ts, val, _ref1, _ref2, _ref3, _ref4;
-
-    filters = {};
-    _ref2 = (_ref1 = lspec.filter) != null ? _ref1 : {};
-    for (key in _ref2) {
-      val = _ref2[key];
-      filters[(parse(key)).pretty()] = val;
-    }
-    aesthetics = _.pick(lspec, ['value']);
-    for (key in aesthetics) {
-      if (!('var' in aesthetics[key])) {
-        delete aesthetics[key];
-      }
-    }
-    transstat = [];
-    select = [];
-    groups = [];
-    metas = {};
-    for (key in aesthetics) {
-      desc = aesthetics[key];
-      if (desc["var"] === 'count(*)') {
-        select.push(desc["var"]);
-      } else {
-        expr = parse(desc["var"]);
-        desc["var"] = expr.pretty();
-        ts = extractOps(expr);
-        transstat.push(ts);
-        select.push(desc["var"]);
-        if (ts.stat.length === 0) {
-          groups.push(desc["var"]);
-        }
-        if ('sort' in desc) {
-          sdesc = dictGets(desc, poly["const"].metas);
-          sexpr = parse(sdesc.sort);
-          sdesc.sort = sexpr.pretty();
-          result = extractOps(sexpr);
-          if (result.stat.length !== 0) {
-            sdesc.stat = result.stat[0];
-          }
-          metas[desc["var"]] = sdesc;
-        }
-      }
-    }
-    transstats = mergeObjLists(transstat);
-    dedupByName = dedupOnKey('name');
-    stats = {
-      stats: dedupByName((_ref3 = transstats.stat) != null ? _ref3 : []),
-      groups: dedup(groups)
-    };
-    return {
-      trans: dedupByName((_ref4 = transstats.trans) != null ? _ref4 : []),
-      stats: stats,
-      sort: metas,
-      select: dedup(select),
-      filter: filters
-    };
+  normalize = function(str) {
+    return getName(parse(str).pretty());
   };
 
   poly.parser = {
+    tj: testExprJSON,
+    tc: typeCheck,
+    ttc: testTypeCheck,
+    createColTypeEnv: createColTypeEnv,
+    getExpression: getExpression,
+    getType: getType,
     tokenize: tokenize,
     parse: parse,
-    layerToData: layerToDataSpec,
-    pivotToData: pivotToDataSpec,
-    numeralToData: numeralToDataSpec
+    bracket: bracket,
+    unbracket: getName,
+    normalize: normalize,
+    escape: escape,
+    unescape: unescape
   };
 
 }).call(this);
@@ -5158,6 +6000,8 @@ attribute of that value.
               return _this.range.max;
             case 'min':
               return _this.range.min;
+            case 'novalue':
+              return _this.range.max / 2 + _this.range.min / 2;
             case 'upper':
               if (!value.m) {
                 return _this.range.max - space;
@@ -6472,8 +7316,15 @@ of a dataset, or knows how to retrieve data from some source.
       this._setData(params);
     }
 
-    FrontendData.prototype.getData = function(callback) {
-      return callback(null, this);
+    FrontendData.prototype.getData = function(callback, dataSpec) {
+      if (dataSpec == null) {
+        callback(null, this);
+        return;
+      }
+      return poly.data.frontendProcess(dataSpec, this, function(err, dataObj) {
+        dataObj.raw = dataObj.data;
+        return callback(err, dataObj);
+      });
     };
 
     FrontendData.prototype.update = function(params) {
@@ -6689,7 +7540,14 @@ of a dataset, or knows how to retrieve data from some source.
         _this = this;
 
       if ((this.raw != null) && (!this.computeBackend)) {
-        return callback(null, this);
+        if (dataSpec == null) {
+          return callback(null, this);
+        }
+        poly.data.frontendProcess(dataSpec, this, function(err, dataObj) {
+          dataObj.raw = dataObj.data;
+          return callback(err, dataObj);
+        });
+        return;
       }
       chr = _.indexOf(this.url, "?") === -1 ? '?' : '&';
       url = this.url;
@@ -6820,13 +7678,13 @@ data processing to be done.
 
 
 (function() {
-  var DataProcess, backendProcess, calculateMeta, calculateStats, filterFactory, filters, frontendProcess, statistics, statsFactory, transformFactory, transforms,
+  var DataProcess, backendProcess, calculateMeta, calculateStats, createFunction, evaluate, filterFactory, filters, frontendProcess, interpretMeta, statistics,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   DataProcess = (function() {
     function DataProcess(layerSpec, grouping, strictmode, parseMethod) {
-      this.parseMethod = parseMethod != null ? parseMethod : poly.parser.layerToData;
+      this.parseMethod = parseMethod != null ? parseMethod : poly.spec.layerToData;
       this._wrap = __bind(this._wrap, this);
       this.make = __bind(this.make, this);
       this.layerMeta = _.extend({}, layerSpec.meta, {
@@ -6920,52 +7778,285 @@ data processing to be done.
   /*
   TRANSFORMS
   ----------
-  Key:value pair of available transformations to a function that creates that
-  transformation. Also, a metadata description of the transformation is returned
-  when appropriate. (e.g for binning)
+  Functions to interpret the arithmetic and other expressions --
   */
 
 
-  transforms = {
-    'bin': function(key, transSpec, meta) {
-      var binFn, binwidth, name;
-
-      name = transSpec.name, binwidth = transSpec.binwidth;
-      if (meta.type === 'num') {
-        if (isNaN(binwidth)) {
-          throw poly.error.defn("The binwidth " + binwidth + " is invalid for a numeric variable");
+  evaluate = {
+    ident: function(name) {
+      return function(row) {
+        if (name in row) {
+          return row[name];
         }
-        binwidth = +binwidth;
-        binFn = function(item) {
-          return item[name] = binwidth * Math.floor(item[key] / binwidth);
+        throw poly.error.defn("Referencing unknown column: " + name);
+      };
+    },
+    "const": function(value) {
+      return function() {
+        return value;
+      };
+    },
+    conditional: function(cond, conseq, altern) {
+      return function(row) {
+        if (cond(row)) {
+          return conseq(row);
+        } else {
+          return altern(row);
+        }
+      };
+    },
+    infixop: {
+      "+": function(lhs, rhs) {
+        return function(row) {
+          return lhs(row) + rhs(row);
         };
-        return {
-          trans: binFn,
-          meta: {
-            bw: binwidth,
-            binned: true,
-            type: 'num'
-          }
+      },
+      "-": function(lhs, rhs) {
+        return function(row) {
+          return lhs(row) - rhs(row);
+        };
+      },
+      "*": function(lhs, rhs) {
+        return function(row) {
+          return lhs(row) * rhs(row);
+        };
+      },
+      "/": function(lhs, rhs) {
+        return function(row) {
+          return lhs(row) / rhs(row);
+        };
+      },
+      "%": function(lhs, rhs) {
+        return function(row) {
+          return lhs(row) % rhs(row);
+        };
+      },
+      ">": function(lhs, rhs) {
+        return function(row) {
+          return lhs(row) > rhs(row);
+        };
+      },
+      ">=": function(lhs, rhs) {
+        return function(row) {
+          return lhs(row) >= rhs(row);
+        };
+      },
+      "<": function(lhs, rhs) {
+        return function(row) {
+          return lhs(row) < rhs(row);
+        };
+      },
+      "<=": function(lhs, rhs) {
+        return function(row) {
+          return lhs(row) <= rhs(row);
+        };
+      },
+      "!=": function(lhs, rhs) {
+        return function(row) {
+          return lhs(row) !== rhs(row);
+        };
+      },
+      "==": function(lhs, rhs) {
+        return function(row) {
+          return lhs(row) === rhs(row);
+        };
+      },
+      "=": function(lhs, rhs) {
+        return function(row) {
+          return lhs(row) === rhs(row);
+        };
+      },
+      "++": function(lhs, rhs) {
+        return function(row) {
+          return lhs(row) + rhs(row);
         };
       }
-      if (meta.type === 'date') {
-        if (!(__indexOf.call(poly["const"].timerange, binwidth) >= 0)) {
-          throw poly.error.defn("The binwidth " + binwidth + " is invalid for a datetime variable");
-        }
-        binFn = function(item) {
-          var _timeBinning,
+    },
+    trans: {
+      "substr": function(args) {
+        return function(row) {
+          var end, start, str;
+
+          str = args[0](row).toString();
+          start = args[1](row);
+          end = args[2](row);
+          return str.substr(start, end);
+        };
+      },
+      "length": function(args) {
+        return function(row) {
+          var str;
+
+          str = args[0](row).toString();
+          return _.size(str);
+        };
+      },
+      "upper": function(args) {
+        return function(row) {
+          var str;
+
+          str = args[0](row).toString();
+          return str.toUpperCase();
+        };
+      },
+      "lower": function(args) {
+        return function(row) {
+          var str;
+
+          str = args[0](row).toString();
+          return str.toLowerCase();
+        };
+      },
+      "indexOf": function(args) {
+        return function(row) {
+          var haystack, needle;
+
+          haystack = args[0](row).toString();
+          needle = args[1](row).toString();
+          return haystack.indexOf(needle);
+        };
+      },
+      "parseNum": function(args) {
+        return function(row) {
+          var str;
+
+          str = args[0](row).toString();
+          return +str;
+        };
+      },
+      "parseDateDefault": function(args) {
+        return function(row) {
+          var str;
+
+          str = args[0](row);
+          return moment(str).unix();
+        };
+      },
+      "parseDate": function(args) {
+        return function(row) {
+          var format, str;
+
+          str = args[0](row);
+          format = args[1](row);
+          return moment(str, format).unix();
+        };
+      },
+      "year": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          return moment.unix(ts).year();
+        };
+      },
+      "month": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          return moment.unix(ts).month() + 1;
+        };
+      },
+      "dayOfMonth": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          return moment.unix(ts).date();
+        };
+      },
+      "dayOfYear": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          return moment.unix(ts).dayOfYear();
+        };
+      },
+      "dayOfWeek": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          return moment.unix(ts).day();
+        };
+      },
+      "hour": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          return moment.unix(ts).hour();
+        };
+      },
+      "minute": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          return moment.unix(ts).minute();
+        };
+      },
+      "second": function(args) {
+        return function(row) {
+          var ts;
+
+          ts = args[0](row);
+          return moment.unix(ts).second();
+        };
+      },
+      "log": function(args) {
+        return function(row) {
+          return Math.log(args[0](row));
+        };
+      },
+      "lag": function(args) {
+        var lastn;
+
+        lastn = [];
+        return function(row) {
+          var currentLag, i, lag, val;
+
+          val = args[0](row);
+          lag = args[1](row);
+          currentLag = _.size(lastn);
+          if (currentLag === 0) {
+            lastn = (function() {
+              var _i, _results;
+
+              _results = [];
+              for (i = _i = 1; 1 <= lag ? _i <= lag : _i >= lag; i = 1 <= lag ? ++_i : --_i) {
+                _results.push(void 0);
+              }
+              return _results;
+            })();
+          } else if (currentLag !== lag) {
+            throw poly.error.defn("Lag period needs to be constant, but isn't!");
+          }
+          lastn.push(val);
+          return lastn.shift();
+        };
+      },
+      "bin": function(args) {
+        return function(row) {
+          var bw, val, _timeBinning,
             _this = this;
 
+          val = args[0](row);
+          bw = args[1](row);
+          if (_.isNumber(bw)) {
+            return Math.floor(val / bw) * bw;
+          }
           _timeBinning = function(n, timerange) {
             var m;
 
-            m = moment.unix(item[key]).startOf(timerange);
+            m = moment.unix(val).startOf(timerange);
             m[timerange](n * Math.floor(m[timerange]() / n));
-            return item[name] = m.unix();
+            return m.unix();
           };
-          switch (binwidth) {
+          switch (bw) {
             case 'week':
-              return item[name] = moment.unix(item[key]).day(0).unix();
+              return moment.unix(val).day(0).unix();
             case 'twomonth':
               return _timeBinning(2, 'month');
             case 'quarter':
@@ -6979,52 +8070,34 @@ data processing to be done.
             case 'decade':
               return _timeBinning(10, 'year');
             default:
-              return item[name] = moment.unix(item[key]).startOf(binwidth).unix();
-          }
-        };
-        return {
-          trans: binFn,
-          meta: {
-            bw: binwidth,
-            binned: true,
-            type: 'date'
+              return moment.unix(val).startOf(bw).unix();
           }
         };
       }
-    },
-    'lag': function(key, transSpec, meta) {
-      var i, lag, lagFn, lastn, name;
-
-      name = transSpec.name, lag = transSpec.lag;
-      lastn = (function() {
-        var _i, _results;
-
-        _results = [];
-        for (i = _i = 1; 1 <= lag ? _i <= lag : _i >= lag; i = 1 <= lag ? ++_i : --_i) {
-          _results.push(void 0);
-        }
-        return _results;
-      })();
-      lagFn = function(item) {
-        lastn.push(item[key]);
-        return item[name] = lastn.shift();
-      };
-      return {
-        trans: lagFn,
-        meta: {
-          type: meta.type
-        }
-      };
     }
   };
 
-  /*
-  Helper function to figures out which transformation to create, then creates it
-  */
+  createFunction = function(node) {
+    var altern, arg, args, cond, conseq, fn, lhs, nodeType, payload, rhs, value;
 
+    nodeType = node[0], payload = node[1];
+    fn = nodeType === 'ident' ? evaluate.ident(payload.name) : nodeType === 'const' ? (value = poly.type.coerce(payload.value, {
+      type: payload.type
+    }), evaluate["const"](value)) : nodeType === 'infixop' ? (lhs = createFunction(payload.lhs), rhs = createFunction(payload.rhs), evaluate.infixop[payload.opname](lhs, rhs)) : nodeType === 'conditional' ? (cond = createFunction(payload.cond), conseq = createFunction(payload.conseq), altern = createFunction(payload.altern), evaluate.conditional(cond, conseq, altern)) : nodeType === 'call' ? (args = (function() {
+      var _i, _len, _ref, _results;
 
-  transformFactory = function(key, transSpec, meta) {
-    return transforms[transSpec.trans](key, transSpec, meta != null ? meta : {});
+      _ref = payload.args;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        arg = _ref[_i];
+        _results.push(createFunction(arg));
+      }
+      return _results;
+    })(), evaluate.trans[payload.fname](args)) : void 0;
+    if (fn) {
+      return fn;
+    }
+    throw poly.error.defn("Unknown operation of type: " + nodeType);
   };
 
   /*
@@ -7063,10 +8136,12 @@ data processing to be done.
     var filterFuncs;
 
     filterFuncs = [];
-    _.each(filterSpec, function(spec, key) {
-      return _.each(spec, function(value, predicate) {
-        var filter;
+    _.each(filterSpec, function(filter) {
+      var key, spec;
 
+      key = poly.parser.unbracket(filter.expr.name);
+      spec = _.pick(filter, 'lt', 'gt', 'le', 'ge', 'in');
+      return _.each(spec, function(value, predicate) {
         if (!(predicate in filters)) {
           return;
         }
@@ -7099,94 +8174,69 @@ data processing to be done.
 
 
   statistics = {
-    sum: function(spec) {
-      return function(values) {
-        return _.reduce(_.without(values, void 0, null), (function(v, m) {
-          return v + m;
-        }), 0);
-      };
+    sum: function(values) {
+      return _.reduce(_.without(values, void 0, null), (function(v, m) {
+        return v + m;
+      }), 0);
     },
-    mean: function(spec) {
-      return function(values) {
-        values = _.without(values, void 0, null);
-        return _.reduce(values, (function(v, m) {
-          return v + m;
-        }), 0) / values.length;
-      };
+    mean: function(values) {
+      values = _.without(values, void 0, null);
+      return _.reduce(values, (function(v, m) {
+        return v + m;
+      }), 0) / values.length;
     },
-    count: function(spec) {
-      return function(values) {
-        return _.without(values, void 0, null).length;
-      };
+    count: function(values) {
+      return _.without(values, void 0, null).length;
     },
-    unique: function(spec) {
-      return function(values) {
-        return (_.uniq(_.without(values, void 0, null))).length;
-      };
+    unique: function(values) {
+      return (_.uniq(_.without(values, void 0, null))).length;
     },
-    min: function(spec) {
-      return function(values) {
-        return _.min(values);
-      };
+    min: function(values) {
+      return _.min(values);
     },
-    max: function(spec) {
-      return function(values) {
-        return _.max(values);
-      };
+    max: function(values) {
+      return _.max(values);
     },
-    median: function(spec) {
-      return function(values) {
-        return poly.median(values);
-      };
+    median: function(values) {
+      return poly.median(values);
     },
-    box: function(spec) {
-      return function(values) {
-        var iqr, len, lowerBound, mid, q2, q4, quarter, sortedValues, splitValues, upperBound, _ref;
+    box: function(values) {
+      var iqr, len, lowerBound, mid, q2, q4, quarter, sortedValues, splitValues, upperBound, _ref;
 
-        len = values.length;
-        if (len > 5) {
-          mid = len / 2;
-          sortedValues = _.sortBy(values, function(x) {
-            return x;
-          });
-          quarter = Math.ceil(mid) / 2;
-          if (quarter % 1 !== 0) {
-            quarter = Math.floor(quarter);
-            q2 = sortedValues[quarter];
-            q4 = sortedValues[(len - 1) - quarter];
-          } else {
-            q2 = (sortedValues[quarter] + sortedValues[quarter - 1]) / 2;
-            q4 = (sortedValues[len - quarter] + sortedValues[(len - quarter) - 1]) / 2;
-          }
-          iqr = q4 - q2;
-          lowerBound = q2 - (1.5 * iqr);
-          upperBound = q4 + (1.5 * iqr);
-          splitValues = _.groupBy(sortedValues, function(v) {
-            return v >= lowerBound && v <= upperBound;
-          });
-          return {
-            q1: _.min(splitValues["true"]),
-            q2: q2,
-            q3: poly.median(sortedValues, true),
-            q4: q4,
-            q5: _.max(splitValues["true"]),
-            outliers: (_ref = splitValues["false"]) != null ? _ref : []
-          };
+      len = values.length;
+      if (len > 5) {
+        mid = len / 2;
+        sortedValues = _.sortBy(values, function(x) {
+          return x;
+        });
+        quarter = Math.ceil(mid) / 2;
+        if (quarter % 1 !== 0) {
+          quarter = Math.floor(quarter);
+          q2 = sortedValues[quarter];
+          q4 = sortedValues[(len - 1) - quarter];
+        } else {
+          q2 = (sortedValues[quarter] + sortedValues[quarter - 1]) / 2;
+          q4 = (sortedValues[len - quarter] + sortedValues[(len - quarter) - 1]) / 2;
         }
+        iqr = q4 - q2;
+        lowerBound = q2 - (1.5 * iqr);
+        upperBound = q4 + (1.5 * iqr);
+        splitValues = _.groupBy(sortedValues, function(v) {
+          return v >= lowerBound && v <= upperBound;
+        });
         return {
-          outliers: values
+          q1: _.min(splitValues["true"]),
+          q2: q2,
+          q3: poly.median(sortedValues, true),
+          q4: q4,
+          q5: _.max(splitValues["true"]),
+          outliers: (_ref = splitValues["false"]) != null ? _ref : []
         };
+      }
+      return {
+        outliers: values
       };
     }
-  };
-
-  /*
-  Helper function to figures out which statistics to create, then creates it
-  */
-
-
-  statsFactory = function(statSpec) {
-    return statistics[statSpec.stat](statSpec);
   };
 
   /*
@@ -7195,58 +8245,80 @@ data processing to be done.
 
 
   calculateStats = function(data, statSpecs) {
-    var groupedData, statFuncs;
+    var e, groupedData, statFuncs;
 
     statFuncs = {};
     _.each(statSpecs.stats, function(statSpec) {
-      var key, name, statFn;
+      var args, expr, fn, key, name;
 
-      key = statSpec.key, name = statSpec.name;
-      statFn = statsFactory(statSpec);
-      return statFuncs[name] = function(data) {
-        return statFn(_.pluck(data, key));
+      name = statSpec.name, expr = statSpec.expr, args = statSpec.args;
+      fn = statistics[name];
+      key = poly.parser.unbracket(args[0].name);
+      return statFuncs[expr.name] = function(data) {
+        return fn(_.pluck(data, key));
       };
     });
-    groupedData = poly.groupBy(data, statSpecs.groups);
+    groupedData = poly.groupBy(data, (function() {
+      var _i, _len, _ref, _results;
+
+      _ref = statSpecs.groups;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        e = _ref[_i];
+        _results.push(poly.parser.unbracket(e.name));
+      }
+      return _results;
+    })());
     return _.map(groupedData, function(data) {
-      var rep;
+      var name, rep, stats, _i, _len, _ref;
 
       rep = {};
-      _.each(statSpecs.groups, function(g) {
-        return rep[g] = data[0][g];
-      });
-      _.each(statFuncs, function(stats, name) {
-        return rep[name] = stats(data);
-      });
+      _ref = statSpecs.groups;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        name = _ref[_i].name;
+        name = poly.parser.unbracket(name);
+        rep[name] = data[0][name];
+      }
+      for (name in statFuncs) {
+        stats = statFuncs[name];
+        rep[name] = stats(data);
+      }
       return rep;
     });
   };
 
   /*
-  META
-  ----
+  META SORTING
+  ------------
   Calculations of meta properties including sorting and limiting based on the
   values of statistical calculations
   */
 
 
-  calculateMeta = function(key, metaSpec, data) {
-    var asc, comparator, limit, multiplier, sort, stat, statSpec, values;
+  calculateMeta = function(metaSpec, data) {
+    var args, asc, comparator, key, limit, multiplier, sort, sortKey, stat, statSpec, values;
 
-    sort = metaSpec.sort, stat = metaSpec.stat, limit = metaSpec.limit, asc = metaSpec.asc;
+    key = metaSpec.key, sort = metaSpec.sort, stat = metaSpec.stat, args = metaSpec.args, limit = metaSpec.limit, asc = metaSpec.asc;
     if (stat) {
       statSpec = {
-        stats: [stat],
+        stats: [
+          {
+            name: stat,
+            expr: sort,
+            args: args
+          }
+        ],
         groups: [key]
       };
       data = calculateStats(data, statSpec);
     }
     multiplier = asc ? 1 : -1;
+    sortKey = poly.parser.unbracket(sort.name);
     comparator = function(a, b) {
-      if (a[sort] === b[sort]) {
+      if (a[sortKey] === b[sortKey]) {
         return 0;
       }
-      if (a[sort] >= b[sort]) {
+      if (a[sortKey] >= b[sortKey]) {
         return 1 * multiplier;
       }
       return -1 * multiplier;
@@ -7255,15 +8327,48 @@ data processing to be done.
     if (limit) {
       data = data.slice(0, +(limit - 1) + 1 || 9e9);
     }
-    values = _.uniq(_.pluck(data, key));
+    values = _.uniq(_.pluck(data, poly.parser.unbracket(key.name)));
     return {
       meta: {
         levels: values,
         sorted: true
       },
       filter: {
+        expr: key,
         "in": values
       }
+    };
+  };
+
+  /*
+  GENERAL PROCESSING
+  ------------------
+  Figure out what the metadata of a column should be based on what we know about
+  other columns, and by the expression
+  */
+
+
+  interpretMeta = function(metas) {
+    var typeEnv;
+
+    typeEnv = poly.parser.createColTypeEnv(metas);
+    return function(expr) {
+      var bw, innerPayload, innerType, payload, rootType, _ref, _ref1;
+
+      _ref = expr.expr, rootType = _ref[0], payload = _ref[1];
+      bw = null;
+      if (rootType === 'call' && payload.fname === 'bin') {
+        _ref1 = payload.args[1], innerType = _ref1[0], innerPayload = _ref1[1];
+        if (innerType === 'const') {
+          bw = poly.type.coerce(innerPayload.value, {
+            type: innerPayload.type
+          });
+        }
+      }
+      return {
+        type: poly.parser.getType(expr.name, typeEnv),
+        bw: bw
+      };
     };
   };
 
@@ -7280,41 +8385,48 @@ data processing to be done.
 
 
   frontendProcess = function(dataSpec, data, callback) {
-    var addMeta, additionalFilter, d, filter, key, meta, metaData, metaSpec, name, statSpec, trans, transSpec, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
+    var addData, addMeta, additionalFilter, expr, filter, getMeta, key, meta, metaData, metaSpec, name, statSpec, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
 
-    metaData = _.clone(data.meta);
+    metaData = (_ref = _.clone(data.meta)) != null ? _ref : {};
+    getMeta = interpretMeta(metaData);
+    addMeta = function(expr, meta) {
+      var _ref1;
+
+      if (meta == null) {
+        meta = {};
+      }
+      return metaData[expr.name] = _.extend((_ref1 = metaData[expr.name]) != null ? _ref1 : {}, getMeta(expr), meta);
+    };
     data = _.clone(data.raw);
-    if (metaData == null) {
-      metaData = {};
-    }
-    addMeta = function(key, meta) {
-      var _ref;
+    addData = function(key, fn) {
+      var d, _i, _len, _results;
 
-      return metaData[key] = _.extend((_ref = metaData[key]) != null ? _ref : {}, meta);
+      _results = [];
+      for (_i = 0, _len = data.length; _i < _len; _i++) {
+        d = data[_i];
+        _results.push(d[key] = fn(d));
+      }
+      return _results;
     };
     if (dataSpec.trans) {
-      _ref = dataSpec.trans;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        transSpec = _ref[_i];
-        key = transSpec.key;
-        _ref1 = transformFactory(key, transSpec, metaData[key]), trans = _ref1.trans, meta = _ref1.meta;
-        for (_j = 0, _len1 = data.length; _j < _len1; _j++) {
-          d = data[_j];
-          trans(d);
-        }
-        addMeta(transSpec.name, meta);
+      _ref1 = dataSpec.trans;
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        expr = _ref1[_i];
+        addData(expr.name, createFunction(expr.expr));
+        addMeta(expr);
       }
     }
     if (dataSpec.filter) {
       data = _.filter(data, filterFactory(dataSpec.filter));
     }
     if (dataSpec.sort) {
-      additionalFilter = {};
+      additionalFilter = [];
       _ref2 = dataSpec.sort;
-      for (key in _ref2) {
-        metaSpec = _ref2[key];
-        _ref3 = calculateMeta(key, metaSpec, data), meta = _ref3.meta, filter = _ref3.filter;
-        additionalFilter[key] = filter;
+      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+        metaSpec = _ref2[_j];
+        key = metaSpec.key;
+        _ref3 = calculateMeta(metaSpec, data), meta = _ref3.meta, filter = _ref3.filter;
+        additionalFilter.push(filter);
         addMeta(key, meta);
       }
       data = _.filter(data, filterFactory(additionalFilter));
@@ -7324,17 +8436,16 @@ data processing to be done.
       _ref4 = dataSpec.stats.stats;
       for (_k = 0, _len2 = _ref4.length; _k < _len2; _k++) {
         statSpec = _ref4[_k];
-        name = statSpec.name;
-        addMeta(name, {
-          type: 'num'
-        });
+        expr = statSpec.expr;
+        addMeta(expr);
       }
     }
     _ref6 = (_ref5 = dataSpec.select) != null ? _ref5 : [];
     for (_l = 0, _len3 = _ref6.length; _l < _len3; _l++) {
       key = _ref6[_l];
-      if ((metaData[key] == null) && key !== 'count(*)') {
-        throw poly.error.defn("You referenced a data column " + key + " that doesn't exist.");
+      name = poly.parser.unbracket(key.name);
+      if ((metaData[name] == null) && name !== 'count(*)') {
+        throw poly.error.defn("You referenced a data column " + name + " that doesn't exist.");
       }
     }
     return callback(null, {
@@ -7358,6 +8469,8 @@ data processing to be done.
 
 
   poly.data.frontendProcess = frontendProcess;
+
+  poly.data.createFunction = createFunction;
 
 }).call(this);
 // Generated by CoffeeScript 1.6.2
@@ -7426,7 +8539,7 @@ Shared constants
         aes = aesthetics[_i];
         if (spec[aes]) {
           if (spec[aes]["var"]) {
-            this.mapping[aes] = spec[aes]["var"];
+            this.mapping[aes] = poly.parser.unbracket(spec[aes]["var"]);
           }
           if (spec[aes]["const"]) {
             this.consts[aes] = spec[aes]["const"];
@@ -8594,9 +9707,12 @@ Dimension object has the following elements (all numeric in pixels):
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  poly.paper = function(dom, w, h, obj) {
+  poly.paper = function(dom, w, h, obj, showBox) {
     var bg, graph, numeral, paper;
 
+    if (showBox == null) {
+      showBox = true;
+    }
     if (typeof Raphael !== "undefined" && Raphael !== null) {
       paper = Raphael(dom, w, h);
     } else {
@@ -8610,7 +9726,7 @@ Dimension object has the following elements (all numeric in pixels):
     });
     if (graph != null) {
       bg.click(graph.handleEvent('reset'));
-      poly.mouseEvents(graph, bg, false);
+      poly.mouseEvents(graph, bg, showBox);
       poly.touchEvents(graph.handleEvent, bg, true);
     } else if (numeral != null) {
       bg.click(numeral.handleEvent('reset'));
@@ -9574,7 +10690,7 @@ The functions here makes it easier to create common types of interactions.
       };
     };
     return function(type, obj, event, graph) {
-      var aesVar, data, guides, layer, spec, v, _i, _j, _k, _len, _len1, _len2, _ref2, _ref3, _ref4, _ref5, _ref6, _results;
+      var aesVar, data, guides, layer, spec, v, _i, _j, _k, _len, _len1, _len2, _ref2, _ref3, _ref4, _ref5, _results;
 
       if (initHandlers == null) {
         initHandlers = _.clone(graph.handlers);
@@ -9601,7 +10717,7 @@ The functions here makes it easier to create common types of interactions.
               if (!(zoomOptions[v] && (layer[v] != null))) {
                 continue;
               }
-              aesVar = layer[v]["var"];
+              aesVar = poly.parser.unbracket(layer[v]["var"]);
               if ((_ref3 = graph.axes.domains[v].type) === 'num' || _ref3 === 'date') {
                 if (data[aesVar].le - data[aesVar].ge > poly["const"].epsilon) {
                   if ((_ref4 = guides[v]) == null) {
@@ -9610,12 +10726,13 @@ The functions here makes it easier to create common types of interactions.
                       max: null
                     };
                   }
-                  _ref5 = [data[aesVar].ge, data[aesVar].le], guides[v].min = _ref5[0], guides[v].max = _ref5[1];
+                  guides[v].min = data[aesVar].ge;
+                  guides[v].max = data[aesVar].le;
                 }
               }
               if (graph.axes.domains[v].type === 'cat') {
                 if (data[aesVar]["in"].length !== 0) {
-                  if ((_ref6 = guides[v]) == null) {
+                  if ((_ref5 = guides[v]) == null) {
                     guides[v] = {
                       levels: null
                     };
@@ -9666,6 +10783,7 @@ The functions here makes it easier to create common types of interactions.
       for (aes in mapping) {
         key = mapping[aes];
         if (this.spec.facet[aes]) {
+          key = poly.parser.normalize(key);
           this.specgroups[key] = this.spec.facet[aes];
         }
       }
@@ -9925,7 +11043,7 @@ The functions here makes it easier to create common types of interactions.
             throw poly.error.defn("You didn't specify a variable to facet on.");
           }
           if (spec["var"]) {
-            retobj.mapping["var"] = spec["var"]["var"];
+            retobj.mapping["var"] = poly.parser.normalize(spec["var"]["var"]);
           }
         } else if (spec.type === 'grid') {
           retobj.type = 'grid';
@@ -9933,10 +11051,10 @@ The functions here makes it easier to create common types of interactions.
             throw poly.error.defn("You didn't specify a variable to facet on.");
           }
           if (spec.x) {
-            retobj.mapping.x = spec.x["var"];
+            retobj.mapping.x = poly.parser.normalize(spec.x["var"]);
           }
           if (spec.y) {
-            retobj.mapping.y = spec.y["var"];
+            retobj.mapping.y = poly.parser.normalize(spec.y["var"]);
           }
         }
       }
@@ -9944,31 +11062,43 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Facet.prototype._makeIndices = function(datas, groups) {
-      var aes, data, index, indexValues, indices, key, meta, sortfn, stringify, v, val, values, _i, _len, _ref;
+      var aes, data, grps, index, indexValues, indices, key, meta, name, sortfn, stringify, v, val, values, x, _i, _len, _ref;
 
       values = {};
       for (aes in groups) {
         key = groups[aes];
+        name = poly.parser.normalize(key["var"]);
         if (key.levels) {
-          values[key["var"]] = key.levels;
+          values[name] = key.levels;
         } else {
           v = [];
           sortfn = null;
           for (index in datas) {
             data = datas[index];
-            if (meta = data.metaData[key["var"]]) {
+            if (meta = data.metaData[name]) {
               if (meta && ((_ref = meta.type) === 'num' || _ref === 'date')) {
                 poly.type.compare(meta.type);
               }
             }
-            v = _.uniq(_.union(v, _.pluck(data.statData, key["var"])));
+            v = _.uniq(_.union(v, _.pluck(data.statData, name)));
           }
-          values[key["var"]] = sortfn != null ? v.sort(sortfn) : v;
+          values[name] = sortfn != null ? v.sort(sortfn) : v;
         }
       }
       indexValues = poly.cross(values);
       indices = {};
-      stringify = poly.stringify(_.pluck(groups, 'var'));
+      grps = (function() {
+        var _i, _len, _ref1, _results;
+
+        _ref1 = _.pluck(groups, 'var');
+        _results = [];
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          x = _ref1[_i];
+          _results.push(poly.parser.normalize(x));
+        }
+        return _results;
+      })();
+      stringify = poly.stringify(grps);
       for (_i = 0, _len = indexValues.length; _i < _len; _i++) {
         val = indexValues[_i];
         indices[stringify(val)] = val;
@@ -10089,7 +11219,7 @@ The functions here makes it easier to create common types of interactions.
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   toStrictMode = function(spec) {
-    var aes, i, mappedTo, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
+    var aes, i, key, mappedTo, val, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
 
     _ref = ['row', 'column', 'value'];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -10117,6 +11247,15 @@ The functions here makes it easier to create common types of interactions.
     if ((_ref3 = spec.full) == null) {
       spec.full = false;
     }
+    if ((_ref4 = spec.formatter) == null) {
+      spec.formatter = {};
+    }
+    _ref5 = spec.formatter;
+    for (key in _ref5) {
+      val = _ref5[key];
+      key = poly.parser.normalize(key);
+      spec.formatter[key] = val;
+    }
     return spec;
   };
 
@@ -10137,7 +11276,7 @@ The functions here makes it easier to create common types of interactions.
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           item = _ref[_i];
-          _results.push(item["var"]);
+          _results.push(poly.parser.unbracket(item["var"]));
         }
         return _results;
       }).call(this);
@@ -10148,7 +11287,7 @@ The functions here makes it easier to create common types of interactions.
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           item = _ref[_i];
-          _results.push(item["var"]);
+          _results.push(poly.parser.unbracket(item["var"]));
         }
         return _results;
       }).call(this);
@@ -10214,7 +11353,7 @@ The functions here makes it easier to create common types of interactions.
     };
 
     PivotProcessedData.prototype.makeFormatters = function() {
-      var degree, exp, formatters, item, v, values, _i, _len;
+      var degree, exp, formatters, item, v, values, _i, _j, _len, _len1, _ref;
 
       values = (function() {
         var _i, _len, _ref, _results;
@@ -10223,16 +11362,21 @@ The functions here makes it easier to create common types of interactions.
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           item = _ref[_i];
-          _results.push(item["var"]);
+          _results.push(poly.parser.unbracket(item["var"]));
         }
         return _results;
       }).call(this);
       formatters = {};
       for (_i = 0, _len = values.length; _i < _len; _i++) {
         v = values[_i];
-        exp = poly.format.getExp(_.min(_.pluck(this.statData, v)));
-        degree = exp;
-        formatters[v] = poly.format.number(degree);
+        formatters[v] = v in this.spec.formatter ? this.spec.formatter[v] : (exp = poly.format.getExp(_.min(_.pluck(this.statData, v))), degree = exp, poly.format.number(degree));
+      }
+      _ref = this.columns.concat(this.rows);
+      for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+        v = _ref[_j];
+        if (v in this.spec.formatter) {
+          formatters[v] = this.spec.formatter[v];
+        }
       }
       return formatters;
     };
@@ -10282,7 +11426,7 @@ The functions here makes it easier to create common types of interactions.
       var ps;
 
       this.spec = toStrictMode(spec);
-      ps = new poly.DataProcess(this.spec, [], this.spec.strict, poly.parser.pivotToData);
+      ps = new poly.DataProcess(this.spec, [], this.spec.strict, poly.spec.pivotToData);
       return ps.make(this.spec, [], this.render);
     };
 
@@ -10296,7 +11440,7 @@ The functions here makes it easier to create common types of interactions.
         _ref1 = spec[aes];
         for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
           item = _ref1[_j];
-          key = item["var"];
+          key = poly.parser.unbracket(item["var"]);
           meta = metaData[key];
           values = _.pluck(statData, key);
           domain = poly.domain.single(values, metaData[key], {});
@@ -10315,7 +11459,7 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Pivot.prototype.render = function(err, statData, metaData) {
-      var cell, colHeaders, cols, cols_mindex, colspan, formatters, i, j, k, key, pivotData, pivotMeta, row, rowHeaders, rows, rows_mindex, rowspan, space, table, ticks, v, val, value, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
+      var cell, colHeaders, cols, cols_mindex, colspan, formatters, i, j, k, key, name, pivotData, pivotMeta, row, rowHeaders, rows, rows_mindex, rowspan, space, table, ticks, v, val, value, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
 
       ticks = this.generateTicks(this.spec, statData, metaData);
       pivotData = new PivotProcessedData(statData, ticks, this.spec);
@@ -10335,7 +11479,7 @@ The functions here makes it easier to create common types of interactions.
       i = 0;
       while (i < pivotMeta.ncol) {
         row = $('<tr></tr>');
-        key = this.spec.columns[i]["var"];
+        key = poly.parser.unbracket(this.spec.columns[i]["var"]);
         if (i === 0) {
           if (pivotMeta.nrow > 1) {
             space = $('<td></td>');
@@ -10351,6 +11495,9 @@ The functions here makes it easier to create common types of interactions.
           colspan = 1;
           while (((j + colspan) < colHeaders.length) && (value === colHeaders[j + colspan][key])) {
             colspan++;
+          }
+          if (formatters[key]) {
+            value = formatters[key](value);
           }
           cell = $("<td class='heading'>" + value + "</td>").attr('colspan', colspan * pivotMeta.nval);
           cell.attr('align', 'center');
@@ -10368,7 +11515,7 @@ The functions here makes it easier to create common types of interactions.
       }
       i = 0;
       while (i < pivotMeta.nrow) {
-        key = this.spec.rows[i]["var"];
+        key = poly.parser.unbracket(this.spec.rows[i]["var"]);
         row.append($("<th>" + key + "</th>").attr('align', 'center'));
         i++;
       }
@@ -10377,7 +11524,7 @@ The functions here makes it easier to create common types of interactions.
         _ref1 = this.spec.values;
         for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
           v = _ref1[_i];
-          cell = $("<td class='heading'>" + v["var"] + "</td>");
+          cell = $("<td class='heading'>" + (poly.parser.unbracket(v["var"])) + "</td>");
           cell.attr('align', 'center');
           row.append(cell);
         }
@@ -10392,12 +11539,15 @@ The functions here makes it easier to create common types of interactions.
         _ref2 = this.spec.rows;
         for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
           key = _ref2[_j];
-          key = key["var"];
+          key = poly.parser.unbracket(key["var"]);
           value = rowHeaders[i][key];
           if ((i === 0) || value !== rowHeaders[i - 1][key]) {
             rowspan = 1;
             while ((i + rowspan < rowHeaders.length) && value === rowHeaders[i + rowspan][key]) {
               rowspan++;
+            }
+            if (formatters[key]) {
+              value = formatters[key](value);
             }
             cell = $("<td class='heading'>" + value + "</td>").attr('rowspan', rowspan);
             cell.attr('align', 'center');
@@ -10412,8 +11562,9 @@ The functions here makes it easier to create common types of interactions.
           _ref3 = this.spec.values;
           for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
             val = _ref3[_k];
-            v = pivotData.get(rows, cols, val["var"]);
-            v = v ? formatters[val["var"]](v) : '-';
+            name = poly.parser.unbracket(val["var"]);
+            v = pivotData.get(rows, cols, name);
+            v = v ? formatters[name](v) : '-';
             row.append($("<td class='value'>" + v + "</td>").attr('align', 'right'));
           }
           j++;
@@ -10481,7 +11632,7 @@ The functions here makes it easier to create common types of interactions.
         throw poly.error.defn("No value defined in numeral.");
       }
       this.spec = toStrictMode(spec);
-      ps = new poly.DataProcess(this.spec, [], this.spec.strict, poly.parser.numeralToData);
+      ps = new poly.DataProcess(this.spec, [], this.spec.strict, poly.spec.numeralToData);
       return ps.make(this.spec, [], this.render);
     };
 
@@ -10518,14 +11669,15 @@ The functions here makes it easier to create common types of interactions.
     };
 
     Numeral.prototype.render = function(err, statData, metaData) {
-      var degree, height, scale, width, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
+      var degree, height, name, scale, width, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
 
       if (err != null) {
         console.error(err);
         return;
       }
-      this.value = statData[0][this.spec.value["var"]];
-      this.title = (_ref = this.spec.title) != null ? _ref : this.spec.value["var"];
+      name = poly.parser.normalize(this.spec.value["var"]);
+      this.value = statData[0][name];
+      this.title = (_ref = this.spec.title) != null ? _ref : name;
       degree = (0 < (_ref1 = this.value) && _ref1 < 1) ? void 0 : this.value % 1 === 0 ? 0 : -1;
       this.value = poly.format.number(degree)(this.value);
       if (_.isNaN(this.value) || this.value === 'NaN') {
@@ -10570,7 +11722,7 @@ The functions here makes it easier to create common types of interactions.
 
       return paper = poly.paper(dom, width, height, {
         numeral: numeral
-      });
+      }, false);
     };
 
     return Numeral;
@@ -10701,8 +11853,15 @@ The functions here makes it easier to create common types of interactions.
       this.dataSubscribed = [];
       this.callback = callback;
       this.prepare = prepare;
+      this.showTooltip = !((spec.tooltip != null) && !spec.tooltip);
+      this.showZoom = !((spec.zoom != null) && !spec.zoom);
       this.make(spec);
-      this.addHandler(poly.handler.tooltip());
+      if (this.showTooltip) {
+        this.addHandler(poly.handler.tooltip());
+      }
+      if (this.showZoom) {
+        this.addHandler(poly.handler.zoom(spec));
+      }
     }
 
     /*
@@ -10952,24 +12111,31 @@ The functions here makes it easier to create common types of interactions.
 
       return paper = poly.paper(dom, width, height, {
         graph: graph
-      });
+      }, this.showZoom);
     };
 
     return Graph;
 
   })();
 
-  poly.chart = function(spec, callback, prepare) {
+  poly.chart = function(spec, callback, prepare, notrycatch) {
     var err;
 
-    try {
+    if (notrycatch == null) {
+      notrycatch = true;
+    }
+    if (notrycatch) {
       return new Graph(spec, callback, prepare);
-    } catch (_error) {
-      err = _error;
-      if (callback != null) {
-        return callback(err, null);
-      } else {
-        throw poly.error.defn("Bad specification.");
+    } else {
+      try {
+        return new Graph(spec, callback, prepare);
+      } catch (_error) {
+        err = _error;
+        if (callback != null) {
+          return callback(err, null);
+        } else {
+          throw poly.error.defn("Bad specification.");
+        }
       }
     }
   };
@@ -10982,6 +12148,14 @@ The functions here makes it easier to create common types of interactions.
     pivot: poly.pivot,
     numeral: poly.numeral,
     handler: poly.handler,
+    parser: {
+      bracket: poly.parser.bracket,
+      unbracket: poly.parser.unbracket,
+      parse: poly.parser.parse,
+      getExpression: poly.parser.getExpression,
+      'escape': poly.parser['escape'],
+      'unescape': poly.parser['unescape']
+    },
     debug: poly
   }
 })(window.polyjs);
