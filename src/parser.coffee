@@ -292,6 +292,11 @@ exprType = (funcTypeEnv, colTypeEnv, expr) ->
   tapply = (fname, targs) ->
     if fname not of funcTypeEnv
       throw poly.error.defn "Unknown function name: #{fname}"
+    if fname is '++' and targs.length is 2
+      if targs[1] == tnum and targs[0] == tcat
+        fname = "++_num1"
+      if targs[0] == tnum and targs[1] == tcat
+        fname = "++_num2"
     if fname is 'bin' and targs.length is 2 and targs[0] == tdate
       fname = 'bin_date'
     if fname in ['min', 'max'] and targs.length is 1 and targs[0] == tdate
@@ -330,7 +335,11 @@ pairNumToNum = new FuncType([tnum, tnum], tnum)
 # type environments
 ###############################################################################
 # infix ops
-initialFuncTypeEnv = {'++': new FuncType([tcat, tcat], tcat)}
+initialFuncTypeEnv = {
+  '++': new FuncType([tcat, tcat], tcat)
+  '++_num1': new FuncType([tcat, tnum], tcat)
+  '++_num2': new FuncType([tnum, tcat], tcat)
+}
 for opname in ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==', '=']
   initialFuncTypeEnv[opname] = pairNumToNum
 # statistics

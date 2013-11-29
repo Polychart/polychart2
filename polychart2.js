@@ -3117,6 +3117,14 @@ See the spec definition for more information.
       if (!(fname in funcTypeEnv)) {
         throw poly.error.defn("Unknown function name: " + fname);
       }
+      if (fname === '++' && targs.length === 2) {
+        if (targs[1] === tnum && targs[0] === tcat) {
+          fname = "++_num1";
+        }
+        if (targs[0] === tnum && targs[1] === tcat) {
+          fname = "++_num2";
+        }
+      }
       if (fname === 'bin' && targs.length === 2 && targs[0] === tdate) {
         fname = 'bin_date';
       }
@@ -3173,7 +3181,9 @@ See the spec definition for more information.
   pairNumToNum = new FuncType([tnum, tnum], tnum);
 
   initialFuncTypeEnv = {
-    '++': new FuncType([tcat, tcat], tcat)
+    '++': new FuncType([tcat, tcat], tcat),
+    '++_num1': new FuncType([tcat, tnum], tcat),
+    '++_num2': new FuncType([tnum, tcat], tcat)
   };
 
   _ref2 = ['*', '/', '%', '+', '-', '>=', '>', '<=', '<', '!=', '==', '='];
