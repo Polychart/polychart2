@@ -8390,12 +8390,13 @@ data processing to be done.
     metaData = (_ref = _.clone(data.meta)) != null ? _ref : {};
     getMeta = interpretMeta(metaData);
     addMeta = function(expr, meta) {
-      var _ref1;
+      var key, _ref1;
 
       if (meta == null) {
         meta = {};
       }
-      return metaData[expr.name] = _.extend((_ref1 = metaData[expr.name]) != null ? _ref1 : {}, getMeta(expr), meta);
+      key = poly.parser.unbracket(expr.name);
+      return metaData[key] = _.extend((_ref1 = metaData[key]) != null ? _ref1 : {}, getMeta(expr), meta);
     };
     data = _.clone(data.raw);
     addData = function(key, fn) {
@@ -8685,13 +8686,32 @@ Shared constants
     };
 
     Layer.prototype._stack = function(group) {
-      var data, datas, item, key, tmp, yval, _results,
+      var compare, data, datas, item, key, levels, sortfn, tmp, yval, _results,
         _this = this;
 
       datas = poly.groupBy(this.statData, group);
       _results = [];
       for (key in datas) {
         data = datas[key];
+        if (this.mapping.color) {
+          levels = this.meta[this.mapping.color].levels;
+          sortfn = levels != null ? function(a, b) {
+            a = _.indexOf(levels, a[_this.mapping.color]);
+            b = _.indexOf(levels, b[_this.mapping.color]);
+            if (a < b) {
+              return -1;
+            } else if (a > b) {
+              return 1;
+            } else {
+              return 0;
+            }
+          } : (compare = poly.type.compare(this.meta[this.mapping.color].type), function(a, b) {
+            a = a[_this.mapping.color];
+            b = b[_this.mapping.color];
+            return compare(a, b);
+          });
+          data.sort(sortfn);
+        }
         tmp = 0;
         yval = this.mapping.y != null ? (function(item) {
           return item[_this.mapping.y];

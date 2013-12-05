@@ -104,6 +104,24 @@ class Layer
     # handle +/- separately?
     datas = poly.groupBy @statData , group
     for key, data of datas
+      # sort by colour
+      if @mapping.color
+        levels = @meta[@mapping.color].levels
+        sortfn =
+          if levels?
+            (a, b) =>
+              a = _.indexOf(levels, a[@mapping.color])
+              b = _.indexOf(levels, b[@mapping.color])
+              if a < b      then -1
+              else if a > b then 1
+              else               0
+          else
+            compare = poly.type.compare(@meta[@mapping.color].type)
+            (a, b) =>
+              a = a[@mapping.color]
+              b = b[@mapping.color]
+              compare(a, b)
+        data.sort(sortfn)
       tmp = 0
       yval = if @mapping.y? then ((item) => item[@mapping.y]) else (item) -> 0
       for item in data
