@@ -362,7 +362,8 @@ frontendProcess = (dataSpec, data, callback) ->
   metaData = _.clone(data.meta) ? {}
   getMeta = interpretMeta(metaData)
   addMeta = (expr, meta={}) ->
-    metaData[expr.name] = _.extend (metaData[expr.name] ? {}), getMeta(expr), meta
+    key = poly.parser.unbracket(expr.name)
+    metaData[key] = _.extend (metaData[key] ? {}), getMeta(expr), meta
   # data & related f'ns
   data = _.clone(data.raw)
   addData = (key, fn) ->
@@ -396,7 +397,6 @@ frontendProcess = (dataSpec, data, callback) ->
     name = poly.parser.unbracket(key.name)
     if not metaData[name]? and name isnt 'count(*)'
       throw poly.error.defn ("You referenced a data column #{name} that doesn't exist.")
-  # done
   callback(null, data:data, meta:metaData)
 
 ###
