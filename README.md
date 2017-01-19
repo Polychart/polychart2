@@ -80,8 +80,4 @@ Once this is running, go to http://localhost:8888/.
 
 License
 -------
-
-For non-commercial use, Polychart2.js is licensed under Creative Commons 3.0
-Attribution & Non-commercial ([Link](http://creativecommons.org/licenses/by-nc/3.0/)).
-
-For commercial use, please see http://www.polychartjs.com/
+MIT
